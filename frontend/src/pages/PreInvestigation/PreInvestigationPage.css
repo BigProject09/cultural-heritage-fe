@@ -1,0 +1,257 @@
+/* 전체 페이지 */
+
+.pre-page {
+  min-height: 100vh;
+  background: #f5f8fd;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+/* ========================= */
+/* 진행 단계 */
+/* ========================= */
+
+.progress-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.progress-item {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.progress-circle {
+  width: 48px;
+  height: 48px;
+
+  border-radius: 50%;
+
+  background: #e5e7eb;
+  color: #6b7280;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  flex-shrink: 0;
+}
+
+.progress-circle.active {
+  background: #2563eb;
+  color: white;
+}
+
+.progress-title {
+  margin-left: 12px;
+
+  color: #6b7280;
+  font-size: 16px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.progress-title.active {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.progress-line {
+  flex: 1;
+  height: 3px;
+
+  background: #d7deea;
+
+  margin: 0 20px;
+}
+
+/* ========================= */
+/* 이전 다음 */
+/* ========================= */
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.nav-btn {
+  background: white;
+  border: none;
+  border-radius: 12px;
+
+  padding: 12px 24px;
+
+  cursor: pointer;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  color: #2563eb;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  transition: .2s;
+}
+
+.nav-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* ========================= */
+/* 본문 */
+/* ========================= */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* ========================= */
+/* 기본 정보 */
+/* ========================= */
+
+.info-card {
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 35px;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,.05);
+}
+
+.info-card h2 {
+  margin-bottom: 30px;
+
+  color: #1f2937;
+  font-size: 30px;
+}
+
+.info-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2,1fr);
+
+  gap: 30px 80px;
+}
+
+.info-item span {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.info-item p {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* ========================= */
+/* 분석 버튼 */
+/* ========================= */
+
+.analysis-card {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.analysis-btn {
+  width: 300px;
+  height: 190px;
+
+  background: white;
+
+  border: 2px solid #dbe7ff;
+  border-radius: 20px;
+
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  transition: .25s;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,.05);
+}
+
+.analysis-btn:hover {
+  border-color: #2563eb;
+  transform: translateY(-5px);
+}
+
+.analysis-btn .icon {
+  font-size: 42px;
+  margin-bottom: 16px;
+}
+
+.analysis-btn h3 {
+  margin: 0;
+
+  color: #1f2937;
+
+  font-size: 28px;
+}
+
+.analysis-btn p {
+  margin-top: 10px;
+
+  color: #6b7280;
+
+  font-size: 15px;
+}
+
+/* ========================= */
+/* 반응형 */
+/* ========================= */
+
+@media (max-width:1100px){
+
+  .progress-wrapper{
+    overflow-x:auto;
+    gap:30px;
+  }
+
+  .analysis-card{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .analysis-btn{
+    width:100%;
+    max-width:420px;
+  }
+
+  .info-grid{
+    grid-template-columns:1fr;
+  }
+
+}
+
+.analysis-btn.completed {
+  background: #eaf3ff;
+  border: 2px solid #2563eb;
+}
+
+.analysis-btn.completed .icon,
+.analysis-btn.completed h3,
+.analysis-btn.completed p {
+  color: #2563eb;
+}

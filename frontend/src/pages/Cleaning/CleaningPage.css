@@ -1,0 +1,93 @@
+.cleaning-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 40px;
+}
+
+.cleaning-container {
+  max-width: 1100px;
+  margin: 40px auto;
+}
+
+.cleaning-title {
+  font-size: 38px;
+  font-weight: 700;
+  color: #1f2937;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.mission-card {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.mission-btn {
+  width: 100%;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mission-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.mission-icon {
+  font-size: 36px;
+}
+
+.mission-btn h3 {
+  font-size: 24px;
+  color: #111827;
+}
+
+.mission-btn p {
+  font-size: 18px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.mission-btn.completed {
+  background: #eaf3ff;
+  border: 2px solid #2563eb;
+}
+
+.mission-btn.completed h3,
+.mission-btn.completed p,
+.mission-btn.completed .mission-icon {
+  color: #2563eb;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px auto 40px;
+  max-width: 1100px;
+}
+
+.nav-btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.nav-btn:hover {
+  background: #1d4ed8;
+}

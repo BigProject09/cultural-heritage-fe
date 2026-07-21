@@ -1,0 +1,251 @@
+/* ===========================
+   Page
+=========================== */
+
+.flow-page{
+
+    min-height:100vh;
+
+    background:#F4F7FB;
+
+    padding:32px 0 60px;
+}
+
+/* ===========================
+   Top
+=========================== */
+
+.top-bar{
+
+    width:1200px;
+
+    margin:0 auto 24px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+}
+
+.logo{
+
+    font-size:48px;
+
+    font-weight:800;
+
+    color:#2C6BED;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.logo:hover{
+
+    transform:scale(1.05);
+}
+
+.nav-btn{
+
+    border:none;
+
+    background:none;
+
+    font-size:20px;
+
+    font-weight:600;
+
+    color:#2C6BED;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.nav-btn:hover{
+
+    color:#2C6BED;
+}
+
+/* ===========================
+   Title
+=========================== */
+
+.flow-title{
+
+    text-align:center;
+
+    font-size:44px;
+
+    margin-bottom:40px;
+
+    color:#2A2A2A;
+}
+
+/* ===========================
+   Container
+=========================== */
+
+.flow-container{
+
+    width:900px;
+
+    margin:0 auto;
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:40px;
+}
+
+.flow-box{
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:32px;
+
+    box-shadow:0 10px 28px rgba(0,0,0,.05);
+}
+
+.flow-box h2{
+
+    text-align:center;
+
+    margin-bottom:28px;
+
+    font-size:30px;
+}
+/* ===========================
+   Flow Step
+=========================== */
+
+.flow-step{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    margin-bottom:10px;
+}
+
+.step-btn{
+
+    width:220px;
+
+    height:52px;
+
+    border:none;
+
+    border-radius:12px;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.step-btn.active{
+
+    background:#2C6BED;
+
+    color:white;
+}
+
+.step-btn.active:hover{
+
+    background:#1E57CF;
+}
+
+.step-btn.inactive{
+
+    background:#E8EDF5;
+
+    color:#6B7280;
+}
+
+.step-btn.inactive:hover{
+
+    background:#D9E3F2;
+}
+
+.ai-step{
+
+    width:220px;
+
+    height:52px;
+
+    border-radius:12px;
+
+    background:#EEF4FF;
+
+    color:#2C6BED;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-weight:600;
+
+    font-size:16px;
+}
+
+.arrow{
+
+    margin:10px 0;
+
+    font-size:24px;
+
+    color:#9CA3AF;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width:1000px){
+
+    .flow-container{
+
+        width:95%;
+
+        grid-template-columns:1fr;
+
+    }
+
+    .top-bar{
+
+        width:95%;
+    }
+
+}
+
+@media (max-width:768px){
+
+    .logo{
+
+        font-size:36px;
+    }
+
+    .flow-box{
+
+        padding:24px;
+    }
+
+    .step-btn,
+    .ai-step{
+
+        width:100%;
+    }
+
+}

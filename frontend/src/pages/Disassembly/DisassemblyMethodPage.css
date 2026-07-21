@@ -1,0 +1,82 @@
+.method-page{
+    min-height:100vh;
+    background:#f8f6f4;
+    padding:30px;
+    box-sizing:border-box;
+}
+
+.top-bar{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:30px;
+}
+
+.nav-btn{
+    border:none;
+    background:none;
+    cursor:pointer;
+    font-size:22px;
+    font-weight:bold;
+    color:#8c6846;
+}
+
+.method-content{
+    display:flex;
+    gap:40px;
+}
+
+.step-menu{
+    width:230px;
+    background:#b59677;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.step-item{
+    padding:24px 20px;
+    border-bottom:1px solid rgba(255,255,255,.2);
+    text-align:center;
+}
+
+.step-item.active{
+    background:#8c6846;
+    color:white;
+    font-weight:bold;
+}
+
+.method-area{
+    flex:1;
+}
+
+.method-area h1{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.recommend-card{
+    background:white;
+    border-radius:20px;
+    padding:35px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.recommend-header{
+    display:inline-block;
+    background:#8c6846;
+    color:white;
+    padding:8px 16px;
+    border-radius:20px;
+    margin-bottom:20px;
+}
+
+.score{
+    font-size:22px;
+    color:#8c6846;
+    margin:20px 0;
+}
+
+.recommend-card ul,
+.recommend-card ol{
+    margin-left:25px;
+    line-height:1.9;
+}
