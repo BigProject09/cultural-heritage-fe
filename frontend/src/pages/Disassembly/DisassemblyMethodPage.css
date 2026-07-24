@@ -1,82 +1,454 @@
-.method-page{
-    min-height:100vh;
-    background:#f8f6f4;
-    padding:30px;
-    box-sizing:border-box;
+.method-page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  padding: 40px 60px;
 }
 
-.top-bar{
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:30px;
+/* ================= 상단 ================= */
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 60px;
 }
 
-.nav-btn{
-    border:none;
-    background:none;
-    cursor:pointer;
-    font-size:22px;
-    font-weight:bold;
-    color:#8c6846;
+.logo {
+  font-size: 40px;
+  font-weight: 700;
+  color: #2f6fed;
+  letter-spacing: 1px;
 }
 
-.method-content{
-    display:flex;
-    gap:40px;
+.nav-btn {
+  padding: 14px 30px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: .2s;
+
+  background: #2563eb;
+  color: white;
 }
 
-.step-menu{
-    width:230px;
-    background:#b59677;
-    border-radius:10px;
-    overflow:hidden;
+.nav-btn:hover {
+  background: #1d4ed8;
 }
 
-.step-item{
-    padding:24px 20px;
-    border-bottom:1px solid rgba(255,255,255,.2);
-    text-align:center;
+/* ================= 제목 ================= */
+
+.page-header {
+  max-width: 1200px;
+  margin: 0 auto 40px;
 }
 
-.step-item.active{
-    background:#8c6846;
-    color:white;
-    font-weight:bold;
+.page-header h1 {
+  font-size: 42px;
+  margin: 0 0 12px;
+  color: #1f2937;
 }
 
-.method-area{
-    flex:1;
+.page-header p {
+  font-size: 18px;
+  color: #6b7280;
+  margin: 0;
 }
 
-.method-area h1{
-    text-align:center;
-    margin-bottom:30px;
+/* ================= 카드 ================= */
+
+.method-card {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 26px;
+  padding: 36px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
 }
 
-.recommend-card{
-    background:white;
-    border-radius:20px;
-    padding:35px;
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
+/* ================= 상단 ================= */
+
+.method-top {
+  display: flex;
+  gap: 30px;
+  align-items: center;
 }
 
-.recommend-header{
-    display:inline-block;
-    background:#8c6846;
-    color:white;
-    padding:8px 16px;
-    border-radius:20px;
-    margin-bottom:20px;
+/* ================= 추천도 ================= */
+
+.score-area {
+  width: 210px;
+  display: flex;
+  justify-content: center;
 }
 
-.score{
-    font-size:22px;
-    color:#8c6846;
-    margin:20px 0;
+.score-circle {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.recommend-card ul,
-.recommend-card ol{
-    margin-left:25px;
-    line-height:1.9;
+.score-inner {
+  width: 138px;
+  height: 138px;
+
+  background: white;
+
+  border-radius: 50%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.score {
+  font-size: 38px;
+  font-weight: bold;
+  color: #1e3a5f;
+}
+
+.method-name {
+  margin-top: 6px;
+  font-size: 23px;
+  font-weight: bold;
+  color: #555;
+}
+
+/* ================= 설명 ================= */
+
+.summary-card {
+  flex: 1;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 18px;
+
+  padding: 28px;
+}
+
+.summary-card h2 {
+  color: #1e3a5f;
+  font-size: 34px;
+  margin-bottom: 18px;
+}
+
+.summary-card p {
+  font-size: 20px;
+  line-height: 1.8;
+  color: #444;
+}
+
+/* ================= 추천 이유 ================= */
+
+.reason-card {
+  width: 100%;
+  margin-top: 30px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.05);
+}
+
+.reason-card h3{
+
+  font-size:26px;
+
+  margin-bottom:18px;
+
+}
+
+.reason-card ul{
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  padding-left: 20px;
+}
+
+.reason-card li{
+  margin-bottom: 0;
+  color:#444;
+  font-size:17px;
+}
+
+/* ================= 제목 ================= */
+
+.step-title{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+  margin-top:40px;
+
+  margin-bottom:25px;
+
+  font-size:30px;
+
+  font-weight:bold;
+
+}
+
+/* ================= 주의사항 ================= */
+
+.warning-btn{
+
+  background:#FFF7E6;
+
+  color:#C68A00;
+
+  border:1px solid #E9D8A6;
+
+  border-radius:12px;
+
+  padding:12px 22px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+}
+
+/* ================= 단계 ================= */
+
+.step-card{
+  transition: .2s;
+  cursor: pointer;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:22px;
+
+  background:#FAFBFC;
+
+  border:1px solid #E4E8EF;
+
+  border-radius:20px;
+
+  padding:26px;
+
+  margin-bottom:18px;
+
+}
+
+.step-number{
+
+  width:55px;
+
+  height:55px;
+
+  border-radius:50%;
+
+  background:#1E3A5F;
+
+  color:white;
+
+  display:flex;
+
+  justify-content:center;
+
+  align-items:center;
+
+  font-size:23px;
+
+  font-weight:bold;
+
+}
+
+.step-info{
+
+  flex:1;
+
+}
+
+.step-info h3{
+
+  font-size:27px;
+
+  margin-bottom:8px;
+
+}
+
+.step-info p{
+
+  font-size:18px;
+
+  color:#666;
+
+}
+
+/* ================= 버튼 ================= */
+
+.step-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.step-actions button{
+
+  border:none;
+
+  border-radius:40px;
+
+  padding:11px 18px;
+
+  cursor:pointer;
+
+  font-weight:bold;
+
+  transition:.2s;
+
+}
+
+/* 수정 */
+
+.edit-btn{
+
+  background:#EEF5FF;
+
+  color:#1E63D5;
+
+}
+
+.edit-btn:hover{
+
+  background:#DDEBFF;
+
+}
+
+/* 삭제 */
+
+.delete-btn{
+
+  background:#FFECEC;
+
+  color:#E74C3C;
+
+}
+
+.delete-btn:hover{
+
+  background:#FFDADA;
+
+}
+
+/* 승인 */
+
+.approve-btn{
+  background:#2E8B57;
+  color:white;
+  min-width:95px;
+}
+
+.approve-btn:hover{
+
+  background:#227047;
+
+}
+
+/* ================= 단계 추가 ================= */
+
+.add-step-btn{
+
+  width:100%;
+
+  margin-top:18px;
+
+  padding:18px;
+
+  background:white;
+
+  border:2px dashed #B8C2D0;
+
+  border-radius:16px;
+
+  color:#1E3A5F;
+
+  font-size:20px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+  transition:.2s;
+
+}
+
+.add-step-btn:hover{
+
+  background:#F6F9FC;
+
+}
+/* ================= 주의사항 모달 ================= */
+
+.warning-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 999;
+}
+
+.warning-content {
+  width: 460px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.warning-content h2 {
+  font-size: 28px;
+  color: #1e3a5f;
+  margin-bottom: 20px;
+}
+
+.warning-content ul {
+  padding-left: 24px;
+}
+
+.warning-content li {
+  font-size: 18px;
+  color: #444;
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+
+.close-btn {
+  width: 100%;
+  margin-top: 28px;
+
+  padding: 14px;
+
+  background: #2563eb;
+  color: white;
+
+  border: none;
+  border-radius: 12px;
+
+  font-size: 17px;
+  font-weight: bold;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.close-btn:hover {
+  background: #1d4ed8;
 }

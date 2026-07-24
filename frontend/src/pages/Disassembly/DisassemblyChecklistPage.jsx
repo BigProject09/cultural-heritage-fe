@@ -1,7 +1,7 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
-import { moveToPreviousStep } from "../../utils/flowNavigation";
 import { useDisassembly } from "../../context/DisassemblyContext";
 
 import "./DisassemblyChecklistPage.css";
@@ -9,92 +9,160 @@ import "./DisassemblyChecklistPage.css";
 function DisassemblyChecklistPage() {
   const navigate = useNavigate();
 
-  const { completed, setCompleted } = useDisassembly();
+  const {
+    completed,
+    setCompleted,
+    taskId,
+    checklist: aiChecklist,
+    setTools,
+  } = useDisassembly();
 
-  // 임시 Flow (나중에 AI 결과로 교체)
-  const approvedFlow = [
-    "처리 전 조사",
-    "해체",
-    "세척",
-    "강화 처리",
-    "접합",
-    "복원",
-    "색 맞춤",
-    "처리 후 기록",
-  ];
+  const [checkedIds, setCheckedIds] = useState([]);
+
+  const handleComplete = async () => {
+    console.log("taskId =", taskId);
+    console.log("checkedIds =", checkedIds);
+
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/tasks/${taskId}/resume`,
+        {
+          resume: {
+            checked_ids: checkedIds,
+          },
+        }
+      );
+
+      console.log("응답 데이터");
+      console.log(response.data);
+
+      // ⭐ ai_tools 구조 확인
+      console.log("ai_tools");
+      console.log(response.data.interrupt.ai_tools);
+      console.log(
+        Object.keys(response.data.interrupt.ai_tools)
+      );
+
+      // 일단 저장
+      setTools(
+        response.data.interrupt.ai_tools.recommended_tools
+      );
+
+      // 체크리스트 완료
+      setCompleted({
+        ...completed,
+        checklist: true,
+      });
+
+      // 저장 후 해체 메인으로 이동
+      navigate("/disassembly");
+
+    } catch (error) {
+      console.error(error);
+
+      console.log("응답 데이터");
+      console.log(error.response?.data);
+
+      alert("체크리스트 저장 실패");
+    }
+  };
+
 
   return (
     <div className="checklist-page">
-      <ProgressNavigator
-        approvedFlow={approvedFlow}
-        currentStep="해체"
-      />
 
-      <div className="top-bar">
-        <button
-          className="nav-btn"
-          onClick={() =>
-            moveToPreviousStep(
-              navigate,
-              approvedFlow,
-              "해체"
-            )
-          }
-        >
-          ← 이전 단계
-        </button>
+      {/* 상단 */}
+      <div className="top-nav">
 
         <button
-          className="nav-btn"
-          onClick={() => {
-            setCompleted({
-              ...completed,
-              checklist: true,
-            });
-
-            navigate("/disassembly");
-          }}
+          className="back-btn"
+          onClick={() => navigate("/disassembly")}
         >
-          완료 →
+          ← 이전
         </button>
+
+        <div className="logo">
+          VORA
+        </div>
+
+        <button
+          className="next-btn"
+          onClick={handleComplete}
+        >
+          완료
+        </button>
+
       </div>
 
-      <div className="method-content">
-        <div className="method-area">
+      {/* 제목 */}
+      <div className="investigation-header">
+
+        <div className="title-area">
+
           <h1>AI 해체 전 조사</h1>
 
-          <div className="recommend-card">
-            <div className="recommend-header">
-              ⭐ AI 체크리스트
+          <p>
+            AI가 유물 정보를 분석하여
+            해체 전 점검 항목을 추천했습니다.
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* 체크리스트 */}
+      <div className="checklist-card">
+
+        <div className="card-title">
+          🤖 AI 추천 체크리스트
+        </div>
+
+        {aiChecklist.map((item) => (
+
+          <label
+            key={item.id}
+            className="check-item"
+          >
+
+            <input
+              type="checkbox"
+              checked={checkedIds.includes(item.id)}
+              onChange={(e) => {
+
+                if (e.target.checked) {
+
+                  setCheckedIds([
+                    ...checkedIds,
+                    item.id,
+                  ]);
+
+                } else {
+
+                  setCheckedIds(
+                    checkedIds.filter(
+                      (id) => id !== item.id
+                    )
+                  );
+
+                }
+
+              }}
+            />
+
+            <div className="check-content">
+
+              <span className="check-title">
+                {item.label}
+              </span>
+
             </div>
 
-            <label>
-              <input type="checkbox" />
-              유물 표면 상태 확인
-            </label>
+          </label>
 
-            <label>
-              <input type="checkbox" />
-              균열 및 결손 확인
-            </label>
+        ))}
 
-            <label>
-              <input type="checkbox" />
-              기존 접착 여부 확인
-            </label>
-
-            <label>
-              <input type="checkbox" />
-              사진 촬영 완료
-            </label>
-
-            <label>
-              <input type="checkbox" />
-              기록 작성 완료
-            </label>
-          </div>
-        </div>
       </div>
+
     </div>
   );
 }

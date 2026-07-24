@@ -1,149 +1,142 @@
-.tool-page{
-    min-height:100vh;
-    background:#f8f6f4;
-    padding:30px;
-    box-sizing:border-box;
+.tool-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 50px 70px 80px;
+  box-sizing: border-box;
 }
 
-.top-bar{
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:30px;
+/* =========================
+   상단
+========================= */
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 70px;
 }
 
-.nav-btn{
-    background:none;
-    border:none;
-    font-size:22px;
-    cursor:pointer;
-    color:#6d421d;
-    font-weight:bold;
+.logo {
+  margin: 0;
+
+  font-size: 56px;
+  font-weight: 700;
+  color: #2f6fed;
+
+  letter-spacing: 1px;
 }
 
-.title{
-    text-align:center;
-    font-size:42px;
-    margin-bottom:8px;
+.nav-btn {
+  min-width: 120px;
+  height: 48px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #2f6fed;
+  color: white;
+
+  font-size: 18px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.sub-title{
-    text-align:center;
-    color:#777;
-    margin-bottom:40px;
+.nav-btn:hover {
+  background: #2458c8;
 }
 
-.tool-list{
-    display:flex;
-    gap:40px;
-    justify-content:center;
+/* =========================
+   제목
+========================= */
+
+.page-header {
+  margin-bottom: 50px;
 }
 
-.tool-card{
+.page-header h1 {
+  margin: 0 0 18px;
 
-    width:420px;
+  font-size: 58px;
+  font-weight: 700;
 
-    background:#efe8f5;
-
-    border-radius:20px;
-
-    padding:25px;
-
-    position:relative;
-
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
-
+  color: #1f2937;
 }
 
-.recommend{
+.page-header p {
+  margin: 0;
 
-    position:absolute;
+  font-size: 22px;
+  color: #6b7280;
 
-    top:18px;
-
-    right:18px;
-
-    background:#8c6846;
-
-    color:white;
-
-    padding:6px 12px;
-
-    border-radius:20px;
-
-    font-size:14px;
-
+  line-height: 1.6;
 }
 
-.tool-card img{
+/* =========================
+   도구 목록
+========================= */
 
-    width:100%;
-
-    height:220px;
-
-    object-fit:cover;
-
-    border-radius:12px;
-
-    margin-bottom:20px;
-
+.tool-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
 }
 
-.tool-card h2{
+.tool-card {
+  background: white;
 
-    font-size:32px;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
 
-    margin-bottom:10px;
+  padding: 24px;
 
+  transition: all 0.2s;
 }
 
-.score{
-
-    color:#8c6846;
-
-    font-size:20px;
-
-    margin-bottom:20px;
-
+.tool-card:hover {
+  border-color: #2f6fed;
+  transform: translateY(-3px);
 }
 
-.tool-card h3{
-
-    margin-bottom:10px;
-
+.tool-card.selected {
+  border-color: #2f6fed;
+  background: #f5f9ff;
 }
 
-.tool-card ul{
+.tool-card h2 {
+  margin: 0 0 16px;
 
-    padding-left:20px;
-
-    line-height:1.8;
-
-    margin-bottom:25px;
-
+  font-size: 24px;
+  color: #1f2937;
 }
 
-.select-btn{
+.tool-card p {
+  margin-bottom: 24px;
 
-    width:100%;
-
-    height:50px;
-
-    border:none;
-
-    border-radius:12px;
-
-    background:#8c6846;
-
-    color:white;
-
-    font-size:18px;
-
-    cursor:pointer;
-
+  color: #6b7280;
+  line-height: 1.6;
 }
 
-.select-btn:hover{
+.select-btn {
+  width: 100%;
+  height: 46px;
 
-    background:#744f2d;
+  border: none;
+  border-radius: 10px;
 
+  background: #2f6fed;
+  color: white;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.select-btn:hover {
+  background: #2458c8;
 }

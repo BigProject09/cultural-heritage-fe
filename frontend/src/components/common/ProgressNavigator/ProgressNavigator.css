@@ -1,55 +1,104 @@
 .progress-wrapper {
+  width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: flex-start;
-  gap: 0;
-  margin: 30px 0;
+  margin-bottom: 40px;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .progress-item {
+  flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   position: relative;
   cursor: pointer;
 }
 
 .progress-circle {
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: #e5e7eb;
-  color: #666;
-  font-weight: bold;
+
+  background: #e8edf5;
+  color: #555;
+
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: 0.3s;
+
+  font-size: 18px;
+  font-weight: 700;
+
   z-index: 2;
+
+  transition: 0.2s;
 }
 
 .progress-circle.active {
-  background: #2563eb;
+  background: #2f6fed;
   color: white;
 }
 
 .progress-title {
-  margin-top: 55px;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  font-size: 14px;
+  margin-top: 12px;
+
+  font-size: 15px;
+  font-weight: 600;
+
   color: #666;
+
+  text-align: center;
+
+  transition: 0.2s;
 }
 
 .progress-title.active {
-  color: #2563eb;
-  font-weight: bold;
+  color: #2f6fed;
 }
 
 .progress-line {
-  width: 90px;
+  position: absolute;
+
+  top: 22px;
+  left: 50%;
+
+  width: 100%;
   height: 3px;
-  background: #d1d5db;
-  margin: 0 8px;
+
+  background: #d7dde7;
+
+  z-index: 1;
+}
+
+.progress-item:last-child .progress-line {
+  display: none;
+}
+
+/* hover */
+
+.progress-item:hover .progress-circle {
+  transform: scale(1.08);
+}
+
+.progress-item:hover .progress-title {
+  color: #2f6fed;
+}
+
+/* 반응형 */
+
+@media (max-width: 900px) {
+
+  .progress-title{
+    font-size:12px;
+  }
+
+  .progress-circle{
+    width:38px;
+    height:38px;
+    font-size:15px;
+  }
+
 }

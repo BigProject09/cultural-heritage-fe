@@ -1,84 +1,166 @@
-import { createContext, useContext, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+} from "react";
 
 const DisassemblyContext = createContext();
 
-export function DisassemblyProvider({ children }) {
-  // 해체 진행 상태
-  const [completed, setCompleted] = useState({
-    checklist: false,
-    tool: false,
-    method: false,
-  });
+export function DisassemblyProvider({
+  children,
+}) {
+  // 작업 ID
+  const [taskId, setTaskId] =
+    useState(null);
 
-  // 처리 전 조사 진행 상태
-  const [preInvestigation, setPreInvestigation] = useState({
-    xray: false,
-    visual: false,
-  });
+  // 처리 전 조사
+  const [preInvestigation, setPreInvestigation] =
+    useState({
+      xray: false,
+      visual: false,
+    });
 
-  // 세척 진행 상태
-  const [cleaning, setCleaning] = useState({
-    mission1: false,
-    mission2: false,
-    mission3: false,
-  });
+  // 세척 (추후 AI 데이터 저장용)
+  const [cleaning, setCleaning] =
+    useState({
+      mission1: false,
+      mission2: false,
+      mission3: false,
+    });
 
-  // 강화 처리 진행 상태
-  const [strengthening, setStrengthening] = useState({
-    mission1: false,
-    mission2: false,
-    mission3: false,
-  });
+  // 해체 체크리스트
+  const [checklist, setChecklist] =
+    useState([]);
 
-  const resetCompleted = () => {
-    // 해체 초기화
-    setCompleted({
+  // 해체 도구
+  const [tools, setTools] =
+    useState([]);
+
+  // 해체 방법
+  const [methods, setMethods] =
+    useState([]);
+
+  // 각 단계 완료 여부
+  const [completed, setCompleted] =
+    useState({
+      // 해체
       checklist: false,
       tool: false,
       method: false,
+      post: false,
+
+      // 세척
+      cleaningMethod: false,
+      cleaningStep: false,
+      cleaningDryingStep: false,
+      cleaningPost: false,
+
+      // 강화 처리
+      strengtheningMethod: false,
+      strengtheningMaterial: false,
+      strengtheningWork: false,
+      strengtheningPost: false,
+
+      // 접합
+      joiningMethod: false,
+      joiningMaterial: false,
+      joiningWork: false,
+      joiningPost: false,
+
+      // 복원
+      restorationMethod: false,
+      restorationMaterial: false,
+      restorationWork: false,
+      restorationPost: false,
+
+      // 색 맞춤
+      colorMatchingMethod: false,
+      colorMatchingMaterial: false,
+      colorMatchingWork: false,
+      colorMatchingPost: false,
     });
 
-    // 처리 전 조사 초기화
+  const resetCompleted = () => {
+    setTaskId(null);
+
     setPreInvestigation({
       xray: false,
       visual: false,
     });
 
-    // 세척 초기화
     setCleaning({
       mission1: false,
       mission2: false,
       mission3: false,
     });
 
-    // 강화 처리 초기화
-    setStrengthening({
-      mission1: false,
-      mission2: false,
-      mission3: false,
+    setChecklist([]);
+    setTools([]);
+    setMethods([]);
+
+    setCompleted({
+      // 해체
+      checklist: false,
+      tool: false,
+      method: false,
+      post: false,
+
+      // 세척
+      cleaningMethod: false,
+      cleaningStep: false,
+      cleaningDryingStep: false,
+      cleaningPost: false,
+
+      // 강화 처리
+      strengtheningMethod: false,
+      strengtheningMaterial: false,
+      strengtheningWork: false,
+      strengtheningPost: false,
+
+      // 접합
+      joiningMethod: false,
+      joiningMaterial: false,
+      joiningWork: false,
+      joiningPost: false,
+
+      // 복원
+      restorationMethod: false,
+      restorationMaterial: false,
+      restorationWork: false,
+      restorationPost: false,
+
+      // 색 맞춤
+      colorMatchingMethod: false,
+      colorMatchingMaterial: false,
+      colorMatchingWork: false,
+      colorMatchingPost: false,
     });
   };
 
   return (
     <DisassemblyContext.Provider
       value={{
-        // 해체
-        completed,
-        setCompleted,
+        taskId,
+        setTaskId,
 
-        // 처리 전 조사
         preInvestigation,
         setPreInvestigation,
 
-        // 세척
         cleaning,
         setCleaning,
 
-        // 강화 처리
-        strengthening,
-        setStrengthening,
+        checklist,
+        setChecklist,
 
-        // 전체 초기화
+        tools,
+        setTools,
+
+        methods,
+        setMethods,
+
+        completed,
+        setCompleted,
+
         resetCompleted,
       }}
     >

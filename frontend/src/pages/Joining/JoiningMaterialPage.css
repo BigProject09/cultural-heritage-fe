@@ -1,0 +1,98 @@
+.joining-material-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 40px 0 60px;
+}
+
+.detail-header {
+  max-width: 1400px;
+  margin: 0 auto 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vora-logo {
+  font-size: 52px;
+  font-weight: 800;
+  color: #2f64f5;
+}
+
+.nav-btn {
+  padding: 12px 34px;
+  border: none;
+  border-radius: 12px;
+  background: #2f64f5;
+  color: white;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nav-btn:hover {
+  background: #1d4fd8;
+}
+
+.material-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 35px;
+}
+
+.page-header h1 {
+  font-size: 42px;
+  margin-bottom: 15px;
+  color: #1f2937;
+}
+
+.page-header p {
+  font-size: 18px;
+  color: #666;
+}
+
+.info-card {
+  background: white;
+  border-radius: 18px;
+  padding: 30px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 15px rgba(0,0,0,.06);
+}
+
+.info-card h2 {
+  font-size: 25px;
+  color: #2f64f5;
+  margin-bottom: 22px;
+}
+
+.info-item {
+  margin-bottom: 18px;
+}
+
+.info-item strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.info-card ul {
+  padding-left: 22px;
+}
+
+.info-card li {
+  margin-bottom: 12px;
+}
+
+.warning-box {
+  padding: 20px;
+  background: #fff8e7;
+  border-left: 5px solid #f5b400;
+  border-radius: 10px;
+}
+
+.warning-box strong {
+  display: block;
+  margin-bottom: 10px;
+  color: #b26a00;
+}

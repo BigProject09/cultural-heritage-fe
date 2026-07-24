@@ -1,6 +1,7 @@
 import "./FlowRecommendationPage.css";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { startTask } from "../../services/conservationGuideApi";
 
 function FlowRecommendationPage() {
   const navigate = useNavigate();
@@ -35,10 +36,10 @@ function FlowRecommendationPage() {
     );
   };
 
-  // ⭐ 사용자가 최종 승인한 Flow
+  // 사용자가 최종 승인한 Flow
   const approvedFlow = steps.filter((step) => step.active);
 
-  // ⭐ 다음 버튼
+  // 다음 버튼
   const handleNext = () => {
     navigate("/pre-investigation", {
       state: {
@@ -46,6 +47,39 @@ function FlowRecommendationPage() {
       },
     });
   };
+
+  useEffect(() => {
+    const fetchFlow = async () => {
+      const artifactInfo = JSON.parse(
+        localStorage.getItem("artifactInfo")
+      );
+
+      if (!artifactInfo) return;
+
+      try {
+        const result = await startTask("task-001", {
+          taskName: "문화재 복원",
+          taskManager: "오서하",
+          relicInfo: artifactInfo,
+
+          // 이미지가 있으면 배열로 보내고,
+          // 없으면 빈 배열 전송
+          relicPhoto: artifactInfo.image
+            ? [artifactInfo.image]
+            : [],
+
+          // API 명세에 맞게 해체 Flow 전달
+          flow: ["disassembly"],
+        });
+
+        console.log("Flow 추천 결과:", result);
+      } catch (error) {
+        console.error("Flow 추천 실패:", error);
+      }
+    };
+
+    fetchFlow();
+  }, []);
 
   return (
     <div className="flow-page">
@@ -126,9 +160,7 @@ function FlowRecommendationPage() {
             >
 
               <div className="ai-step">
-
                 {step}
-
               </div>
 
               {index !== aiFlow.length - 1 && (

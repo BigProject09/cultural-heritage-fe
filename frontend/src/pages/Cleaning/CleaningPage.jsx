@@ -1,71 +1,38 @@
-import "./CleaningPage.css";
 import { useLocation, useNavigate } from "react-router-dom";
+
+import "./CleaningPage.css";
+
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
+import {
+  moveToNextStep,
+  moveToPreviousStep,
+} from "../../utils/flowNavigation";
+
 import { useDisassembly } from "../../context/DisassemblyContext";
-import { moveToNextStep } from "../../utils/flowNavigation";
 
 function CleaningPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { completed } = useDisassembly();
+
   const approvedFlow =
     location.state?.approvedFlow || [
       { id: 1, name: "처리 전 조사" },
-      { id: 2, name: "세척" },
-      { id: 3, name: "강화 처리" },
-      { id: 4, name: "접합" },
-      { id: 5, name: "복원" },
-      { id: 6, name: "처리 후 기록" },
+      { id: 2, name: "해체" },
+      { id: 3, name: "세척" },
+      { id: 4, name: "강화 처리" },
+      { id: 5, name: "접합" },
+      { id: 6, name: "복원" },
+      { id: 7, name: "색 맞춤" },
+      { id: 8, name: "처리 후 기록" },
     ];
 
-  const { cleaning, setCleaning } = useDisassembly();
-
-  const handlePrevious = () => {
-    navigate("/pre-investigation", {
-      state: {
-        approvedFlow,
-      },
-    });
-  };
-
-  const handleNext = () => {
-    if (
-      !cleaning.mission1 ||
-      !cleaning.mission2 ||
-      !cleaning.mission3
-    ) {
-      alert("세척 미션을 모두 완료하세요.");
-      return;
-    }
-
-    moveToNextStep(
-      navigate,
-      approvedFlow,
-      "세척"
-    );
-  };
-
-  const completeMission1 = () => {
-    setCleaning((prev) => ({
-      ...prev,
-      mission1: true,
-    }));
-  };
-
-  const completeMission2 = () => {
-    setCleaning((prev) => ({
-      ...prev,
-      mission2: true,
-    }));
-  };
-
-  const completeMission3 = () => {
-    setCleaning((prev) => ({
-      ...prev,
-      mission3: true,
-    }));
-  };
-
+  const allCompleted =
+    completed.cleaningMethod &&
+    completed.cleaningStep &&
+    completed.cleaningDryingStep &&
+    completed.cleaningPost;
   return (
     <div className="cleaning-page">
       <ProgressNavigator
@@ -73,83 +40,130 @@ function CleaningPage() {
         currentStep="세척"
       />
 
-      <div className="navigation">
-        <button className="nav-btn" onClick={handlePrevious}>
+      <div className="top-bar">
+        <button
+          className="nav-btn"
+          onClick={() =>
+            moveToPreviousStep(
+              navigate,
+              approvedFlow,
+              "세척"
+            )
+          }
+        >
           ← 이전
         </button>
 
-        <button className="nav-btn" onClick={handleNext}>
-          다음 →
+        <button
+          className="nav-btn"
+          disabled={!allCompleted}
+          onClick={() =>
+            moveToNextStep(
+              navigate,
+              approvedFlow,
+              "세척"
+            )
+          }
+        >
+          다음 단계 →
         </button>
       </div>
 
       <div className="cleaning-container">
-        <h1 className="cleaning-title">🧼 세척</h1>
 
-        <section className="mission-card">
-          <button
-            className={`mission-btn ${
-              cleaning.mission1 ? "completed" : ""
-            }`}
-            onClick={completeMission1}
-          >
-            <div className="mission-icon">
-              {cleaning.mission1 ? "✅" : "①"}
-            </div>
+        <div className="page-header">
+          <h1>AI 세척 작업</h1>
 
-            <h3>
-              {cleaning.mission1
-                ? "AI 추천 세척 방법 확인 완료"
-                : "AI 추천 세척 방법 확인"}
-            </h3>
+          <p>
+            아래 4개의 작업을 모두 완료하면
+            다음 단계로 이동할 수 있습니다.
+          </p>
+        </div>
 
-            <p>
-              AI가 추천한 세척 순서와 주의사항을 확인합니다.
-            </p>
-          </button>
+        {/* ① 세척법 선택 */}
+        <div
+          className="task-card"
+          onClick={() => navigate("/cleaning-method-select")}
+        >
+          <div className="task-icon">
+            {completed.cleaningMethod ? "✔" : "①"}
+          </div>
 
-          <button
-            className={`mission-btn ${
-              cleaning.mission2 ? "completed" : ""
-            }`}
-            onClick={completeMission2}
-          >
-            <div className="mission-icon">
-              {cleaning.mission2 ? "✅" : "②"}
-            </div>
-
-            <h3>
-              {cleaning.mission2
-                ? "세척 도구 선택 완료"
-                : "세척 도구 선택"}
-            </h3>
+          <div className="task-content">
+            <h2>세척법 선택</h2>
 
             <p>
-              유물에 적합한 세척 도구를 선택합니다.
+              물리적 세척과 화학적 세척 여부를 선택합니다.
+              선택 결과를 백엔드에 전송합니다.
             </p>
-          </button>
+          </div>
 
-          <button
-            className={`mission-btn ${
-              cleaning.mission3 ? "completed" : ""
-            }`}
-            onClick={completeMission3}
-          >
-            <div className="mission-icon">
-              {cleaning.mission3 ? "✅" : "③"}
-            </div>
+          <div className="task-arrow">→</div>
+        </div>
 
-            <h3>
-              {cleaning.mission3
-                ? "세척 작업 완료"
-                : "세척 작업 수행"}
-            </h3>
+        {/* ② 세척 단계별 작업 */}
+        <div
+          className="task-card"
+          onClick={() => navigate("/cleaning-step")}
+        >
+          <div className="task-icon">
+            {completed.cleaningStep ? "✔" : "②"}
+          </div>
+
+          <div className="task-content">
+            <h2>세척 단계별 작업</h2>
 
             <p>
-              세척 작업을 진행하고 결과를 확인합니다.
+              AI가 추천한 세척 단계를
+              순서대로 수행합니다.
             </p>
-          </button>
-        </section>
+          </div>
+
+          <div className="task-arrow">→</div>
+        </div>
+
+        {/* ③ 건조 단계별 작업 */}
+        <div
+          className="task-card"
+          onClick={() => navigate("/cleaning-drying-step")}
+        >
+          <div className="task-icon">
+            {completed.cleaningDryingStep ? "✔" : "③"}
+          </div>
+
+          <div className="task-content">
+            <h2>건조 단계별 작업</h2>
+
+            <p>
+              건조 작업을 진행하고
+              결과를 확인합니다.
+            </p>
+          </div>
+
+          <div className="task-arrow">→</div>
+        </div>
+
+        {/* ④ 작업 후 기록 */}
+        <div
+          className="task-card"
+          onClick={() => navigate("/cleaning-post")}
+        >
+          <div className="task-icon">
+            {completed.cleaningPost ? "✔" : "④"}
+          </div>
+
+          <div className="task-content">
+            <h2>작업 후 기록</h2>
+
+            <p>
+              세척 완료 사진과
+              전문가 작업 메모를 기록합니다.
+            </p>
+          </div>
+
+          <div className="task-arrow">→</div>
+        </div>
+
       </div>
     </div>
   );

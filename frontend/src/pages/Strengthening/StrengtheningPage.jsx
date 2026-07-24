@@ -1,8 +1,13 @@
 import "./StrengtheningPage.css";
+
 import { useLocation, useNavigate } from "react-router-dom";
+
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import { useDisassembly } from "../../context/DisassemblyContext";
-import { moveToNextStep } from "../../utils/flowNavigation";
+import {
+  moveToNextStep,
+  moveToPreviousStep,
+} from "../../utils/flowNavigation";
 
 function StrengtheningPage() {
   const navigate = useNavigate();
@@ -11,148 +16,186 @@ function StrengtheningPage() {
   const approvedFlow =
     location.state?.approvedFlow || [
       { id: 1, name: "처리 전 조사" },
-      { id: 2, name: "세척" },
-      { id: 3, name: "강화 처리" },
-      { id: 4, name: "접합" },
-      { id: 5, name: "복원" },
-      { id: 6, name: "처리 후 기록" },
+      { id: 2, name: "해체" },
+      { id: 3, name: "세척" },
+      { id: 4, name: "강화 처리" },
+      { id: 5, name: "접합" },
+      { id: 6, name: "복원" },
+      { id: 7, name: "색 맞춤" },
+      { id: 8, name: "처리 후 기록" },
     ];
 
-  const { strengthening, setStrengthening } = useDisassembly();
+  const { completed } = useDisassembly();
 
-  const handlePrevious = () => {
-    navigate("/cleaning", {
-      state: {
-        approvedFlow,
-      },
-    });
-  };
-
-  const handleNext = () => {
-    if (
-      !strengthening.mission1 ||
-      !strengthening.mission2 ||
-      !strengthening.mission3
-    ) {
-      alert("강화 처리 미션을 모두 완료하세요.");
-      return;
-    }
-
-    moveToNextStep(
-      navigate,
-      approvedFlow,
-      "강화 처리"
-    );
-  };
-
-  const completeMission1 = () => {
-    setStrengthening((prev) => ({
-      ...prev,
-      mission1: true,
-    }));
-  };
-
-  const completeMission2 = () => {
-    setStrengthening((prev) => ({
-      ...prev,
-      mission2: true,
-    }));
-  };
-
-  const completeMission3 = () => {
-    setStrengthening((prev) => ({
-      ...prev,
-      mission3: true,
-    }));
-  };
+  const allCompleted =
+    completed.strengtheningMethod &&
+    completed.strengtheningMaterial &&
+    completed.strengtheningWork &&
+    completed.strengtheningPost;
 
   return (
-    <div className="cleaning-page">
+    <div className="strengthening-page">
+
       <ProgressNavigator
         approvedFlow={approvedFlow}
         currentStep="강화 처리"
       />
 
-      <div className="navigation">
-        <button className="nav-btn" onClick={handlePrevious}>
+      <div className="top-bar">
+
+        <button
+          className="nav-btn"
+          onClick={() =>
+            moveToPreviousStep(
+              navigate,
+              approvedFlow,
+              "강화 처리"
+            )
+          }
+        >
           ← 이전
         </button>
 
-        <button className="nav-btn" onClick={handleNext}>
-          다음 →
+        <button
+          className="nav-btn"
+          disabled={!allCompleted}
+          onClick={() =>
+            moveToNextStep(
+              navigate,
+              approvedFlow,
+              "강화 처리"
+            )
+          }
+        >
+          다음 단계 →
         </button>
+
       </div>
 
-      <div className="cleaning-container">
-        <h1 className="cleaning-title">🧪 강화 처리</h1>
+      <div className="strengthening-container">
 
-        <section className="mission-card">
+        <div className="page-header">
+          <h1>AI 강화 처리</h1>
 
-          <button
-            className={`mission-btn ${
-              strengthening.mission1 ? "completed" : ""
-            }`}
-            onClick={completeMission1}
-          >
-            <div className="mission-icon">
-              {strengthening.mission1 ? "✅" : "①"}
-            </div>
+          <p>
+            아래 4개의 작업을 모두 완료하면
+            다음 단계로 이동할 수 있습니다.
+          </p>
+        </div>
 
-            <h3>
-              {strengthening.mission1
-                ? "AI 추천 강화 방법 확인 완료"
-                : "AI 추천 강화 방법 확인"}
-            </h3>
+        {/* 1 */}
 
-            <p>
-              AI가 유물 재질에 적합한 강화 방법을 추천합니다.
-            </p>
-          </button>
+        <div
+          className="task-card"
+          onClick={() => navigate("/strengthening-method")}
+        >
 
-          <button
-            className={`mission-btn ${
-              strengthening.mission2 ? "completed" : ""
-            }`}
-            onClick={completeMission2}
-          >
-            <div className="mission-icon">
-              {strengthening.mission2 ? "✅" : "②"}
-            </div>
+          <div className="task-icon">
+            {completed.strengtheningMethod ? "✔" : "①"}
+          </div>
 
-            <h3>
-              {strengthening.mission2
-                ? "강화제 선택 완료"
-                : "강화제 선택"}
-            </h3>
+          <div className="task-content">
+
+            <h2>AI 추천 강화 방법 확인</h2>
 
             <p>
-              AI가 추천한 강화제를 확인하고 적용합니다.
+              AI가 손상 상태를 분석하여
+              강화 처리 부위와 분무법·침지법을 추천합니다.
             </p>
-          </button>
 
-          <button
-            className={`mission-btn ${
-              strengthening.mission3 ? "completed" : ""
-            }`}
-            onClick={completeMission3}
-          >
-            <div className="mission-icon">
-              {strengthening.mission3 ? "✅" : "③"}
-            </div>
+          </div>
 
-            <h3>
-              {strengthening.mission3
-                ? "강화 처리 완료"
-                : "강화 처리 수행"}
-            </h3>
+          <div className="task-arrow">
+            →
+          </div>
+
+        </div>
+
+        {/* 2 */}
+
+        <div
+          className="task-card"
+          onClick={() => navigate("/strengthening-material")}
+        >
+
+          <div className="task-icon">
+            {completed.strengtheningMaterial ? "✔" : "②"}
+          </div>
+
+          <div className="task-content">
+
+            <h3>강화제 선택</h3>
 
             <p>
-              강화 처리를 수행하고 결과를 확인합니다.
+              AI가 추천한 Paraloid B72 등
+              강화제를 확인하고 선택합니다.
             </p>
-          </button>
 
-        </section>
+          </div>
+
+          <div className="arrow">
+            →
+          </div>
+
+        </div>
+
+        {/* 3 */}
+
+        <div
+          className="task-card"
+          onClick={() => navigate("/strengthening-work")}
+        >
+
+          <div className="task-icon">
+            {completed.strengtheningWork ? "✔" : "③"}
+          </div>
+
+          <div className="task-content">
+
+            <h3>강화 처리 수행</h3>
+
+            <p>
+              강화제를 도포하고
+              상온에서 충분히 자연 건조합니다.
+            </p>
+
+          </div>
+
+          <div className="arrow">
+            →
+          </div>
+
+        </div>
+
+        {/* 4 */}
+
+        <div
+          className="task-card"
+          onClick={() => navigate("/strengthening-post")}
+        >
+
+          <div className="task-icon">
+            {completed.strengtheningPost ? "✔" : "④"}
+          </div>
+
+          <div className="task-content">
+
+            <h3>작업 후 기록</h3>
+
+            <p>
+              작업 후 사진과 메모를 기록합니다.
+            </p>
+
+          </div>
+
+          <div className="arrow">
+            →
+          </div>
+
+        </div>
+
       </div>
+
     </div>
   );
 }

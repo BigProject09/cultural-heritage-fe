@@ -1,9 +1,15 @@
 import { useState } from "react";
+import { useDisassembly } from "../../context/DisassemblyContext";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./ArtifactRegisterPage.css";
 
 function ArtifactRegisterPage() {
   const navigate = useNavigate();
+  const {
+  setTaskId,
+  setChecklist,
+} = useDisassembly();
 
   const [image, setImage] = useState(null);
   const [artifactType, setArtifactType] = useState("도토기");
@@ -27,7 +33,47 @@ function ArtifactRegisterPage() {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+
+      const request = {
+    taskName: "보존처리 프로젝트",
+    taskManager: "오서하",
+
+    relicInfo: {
+      name: artifactType,
+      material: material,
+      period: "",
+      condition: "",
+    },
+
+    relicPhoto: [],
+
+    flow: ["disassembly"],
+  };
+
+  console.log("POST 요청 시작", request);
+
+  try {
+  const response = await axios.post(
+    "http://localhost:8080/tasks/1/start",
+    request
+  );
+
+  console.log("백엔드 응답:", response.data);
+
+  // Context에 저장
+  setTaskId("1");
+
+  setChecklist(
+    response.data.interrupt.ai_checklist.checklist
+  );
+
+} catch (error) {
+  console.error(error);
+  alert("백엔드 연결 실패");
+  return;
+}
+
   const artifactInfo = {
     image,
     artifactType,
@@ -255,11 +301,23 @@ function ArtifactRegisterPage() {
 
             <div className="soil-inputs">
 
-              <input placeholder="pH" />
+              <input
+  placeholder="pH"
+  value={soilPH}
+  onChange={(e) => setSoilPH(e.target.value)}
+/>
 
-              <input placeholder="Cl-" />
+<input
+  placeholder="Cl-"
+  value={soilCL}
+  onChange={(e) => setSoilCL(e.target.value)}
+/>
 
-              <input placeholder="기타" />
+<input
+  placeholder="기타"
+  value={soilEtc}
+  onChange={(e) => setSoilEtc(e.target.value)}
+/>
 
             </div>
 
@@ -270,9 +328,11 @@ function ArtifactRegisterPage() {
             <label>측정 장비</label>
 
             <textarea
-              rows="4"
-              placeholder="예) Galaxy S25 Ultra"
-            />
+  rows="4"
+  placeholder="예) Galaxy S25 Ultra"
+  value={device}
+  onChange={(e) => setDevice(e.target.value)}
+/>
 
           </div>
 

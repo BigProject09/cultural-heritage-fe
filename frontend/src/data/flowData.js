@@ -4,7 +4,7 @@ export const flowRoutes = {
   "처리 전 조사": "/pre-investigation",
   "해체": "/disassembly",
   "세척": "/cleaning",
-  "강화 처리": "/reinforcement",
+  "강화 처리": "/strengthening",
   "접합": "/joining",
   "복원": "/restoration",
   "색 맞춤": "/color-matching",

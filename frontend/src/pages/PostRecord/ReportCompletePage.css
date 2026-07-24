@@ -1,0 +1,52 @@
+.complete-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.complete-card {
+  width: 500px;
+
+  background: white;
+
+  padding: 60px;
+
+  border-radius: 20px;
+
+  text-align: center;
+
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+}
+
+.check {
+  font-size: 70px;
+  margin-bottom: 20px;
+}
+
+.complete-card h1 {
+  margin-bottom: 15px;
+}
+
+.complete-card p {
+  color: gray;
+  margin-bottom: 40px;
+}
+
+.complete-btn {
+  width: 100%;
+  padding: 15px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #2f6fed;
+  color: white;
+
+  font-size: 17px;
+  font-weight: bold;
+
+  cursor: pointer;
+}
