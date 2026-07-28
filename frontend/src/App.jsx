@@ -43,22 +43,22 @@ import CleaningPostPage from "./pages/Cleaning/CleaningPostPage";
 // 강화 처리
 import StrengtheningPage from "./pages/Strengthening/StrengtheningPage";
 import StrengtheningMethodPage from "./pages/Strengthening/StrengtheningMethodPage";
-import StrengtheningMaterialPage from "./pages/Strengthening/StrengtheningMaterialPage";
-import StrengtheningWorkPage from "./pages/Strengthening/StrengtheningWorkPage";
+import StrengtheningWettingPage from "./pages/Strengthening/StrengtheningWettingPage";
+import StrengtheningWettingResultPage from "./pages/Strengthening/StrengtheningWettingResultPage";
 import StrengtheningPostPage from "./pages/Strengthening/StrengtheningPostPage";
+import StrengtheningMaterialPage from "./pages/Strengthening/StrengtheningMaterialPage";
 
 // 접합
-import JoiningPage from "./pages/Joining/JoiningPage";
-import JoiningMethodPage from "./pages/Joining/JoiningMethodPage";
-import JoiningMaterialPage from "./pages/Joining/JoiningMaterialPage";
-import JoiningWorkPage from "./pages/Joining/JoiningWorkPage";
-import JoiningPostPage from "./pages/Joining/JoiningPostPage";
+import BondingPage from "./pages/Bonding/BondingPage";
+import BondingMethodPage from "./pages/Bonding/BondingMethodPage";
+import BondingMaterialPage from "./pages/Bonding/BondingMaterialPage";
+import BondingWorkPage from "./pages/Bonding/BondingWorkPage";
+import BondingPostPage from "./pages/Bonding/BondingPostPage";
 
 //복원
 import RestorationPage from "./pages/Restoration/RestorationPage";
 import RestorationMethodPage from "./pages/Restoration/RestorationMethodPage";
 import RestorationMaterialPage from "./pages/Restoration/RestorationMaterialPage";
-import RestorationWorkPage from "./pages/Restoration/RestorationWorkPage";
 import RestorationPostPage from "./pages/Restoration/RestorationPostPage";
 
 // 색 맞춤
@@ -220,19 +220,25 @@ function App() {
           />
 
           <Route
+            path="/strengthening-material"
+            element={<StrengtheningMaterialPage />}
+          />
+          
+          <Route
             path="/strengthening-method"
             element={<StrengtheningMethodPage />}
           />
 
           <Route
-            path="/strengthening-material"
-            element={<StrengtheningMaterialPage />}
+            path="/strengthening-wetting"
+            element={<StrengtheningWettingPage />}
           />
 
           <Route
-            path="/strengthening-work"
-            element={<StrengtheningWorkPage />}
+            path="/strengthening-wetting-result"
+            element={<StrengtheningWettingResultPage />}
           />
+
 
           <Route
             path="/strengthening-post"
@@ -241,30 +247,32 @@ function App() {
 
           {/* 접합 */}
           <Route
-            path="/joining"
-            element={<JoiningPage />}
+            path="/bonding"
+            element={<BondingPage />}
+          />
+
+          <Route path="/joining" 
+          element={<BondingPage />} />
+
+          <Route
+            path="/bonding-method"
+            element={<BondingMethodPage />}
           />
 
           <Route
-            path="/joining-method"
-            element={<JoiningMethodPage />}
+            path="/bonding-material"
+            element={<BondingMaterialPage />}
           />
 
           <Route
-            path="/joining-material"
-            element={<JoiningMaterialPage />}
+            path="/bonding-work"
+            element={<BondingWorkPage />}
           />
 
           <Route
-            path="/joining-work"
-            element={<JoiningWorkPage />}
+            path="/bonding-post"
+            element={<BondingPostPage />}
           />
-
-          <Route
-            path="/joining-post"
-            element={<JoiningPostPage />}
-          />
-
           {/* 복원 */}
           <Route
             path="/restoration"
@@ -282,15 +290,9 @@ function App() {
           />
 
           <Route
-            path="/restoration-work"
-            element={<RestorationWorkPage />}
-          />
-
-          <Route
             path="/restoration-post"
             element={<RestorationPostPage />}
           />
-
           {/* 색 맞춤 */}
           <Route
             path="/color-matching"

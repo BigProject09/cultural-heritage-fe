@@ -40,6 +40,27 @@ export function DisassemblyProvider({
   const [methods, setMethods] =
     useState([]);
 
+    // 세척 방법
+    const [cleaningMethod, setCleaningMethod] =
+      useState({
+        usePhysical: false,
+        useChemical: false,
+      });
+
+      const [cleaningAnalysis, setCleaningAnalysis] = useState(null);
+
+      const [cleaningGuide, setCleaningGuide] = useState(null);
+
+      const [dryingGuide, setDryingGuide] = useState(null);
+
+  // 강화 추천
+const [strengtheningRecommendation, setStrengtheningRecommendation] =
+  useState(null);
+
+// 강화 단계별 안내
+const [strengtheningGuide, setStrengtheningGuide] =
+  useState(null);
+
   // 각 단계 완료 여부
   const [completed, setCompleted] =
     useState({
@@ -55,11 +76,12 @@ export function DisassemblyProvider({
       cleaningDryingStep: false,
       cleaningPost: false,
 
-      // 강화 처리
-      strengtheningMethod: false,
-      strengtheningMaterial: false,
-      strengtheningWork: false,
-      strengtheningPost: false,
+     // 강화 처리
+    strengtheningMaterial: false,
+    strengtheningWetting: false,
+    strengtheningWettingResult: false,
+    strengtheningMethod: false,
+    strengtheningPost: false,
 
       // 접합
       joiningMethod: false,
@@ -67,7 +89,7 @@ export function DisassemblyProvider({
       joiningWork: false,
       joiningPost: false,
 
-      // 복원
+    // 복원
       restorationMethod: false,
       restorationMaterial: false,
       restorationWork: false,
@@ -98,6 +120,17 @@ export function DisassemblyProvider({
     setTools([]);
     setMethods([]);
 
+    setCleaningMethod({
+      usePhysical: false,
+      useChemical: false,
+    });
+
+  setCleaningAnalysis(null);
+  setCleaningGuide(null);
+  setDryingGuide(null);
+  setStrengtheningRecommendation(null);
+  setStrengtheningGuide(null);
+
     setCompleted({
       // 해체
       checklist: false,
@@ -112,10 +145,11 @@ export function DisassemblyProvider({
       cleaningPost: false,
 
       // 강화 처리
-      strengtheningMethod: false,
-      strengtheningMaterial: false,
-      strengtheningWork: false,
-      strengtheningPost: false,
+    strengtheningMaterial: false,
+    strengtheningWetting: false,
+    strengtheningWettingResult: false,
+    strengtheningMethod: false,
+    strengtheningPost: false,
 
       // 접합
       joiningMethod: false,
@@ -123,10 +157,9 @@ export function DisassemblyProvider({
       joiningWork: false,
       joiningPost: false,
 
-      // 복원
-      restorationMethod: false,
+     // 복원
       restorationMaterial: false,
-      restorationWork: false,
+      restorationMethod: false,
       restorationPost: false,
 
       // 색 맞춤
@@ -155,11 +188,29 @@ export function DisassemblyProvider({
         tools,
         setTools,
 
-        methods,
-        setMethods,
+      methods,
+      setMethods,
 
-        completed,
-        setCompleted,
+      cleaningMethod,
+      setCleaningMethod,
+
+      cleaningAnalysis,
+      setCleaningAnalysis,
+
+      cleaningGuide,
+      setCleaningGuide,
+
+      dryingGuide,
+      setDryingGuide,
+
+     strengtheningRecommendation,
+      setStrengtheningRecommendation,
+
+      strengtheningGuide,
+      setStrengtheningGuide,
+
+      completed,
+      setCompleted,
 
         resetCompleted,
       }}

@@ -20,6 +20,11 @@ function DisassemblyPostPage() {
   const fileInputRef = useRef(null);
 
   const handleComplete = async () => {
+     if (!taskId) {
+      alert("taskId가 없습니다.");
+      return;
+    }
+
     const request = {
      resume: {
         memo,
@@ -78,7 +83,7 @@ function DisassemblyPostPage() {
         <h2>📷 작업 후 사진</h2>
 
        <p className="card-description">
-        작업 중 특이사항이나 추가 내용을 자유롭게 작성해주세요.
+        작업 완료 후 촬영한 사진을 등록해주세요.
       </p>
 
         <input

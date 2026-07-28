@@ -1,55 +1,81 @@
-import axios from "axios";
+import { resumeTask } from "../../services/conservationGuideApi";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDisassembly } from "../../context/DisassemblyContext";
-
 import "./CleaningDryingStepPage.css";
+import { useDisassembly } from "../../context/DisassemblyContext";
 
 function CleaningDryingStepPage() {
   const navigate = useNavigate();
 
   const {
-    taskId,
-    setCompleted,
-  } = useDisassembly();
+  taskId,
+  setCompleted,
+  dryingGuide,
+} = useDisassembly();
 
+
+  const [steps, setSteps] = useState([]);
+
+  useEffect(() => {
+    if (dryingGuide) {
+      setSteps(
+        (dryingGuide.steps ?? []).map((step) => ({
+          ...step,
+          approved: false,
+        }))
+      );
+    }
+ }, [dryingGuide]);
+
+  const [showWarning, setShowWarning] = useState(false);
   const handleComplete = async () => {
+    const completedStepIds = steps
+      .filter((step) => step.approved)
+      .map((step) => step.id);
+
+    if (completedStepIds.length === 0) {
+      alert("최소 1개의 단계를 완료해주세요.");
+      return;
+    }
+
     const request = {
       resume: {
-        completed_step_ids: [],
+        completed_step_ids: completedStepIds,
       },
     };
 
-    try {
-      const response = await axios.post(
-        `http://localhost:8080/tasks/${taskId}/resume`,
-        request
-      );
+    console.log(request);
 
-      console.log("✅ 백엔드 응답:", response.data);
+    try {
+    const response = await resumeTask(taskId, request);
+
+      console.log(response);
 
       setCompleted((prev) => ({
         ...prev,
         cleaningDryingStep: true,
       }));
 
-      navigate("/cleaning-post");
+      navigate("/cleaning");
+
     } catch (error) {
-      console.error("❌ 에러:", error);
+      console.error(error);
       alert("건조 단계 저장 실패");
     }
   };
 
   return (
-    <div className="cleaning-drying-step-page">
-      <div className="detail-header">
+    <div className="method-page">
+      {/* 상단 */}
+      <div className="top-bar">
         <button
           className="nav-btn"
-          onClick={() => navigate("/cleaning-step")}
+          onClick={() => navigate("/cleaning")}
         >
           ← 이전
         </button>
 
-        <h1 className="vora-logo">VORA</h1>
+        <div className="logo">VORA</div>
 
         <button
           className="nav-btn"
@@ -59,29 +85,114 @@ function CleaningDryingStepPage() {
         </button>
       </div>
 
-      <div className="work-container">
-        <div className="page-header">
-          <h1>🌬️ 건조 작업</h1>
-          <p>AI가 추천한 건조 절차를 진행합니다.</p>
+      {/* 제목 */}
+      <div className="page-header">
+        <h1>AI 건조 단계별 작업</h1>
+        <p>AI가 추천한 건조 작업입니다.</p>
+      </div>
+
+      {/* 메인 카드 */}
+      <div className="method-card">
+        {/* 상단 영역 */}
+        <div className="method-top">
+
+          {/* AI 요약 */}
+          <div className="summary-card">
+            <h2>AI 요약</h2>
+           <p>
+  {dryingGuide?.summary || "AI 건조 단계 정보를 불러오는 중입니다."}
+</p>
+          </div>
         </div>
 
-        <div className="info-card">
-          <h2>건조 절차</h2>
-          <p>
-            세척이 완료된 유물을 통풍이 잘 되는 환경에서 자연 건조합니다.
-            직사광선과 고온 환경은 피하고 충분히 건조된 후 다음 작업을 진행합니다.
-          </p>
-        </div>
-
-        <div className="warning-box">
-          <strong>⚠ 주의사항</strong>
+        {/* 추천 이유 */}
+        <div className="reason-card">
+          <h3>추천 이유</h3>
 
           <ul>
-            <li>직사광선을 피합니다.</li>
-            <li>강한 열풍을 사용하지 않습니다.</li>
-            <li>완전히 건조될 때까지 이동을 최소화합니다.</li>
+            {dryingGuide?.reasons?.map((reason) => (
+              <li key={reason}>✔ {reason}</li>
+            ))}
           </ul>
         </div>
+
+        {/* 추천 건조 방법 */}
+        <div className="step-title">
+          <span>추천 건조 방법</span>
+
+          <button
+            className="warning-btn"
+            onClick={() => setShowWarning(true)}
+          >
+            ⚠ 주의사항
+          </button>
+        </div>
+
+        {/* 주의사항 모달 */}
+        {showWarning && (
+          <div className="warning-modal">
+            <div className="warning-content">
+              <h2>⚠ 주의사항</h2>
+
+              <ul>
+              <li>
+                {dryingGuide?.overall_caution || "주의사항 정보 없음"}
+              </li>
+              </ul>
+
+              <button
+                className="close-btn"
+                onClick={() => setShowWarning(false)}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 단계 목록 */}
+        {steps?.map((step, index) => (
+          <div
+            key={step.id}
+            className="step-card"
+          >
+            <div className="step-number">
+              {index + 1}
+            </div>
+
+            <div className="step-info">
+              <h3>
+                {step.label || step.title}
+              </h3>
+
+              <p>
+                {step.caution || step.description}
+              </p>
+            </div>
+            <div className="step-actions">
+              
+              <button
+                className="approve-btn"
+                onClick={() => {
+                  setSteps((prev) =>
+                    prev.map((s) =>
+                      s.id === step.id
+                        ? {
+                            ...s,
+                            approved: !s.approved,
+                          }
+                        : s
+                    )
+                  );
+                }}
+              >
+                {step.approved
+                  ? "✔ 완료"
+                  : "완료"}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

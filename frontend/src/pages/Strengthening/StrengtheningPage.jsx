@@ -25,23 +25,30 @@ function StrengtheningPage() {
       { id: 8, name: "처리 후 기록" },
     ];
 
+
   const { completed } = useDisassembly();
 
-  const allCompleted =
-    completed.strengtheningMethod &&
-    completed.strengtheningMaterial &&
-    completed.strengtheningWork &&
-    completed.strengtheningPost;
+
+const allCompleted =
+  completed.strengtheningMaterial &&
+  completed.strengtheningWetting &&
+  completed.strengtheningWettingResult &&
+  completed.strengtheningMethod &&
+  completed.strengtheningPost;
+
 
   return (
     <div className="strengthening-page">
+
 
       <ProgressNavigator
         approvedFlow={approvedFlow}
         currentStep="강화 처리"
       />
 
+
       <div className="top-bar">
+
 
         <button
           className="nav-btn"
@@ -55,6 +62,7 @@ function StrengtheningPage() {
         >
           ← 이전
         </button>
+
 
         <button
           className="nav-btn"
@@ -70,48 +78,28 @@ function StrengtheningPage() {
           다음 단계 →
         </button>
 
+
       </div>
+
+
 
       <div className="strengthening-container">
 
+
         <div className="page-header">
+
           <h1>AI 강화 처리</h1>
 
           <p>
-            아래 4개의 작업을 모두 완료하면
+            아래 5개의 작업을 모두 완료하면
             다음 단계로 이동할 수 있습니다.
           </p>
-        </div>
-
-        {/* 1 */}
-
-        <div
-          className="task-card"
-          onClick={() => navigate("/strengthening-method")}
-        >
-
-          <div className="task-icon">
-            {completed.strengtheningMethod ? "✔" : "①"}
-          </div>
-
-          <div className="task-content">
-
-            <h2>AI 추천 강화 방법 확인</h2>
-
-            <p>
-              AI가 손상 상태를 분석하여
-              강화 처리 부위와 분무법·침지법을 추천합니다.
-            </p>
-
-          </div>
-
-          <div className="task-arrow">
-            →
-          </div>
 
         </div>
 
-        {/* 2 */}
+
+
+        {/* 1. 강화제 선택 */}
 
         <div
           className="task-card"
@@ -119,47 +107,121 @@ function StrengtheningPage() {
         >
 
           <div className="task-icon">
-            {completed.strengtheningMaterial ? "✔" : "②"}
+            {completed.strengtheningMaterial ? "✔" : "①"}
           </div>
+
 
           <div className="task-content">
 
-            <h3>강화제 선택</h3>
+            <h2>강화제 추천</h2>
 
             <p>
-              AI가 추천한 Paraloid B72 등
-              강화제를 확인하고 선택합니다.
+              AI가 유물의 재질과 손상 상태를 분석하여
+              적합한 강화제와 용매를 추천합니다.
             </p>
 
           </div>
 
-          <div className="arrow">
+
+          <div className="task-arrow">
             →
           </div>
 
         </div>
 
-        {/* 3 */}
+
+
+
+        {/* 2. 습윤 테스트 */}
 
         <div
           className="task-card"
-          onClick={() => navigate("/strengthening-work")}
+          onClick={() => navigate("/strengthening-wetting")}
         >
 
           <div className="task-icon">
-            {completed.strengtheningWork ? "✔" : "③"}
+            {completed.strengtheningWetting ? "✔" : "②"}
           </div>
+
 
           <div className="task-content">
 
-            <h3>강화 처리 수행</h3>
+            <h3>습윤 효과 테스트</h3>
 
             <p>
-              강화제를 도포하고
-              상온에서 충분히 자연 건조합니다.
+              강화제 적용 전후 사진을 비교하여
+              색 변화 여부를 분석합니다.
             </p>
 
           </div>
+
+
+          <div className="arrow">
+            →
+          </div>
+
+
+        </div>
+
+
+
+
+
+        {/* 3. 습윤 결과 확인 */}
+
+        <div
+          className="task-card"
+          onClick={() =>
+            navigate("/strengthening-wetting-result")
+          }
+        >
+
+          <div className="task-icon">
+            {completed.strengtheningWettingResult ? "✔" : "③"}
+          </div>
+
+
+          <div className="task-content">
+
+            <h3>습윤 테스트 결과 확인</h3>
+
+            <p>
+              AI 색 변화 분석 결과를 확인하고
+              강화 처리 진행 여부를 결정합니다.
+            </p>
+
+          </div>
+
+
+          <div className="arrow">
+            →
+          </div>
+
+
+        </div>
+        {/* 4. 단계별 강화 작업 */}
+
+        <div
+          className="task-card"
+          onClick={() => navigate("/strengthening-method")}
+        >
+
+          <div className="task-icon">
+            {completed.strengtheningMethod ? "✔" : "④"}
+          </div>
+
+
+          <div className="task-content">
+
+            <h3>단계별 강화 작업</h3>
+
+            <p>
+              AI가 추천한 강화 처리 절차를 확인하고
+              단계별 작업을 수행합니다.
+            </p>
+
+          </div>
+
 
           <div className="arrow">
             →
@@ -167,7 +229,7 @@ function StrengtheningPage() {
 
         </div>
 
-        {/* 4 */}
+        {/* 5. 작업 후 기록 */}
 
         <div
           className="task-card"
@@ -175,29 +237,35 @@ function StrengtheningPage() {
         >
 
           <div className="task-icon">
-            {completed.strengtheningPost ? "✔" : "④"}
+            {completed.strengtheningPost ? "✔" : "⑤"}
           </div>
+
 
           <div className="task-content">
 
             <h3>작업 후 기록</h3>
 
             <p>
-              작업 후 사진과 메모를 기록합니다.
+              강화 처리 후 사진과 메모를 기록합니다.
             </p>
 
           </div>
+
 
           <div className="arrow">
             →
           </div>
 
+
         </div>
 
+
       </div>
+
 
     </div>
   );
 }
+
 
 export default StrengtheningPage;

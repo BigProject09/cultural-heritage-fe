@@ -1,46 +1,78 @@
-import axios from "axios";
+import { resumeTask } from "../../services/conservationGuideApi";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDisassembly } from "../../context/DisassemblyContext";
-
 import "./CleaningStepPage.css";
+import { useDisassembly } from "../../context/DisassemblyContext";
 
 function CleaningStepPage() {
   const navigate = useNavigate();
- const {
-    taskId,
-    setCompleted,
-  } = useDisassembly();
 
+const {
+  taskId,
+  completed,
+  setCompleted,
+  cleaningGuide,
+  setDryingGuide,
+} = useDisassembly();
+
+  const [steps, setSteps] = useState([]);
+
+  useEffect(() => {
+    if (cleaningGuide) {
+      setSteps(
+        (cleaningGuide.steps ?? []).map((step) => ({
+          ...step,
+          approved: false,
+        }))
+      );
+    }
+  }, [cleaningGuide]);
+
+  const [showWarning, setShowWarning] = useState(false);
   const handleComplete = async () => {
-  const request = {
-    resume: {
-      completed_step_ids: selectedStepIds
-    },
+    const completedStepIds = steps
+      .filter((step) => step.approved)
+      .map((step) => step.id);
+
+    if (completedStepIds.length === 0) {
+      alert("최소 1개의 단계를 완료해주세요.");
+      return;
+    }
+
+    const request = {
+      resume: {
+        completed_step_ids: completedStepIds,
+      },
+    };
+
+    console.log(request);
+
+    try {
+      const response = await resumeTask(taskId, request);
+
+      console.log(response);
+
+      // 건조 단계 가이드 저장
+      if (response.interrupt?.ai_drying_guide) {
+        setDryingGuide(response.interrupt.ai_drying_guide);
+      }
+
+      setCompleted((prev) => ({
+        ...prev,
+        cleaningStep: true,
+      }));
+
+      navigate("/cleaning");
+    } catch (error) {
+      console.error(error);
+      alert("세척 단계 저장 실패");
+    }
   };
 
-  try {
-    const response = await axios.post(
-      `http://localhost:8080/tasks/${taskId}/resume`,
-      request
-    );
-
-    console.log("✅ 백엔드 응답:", response.data);
-
-    setCompleted((prev) => ({
-      ...prev,
-      cleaningStep: true,
-    }));
-
-    navigate("/cleaning-drying-step");
-  } catch (error) {
-    console.error("❌ 에러:", error);
-    alert("세척 단계 저장 실패");
-  }
-};
-
   return (
-    <div className="cleaning-step-page">
-      <div className="detail-header">
+    <div className="method-page">
+      {/* 상단 */}
+      <div className="top-bar">
         <button
           className="nav-btn"
           onClick={() => navigate("/cleaning")}
@@ -48,7 +80,7 @@ function CleaningStepPage() {
           ← 이전
         </button>
 
-        <h1 className="vora-logo">VORA</h1>
+        <div className="logo">VORA</div>
 
         <button
           className="nav-btn"
@@ -58,60 +90,114 @@ function CleaningStepPage() {
         </button>
       </div>
 
-      <div className="work-container">
+      {/* 제목 */}
+      <div className="page-header">
+        <h1>AI 세척 단계별 작업</h1>
+        <p>AI가 추천한 세척 작업입니다.</p>
+      </div>
 
-        <div className="page-header">
-          <h1>🧼 세척 작업 수행</h1>
-          <p>
-            AI가 추천한 절차에 따라 세척 작업을 진행합니다.
-          </p>
+      {/* 메인 카드 */}
+      <div className="method-card">
+        {/* 상단 영역 */}
+        <div className="method-top">
+
+          {/* AI 요약 */}
+          <div className="summary-card">
+            <h2>AI 요약</h2>
+            <p>
+              {cleaningGuide?.summary || "AI 세척 단계 정보를 불러오는 중입니다."}
+            </p>
+          </div>
         </div>
 
-        <div className="info-card">
-          <h2>1단계. 표면 먼지 제거</h2>
-
-          <p>
-            부드러운 붓을 이용하여 표면의 먼지와 작은 이물질을 제거합니다.
-          </p>
-        </div>
-
-        <div className="info-card">
-          <h2>2단계. 국소 오염 제거</h2>
-
-          <p>
-            면봉에 세척제를 소량 묻혀 오염 부위를 부드럽게 닦아냅니다.
-          </p>
-        </div>
-
-        <div className="info-card">
-          <h2>3단계. 고착 오염 제거</h2>
-
-          <p>
-            제거되지 않는 오염은 대나무 스틱을 이용하여
-            최소한의 힘으로 제거합니다.
-          </p>
-        </div>
-
-        <div className="info-card">
-          <h2>4단계. 건조</h2>
-
-          <p>
-            세척 후 자연 건조하며,
-            직사광선과 고온 환경은 피합니다.
-          </p>
-        </div>
-
-        <div className="warning-box">
-          <strong>⚠ 작업 시 주의사항</strong>
+        {/* 추천 이유 */}
+        <div className="reason-card">
+          <h3>추천 이유</h3>
 
           <ul>
-            <li>유물 표면을 강하게 문지르지 않습니다.</li>
-            <li>균열 부위에는 힘을 가하지 않습니다.</li>
-            <li>세척제는 필요한 만큼만 사용합니다.</li>
-            <li>이상 발견 시 즉시 작업을 중단합니다.</li>
+            {cleaningGuide?.reasons?.map((reason) => (
+              <li key={reason}>✔ {reason}</li>
+            ))}
           </ul>
         </div>
 
+        {/* 추천 세척 방법 */}
+        <div className="step-title">
+          <span>추천 세척 방법</span>
+
+          <button
+            className="warning-btn"
+            onClick={() => setShowWarning(true)}
+          >
+            ⚠ 주의사항
+          </button>
+        </div>
+
+        {/* 주의사항 모달 */}
+        {showWarning && (
+          <div className="warning-modal">
+            <div className="warning-content">
+              <h2>⚠ 주의사항</h2>
+
+              <ul>
+                <li>
+                  {cleaningGuide?.overall_caution || "주의사항 정보 없음"}
+                </li>
+              </ul>
+
+              <button
+                className="close-btn"
+                onClick={() => setShowWarning(false)}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 단계 목록 */}
+        {steps?.map((step, index) => (
+          <div
+            key={step.id}
+            className="step-card"
+          >
+            <div className="step-number">
+              {index + 1}
+            </div>
+
+            <div className="step-info">
+              <h3>
+                {step.label || step.title}
+              </h3>
+
+              <p>
+                {step.caution || step.description}
+              </p>
+            </div>
+            <div className="step-actions">
+              
+              <button
+                className="approve-btn"
+                onClick={() => {
+                  setSteps((prev) =>
+                    prev.map((s) =>
+                      s.id === step.id
+                        ? {
+                            ...s,
+                            approved: !s.approved,
+                          }
+                        : s
+                    )
+                  );
+                }}
+              >
+                {step.approved
+                  ? "✔ 완료"
+                  : "완료"}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

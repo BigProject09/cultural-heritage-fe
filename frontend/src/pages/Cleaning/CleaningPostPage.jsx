@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import { resumeTask } from "../../services/conservationGuideApi";
 import { useNavigate } from "react-router-dom";
 import { useDisassembly } from "../../context/DisassemblyContext";
 
@@ -8,10 +8,11 @@ import "./CleaningPostPage.css";
 function CleaningPostPage() {
   const navigate = useNavigate();
 
-  const {
-    taskId,
-    setCompleted,
-  } = useDisassembly();
+const {
+  taskId,
+  setStrengtheningRecommendation,
+  setCompleted,
+} = useDisassembly();
 
   const [memo, setMemo] = useState("");
 
@@ -24,12 +25,16 @@ function CleaningPostPage() {
     };
 
     try {
-      const response = await axios.post(
-        `http://localhost:8080/tasks/${taskId}/resume`,
-        request
-      );
+      const response = await resumeTask(taskId, request);
 
-      console.log("✅ 백엔드 응답:", response.data);
+      console.log("✅ 백엔드 응답:", response);
+
+      // 강화 처리 AI 추천 저장
+      if (response.interrupt?.ai_recommendation) {
+        setStrengtheningRecommendation(
+          response.interrupt.ai_recommendation
+        );
+      }
 
       setCompleted((prev) => ({
         ...prev,
@@ -37,6 +42,7 @@ function CleaningPostPage() {
       }));
 
       navigate("/cleaning");
+      
     } catch (error) {
       console.error("❌ 에러:", error);
       alert("작업 후 기록 저장 실패");

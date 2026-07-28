@@ -17,9 +17,16 @@ function DisassemblyChecklistPage() {
     setTools,
   } = useDisassembly();
 
+  console.log("taskId =", taskId);
+
   const [checkedIds, setCheckedIds] = useState([]);
 
   const handleComplete = async () => {
+    if (!taskId) {
+      alert("taskId가 없습니다.");
+      return;
+    }
+
     console.log("taskId =", taskId);
     console.log("checkedIds =", checkedIds);
 
@@ -38,15 +45,12 @@ function DisassemblyChecklistPage() {
 
       // ⭐ ai_tools 구조 확인
       console.log("ai_tools");
-      console.log(response.data.interrupt.ai_tools);
-      console.log(
-        Object.keys(response.data.interrupt.ai_tools)
-      );
+      console.log(response.data.interrupt?.ai_tools);
 
-      // 일단 저장
-      setTools(
-        response.data.interrupt.ai_tools.recommended_tools
-      );
+    const tools =
+      response.data.interrupt?.ai_tools?.recommended_tools ?? [];
+
+    setTools(tools);
 
       // 체크리스트 완료
       setCompleted({
@@ -55,7 +59,7 @@ function DisassemblyChecklistPage() {
       });
 
       // 저장 후 해체 메인으로 이동
-      navigate("/disassembly");
+      navigate("/disassembly-tool");
 
     } catch (error) {
       console.error(error);

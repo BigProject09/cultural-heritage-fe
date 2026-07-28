@@ -2,6 +2,7 @@ import "./FlowRecommendationPage.css";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { startTask } from "../../services/conservationGuideApi";
+import { useDisassembly } from "../../context/DisassemblyContext";
 
 function FlowRecommendationPage() {
   const navigate = useNavigate();
@@ -17,14 +18,15 @@ function FlowRecommendationPage() {
     { id: 8, name: "처리 후 기록", active: true },
   ]);
 
-  const aiFlow = [
-    "처리 전 조사",
-    "세척",
-    "강화 처리",
-    "접합",
-    "복원",
-    "처리 후 기록",
-  ];
+  const [aiFlow, setAiFlow] = useState([]);
+ const {
+  setTaskId,
+  setChecklist,
+  setCleaningMethod,
+  setCleaningAnalysis,
+  setCleaningGuide,
+  setDryingGuide,
+} = useDisassembly();
 
   const toggleStep = (id) => {
     setSteps((prev) =>
@@ -49,16 +51,28 @@ function FlowRecommendationPage() {
   };
 
   useEffect(() => {
-    const fetchFlow = async () => {
-      const artifactInfo = JSON.parse(
-        localStorage.getItem("artifactInfo")
-      );
+  const fetchFlow = async () => {
 
-      if (!artifactInfo) return;
+    console.log("① fetchFlow 시작");
+
+    const artifactInfo = JSON.parse(
+      localStorage.getItem("artifactInfo")
+    );
+
+    console.log("② artifactInfo =", artifactInfo);
+
+    if (!artifactInfo) {
+      console.log("③ artifactInfo가 없어서 종료");
+      return;
+    }
+
+    console.log("④ API 호출 직전");
+
+    const taskId = `task-${Date.now()}`;
 
       try {
-        const result = await startTask("task-001", {
-          taskName: "문화재 복원",
+          const result = await startTask(taskId, {
+            taskName: "문화재 복원",
           taskManager: "오서하",
           relicInfo: artifactInfo,
 
@@ -69,13 +83,64 @@ function FlowRecommendationPage() {
             : [],
 
           // API 명세에 맞게 해체 Flow 전달
-          flow: ["disassembly"],
+          flow: [
+            "disassembly",
+            "cleaning",
+            "reinforcement",
+            "bonding",
+            "restoration",
+            "post_record",
+          ],
         });
 
-        console.log("Flow 추천 결과:", result);
-      } catch (error) {
-        console.error("Flow 추천 실패:", error);
+      console.log("API 응답 =", result);
+      console.log("생성한 taskId =", taskId);
+
+      console.log("Flow 추천 결과:", result);
+      console.log("response =", response);
+
+      console.log("result =", result);
+      console.log("taskId =", taskId);
+
+      setTaskId(taskId);
+      console.log("Context 저장 =", taskId);
+
+      console.log("setTaskId =", taskId);
+      console.log("interrupt 확인:", result.interrupt);
+      if (result.interrupt?.ai_checklist?.checklist) {
+        setChecklist(result.interrupt.ai_checklist.checklist);
       }
+
+      // 세척 AI 데이터 저장
+      if (result.interrupt?.cleaning_method) {
+        setCleaningMethod(result.interrupt.cleaning_method);
+      }
+
+      if (result.interrupt?.cleaning_analysis) {
+        setCleaningAnalysis(result.interrupt.cleaning_analysis);
+      }
+
+      if (result.interrupt?.cleaning_guide) {
+        setCleaningGuide(result.interrupt.cleaning_guide);
+      }
+
+      if (result.interrupt?.drying_guide) {
+        setDryingGuide(result.interrupt.drying_guide);
+      }
+
+      console.log(
+        "체크리스트:",
+        result.interrupt?.ai_checklist?.checklist
+      );
+      
+        // 추천 Flow 저장
+        setAiFlow(result.flow || result.recommendedFlow || []);
+
+    } catch (error) {
+  console.error("Flow 추천 실패:", error);
+  console.log("error.response =", error.response);
+  console.log("error.data =", error.response?.data);
+}
     };
 
     fetchFlow();

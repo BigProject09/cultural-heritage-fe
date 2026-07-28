@@ -2,19 +2,19 @@ import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import "./StrengtheningMethodPage.css";
+import "./BondingMethodPage.css";
 
 import { useDisassembly } from "../../context/DisassemblyContext";
 
 
-function StrengtheningMethodPage() {
+function BondingMethodPage() {
 
   const navigate = useNavigate();
 
 
   const {
     taskId,
-    strengtheningGuide,
+    methods,
     completed,
     setCompleted,
   } = useDisassembly();
@@ -22,44 +22,38 @@ function StrengtheningMethodPage() {
 
 
   const {
-    steps: strengtheningSteps = [],
+    steps: bondingSteps = [],
     overall_caution = "",
-  } = strengtheningGuide || {};
+  } = methods || {};
 
 
 
   const [steps, setSteps] = useState(
-
-    strengtheningSteps.map((step)=>({
+    bondingSteps.map((step) => ({
       ...step,
-      approved:false,
+      approved: false,
     }))
-
   );
 
 
 
-  const [showWarning,setShowWarning] =
+  const [showWarning, setShowWarning] =
     useState(false);
 
 
 
+  const handleDelete = (stepId) => {
 
-  // 삭제
-  const handleDelete = (stepId)=>{
+    const isDelete = window.confirm(
+      "이 단계를 삭제하시겠습니까?"
+    );
 
-    const confirmDelete =
-      window.confirm(
-        "이 단계를 삭제하시겠습니까?"
-      );
-
-
-    if(!confirmDelete) return;
+    if (!isDelete) return;
 
 
-    setSteps((prev)=>
+    setSteps((prev) =>
       prev.filter(
-        (step)=>step.id !== stepId
+        (step) => step.id !== stepId
       )
     );
 
@@ -67,29 +61,23 @@ function StrengtheningMethodPage() {
 
 
 
+  const handleAddStep = () => {
 
-  // 추가
-  const handleAddStep = ()=>{
-
-    const title =
-      window.prompt(
-        "단계명을 입력하세요."
-      );
+    const title = window.prompt(
+      "단계명을 입력하세요."
+    );
 
 
-    if(!title || title.trim()==="")
-      return;
+    if (!title || title.trim() === "") return;
 
 
 
-    const caution =
-      window.prompt(
-        "단계 설명을 입력하세요."
-      );
+    const description = window.prompt(
+      "단계 설명을 입력하세요."
+    );
 
 
-    if(!caution || caution.trim()==="")
-      return;
+    if (!description || description.trim() === "") return;
 
 
 
@@ -98,10 +86,10 @@ function StrengtheningMethodPage() {
       ...prev,
 
       {
-        id:`strengthening-step-${Date.now()}`,
-        order:prev.length+1,
+        id:`bonding-step-${Date.now()}`,
+        order:prev.length + 1,
         label:title,
-        caution,
+        caution:description,
         approved:false,
       }
 
@@ -111,68 +99,48 @@ function StrengtheningMethodPage() {
 
 
 
-
-  // 수정
   const handleEdit = (stepId)=>{
 
-
-    const step =
-      steps.find(
-        (s)=>s.id===stepId
-      );
+    const step = steps.find(
+      (s)=>s.id===stepId
+    );
 
 
     if(!step) return;
 
 
 
-    const title =
-      window.prompt(
-        "단계명을 수정하세요.",
-        step.label
-      );
+    const title = window.prompt(
+      "단계명을 수정하세요.",
+      step.label
+    );
 
 
-    if(!title) return;
+    const description = window.prompt(
+      "단계 설명을 수정하세요.",
+      step.caution
+    );
 
 
-
-    const caution =
-      window.prompt(
-        "주의사항을 수정하세요.",
-        step.caution
-      );
-
-
-    if(!caution) return;
-
+    if(!title || !description) return;
 
 
 
     setSteps((prev)=>
-
       prev.map((s)=>
-
         s.id===stepId
-
         ?
-
         {
           ...s,
           label:title,
-          caution,
+          caution:description,
         }
-
         :
-
         s
-
       )
-
     );
 
   };
-
 
 
 
@@ -189,33 +157,20 @@ function StrengtheningMethodPage() {
 
 
 
-
     const completedStepIds =
-
       steps
-
-      .filter(
-        (step)=>step.approved
-      )
-
-      .map(
-        (step)=>step.id
-      );
-
-
+      .filter((step)=>step.approved)
+      .map((step)=>step.id);
 
 
 
     if(completedStepIds.length===0){
 
-      alert(
-        "최소 1개의 단계를 승인해주세요."
-      );
+      alert("최소 1개의 단계를 승인해주세요.");
 
       return;
 
     }
-
 
 
 
@@ -227,36 +182,27 @@ function StrengtheningMethodPage() {
         `http://localhost:8080/tasks/${taskId}/resume`,
 
         {
-
           resume:{
-
             completed_step_ids:
               completedStepIds
-
           }
-
         }
 
       );
 
 
 
+      setCompleted({
 
-      setCompleted((prev)=>({
+        ...completed,
 
-        ...prev,
+        bondingMethod:true,
 
-        strengtheningMethod:true,
-
-      }));
-
+      });
 
 
 
-      navigate(
-        "/strengthening-post"
-      );
-
+      navigate("/bonding-post");
 
 
 
@@ -264,9 +210,7 @@ function StrengtheningMethodPage() {
 
       console.error(error);
 
-      alert(
-        "강화 단계 저장 실패"
-      );
+      alert("접합 단계 저장 실패");
 
     }
 
@@ -275,15 +219,10 @@ function StrengtheningMethodPage() {
 
 
 
-
-
   return (
 
     <div className="method-page">
 
-
-
-      {/* 상단 */}
 
       <div className="top-bar">
 
@@ -293,7 +232,7 @@ function StrengtheningMethodPage() {
           className="nav-btn"
 
           onClick={()=>
-            navigate("/strengthening")
+            navigate("/bonding")
           }
 
         >
@@ -304,13 +243,9 @@ function StrengtheningMethodPage() {
 
 
 
-
         <div className="logo">
-
           VORA
-
         </div>
-
 
 
 
@@ -332,21 +267,16 @@ function StrengtheningMethodPage() {
 
 
 
-
-
-      {/* 제목 */}
-
       <div className="page-header">
 
 
         <h1>
-          AI 단계별 강화 안내
+          AI 단계별 접합 안내
         </h1>
 
 
-
         <p>
-          AI가 분석한 최적의 강화 처리 작업 절차입니다.
+          AI가 분석한 최적의 접합 작업 절차입니다.
         </p>
 
 
@@ -355,15 +285,9 @@ function StrengtheningMethodPage() {
 
 
 
-
-
       <div className="method-card">
 
 
-
-
-
-        {/* 전체 주의사항 */}
 
         <div className="reason-card">
 
@@ -373,17 +297,12 @@ function StrengtheningMethodPage() {
           </h3>
 
 
-
           <p>
             {overall_caution}
           </p>
 
 
-
         </div>
-
-
-
 
 
 
@@ -392,9 +311,8 @@ function StrengtheningMethodPage() {
 
 
           <span>
-            추천 강화 방법
+            추천 접합 방법
           </span>
-
 
 
 
@@ -413,10 +331,7 @@ function StrengtheningMethodPage() {
           </button>
 
 
-
         </div>
-
-
 
 
 
@@ -435,12 +350,9 @@ function StrengtheningMethodPage() {
               </h2>
 
 
-
               <p>
                 {overall_caution}
               </p>
-
-
 
 
               <button
@@ -452,11 +364,8 @@ function StrengtheningMethodPage() {
                 }
 
               >
-
                 닫기
-
               </button>
-
 
 
             </div>
@@ -472,21 +381,13 @@ function StrengtheningMethodPage() {
 
 
 
-
-
         {
           steps.map((step,index)=>(
 
-
             <div
-
               key={step.id}
-
               className="step-card"
-
             >
-
-
 
 
               <div className="step-number">
@@ -498,17 +399,12 @@ function StrengtheningMethodPage() {
 
 
 
-
-
               <div className="step-info">
 
 
                 <h3>
-
                   {step.label}
-
                 </h3>
-
 
 
 
@@ -518,12 +414,11 @@ function StrengtheningMethodPage() {
                     주의사항
                   </strong>
 
-                  <br />
+                  <br/>
 
                   {step.caution}
 
                 </p>
-
 
 
               </div>
@@ -531,50 +426,28 @@ function StrengtheningMethodPage() {
 
 
 
-
-
-
               <div className="step-actions">
 
 
-
-
-
                 <button
-
                   className="edit-btn"
-
                   onClick={()=>
                     handleEdit(step.id)
                   }
-
                 >
-
                   ✏ 수정
-
                 </button>
-
-
-
 
 
 
                 <button
-
                   className="delete-btn"
-
                   onClick={()=>
                     handleDelete(step.id)
                   }
-
                 >
-
                   🗑 삭제
-
                 </button>
-
-
-
 
 
 
@@ -585,68 +458,42 @@ function StrengtheningMethodPage() {
 
                   onClick={()=>{
 
-
                     setSteps((prev)=>
-
                       prev.map((s)=>
-
                         s.id===step.id
-
                         ?
-
                         {
                           ...s,
                           approved:
-                            !s.approved
+                          !s.approved
                         }
-
                         :
-
                         s
-
                       )
-
                     );
-
 
                   }}
 
                 >
 
-
                   {
                     step.approved
-
                     ?
-
                     "✔ 승인됨"
-
                     :
-
                     "✔ 승인"
                   }
 
-
                 </button>
-
-
-
 
 
               </div>
 
 
-
-
             </div>
 
-
           ))
-
         }
-
-
-
 
 
 
@@ -666,18 +513,15 @@ function StrengtheningMethodPage() {
 
 
 
-
-
       </div>
 
 
 
     </div>
 
-
   );
 
 }
 
 
-export default StrengtheningMethodPage;
+export default BondingMethodPage;

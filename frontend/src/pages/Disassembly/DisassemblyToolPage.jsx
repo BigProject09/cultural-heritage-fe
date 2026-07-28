@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./DisassemblyToolPage.css";
 import { useDisassembly } from "../../context/DisassemblyContext";
 
@@ -7,10 +8,13 @@ function DisassemblyToolPage() {
   const navigate = useNavigate();
 
   const {
-  tools,
-  completed,
-  setCompleted,
+    taskId,
+    tools,
+    completed,
+    setCompleted,
+    setMethods,
   } = useDisassembly();
+
   console.log("tools =", tools);
 
   console.log("tools =", tools);
@@ -30,7 +34,12 @@ function DisassemblyToolPage() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (!taskId) {
+      alert("taskId가 없습니다.");
+      return;
+    }
+
     if (selectedTools.length === 0) {
       alert("도구를 1개 이상 선택해주세요.");
       return;
@@ -38,19 +47,34 @@ function DisassemblyToolPage() {
 
     console.log("선택된 도구", selectedTools);
 
-    // 완료 상태 저장
-    setCompleted({
-      ...completed,
-      tool: true,
-    });
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/tasks/${taskId}/resume`,
+        {
+          resume: {
+            confirmed_tools: selectedTools,
+          },
+        }
+      );
 
-    // TODO
-    // resume API 전송
+      const methods =
+        response.data.interrupt?.ai_disassembly_method ?? {};
 
-    navigate("/disassembly");
-  };
+      setMethods(methods);
 
-  return (
+      setCompleted({
+        ...completed,
+        tool: true,
+      });
+
+      navigate("/disassembly-method");
+    } catch (error) {
+      console.error(error);
+      alert("도구 저장 실패");
+    }
+    };
+
+    return (
     <div className="tool-page">
 
       {/* 상단 */}

@@ -1,0 +1,199 @@
+.bonding-material-page {
+  min-height: 100vh;
+  padding: 30px;
+  background: #f5f5f5;
+}
+
+
+/* ================= 상단 ================= */
+
+.detail-header {
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 30px;
+
+}
+
+
+.vora-logo {
+
+  font-size: 28px;
+  font-weight: bold;
+
+  color: #2f6fed;
+
+}
+
+
+
+/* ================= 전체 컨테이너 ================= */
+
+.material-container {
+
+  max-width: 1000px;
+
+  margin: 0 auto;
+
+  background: white;
+
+  padding: 40px;
+
+  border-radius: 20px;
+
+  box-shadow: 0 8px 25px rgba(0,0,0,.08);
+
+}
+
+
+
+/* ================= 제목 ================= */
+
+.page-header {
+
+  margin-bottom: 30px;
+
+}
+
+
+.page-header h1 {
+
+  font-size: 32px;
+
+  margin: 0 0 10px;
+
+  color:#1f2937;
+
+}
+
+
+.page-header p {
+
+  color:#6b7280;
+
+  font-size:17px;
+
+}
+
+
+
+/* ================= 접합제 카드 ================= */
+
+.material-card {
+
+  width:100%;
+
+}
+
+
+
+/* 제목 */
+
+.material-title {
+
+  display:flex;
+
+  align-items:center;
+
+  gap:15px;
+
+  font-size:24px;
+
+  font-weight:600;
+
+  margin-bottom:20px;
+
+}
+
+
+.material-title span:last-child {
+
+  margin-left:auto;
+
+}
+
+
+
+.material-card hr {
+
+  margin:20px 0 30px;
+
+  border:none;
+
+  border-top:1px solid #e5e7eb;
+
+}
+
+
+
+/* ================= 이미지 ================= */
+
+.material-image {
+
+  display:flex;
+
+  justify-content:center;
+
+  margin-bottom:30px;
+
+}
+
+
+.material-image img {
+
+  width:220px;
+
+  height:auto;
+
+  object-fit:contain;
+
+}
+
+
+
+/* ================= 설명 ================= */
+
+.material-description {
+
+  font-size:18px;
+
+  line-height:2;
+
+  text-align:justify;
+
+  color:#444;
+
+}
+
+
+
+/* ================= 버튼 ================= */
+
+.nav-btn {
+
+  padding:10px 18px;
+
+  border:none;
+
+  border-radius:8px;
+
+  cursor:pointer;
+
+  font-size:15px;
+
+  font-weight:600;
+
+  background:#2563eb;
+
+  color:white;
+
+}
+
+
+.nav-btn:hover {
+
+  background:#1d4ed8;
+
+}

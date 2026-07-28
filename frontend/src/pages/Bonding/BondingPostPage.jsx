@@ -1,19 +1,15 @@
-import axios from "axios";
+import { resumeTask } from "../../services/conservationGuideApi";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useDisassembly } from "../../context/DisassemblyContext";
 
-import "./JoiningPostPage.css";
+import "./BondingPostPage.css";
 
-function JoiningPostPage() {
+function BondingPostPage() {
   const navigate = useNavigate();
 
-  const {
-    taskId,
-    completed,
-    setCompleted,
-  } = useDisassembly();
+  const { taskId, setCompleted } = useDisassembly();
 
   const [photos, setPhotos] = useState([]);
   const [memo, setMemo] = useState("");
@@ -21,25 +17,28 @@ function JoiningPostPage() {
   const fileInputRef = useRef(null);
 
   const handleComplete = async () => {
+    if (!taskId) {
+      alert("taskId가 없습니다.");
+      return;
+    }
+
     const request = {
       resume: {
-        memo,
         photo_urls: photos.map((photo) => photo.name),
+        memo,
       },
     };
 
     try {
-      await axios.post(
-        `http://localhost:8080/tasks/${taskId}/resume`,
-        request
-      );
+      await resumeTask(taskId, request);
 
-      setCompleted({
-        ...completed,
-        joiningPost: true,
-      });
+      setCompleted((prev) => ({
+        ...prev,
+        bondingPost: true,
+      }));
 
-      navigate("/joining");
+      // 복원(재료 선택) 페이지로 이동
+      navigate("/material");
     } catch (error) {
       console.error(error);
       alert("접합 작업 후 기록 저장 실패");
@@ -47,20 +46,16 @@ function JoiningPostPage() {
   };
 
   return (
-    <div className="joining-post-page">
-
+    <div className="bonding-post-page">
       <div className="top-bar">
-
         <button
           className="nav-btn"
-          onClick={() => navigate("/joining")}
+          onClick={() => navigate("/bonding-method")}
         >
           ← 이전
         </button>
 
-        <div className="logo">
-          VORA
-        </div>
+        <div className="logo">VORA</div>
 
         <button
           className="nav-btn"
@@ -68,13 +63,11 @@ function JoiningPostPage() {
         >
           완료
         </button>
-
       </div>
 
       <h1>접합 작업 후 기록</h1>
 
       <div className="post-card">
-
         <h2>📷 작업 후 사진</h2>
 
         <input
@@ -91,7 +84,6 @@ function JoiningPostPage() {
         />
 
         <div className="photo-list">
-
           {photos.map((photo, index) => (
             <div
               key={index}
@@ -99,7 +91,7 @@ function JoiningPostPage() {
             >
               <img
                 src={URL.createObjectURL(photo)}
-                alt=""
+                alt={`작업 후 사진 ${index + 1}`}
               />
             </div>
           ))}
@@ -110,13 +102,10 @@ function JoiningPostPage() {
           >
             +
           </button>
-
         </div>
-
       </div>
 
       <div className="post-card">
-
         <h2>📝 작업 메모</h2>
 
         <textarea
@@ -124,11 +113,9 @@ function JoiningPostPage() {
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
         />
-
       </div>
-
     </div>
   );
 }
 
-export default JoiningPostPage;
+export default BondingPostPage;

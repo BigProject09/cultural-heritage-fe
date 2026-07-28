@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
-import "./JoiningPage.css";
+import "./BondingPage.css";
 
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import {
@@ -10,7 +10,7 @@ import {
 
 import { useDisassembly } from "../../context/DisassemblyContext";
 
-function JoiningPage() {
+function BondingPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,13 +28,14 @@ function JoiningPage() {
       { id: 8, name: "처리 후 기록" },
     ];
 
-  const allCompleted =
-    completed.joiningMethod &&
-    completed.joiningMaterial &&
-    completed.joiningWork &&
-    completed.joiningPost;
+const allCompleted =
+  completed.bondingMethod &&
+  completed.bondingMaterial &&
+  completed.bondingWork &&
+  completed.bondingPost;
+  
   return (
-    <div className="joining-page">
+    <div className="bonding-page">
       <ProgressNavigator
         approvedFlow={approvedFlow}
         currentStep="접합"
@@ -69,7 +70,7 @@ function JoiningPage() {
         </button>
       </div>
 
-      <div className="joining-container">
+      <div className="bonding-container">
 
         <div className="page-header">
           <h1>접합</h1>
@@ -80,35 +81,13 @@ function JoiningPage() {
           </p>
         </div>
 
-        {/* ① AI 추천 접합 방법 확인 */}
+        {/* ① 접합제 선택 */}
         <div
           className="task-card"
-          onClick={() => navigate("/joining-method")}
+          onClick={() => navigate("/bonding-material")}
         >
           <div className="task-icon">
-            {completed.joiningMethod ? "✔" : "①"}
-          </div>
-
-          <div className="task-content">
-            <h2>AI 추천 접합 방법 확인</h2>
-
-            <p>
-              AI가 유물의 상태를 분석하여
-            적합한 접합 방법과
-            작업 시 주의사항을 추천합니다.
-            </p>
-          </div>
-
-          <div className="task-arrow">→</div>
-        </div>
-
-        {/* ② 접합제 선택 */}
-        <div
-          className="task-card"
-          onClick={() => navigate("/joining-material")}
-        >
-          <div className="task-icon">
-            {completed.joiningMaterial ? "✔" : "②"}
+            {completed.bondingMaterial ? "✔" : "①"}
           </div>
 
           <div className="task-content">
@@ -123,35 +102,54 @@ function JoiningPage() {
           <div className="task-arrow">→</div>
         </div>
 
-        {/* ③ 접합 작업 수행 */}
+        {/* ② 임시접합 */}
         <div
           className="task-card"
-          onClick={() => navigate("/joining-work")}
+          onClick={() => navigate("/bonding-work")}
         >
           <div className="task-icon">
-            {completed.joiningWork ? "✔" : "③"}
+            {completed.bondingWork ? "✔" : "②"}
           </div>
 
           <div className="task-content">
-            <h2>접합 작업 수행</h2>
+            <h2>임시접합</h2>
 
             <p>
-              AI가 안내하는 순서에 따라
-              접합 작업을 진행하고
-              건조 방법을 확인합니다.
+              접합 전 유물의 위치를 맞추고
+              처리 전·후 사진을 기록합니다.
             </p>
           </div>
 
           <div className="task-arrow">→</div>
         </div>
 
+        {/* ③ 단계별 안내 */}
+        <div
+          className="task-card"
+          onClick={() => navigate("/bonding-method")}
+        >
+          <div className="task-icon">
+            {completed.bondingMethod ? "✔" : "③"}
+          </div>
+
+          <div className="task-content">
+            <h2>단계별 안내</h2>
+
+            <p>
+              AI가 추천한 접합 절차를 확인하고
+              단계별 작업을 수행합니다.
+            </p>
+          </div>
+
+          <div className="task-arrow">→</div>
+        </div>
         {/* ④ 작업 후 기록 */}
         <div
           className="task-card"
-          onClick={() => navigate("/joining-post")}
+          onClick={() => navigate("/bonding-post")}
         >
           <div className="task-icon">
-            {completed.joiningPost ? "✔" : "④"}
+            {completed.bondingPost ? "✔" : "④"}
           </div>
 
           <div className="task-content">
@@ -171,4 +169,4 @@ function JoiningPage() {
   );
 }
 
-export default JoiningPage;
+export default BondingPage;

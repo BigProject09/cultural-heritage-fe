@@ -7,51 +7,17 @@ import { useDisassembly } from "../../context/DisassemblyContext";
 function DisassemblyMethodPage() {
   const navigate = useNavigate();
 
-  const {
-    taskId,
-    completed,
-    setCompleted,
-  } = useDisassembly();
+const {
+  taskId,
+  methods,
+  completed,
+  setCompleted,
+} = useDisassembly();
 
-  // 임시 데이터 (나중에 API 연결)
-  const method = {
-    name: "침지법",
-    score: 73,
-    summary: "유물 전체에 접착제가 균일하게 분포되어 있음",
-    reasons: [
-      "전체 해체 필요",
-      "접착제 열화 확인",
-      "손상 최소화",
-    ],
-    cautions: [
-      "용제 과다 사용 금지",
-      "환기 필수",
-      "균열 부위 압력 금지",
-    ],
-    steps: [
-      {
-        id: "disassembly-method-01",
-        order: 1,
-        title: "유물 상태 확인",
-        description: "해체 전 유물의 상태를 다시 한번 확인합니다.",
-      },
-      {
-        id: "disassembly-method-02",
-        order: 2,
-        title: "용액 준비",
-        description: "침지에 사용할 용액을 준비합니다.",
-      },
-      {
-        id: "disassembly-method-03",
-        order: 3,
-        title: "침지 및 해체",
-        description: "유물을 용액에 침지하여 접착제를 분해합니다.",
-      },
-    ],
-  };
+const { steps: methodSteps = [], overall_caution = "" } = methods;
 
   const [steps, setSteps] = useState(
-    method.steps.map((step) => ({
+    methodSteps.map((step) => ({
       ...step,
       approved: false,
     }))
@@ -84,13 +50,14 @@ const handleAddStep = () => {
 
   setSteps((prev) => [
     ...prev,
-    {
-      id: `step-${Date.now()}`,
-      order: prev.length + 1,
-      title,
-      description,
-      approved: false,
-    },
+   {
+    id: `step-${Date.now()}`,
+    order: prev.length + 1,
+    label: title,
+    tools_used: [],
+    caution: description,
+    approved: false,
+  },
   ]);
   };
 
@@ -102,14 +69,14 @@ const handleEdit = (stepId) => {
 
   const title = window.prompt(
     "단계명을 수정하세요.",
-    step.title
+    step.label
   );
 
   if (!title || title.trim() === "") return;
 
   const description = window.prompt(
     "단계 설명을 수정하세요.",
-    step.description
+    step.caution
   );
 
   if (!description || description.trim() === "") return;
@@ -119,8 +86,8 @@ const handleEdit = (stepId) => {
       s.id === stepId
         ? {
             ...s,
-            title,
-            description,
+           label: title,
+           caution: description,
           }
         : s
     )
@@ -128,6 +95,10 @@ const handleEdit = (stepId) => {
 };
 
   const handleComplete = async () => {
+    if (!taskId) {
+      alert("taskId가 없습니다.");
+      return;
+    }
     const completedStepIds = steps
       .filter((step) => step.approved)
       .map((step) => step.id);
@@ -158,7 +129,7 @@ const handleEdit = (stepId) => {
         method: true,
       });
 
-      navigate("/disassembly");
+      navigate("/disassembly-post");
     } catch (error) {
       console.error(error);
       alert("해체 방법 저장 실패");
@@ -194,49 +165,12 @@ const handleEdit = (stepId) => {
 
       {/* 메인 카드 */}
       <div className="method-card">
-        {/* 상단 영역 */}
-        <div className="method-top">
-          {/* 추천도 */}
-          <div className="score-area">
-            <div
-              className="score-circle"
-              style={{
-                background: `conic-gradient(
-                  #1976d2 ${method.score * 3.6}deg,
-                  #E8EEF8 0deg
-                )`,
-              }}
-            >
-              <div className="score-inner">
-                <div className="method-name">
-                  {method.name}
-                </div>
-
-                <div className="score">
-                  {method.score}%
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* AI 요약 */}
-          <div className="summary-card">
-            <h2>추천도 {method.score}%</h2>
-            <p>{method.summary}</p>
-          </div>
-        </div>
 
         {/* 추천 이유 */}
-        <div className="reason-card">
-          <h3>추천 이유</h3>
-
-          <ul>
-            {method.reasons.map((reason) => (
-              <li key={reason}>✔ {reason}</li>
-            ))}
-          </ul>
+       <div className="reason-card">
+          <h3>주의사항</h3>
+          <p>{overall_caution}</p>
         </div>
-
         {/* 추천 해체 방법 */}
         <div className="step-title">
           <span>추천 해체 방법</span>
@@ -255,11 +189,7 @@ const handleEdit = (stepId) => {
             <div className="warning-content">
               <h2>⚠ 주의사항</h2>
 
-              <ul>
-                {method.cautions.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+             <p>{overall_caution}</p>
 
               <button
                 className="close-btn"
@@ -282,8 +212,17 @@ const handleEdit = (stepId) => {
             </div>
 
             <div className="step-info">
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
+              <h3>{step.label}</h3>
+
+              <p>
+                <strong>사용 도구</strong><br />
+                {step.tools_used.join(", ")}
+              </p>
+
+              <p>
+                <strong>주의사항</strong><br />
+                {step.caution}
+              </p>
             </div>
             <div className="step-actions">
 

@@ -29,19 +29,20 @@ function RestorationPage() {
     ];
 
   const allCompleted =
-    completed.restorationMethod &&
     completed.restorationMaterial &&
-    completed.restorationWork &&
+    completed.restorationMethod &&
     completed.restorationPost;
 
   return (
     <div className="restoration-page">
+
       <ProgressNavigator
         approvedFlow={approvedFlow}
         currentStep="복원"
       />
 
       <div className="top-bar">
+
         <button
           className="nav-btn"
           onClick={() =>
@@ -54,6 +55,7 @@ function RestorationPage() {
         >
           ← 이전
         </button>
+
 
         <button
           className="nav-btn"
@@ -68,105 +70,118 @@ function RestorationPage() {
         >
           다음 단계 →
         </button>
+
       </div>
+
 
       <div className="restoration-container">
 
         <div className="page-header">
+
           <h1>복원</h1>
 
           <p>
-            아래 4개의 작업을 모두 완료하면
+            아래 3개의 작업을 모두 완료하면
             다음 단계로 이동할 수 있습니다.
           </p>
+
         </div>
 
-        {/* ① */}
-        <div
-          className="task-card"
-          onClick={() => navigate("/restoration-method")}
-        >
-          <div className="task-icon">
-            {completed.restorationMethod ? "✔" : "①"}
-          </div>
 
-          <div className="task-content">
-            <h2>AI 추천 복원 방법 확인</h2>
-
-            <p>
-              AI가 유물 상태를 분석하여
-              적합한 복원 방법과
-              작업 절차를 추천합니다.
-            </p>
-          </div>
-
-          <div className="task-arrow">→</div>
-        </div>
-
-        {/* ② */}
+        {/* ① 복원 재료 선택 */}
         <div
           className="task-card"
           onClick={() => navigate("/restoration-material")}
         >
+
           <div className="task-icon">
-            {completed.restorationMaterial ? "✔" : "②"}
+            {completed.restorationMaterial ? "✔" : "①"}
           </div>
 
+
           <div className="task-content">
+
             <h2>복원 재료 선택</h2>
 
             <p>
               AI가 추천한 복원 재료를 확인하고
               적합한 재료를 선택합니다.
             </p>
+
           </div>
 
-          <div className="task-arrow">→</div>
+
+          <div className="task-arrow">
+            →
+          </div>
+
         </div>
 
-        {/* ③ */}
+
+
+        {/* ② 단계별 복원 작업 */}
         <div
           className="task-card"
-          onClick={() => navigate("/restoration-work")}
+          onClick={() => navigate("/restoration-method")}
         >
+
           <div className="task-icon">
-            {completed.restorationWork ? "✔" : "③"}
+            {completed.restorationMethod ? "✔" : "②"}
           </div>
+
 
           <div className="task-content">
-            <h2>복원 작업 수행</h2>
+
+            <h2>단계별 복원 작업</h2>
 
             <p>
-              AI가 안내하는 절차에 따라
-              복원 작업을 수행합니다.
+              AI가 추천한 복원 절차를 확인하고
+              단계별 작업을 수행합니다.
             </p>
+
           </div>
 
-          <div className="task-arrow">→</div>
+
+          <div className="task-arrow">
+            →
+          </div>
+
         </div>
 
-        {/* ④ */}
+
+
+        {/* ③ 작업 후 기록 */}
         <div
           className="task-card"
           onClick={() => navigate("/restoration-post")}
         >
+
           <div className="task-icon">
-            {completed.restorationPost ? "✔" : "④"}
+            {completed.restorationPost ? "✔" : "③"}
           </div>
 
+
           <div className="task-content">
+
             <h2>작업 후 기록</h2>
 
             <p>
               복원 완료 사진과
               작업 메모를 기록합니다.
             </p>
+
           </div>
 
-          <div className="task-arrow">→</div>
+
+          <div className="task-arrow">
+            →
+          </div>
+
         </div>
 
+
       </div>
+
     </div>
   );
 }

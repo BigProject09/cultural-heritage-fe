@@ -1,7 +1,6 @@
-import axios from "axios";
+import { resumeTask } from "../../services/conservationGuideApi";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { useDisassembly } from "../../context/DisassemblyContext";
 
 import "./StrengtheningPostPage.css";
@@ -11,7 +10,6 @@ function StrengtheningPostPage() {
 
   const {
     taskId,
-    completed,
     setCompleted,
   } = useDisassembly();
 
@@ -29,15 +27,12 @@ function StrengtheningPostPage() {
     };
 
     try {
-      await axios.post(
-        `http://localhost:8080/tasks/${taskId}/resume`,
-        request
-      );
+      await resumeTask(taskId, request);
 
-      setCompleted({
-        ...completed,
+      setCompleted((prev) => ({
+        ...prev,
         strengtheningPost: true,
-      });
+      }));
 
       navigate("/strengthening");
     } catch (error) {
