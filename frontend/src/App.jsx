@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-
 import { DisassemblyProvider } from "./context/DisassemblyContext";
 //첫 화면
 import HomePage from "./pages/Home/HomePage";
@@ -78,69 +77,39 @@ function App() {
     <BrowserRouter>
       <DisassemblyProvider>
         <Routes>
-<Route path="/mypage" element={<MyPage />} />
-<Route path="/mypage/profile" element={<ProfilePage />} />
-<Route path="/mypage/activity" element={<ActivityPage />} />
-<Route path="/mypage/projects" element={<ProjectPage />} />
-<Route path="/mypage/reports" element={<MyReportPage />} />
+          <Route path="/mypage" element={<MyPage />} />
+          <Route path="/mypage/profile" element={<ProfilePage />} />
+          <Route path="/mypage/activity" element={<ActivityPage />} />
+          <Route path="/mypage/projects" element={<ProjectPage />} />
+          <Route path="/mypage/reports" element={<MyReportPage />} />
           {/* 홈페이지 */}
-          <Route
-            path="/"
-            element={<HomePage />}
-          />
+          <Route path="/" element={<HomePage />} />
 
           {/* 공지사항 */}
-          <Route
-            path="/notice"
-            element={<NoticePage />}
-          />
+          <Route path="/notice" element={<NoticePage />} />
 
           {/* 로그인 */}
-          <Route
-            path="/login"
-            element={<LoginPage />}
-          />
+          <Route path="/login" element={<LoginPage />} />
 
           {/* 회원가입 */}
-          <Route
-            path="/signup"
-            element={<SignUpPage />}
-          />
+          <Route path="/signup" element={<SignUpPage />} />
 
           {/* 마이페이지 */}
-          <Route
-            path="/mypage"
-            element={<MyPage />}
-          />
+          <Route path="/mypage" element={<MyPage />} />
 
           {/* 작업 리스트 */}
-          <Route
-            path="/worklist"
-            element={<WorkListPage />}
-          />
+          <Route path="/worklist" element={<WorkListPage />} />
 
           {/* 프로젝트 상세 */}
-          <Route
-            path="/worklist/:id"
-            element={<ProjectDetailPage />}
-          />
+          <Route path="/worklist/:id" element={<ProjectDetailPage />} />
 
           {/* 게시판 */}
-          <Route
-            path="/board"
-            element={<BoardPage />}
-          />
+          <Route path="/board" element={<BoardPage />} />
 
-          <Route
-            path="/board/:id"
-            element={<BoardDetailPage />}
-          />
+          <Route path="/board/:id" element={<BoardDetailPage />} />
 
           {/* 유물 등록 */}
-          <Route
-            path="/artifact-register"
-            element={<ArtifactRegisterPage />}
-          />
+          <Route path="/artifact-register" element={<ArtifactRegisterPage />} />
 
           {/* AI Flow 추천 */}
           <Route
@@ -149,46 +118,28 @@ function App() {
           />
 
           {/* 처리 전 조사 */}
-          <Route
-            path="/pre-investigation"
-            element={<PreInvestigationPage />}
-          />
+          <Route path="/pre-investigation" element={<PreInvestigationPage />} />
 
-          <Route
-            path="/pre-investigation/xray"
-            element={<XrayPage />}
-          />
+          <Route path="/pre-investigation/xray" element={<XrayPage />} />
 
-          <Route
-            path="/pre-investigation/visual"
-            element={<VisualPage />}
-          />
+          <Route path="/pre-investigation/visual" element={<VisualPage />} />
 
           {/* 해체 */}
-          <Route
-            path="/disassembly"
-            element={<DisassemblyPage />}
-          />
+          <Route path="/disassembly" element={<DisassemblyPage />} />
 
           <Route
             path="/disassembly-checklist"
             element={<DisassemblyChecklistPage />}
           />
 
-          <Route
-            path="/disassembly-tool"
-            element={<DisassemblyToolPage />}
-          />
+          <Route path="/disassembly-tool" element={<DisassemblyToolPage />} />
 
           <Route
             path="/disassembly-method"
             element={<DisassemblyMethodPage />}
           />
 
-          <Route
-            path="/disassembly-post"
-            element={<DisassemblyPostPage />}
-          />
+          <Route path="/disassembly-post" element={<DisassemblyPostPage />} />
 
           {/* 세척 */}
           <Route path="/cleaning" element={<CleaningPage />} />
@@ -198,32 +149,23 @@ function App() {
             element={<CleaningMethodSelectPage />}
           />
 
-          <Route
-            path="/cleaning-step"
-            element={<CleaningStepPage />}
-          />
+          <Route path="/cleaning-step" element={<CleaningStepPage />} />
 
           <Route
             path="/cleaning-drying-step"
             element={<CleaningDryingStepPage />}
           />
 
-          <Route
-            path="/cleaning-post"
-            element={<CleaningPostPage />}
-          />
+          <Route path="/cleaning-post" element={<CleaningPostPage />} />
 
           {/* 강화 처리 */}
-          <Route
-            path="/strengthening"
-            element={<StrengtheningPage />}
-          />
+          <Route path="/strengthening" element={<StrengtheningPage />} />
 
           <Route
             path="/strengthening-material"
             element={<StrengtheningMaterialPage />}
           />
-          
+
           <Route
             path="/strengthening-method"
             element={<StrengtheningMethodPage />}
@@ -239,45 +181,25 @@ function App() {
             element={<StrengtheningWettingResultPage />}
           />
 
-
           <Route
             path="/strengthening-post"
             element={<StrengtheningPostPage />}
           />
 
           {/* 접합 */}
-          <Route
-            path="/bonding"
-            element={<BondingPage />}
-          />
+          <Route path="/bonding" element={<BondingPage />} />
 
-          <Route path="/joining" 
-          element={<BondingPage />} />
+          <Route path="/joining" element={<BondingPage />} />
 
-          <Route
-            path="/bonding-method"
-            element={<BondingMethodPage />}
-          />
+          <Route path="/bonding-method" element={<BondingMethodPage />} />
 
-          <Route
-            path="/bonding-material"
-            element={<BondingMaterialPage />}
-          />
+          <Route path="/bonding-material" element={<BondingMaterialPage />} />
 
-          <Route
-            path="/bonding-work"
-            element={<BondingWorkPage />}
-          />
+          <Route path="/bonding-work" element={<BondingWorkPage />} />
 
-          <Route
-            path="/bonding-post"
-            element={<BondingPostPage />}
-          />
+          <Route path="/bonding-post" element={<BondingPostPage />} />
           {/* 복원 */}
-          <Route
-            path="/restoration"
-            element={<RestorationPage />}
-          />
+          <Route path="/restoration" element={<RestorationPage />} />
 
           <Route
             path="/restoration-method"
@@ -289,15 +211,9 @@ function App() {
             element={<RestorationMaterialPage />}
           />
 
-          <Route
-            path="/restoration-post"
-            element={<RestorationPostPage />}
-          />
+          <Route path="/restoration-post" element={<RestorationPostPage />} />
           {/* 색 맞춤 */}
-          <Route
-            path="/color-matching"
-            element={<ColorMatchingPage />}
-          />
+          <Route path="/color-matching" element={<ColorMatchingPage />} />
 
           <Route
             path="/color-matching-method"
@@ -320,21 +236,11 @@ function App() {
           />
 
           {/* 처리 후 기록 */}
-          <Route
-            path="/post-record"
-            element={<PostRecordPage />}
-          />
+          <Route path="/post-record" element={<PostRecordPage />} />
 
-          <Route
-            path="/report"
-            element={<ReportPage />}
-          />
+          <Route path="/report" element={<ReportPage />} />
 
-          <Route
-            path="/report-complete"
-            element={<ReportCompletePage />}
-          />
-
+          <Route path="/report-complete" element={<ReportCompletePage />} />
         </Routes>
       </DisassemblyProvider>
     </BrowserRouter>

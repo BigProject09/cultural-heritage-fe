@@ -1,86 +1,423 @@
 .xray-page {
   min-height: 100vh;
-  background: #f5f7fb;
-  padding: 60px 20px;
-  display: flex;
-  justify-content: center;
+  padding: 48px 20px 80px;
+  background: #f4f7fb;
+  color: #172033;
 }
 
 .xray-container {
-  width: 100%;
-  max-width: 900px;
+  width: min(1200px, 100%);
+  margin: 0 auto;
+}
+
+.xray-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
 .xray-title {
-  font-size: 38px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 40px;
+  margin: 0 0 8px;
+  font-size: 36px;
 }
 
-.result-card {
-  background: white;
-  border-radius: 18px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  padding: 35px;
-  margin-bottom: 35px;
+.xray-header p,
+.xray-help {
+  margin: 0;
+  color: #687386;
 }
 
-.result-card h2 {
-  margin-bottom: 25px;
-  color: #2563eb;
-  font-size: 28px;
-}
-
-.result-item {
+.xray-steps {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  padding: 18px 0;
-  border-bottom: 1px solid #e5e7eb;
-
-  font-size: 20px;
+  gap: 8px;
 }
 
-.result-item:last-child {
-  border-bottom: none;
-}
-
-.result-label {
-  font-weight: 600;
-  color: #374151;
-}
-
-.result-value {
+.xray-steps span {
+  padding: 9px 14px;
+  border: 1px solid #d8dfeb;
+  border-radius: 999px;
+  background: #fff;
+  color: #7a8495;
+  font-size: 13px;
   font-weight: 700;
-  color: #111827;
+}
+
+.xray-steps span.active {
+  border-color: #2767df;
+  background: #2767df;
+  color: #fff;
+}
+
+.xray-steps span.done {
+  border-color: #9bc5aa;
+  background: #eaf7ee;
+  color: #257241;
+}
+
+.artifact-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  overflow: hidden;
+  margin-bottom: 18px;
+  border: 1px solid #dfe5ef;
+  border-radius: 14px;
+  background: #dfe5ef;
+}
+
+.artifact-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  background: #fff;
+}
+
+.artifact-summary span {
+  color: #778195;
+  font-size: 12px;
+}
+
+.artifact-summary strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.xray-panel,
+.xray-page .panel {
+  margin-bottom: 18px;
+  padding: 24px;
+  border: 1px solid #dfe5ef;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(29, 44, 75, 0.06);
+}
+
+.xray-panel h2,
+.xray-page .panel h2 {
+  margin: 0 0 8px;
+  font-size: 19px;
+}
+
+.xray-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 130px;
+  margin: 18px 0 12px;
+  border: 1px dashed #94a7c5;
+  border-radius: 12px;
+  background: #f8faff;
+  color: #2767df;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.xray-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.file-list {
+  max-height: 150px;
+  margin: 0 0 18px;
+  padding: 12px 16px 12px 34px;
+  overflow: auto;
+  border-radius: 10px;
+  background: #f7f9fc;
+  color: #536076;
+  font-size: 13px;
+}
+
+.xray-page button {
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.xray-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.xray-primary {
+  background: #2767df;
+  color: #fff;
+}
+
+.xray-secondary {
+  border: 1px solid #cfd8e6 !important;
+  background: #fff;
+  color: #354158;
+}
+
+.xray-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.xray-actions.left {
+  justify-content: flex-start;
+}
+
+.xray-message {
+  margin-top: 14px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  background: #eef4ff;
+  color: #315a9c;
+  font-size: 13px;
+}
+
+.xray-message.error {
+  background: #fff0f0;
+  color: #b53a3a;
+}
+
+.xray-message.subtle {
+  background: #f5f7fa;
+  color: #667185;
+}
+
+.assembled-preview {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+  padding: 18px;
+  overflow: auto;
+  border-radius: 12px;
+  background: #111722;
+}
+
+.assembled-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 680px;
+  object-fit: contain;
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.health-badge {
+  flex: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff0f0;
+  color: #b53a3a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.health-badge.ok {
+  background: #eaf7ee;
+  color: #257241;
+}
+
+.confidence-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 20px;
+  color: #5f6b80;
+  font-size: 13px;
+}
+
+.confidence-field input {
+  width: min(480px, 100%);
+}
+
+.image-tabs {
+  display: flex;
+  gap: 7px;
+  margin: 14px 0 12px;
+  overflow-x: auto;
+}
+
+.image-tabs button {
+  flex: none;
+  border: 1px solid #d6deea;
+  background: #f7f9fc;
+  color: #58657a;
+  font-size: 12px;
+}
+
+.image-tabs button.active {
+  border-color: #2767df;
+  background: #2767df;
+  color: #fff;
+}
+
+.xray-page .viewer {
+  overflow: hidden;
+  border: 1px solid #dfe5ef;
+  border-radius: 10px;
+  background: #0d1118;
+}
+
+.xray-page .viewer-inner {
+  position: relative;
+  line-height: 0;
+}
+
+.xray-page .viewer-img {
+  display: block;
+  width: 100%;
+}
+
+.xray-page .viewer-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.xray-page .viewer-meta,
+.xray-page .viewer-empty,
+.xray-page .empty {
+  padding: 12px;
+  color: #748096;
+  font-size: 12px;
+}
+
+.xray-page .table-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+  border: 1px solid #dfe5ef;
+  border-radius: 10px;
+}
+
+.xray-page table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.xray-page th,
+.xray-page td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e7ebf2;
+  text-align: left;
+}
+
+.xray-page th {
+  background: #f7f9fc;
+  color: #667287;
+}
+
+.xray-page tr.selected {
+  background: #edf4ff;
+}
+
+.xray-page td input,
+.xray-page textarea.report {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d9e0eb;
+  border-radius: 7px;
+  background: #fff;
+  color: #1f293b;
+}
+
+.xray-page textarea.report {
+  min-height: 340px;
+  margin-top: 14px;
+  resize: vertical;
+}
+
+.xray-page .style-picker {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0 8px;
+}
+
+.xray-page .style-btn {
+  border: 1px solid #d6deea;
+  background: #f7f9fc;
+  color: #58657a;
+}
+
+.xray-page .style-btn.active,
+.xray-page .panel .primary {
+  background: #2767df;
+  color: #fff;
+}
+
+.xray-page .sub,
+.xray-page .dim {
+  color: #748096;
+}
+
+.xray-page .msg {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.xray-page .del {
+  padding: 5px 8px;
+  background: #fff0f0;
+  color: #b53a3a;
 }
 
 .complete-area {
   display: flex;
   justify-content: center;
+  padding-top: 12px;
 }
 
 .complete-btn {
-  width: 220px;
-  height: 58px;
-
-  border: none;
-  border-radius: 14px;
-
-  background: #2563eb;
-  color: white;
-
-  font-size: 20px;
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition: 0.2s;
+  min-width: 220px;
+  min-height: 54px;
+  background: #2767df;
+  color: #fff;
+  font-size: 16px !important;
 }
 
-.complete-btn:hover {
-  background: #1d4ed8;
-  transform: translateY(-2px);
+@media (max-width: 800px) {
+  .xray-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .artifact-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .panel-title-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .xray-page {
+    padding: 28px 12px 60px;
+  }
+
+  .xray-steps {
+    width: 100%;
+  }
+
+  .xray-steps span {
+    flex: 1;
+    text-align: center;
+  }
+
+  .artifact-summary {
+    grid-template-columns: 1fr;
+  }
 }
