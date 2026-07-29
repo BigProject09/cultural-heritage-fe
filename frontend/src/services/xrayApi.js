@@ -189,9 +189,7 @@ export async function waitForStitchJob(
     if (status.status === "COMPLETED") return status;
 
     if (status.status === "FAILED") {
-      throw new Error(
-        status.errorMessage || status.message || "AI 결합 작업이 실패했습니다.",
-      );
+      throw new Error(status.errorMessage || "AI 결합 작업이 실패했습니다.");
     }
 
     await delay(intervalMs);

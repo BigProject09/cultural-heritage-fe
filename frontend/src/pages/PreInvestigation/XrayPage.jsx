@@ -509,15 +509,18 @@ export default function XrayPage() {
 
       setStitchJobId(created.jobId);
       setStitchStatus(created.status || "PENDING");
-      setStitchMessage("AI 결합 작업을 시작했습니다.");
 
       // 완료될 때까지 상태를 확인한다. 진행 상황은 콜백으로 받는다.
       const completed = await waitForStitchJob(created.jobId, (status) => {
         setStitchStatus(status.status);
         setStitchMessage(
-          status.status === "RUNNING"
-            ? "X-RAY 조각을 결합하고 있습니다."
-            : status.message || "결합 작업을 기다리고 있습니다.",
+          {
+            PENDING: "결합 작업을 접수했습니다.",
+            RUNNING: "X-RAY 조각을 결합하고 있습니다.",
+            COMPLETED: "결합이 완료되었습니다.",
+          }[status.status] ||
+            status.errorMessage ||
+            "결합 작업을 기다리고 있습니다.",
         );
       });
 
