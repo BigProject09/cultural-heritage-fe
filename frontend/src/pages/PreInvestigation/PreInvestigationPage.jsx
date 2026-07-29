@@ -8,50 +8,45 @@ function PreInvestigationPage() {
   const location = useLocation();
   const { preInvestigation } = useDisassembly();
 
-  const approvedFlow =
-    location.state?.approvedFlow || [
-      { id: 1, name: "처리 전 조사" },
-      { id: 2, name: "세척" },
-      { id: 3, name: "강화 처리" },
-      { id: 4, name: "접합" },
-      { id: 5, name: "복원" },
-      { id: 6, name: "처리 후 기록" },
-    ];
+  const approvedFlow = location.state?.approvedFlow || [
+    { id: 1, name: "처리 전 조사" },
+    { id: 2, name: "세척" },
+    { id: 3, name: "강화 처리" },
+    { id: 4, name: "접합" },
+    { id: 5, name: "복원" },
+    { id: 6, name: "처리 후 기록" },
+  ];
 
-    const artifact = JSON.parse(localStorage.getItem("artifactInfo"));
+  const artifact = JSON.parse(localStorage.getItem("artifactInfo"));
 
   const handlePrevious = () => {
     navigate("/flow-recommendation");
   };
 
- const handleNext = () => {
-  if (!preInvestigation.xray || !preInvestigation.visual) {
-    alert("처리 전 조사를 먼저 완료하세요.");
-    return;
-  }
+  const handleNext = () => {
+    if (!preInvestigation.xray || !preInvestigation.visual) {
+      alert("처리 전 조사를 먼저 완료하세요.");
+      return;
+    }
 
-  moveToNextStep(
-    navigate,
-    approvedFlow,
-    "처리 전 조사"
-  );
-};
+    moveToNextStep(navigate, approvedFlow, "처리 전 조사");
+  };
 
   const handleXray = () => {
-  navigate("/pre-investigation/xray", {
-    state: {
-      approvedFlow,
-    },
-  });
-};
+    navigate("/pre-investigation/xray", {
+      state: {
+        approvedFlow,
+      },
+    });
+  };
 
   const handleVisual = () => {
-  navigate("/pre-investigation/visual", {
-    state: {
-      approvedFlow,
-    },
-  });
-};
+    navigate("/pre-investigation/visual", {
+      state: {
+        approvedFlow,
+      },
+    });
+  };
 
   return (
     <div className="pre-page">
@@ -92,10 +87,9 @@ function PreInvestigationPage() {
             <div className="info-item">
               <span>크기</span>
               <p>
-  가로 {artifact?.width || "-"}cm ·
-  세로 {artifact?.height || "-"}cm ·
-  높이 {artifact?.depth || "-"}cm
-</p>
+                가로 {artifact?.width || "-"}cm · 세로 {artifact?.height || "-"}
+                cm · 높이 {artifact?.depth || "-"}cm
+              </p>
             </div>
 
             <div className="info-item">
@@ -106,9 +100,8 @@ function PreInvestigationPage() {
             <div className="info-item">
               <span>토양 정보</span>
               <p>
-  pH {artifact?.soilPH || "-"} ·
-  Cl- {artifact?.soilCL || "-"}
-</p>
+                pH {artifact?.soilPH || "-"} · Cl- {artifact?.soilCL || "-"}
+              </p>
             </div>
 
             <div className="info-item">
@@ -121,48 +114,40 @@ function PreInvestigationPage() {
         {/* 분석 영역 */}
         <section className="analysis-card">
           <button
-  className={`analysis-btn ${preInvestigation.xray ? "completed" : ""}`}
-  onClick={handleXray}
->
-  <div className="icon">
-    {preInvestigation.xray ? "✅" : "🩻"}
-  </div>
+            className={`analysis-btn ${preInvestigation.xray ? "completed" : ""}`}
+            onClick={handleXray}
+          >
+            <div className="icon">{preInvestigation.xray ? "✅" : "🩻"}</div>
 
-  <h3>
-    {preInvestigation.xray
-      ? "X-RAY 분석 완료"
-      : "X-RAY 분석"}
-  </h3>
+            <h3>{preInvestigation.xray ? "X-RAY 분석 완료" : "X-RAY 분석"}</h3>
 
-  <p>
-    {preInvestigation.xray
-      ? "AI 분석을 완료했습니다."
-      : "내부 균열 및 손상 분석"}
-  </p>
-</button>
+            <p>
+              {preInvestigation.xray
+                ? "AI 분석을 완료했습니다."
+                : "내부 균열 및 손상 분석"}
+            </p>
+          </button>
 
           <button
-  className={`analysis-btn ${
-    preInvestigation.visual ? "completed" : ""
-  }`}
-  onClick={handleVisual}
->
-  <div className="icon">
-    {preInvestigation.visual ? "✅" : "🔍"}
-  </div>
+            className={`analysis-btn ${
+              preInvestigation.visual ? "completed" : ""
+            }`}
+            onClick={handleVisual}
+          >
+            <div className="icon">{preInvestigation.visual ? "✅" : "🔍"}</div>
 
-  <h3>
-    {preInvestigation.visual
-      ? "육안 상태 조사 완료"
-      : "육안 상태 조사"}
-  </h3>
+            <h3>
+              {preInvestigation.visual
+                ? "육안 상태 조사 완료"
+                : "육안 상태 조사"}
+            </h3>
 
-  <p>
-    {preInvestigation.visual
-      ? "AI 분석을 완료했습니다."
-      : "표면 손상 및 오염 조사"}
-  </p>
-</button>
+            <p>
+              {preInvestigation.visual
+                ? "AI 분석을 완료했습니다."
+                : "표면 손상 및 오염 조사"}
+            </p>
+          </button>
         </section>
       </div>
     </div>
