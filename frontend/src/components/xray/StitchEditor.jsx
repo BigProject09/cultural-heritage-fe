@@ -180,6 +180,7 @@ export default function StitchEditor({
   assembledFile,
   fragmentFiles,
   fragments,
+  canvas,
   artifactId,
   onConfirm,
   onCancel,
@@ -198,8 +199,11 @@ export default function StitchEditor({
   const [placements, setPlacements] = useState({});
   const [movedKeys, setMovedKeys] = useState(() => new Set());
 
-  const canvasWidth = assembled?.width ?? 0;
-  const canvasHeight = assembled?.height ?? 0;
+  // 캔버스 크기는 layout 이 알려주는 값을 먼저 쓴다.
+  // 변환행렬이 그 좌표계를 기준으로 하므로 결합본 이미지에서
+  // 유추한 값보다 정확하다.
+  const canvasWidth = canvas?.width ?? assembled?.width ?? 0;
+  const canvasHeight = canvas?.height ?? assembled?.height ?? 0;
 
   const pieces = useMemo(
     () => buildPieces(fragments, canvasWidth, canvasHeight),

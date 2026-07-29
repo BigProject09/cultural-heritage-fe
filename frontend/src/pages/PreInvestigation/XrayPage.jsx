@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useDisassembly } from "../../context/DisassemblyContext";
 import "./XrayPage.css";
 
+import StitchEditor from "../../components/xray/StitchEditor";
 import ImageViewer from "../../components/xray/ImageViewer";
 import ReportPanel from "../../components/xray/ReportPanel";
 import TaskProgress from "../../components/xray/TaskProgress";
@@ -13,6 +14,7 @@ import {
   detectBatch,
   detectOne,
   downloadStitchResult,
+  fetchStitchLayout,
   generateReport,
   waitForStitchJob,
 } from "../../services/xrayApi";
@@ -346,6 +348,26 @@ export default function XrayPage() {
   const [stitchMessage, setStitchMessage] = useState("");
   const [stitchJobId, setStitchJobId] = useState("");
 
+  /**
+   * 조각별 배치 정보.
+   *
+   * 수동 보정 화면이 이 값으로 조각을 개별 배치한다.
+   * 서버가 아직 제공하지 않으면 빈 배열이 오고, 그때는
+   * 보정 버튼을 내보내지 않는다.
+   */
+  const [stitchLayout, setStitchLayout] = useState(null);
+
+  /** 보정 화면 표시 여부 */
+  const [editingPlacement, setEditingPlacement] = useState(false);
+
+  /**
+   * 사람이 바로잡은 조각별 변환행렬.
+   *
+   * 다음 단계로 넘길 때 함께 전달해, 어떤 조각을 손댔는지
+   * 기록에 남긴다.
+   */
+  const [correctedFragments, setCorrectedFragments] = useState(null);
+
   const [health, setHealth] = useState(null);
   const [confidence, setConfidence] = useState(0.08);
   const [regions, setRegions] = useState([]);
@@ -403,6 +425,8 @@ export default function XrayPage() {
     setAssembledFile(null);
     setStitchStatus("IDLE");
     setStitchMessage("");
+    setStitchLayout(null);
+    setCorrectedFragments(null);
   }
 
   function acceptFragmentFiles(files) {
@@ -419,6 +443,8 @@ export default function XrayPage() {
     setAssembledFile(null);
     setStitchStatus("IDLE");
     setStitchMessage("");
+    setStitchLayout(null);
+    setCorrectedFragments(null);
   }
 
   function removeFragment(target) {
@@ -426,6 +452,8 @@ export default function XrayPage() {
     setAssembledFile(null);
     setStitchStatus("IDLE");
     setStitchMessage("");
+    setStitchLayout(null);
+    setCorrectedFragments(null);
   }
 
   function handleDrop(event) {
@@ -502,6 +530,12 @@ export default function XrayPage() {
 
       setAssembledFile(resultFile);
       setViewFile(resultFile);
+      // 조각별 배치 정보를 함께 받아 둔다.
+      // 실패해도 결합 결과 자체는 쓸 수 있어야 하므로
+      // 예외를 밖으로 던지지 않는다.
+      const layout = await fetchStitchLayout(completed.jobId);
+      setStitchLayout(layout);
+      setCorrectedFragments(null);
       setStitchStatus("COMPLETED");
       setStitchMessage(
         "결합이 완료되었습니다. 결과를 확인한 뒤 다음 단계로 이동하세요.",
@@ -510,6 +544,25 @@ export default function XrayPage() {
       setStitchStatus("FAILED");
       setStitchMessage(`결합 실패: ${error.message}`);
     }
+  }
+
+  /**
+   * 수동 보정 결과를 받는다.
+   *
+   * 화면에서 그린 그대로를 결합본으로 삼는다. 조각을 옮긴
+   * 위치가 곧 결과여야 이후 분석과 어긋나지 않는다.
+   */
+  function applyCorrection({ file, fragments: corrected, movedCount }) {
+    setAssembledFile(file);
+    setViewFile(file);
+    setCorrectedFragments(corrected);
+    setEditingPlacement(false);
+
+    setStitchMessage(
+      movedCount > 0
+        ? `조각 ${movedCount}개를 보정했습니다. 결과를 확인한 뒤 확정하세요.`
+        : "보정 없이 저장했습니다.",
+    );
   }
 
   /**
@@ -744,6 +797,10 @@ export default function XrayPage() {
           reportStyle,
           colorImage: colorSources[0] || null,
           stitchedXrayImage: assembledFile,
+          // 사람이 조각 위치를 바로잡았는지와 그 결과.
+          // 검수 이력의 일부이므로 함께 남긴다.
+          placementCorrected: Boolean(correctedFragments),
+          correctedFragments,
         },
       },
     });
@@ -1036,7 +1093,34 @@ export default function XrayPage() {
               </section>
             )}
 
-            {assembledPreview && (
+            {assembledPreview && editingPlacement && (
+              <section className="xray-section">
+                <div className="section-heading">
+                  <div>
+                    <span className="section-kicker">STEP 2</span>
+                    <h2>조각 위치 보정</h2>
+                    <p>
+                      조각을 끌어 옮기고 회전해 위치를 바로잡습니다. AI가
+                      배치하지 못한 조각은 오른쪽 목록에서 직접 놓을 수
+                      있습니다.
+                    </p>
+                  </div>
+                  <span className="requirement-chip">전문가 보정</span>
+                </div>
+
+                <StitchEditor
+                  assembledFile={assembledFile}
+                  fragmentFiles={fragmentFiles}
+                  fragments={stitchLayout?.fragments ?? []}
+                  canvas={stitchLayout?.canvas ?? null}
+                  artifactId={artifactId}
+                  onConfirm={applyCorrection}
+                  onCancel={() => setEditingPlacement(false)}
+                />
+              </section>
+            )}
+
+            {assembledPreview && !editingPlacement && (
               <section className="xray-section">
                 <div className="section-heading">
                   <div>
@@ -1044,7 +1128,9 @@ export default function XrayPage() {
                     <h2>조각 결합 결과</h2>
                     <p>조각 방향과 파손 간격을 확인한 뒤 분석을 계속하세요.</p>
                   </div>
-                  <span className="ai-chip">AI 배치 초안</span>
+                  <span className="ai-chip">
+                    {correctedFragments ? "전문가 보정본" : "AI 배치 초안"}
+                  </span>
                 </div>
 
                 <div className="assembled-preview">
@@ -1066,6 +1152,8 @@ export default function XrayPage() {
                       onClick={() => {
                         setAssembledFile(null);
                         setStitchStatus("IDLE");
+                        setStitchLayout(null);
+                        setCorrectedFragments(null);
                       }}
                       disabled={stitchBusy}
                     >
@@ -1078,6 +1166,20 @@ export default function XrayPage() {
                     >
                       다시 결합하기
                     </button>
+
+                    {/*
+                      조각별 배치 정보가 있어야 개별로 움직일 수 있다.
+                      서버가 아직 제공하지 않으면 버튼을 감춘다.
+                    */}
+                    {stitchLayout?.fragments?.length > 0 && (
+                      <button
+                        className="xray-secondary"
+                        onClick={() => setEditingPlacement(true)}
+                      >
+                        조각 위치 보정
+                      </button>
+                    )}
+
                     <button className="xray-primary" onClick={confirmStitch}>
                       이 결과로 분석 계속하기
                       <span aria-hidden="true">→</span>
@@ -1527,7 +1629,9 @@ export default function XrayPage() {
                     </button>
                   </div>
                 </header>
-                <div className="final-report-body">{report}</div>
+                <div className="final-report-body">
+                  {report.replace(/\*\*/g, "")}
+                </div>
                 <footer>
                   <span>
                     {reportStyle === "detailed" ? "상세본" : "요약본"} ·{" "}
