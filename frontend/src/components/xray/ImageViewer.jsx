@@ -12,12 +12,7 @@ import { useEffect, useRef, useState } from "react";
  * AI가 반환한 bbox는 원본 이미지 픽셀 좌표이므로
  * viewBox를 원본 크기로 두면 그대로 그릴 수 있다.
  */
-export default function ImageViewer({
-  file,
-  regions,
-  selectedId,
-  onSelect,
-}) {
+export default function ImageViewer({ file, regions, selectedId, onSelect }) {
   const [url, setUrl] = useState(null);
   const [size, setSize] = useState(null);
   const imgRef = useRef(null);
@@ -43,11 +38,7 @@ export default function ImageViewer({
   }
 
   if (!url) {
-    return (
-      <div className="viewer-empty">
-        이미지를 선택하세요
-      </div>
-    );
+    return <div className="viewer-empty">이미지를 선택하세요</div>;
   }
 
   return (
@@ -65,7 +56,7 @@ export default function ImageViewer({
           <svg
             className="viewer-svg"
             viewBox={`0 0 ${size.width} ${size.height}`}
-            preserveAspectRatio="none"
+            preserveAspectRatio="xMidYMid meet"
           >
             {regions.map((r) => (
               <BoxShape
@@ -82,8 +73,7 @@ export default function ImageViewer({
 
       {size && (
         <div className="viewer-meta">
-          {size.width} x {size.height} px | 영역{" "}
-          {regions.length}건
+          {size.width} x {size.height} px | 영역 {regions.length}건
         </div>
       )}
     </div>
@@ -101,12 +91,7 @@ function colorOf(confidence) {
   return "#ff2d2d";
 }
 
-function BoxShape({
-  region,
-  imageWidth,
-  selected,
-  onSelect,
-}) {
+function BoxShape({ region, imageWidth, selected, onSelect }) {
   const { x1, y1, x2, y2 } = region.bbox;
 
   const color = colorOf(region.confidence);
@@ -117,10 +102,7 @@ function BoxShape({
   const fontSize = Math.max(12, imageWidth / 70);
 
   return (
-    <g
-      onClick={() => onSelect(region.regionId)}
-      style={{ cursor: "pointer" }}
-    >
+    <g onClick={() => onSelect(region.regionId)} style={{ cursor: "pointer" }}>
       <rect
         x={x1}
         y={y1}

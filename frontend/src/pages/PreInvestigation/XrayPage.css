@@ -51,6 +51,9 @@
   border-radius: 10px;
   cursor: pointer;
   font-weight: 700;
+  /* 버튼 글자는 줄바꿈되지 않게 한다. flex 자식은 공간이
+     모자라면 내용보다 작게 눌리기 때문이다. */
+  white-space: nowrap;
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
@@ -1625,6 +1628,11 @@
   gap: 4px;
 }
 
+/* 공간이 모자라면 안내 문구가 먼저 줄어들고 버튼은 유지된다 */
+.complete-area > div:first-child {
+  min-width: 0;
+}
+
 .complete-area strong {
   font-size: 13px;
 }
@@ -1640,7 +1648,9 @@
   min-height: 48px !important;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  /* 화살표를 글자에 가깝게 둔다. 간격이 넓으면 버튼이
+     불필요하게 커져 옆 버튼과 균형이 깨진다. */
+  gap: 10px;
   background: var(--xray-primary);
   color: #fff;
 }
@@ -1649,15 +1659,37 @@
   color: #fff;
 }
 
+.complete-area > .complete-btn {
+  flex: none;
+}
+
 .complete-area.final {
   position: static;
 }
 
 .final-complete-actions {
   display: flex !important;
-  align-items: center;
+  /* stretch 로 두면 두 버튼의 높이가 자동으로 맞는다 */
+  align-items: stretch;
+  flex: none;
   flex-direction: row !important;
   gap: 8px !important;
+}
+
+/*
+ * 나란히 놓인 두 버튼의 크기를 맞춘다.
+ *
+ * 완료 버튼은 글자가 길고 화살표까지 있어 그대로 두면 옆
+ * 버튼의 두 배 가까이 넓어진다. 같은 최소 폭을 줘서 한 쌍으로
+ * 보이게 한다.
+ */
+.final-complete-actions > button {
+  flex: none;
+  min-width: 160px;
+  height: 48px !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  align-self: center !important;
 }
 
 .complete-modal-backdrop {
