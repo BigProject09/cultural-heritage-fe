@@ -55,17 +55,32 @@ import {
 const WORKFLOW = {
   STITCH: "STITCH",
   INSPECTION: "INSPECTION",
+  REVIEW: "REVIEW",
 };
+
+const WORKFLOW_STEPS = [
+  ["이미지 등록", "X-RAY 조각 선택"],
+  ["조각 결합", "AI 배치 결과 확인"],
+  ["영역 검수", "정상 후보만 제외"],
+  ["문안 작성", "조사 초안 편집"],
+  ["최종 검토", "전체 결과 확인"],
+];
 
 /**
  * Mock 모드 여부.
  *
  * 백엔드 없이 화면만 확인할 때 쓴다. .env 에서
- * VITE_USE_XRAY_MOCK=false 로 두면 실제 API 를 호출한다.
- * 값이 없으면 Mock 이 기본이므로, 실서버 연동 시 반드시
- * false 를 명시해야 한다.
+ * VITE_USE_XRAY_MOCK=true 로 두면 서버를 부르지 않고
+ * 가짜 응답으로 동작한다.
+ *
+ * 값이 없으면 실제 API 를 호출한다. 팀 저장소에서는 실서버가
+ * 기본이어야 안전하기 때문이다. Mock 은 명시적으로 켜야 한다.
+ *
+ * services/xrayApi.js 도 같은 규칙을 쓴다. 두 곳의 판정이
+ * 어긋나면, 화면은 Mock 이라 판단해 컬러 이미지를 비워 보내는데
+ * 실제 API 가 호출되어 결합이 실패한다.
  */
-const USE_MOCK = import.meta.env.VITE_USE_XRAY_MOCK !== "false";
+const USE_MOCK = import.meta.env.VITE_USE_XRAY_MOCK === "true";
 
 /** 결합 작업이 진행 중인 상태들. 버튼 잠금과 진행 표시에 함께 쓴다. */
 const STITCH_BUSY = ["UPLOADING", "PENDING", "RUNNING"];
@@ -198,7 +213,7 @@ function defaultNote(region) {
 }
 
 function UploadThumbnail({ file, index, disabled, onRemove }) {
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(null);
 
   useEffect(() => {
     const objectUrl = URL.createObjectURL(file);
@@ -209,7 +224,7 @@ function UploadThumbnail({ file, index, disabled, onRemove }) {
   return (
     <article className="upload-thumbnail">
       <div className="upload-thumbnail-image">
-        <img src={url} alt={`X-RAY 조각 ${index + 1}`} />
+        {url && <img src={url} alt={`X-RAY 조각 ${index + 1}`} />}
         <span>{String(index + 1).padStart(2, "0")}</span>
       </div>
       <div className="upload-thumbnail-info">
@@ -229,6 +244,41 @@ function UploadThumbnail({ file, index, disabled, onRemove }) {
   );
 }
 
+function sourceValue(source) {
+  if (!source || typeof source !== "object") return source;
+  if (source instanceof Blob) return source;
+
+  return source.file || source.url || source.imageUrl || source.src || "";
+}
+
+function ResultPreviewImage({ source, alt }) {
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  useEffect(() => {
+    const resolved = sourceValue(source);
+
+    if (resolved instanceof Blob) {
+      const objectUrl = URL.createObjectURL(resolved);
+      setPreviewUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+
+    setPreviewUrl(typeof resolved === "string" ? resolved : "");
+    return undefined;
+  }, [source]);
+
+  if (!previewUrl) {
+    return (
+      <div className="result-image-empty">
+        <span aria-hidden="true">＋</span>
+        <strong>등록된 이미지가 없습니다</strong>
+      </div>
+    );
+  }
+
+  return <img src={previewUrl} alt={alt} />;
+}
+
 function StepIcon({ number, done }) {
   return (
     <span className="workflow-step-icon" aria-hidden="true">
@@ -242,6 +292,7 @@ export default function XrayPage() {
   const location = useLocation();
   const { setPreInvestigation } = useDisassembly();
   const fileInputRef = useRef(null);
+  const reportSectionRef = useRef(null);
 
   const approvedFlow = location.state?.approvedFlow || [];
 
@@ -299,6 +350,7 @@ export default function XrayPage() {
   const [confidence, setConfidence] = useState(0.08);
   const [regions, setRegions] = useState([]);
   const [summaries, setSummaries] = useState([]);
+  const [excludedRegions, setExcludedRegions] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [viewFile, setViewFile] = useState(null);
 
@@ -316,6 +368,7 @@ export default function XrayPage() {
   const [reportStyle, setReportStyle] = useState("summary");
   const [isDragging, setIsDragging] = useState(false);
   const [lastRemoved, setLastRemoved] = useState(null);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
 
   // AI 서비스 상태를 미리 확인해 두고 결함 분석 버튼 활성화에 쓴다
   useEffect(() => {
@@ -492,6 +545,7 @@ export default function XrayPage() {
     setInspectionDone(false);
     setInspectionMessage("");
     setRegions([]);
+    setExcludedRegions([]);
     setSummaries([]);
     setElapsed(null);
     setReport("");
@@ -522,7 +576,9 @@ export default function XrayPage() {
         ...region,
         regionId: `R-${String(index + 1).padStart(3, "0")}`,
         userNote: defaultNote(region),
-        reviewDecision: "pending",
+        // AI가 탐지한 영역은 우선 이상 영역으로 포함한다.
+        // 작업자는 정상으로 확인한 오탐만 제외하면 된다.
+        reviewDecision: "damage",
       }));
 
       const allSummaries = [
@@ -561,20 +617,20 @@ export default function XrayPage() {
     );
   }
 
-  function updateDecision(id, reviewDecision) {
-    setRegions((current) =>
-      current.map((region) =>
-        region.regionId === id ? { ...region, reviewDecision } : region,
-      ),
-    );
-  }
-
-  /** 오탐 제외. 지운 영역은 문안에도 반영되지 않는다. */
+  /** 정상 영역 제외. 제외한 영역은 문안 생성 대상에서 빠진다. */
   function removeRegion(id) {
     setRegions((current) => {
       const index = current.findIndex((region) => region.regionId === id);
       const region = current[index];
-      if (region) setLastRemoved({ region, index });
+      if (region) {
+        const excludedRegion = {
+          ...region,
+          reviewDecision: "normal",
+          excludedAt: new Date().toISOString(),
+        };
+        setExcludedRegions((excluded) => [...excluded, excludedRegion]);
+        setLastRemoved({ region, index });
+      }
 
       const next = current.filter((item) => item.regionId !== id);
       if (selectedId === id) {
@@ -601,6 +657,11 @@ export default function XrayPage() {
       (item) => item?.name === lastRemoved.region.fileName,
     );
     if (file) setViewFile(file);
+    setExcludedRegions((current) =>
+      current.filter(
+        (region) => region.regionId !== lastRemoved.region.regionId,
+      ),
+    );
     setLastRemoved(null);
   }
 
@@ -659,7 +720,7 @@ export default function XrayPage() {
    * 고친 최종본이 전달된다.
    */
   function handleComplete() {
-    if (!inspectionDone) return;
+    if (!inspectionDone || !report.trim()) return;
 
     setPreInvestigation((previous) => ({
       ...previous,
@@ -671,15 +732,37 @@ export default function XrayPage() {
         approvedFlow,
         artifactInfo,
         xrayResult: {
+          status: "COMPLETED",
+          completedAt: new Date().toISOString(),
           stitchJobId,
           regionCount: regions.length,
           regions,
+          excludedRegionCount: excludedRegions.length,
+          excludedRegions,
           summaries,
           report,
           reportStyle,
+          colorImage: colorSources[0] || null,
+          stitchedXrayImage: assembledFile,
         },
       },
     });
+  }
+
+  function openFinalReview() {
+    if (!inspectionDone || !report.trim()) return;
+    setWorkflow(WORKFLOW.REVIEW);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function returnToReport() {
+    setWorkflow(WORKFLOW.INSPECTION);
+    window.setTimeout(() => {
+      reportSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
   }
 
   const stitchBusy = STITCH_BUSY.includes(stitchStatus);
@@ -698,11 +781,33 @@ export default function XrayPage() {
   const selectedIndex = regions.findIndex(
     (region) => region.regionId === selectedRegion?.regionId,
   );
-  const reviewedCount = regions.filter(
-    (region) => region.reviewDecision && region.reviewDecision !== "pending",
-  ).length;
+  const excludedCount = excludedRegions.length;
   const currentStep =
-    workflow === WORKFLOW.STITCH ? (assembledFile ? 2 : 1) : report ? 4 : 3;
+    workflow === WORKFLOW.STITCH
+      ? assembledFile
+        ? 2
+        : 1
+      : workflow === WORKFLOW.REVIEW
+        ? 5
+        : report
+          ? 4
+          : 3;
+  const artifactManager = String(
+    valueFrom(
+      artifactInfo,
+      ["taskManager", "manager", "managerName", "createdBy"],
+      "담당자 정보 없음",
+    ),
+  );
+  const reviewDate = useMemo(
+    () =>
+      new Intl.DateTimeFormat("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date()),
+    [],
+  );
 
   function selectRegion(id) {
     setSelectedId(id);
@@ -773,13 +878,12 @@ export default function XrayPage() {
           </div>
         </section>
 
-        <ol className="workflow-steps" aria-label="X-RAY 분석 진행 단계">
-          {[
-            ["이미지 등록", "X-RAY 조각 선택"],
-            ["조각 결합", "AI 배치 결과 확인"],
-            ["영역 검수", "이상 후보 판정"],
-            ["문안 작성", "조사 초안 편집"],
-          ].map(([label, description], index) => {
+        <ol
+          className="workflow-steps"
+          aria-label="X-RAY 분석 진행 단계"
+          data-workflow-version="5-step"
+        >
+          {WORKFLOW_STEPS.map(([label, description], index) => {
             const step = index + 1;
             const state =
               step < currentStep
@@ -1086,17 +1190,11 @@ export default function XrayPage() {
                 <div className="inspection-summary-bar">
                   <div>
                     <strong>{regions.length}</strong>
-                    <span>검토 후보</span>
+                    <span>이상 영역 포함</span>
                   </div>
                   <div>
-                    <strong>{reviewedCount}</strong>
-                    <span>판정 완료</span>
-                  </div>
-                  <div>
-                    <strong>
-                      {Math.max(regions.length - reviewedCount, 0)}
-                    </strong>
-                    <span>검토 전</span>
+                    <strong>{excludedCount}</strong>
+                    <span>정상으로 제외</span>
                   </div>
                   {elapsed && <p>분석 소요 {elapsed}초</p>}
                   <button
@@ -1163,8 +1261,14 @@ export default function XrayPage() {
                         {selectedIndex + 1} / {regions.length}
                       </strong>
                     </div>
+                    <span>{regions.length}건 이상 영역으로 포함</span>
+                  </div>
+
+                  <div className="review-default-guide">
+                    <strong>기본 판정: 이상 있음</strong>
                     <span>
-                      {reviewedCount}/{regions.length} 판정 완료
+                      AI 탐지 영역은 모두 결과에 포함됩니다. 정상으로 확인된
+                      영역만 제외하세요.
                     </span>
                   </div>
 
@@ -1180,9 +1284,7 @@ export default function XrayPage() {
                         }
                         onClick={() => selectRegion(region.regionId)}
                       >
-                        <span
-                          className={`review-state ${region.reviewDecision}`}
-                        />
+                        <span className="review-state damage" />
                         <strong>{region.regionId}</strong>
                         <span>{region.position}</span>
                         <small>{region.confidence.toFixed(2)}</small>
@@ -1195,25 +1297,10 @@ export default function XrayPage() {
                       <div className="review-detail-title">
                         <div>
                           <strong>{selectedRegion.regionId}</strong>
-                          <span
-                            className={`decision-chip ${selectedRegion.reviewDecision}`}
-                          >
-                            {selectedRegion.reviewDecision === "damage"
-                              ? "이상 있음"
-                              : selectedRegion.reviewDecision === "normal"
-                                ? "정상 영역"
-                                : selectedRegion.reviewDecision === "hold"
-                                  ? "판단 보류"
-                                  : "검토 전"}
+                          <span className="decision-chip damage">
+                            이상 있음 · 결과 포함
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          className="exclude-button"
-                          onClick={() => removeRegion(selectedRegion.regionId)}
-                        >
-                          검토 대상에서 제외
-                        </button>
                       </div>
 
                       <dl className="region-meta">
@@ -1252,30 +1339,8 @@ export default function XrayPage() {
                         </div>
                       </div>
 
-                      <fieldset className="decision-field">
-                        <legend>전문가 판정</legend>
-                        {[
-                          ["damage", "이상 있음"],
-                          ["normal", "정상 영역"],
-                          ["hold", "판단 보류"],
-                        ].map(([value, label]) => (
-                          <label key={value}>
-                            <input
-                              type="radio"
-                              name={`decision-${selectedRegion.regionId}`}
-                              value={value}
-                              checked={selectedRegion.reviewDecision === value}
-                              onChange={() =>
-                                updateDecision(selectedRegion.regionId, value)
-                              }
-                            />
-                            <span>{label}</span>
-                          </label>
-                        ))}
-                      </fieldset>
-
                       <label className="review-note">
-                        <span>전문가 소견</span>
+                        <span>전문가 소견 · 선택 입력</span>
                         <textarea
                           value={selectedRegion.userNote || ""}
                           onChange={(event) =>
@@ -1301,14 +1366,21 @@ export default function XrayPage() {
                             selectRegion(previous.regionId);
                           }}
                         >
-                          이전 영역
+                          이전
+                        </button>
+                        <button
+                          type="button"
+                          className="normal-exclude-button"
+                          onClick={() => removeRegion(selectedRegion.regionId)}
+                        >
+                          정상으로 제외
                         </button>
                         <button
                           type="button"
                           className="xray-primary"
                           onClick={selectNextRegion}
                         >
-                          저장 후 다음
+                          다음
                           <span aria-hidden="true">→</span>
                         </button>
                       </div>
@@ -1319,7 +1391,7 @@ export default function XrayPage() {
             )}
 
             {inspectionDone && (
-              <section className="report-section">
+              <section className="report-section" ref={reportSectionRef}>
                 <div className="section-heading">
                   <div>
                     <span className="section-kicker">STEP 4</span>
@@ -1345,7 +1417,7 @@ export default function XrayPage() {
                 <TaskProgress
                   active={reportLoading}
                   headline="AI 1차 상태조사 문안을 작성하고 있습니다"
-                  detail={`검수 완료 영역 ${regions.length}건`}
+                  detail={`이상 포함 ${regions.length}건 · 정상 제외 ${excludedCount}건`}
                   note="30초에서 2분이 걸립니다."
                 />
               </section>
@@ -1353,19 +1425,146 @@ export default function XrayPage() {
 
             <div className="complete-area">
               <div>
-                <strong>X-RAY 분석 작업</strong>
+                <strong>최종 검토 전 확인</strong>
                 <span>
-                  검토 후보 {regions.length}건 · 판정 완료 {reviewedCount}건
+                  이상 포함 {regions.length}건 · 정상 제외 {excludedCount}건 ·
+                  문안 {report.trim() ? "작성 완료" : "작성 필요"}
                 </span>
               </div>
               <button
                 className="complete-btn"
-                onClick={handleComplete}
-                disabled={!inspectionDone}
+                onClick={openFinalReview}
+                disabled={!inspectionDone || !report.trim()}
               >
-                작업 완료
+                최종 검토로 이동
                 <span aria-hidden="true">→</span>
               </button>
+            </div>
+          </main>
+        )}
+
+        {workflow === WORKFLOW.REVIEW && (
+          <main className="workflow-content">
+            <section className="final-review-section">
+              <div className="section-heading">
+                <div>
+                  <span className="section-kicker">STEP 5</span>
+                  <h2>최종 결과 검토</h2>
+                  <p>
+                    컬러 기준 이미지, X-RAY 결합 결과와 조사 문안을 확인한 뒤
+                    작업을 완료하세요.
+                  </p>
+                </div>
+                <span className="review-ready-chip">
+                  <span aria-hidden="true">✓</span>
+                  완료 준비
+                </span>
+              </div>
+
+              <dl className="final-artifact-info">
+                <div>
+                  <dt>분석 대상</dt>
+                  <dd>{artifactType || "유물 정보 없음"}</dd>
+                </div>
+                <div>
+                  <dt>관리번호</dt>
+                  <dd>{artifactId || "정보 없음"}</dd>
+                </div>
+                <div>
+                  <dt>분석일</dt>
+                  <dd>{reviewDate}</dd>
+                </div>
+                <div>
+                  <dt>담당자</dt>
+                  <dd>{artifactManager}</dd>
+                </div>
+              </dl>
+
+              <div className="final-image-grid">
+                <article className="result-image-card">
+                  <header>
+                    <div>
+                      <span>REFERENCE IMAGE</span>
+                      <h3>컬러 기준 이미지</h3>
+                    </div>
+                    <small>외형 및 표면 상태</small>
+                  </header>
+                  <div className="result-image-frame color">
+                    <ResultPreviewImage
+                      source={colorSources[0]}
+                      alt="유물 컬러 기준 이미지"
+                    />
+                  </div>
+                </article>
+
+                <article className="result-image-card">
+                  <header>
+                    <div>
+                      <span>ASSEMBLED X-RAY</span>
+                      <h3>X-RAY 결합 결과</h3>
+                    </div>
+                    <small>{fragmentFiles.length}개 조각 결합</small>
+                  </header>
+                  <div className="result-image-frame xray">
+                    <ResultPreviewImage
+                      source={assembledFile}
+                      alt="X-RAY 조각 결합 결과"
+                    />
+                  </div>
+                </article>
+              </div>
+
+              <article className="final-report-card">
+                <header>
+                  <div>
+                    <span>FINAL INSPECTION NOTE</span>
+                    <h3>상태조사 문안</h3>
+                  </div>
+                  <div className="final-report-actions">
+                    <span>전문가 검토본</span>
+                    <button type="button" onClick={returnToReport}>
+                      문안 수정하기
+                    </button>
+                  </div>
+                </header>
+                <div className="final-report-body">{report}</div>
+                <footer>
+                  <span>
+                    {reportStyle === "detailed" ? "상세본" : "요약본"} ·{" "}
+                    {report.length.toLocaleString()}자
+                  </span>
+                  <span>
+                    이상 포함 {regions.length}건 · 정상 제외 {excludedCount}건
+                  </span>
+                </footer>
+              </article>
+            </section>
+
+            <div className="complete-area final">
+              <div>
+                <strong>모든 결과를 확인하셨나요?</strong>
+                <span>
+                  완료 후 결과는 조회할 수 있으며 수정하려면 작업을 다시 열어야
+                  합니다.
+                </span>
+              </div>
+              <div className="final-complete-actions">
+                <button
+                  type="button"
+                  className="xray-secondary"
+                  onClick={returnToReport}
+                >
+                  이전 단계로
+                </button>
+                <button
+                  type="button"
+                  className="complete-btn"
+                  onClick={() => setShowCompleteConfirm(true)}
+                >
+                  조사 작업 완료
+                  <span aria-hidden="true">→</span>
+                </button>
+              </div>
             </div>
           </main>
         )}
@@ -1373,7 +1572,7 @@ export default function XrayPage() {
         {lastRemoved && (
           <div className="undo-toast" role="status">
             <span>
-              {lastRemoved.region.regionId}을 검토 대상에서 제외했습니다.
+              {lastRemoved.region.regionId}을 정상 영역으로 제외했습니다.
             </span>
             <button type="button" onClick={undoRemove}>
               되돌리기
@@ -1385,6 +1584,50 @@ export default function XrayPage() {
             >
               ×
             </button>
+          </div>
+        )}
+
+        {showCompleteConfirm && (
+          <div
+            className="complete-modal-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setShowCompleteConfirm(false);
+              }
+            }}
+          >
+            <section
+              className="complete-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="complete-modal-title"
+            >
+              <span className="complete-modal-icon" aria-hidden="true">
+                ✓
+              </span>
+              <h2 id="complete-modal-title">X-RAY 조사를 완료할까요?</h2>
+              <p>
+                완료된 결과는 처리 전 조사에서 다시 확인할 수 있습니다. 수정이
+                필요하면 작업을 다시 열어야 합니다.
+              </p>
+              <div>
+                <button
+                  type="button"
+                  className="xray-secondary"
+                  onClick={() => setShowCompleteConfirm(false)}
+                >
+                  계속 검토하기
+                </button>
+                <button
+                  type="button"
+                  className="xray-primary"
+                  onClick={handleComplete}
+                >
+                  작업 완료
+                </button>
+              </div>
+            </section>
           </div>
         )}
       </div>

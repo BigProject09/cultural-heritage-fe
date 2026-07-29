@@ -21,41 +21,76 @@ function ArtifactRegisterPage() {
 
   // 유물 사진을 data URL 로 저장한다.
   //
-  // URL.createObjectURL 이 만드는 blob: URL 은 문서 수명에 묶여 있어
-  // 새로고침하면 무효가 된다. localStorage 에는 문자열이 남지만
-  // 실제로 불러올 수 없어, 이후 단계에서 사진을 쓰지 못한다.
+  // blob: URL 은 문서 수명에 묶여 있어 새로고침하면 무효가 된다.
+  // localStorage 에는 문자열이 남지만 실제로 불러올 수 없어
+  // 이후 단계에서 사진을 쓰지 못한다.
   //
-  // X-RAY 결합은 이 컬러 사진의 외곽 형태를 기준으로 조각을
-  // 배치하므로 반드시 살아 있어야 한다.
+  // X-RAY 결합은 이 사진의 외곽 형태를 기준으로 조각을 배치한다.
+  // 다시 압축하면 경계에 아티팩트가 생겨 마스크 추출이 나빠지므로
+  // 용량이 허용하는 한 원본을 그대로 둔다.
   //
-  // 원본 그대로 넣으면 localStorage 용량(약 5MB)을 넘길 수 있어
-  // 긴 변을 2000px 로 줄인다. 결합 엔진이 기준 이미지를 1400~2200px
-  // 로 축소해 분석하므로 정밀도 손실은 없다.
+  // 줄여야 할 때도 2400px 아래로는 내리지 않는다. 결합 엔진이
+  // 기준 이미지를 최대 2200px 로 분석하기 때문이다.
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // localStorage 는 대략 5MB 가 한계다. 다른 값도 함께
+    // 저장되므로 여유를 두고 상한을 잡는다.
+    const MAX_BYTES = 3_200_000;
+
+    // 해상도와 품질을 단계적으로 낮춘다.
+    // 엔진 분석 상한(2200px)을 먼저 지키고, 그래도 크면
+    // 품질을 내린 뒤 마지막에 해상도를 줄인다.
+    const STEPS = [
+      [2400, 0.95],
+      [2400, 0.88],
+      [2000, 0.88],
+      [1600, 0.85],
+    ];
+
     const reader = new FileReader();
 
     reader.onload = () => {
+      const original = reader.result;
+
+      // 원본이 충분히 작으면 손대지 않는다
+      if (original.length <= MAX_BYTES) {
+        setImage(original);
+        return;
+      }
+
       const img = new Image();
 
       img.onload = () => {
-        const maxSide = 2000;
-        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const render = (maxSide, quality) => {
+          const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
 
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
 
-        canvas
-          .getContext("2d")
-          .drawImage(img, 0, 0, canvas.width, canvas.height);
+          const context = canvas.getContext("2d");
+          context.imageSmoothingQuality = "high";
+          context.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        setImage(canvas.toDataURL("image/jpeg", 0.9));
+          return canvas.toDataURL("image/jpeg", quality);
+        };
+
+        for (const [maxSide, quality] of STEPS) {
+          const encoded = render(maxSide, quality);
+
+          if (encoded.length <= MAX_BYTES) {
+            setImage(encoded);
+            return;
+          }
+        }
+
+        // 모든 단계로도 부족하면 마지막 설정을 그대로 쓴다
+        setImage(render(1600, 0.8));
       };
 
-      img.src = reader.result;
+      img.src = original;
     };
 
     reader.readAsDataURL(file);
