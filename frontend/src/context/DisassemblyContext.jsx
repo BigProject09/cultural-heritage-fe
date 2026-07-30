@@ -14,7 +14,7 @@ export function DisassemblyProvider({
   // taskId처럼 context에 저장해 페이지 이동과 무관하게 유지한다.
   const [approvedFlow, setApprovedFlow] =
     useState(null);
-
+  const [visualResult, setVisualResult] = useState(null);
   // 처리 전 조사
   const [preInvestigation, setPreInvestigation] =
     useState({
@@ -198,6 +198,7 @@ const [restorationChoice, setRestorationChoice] =
     });
 
   setCleaningAnalysis(null);
+  setVisualResult(null);
   setCleaningGuide(null);
   setDryingGuide(null);
   setCleaningSelection({ usePhysical: false, useChemical: false });
@@ -252,6 +253,9 @@ const [restorationChoice, setRestorationChoice] =
         taskId,
         setTaskId,
 
+        visualResult,
+        setVisualResult,
+        
         approvedFlow,
         setApprovedFlow,
 
