@@ -1,6 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "./ReportPage.css";
 import { addMyReport } from "../../utils/myReports";
+import {
+  MODULE_STATUS,
+  markWorkspaceModule,
+} from "../../data/workspaceProjects";
 
 function ReportPage() {
   const navigate = useNavigate();
@@ -16,8 +20,21 @@ function ReportPage() {
     localStorage.getItem("artifactInfo") || "{}",
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const artifactName = artifactInfo.name || "무명 유물";
+
+    if (artifactInfo.artifactId) {
+      try {
+        await markWorkspaceModule(
+          artifactInfo.artifactId,
+          "guide",
+          MODULE_STATUS.DONE,
+        );
+      } catch (error) {
+        window.alert(`복원 가이드 상태 저장 실패: ${error.message}`);
+        return;
+      }
+    }
 
     addMyReport({
       id: `report-${Date.now()}`,

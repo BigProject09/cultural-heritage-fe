@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import useObjectUrl from "../../hooks/useObjectUrl";
 
 /**
  * 원본 이미지 위에 탐지 박스를 겹쳐 표시한다.
@@ -13,29 +14,19 @@ import { useEffect, useRef, useState } from "react";
  * viewBox를 원본 크기로 두면 그대로 그릴 수 있다.
  */
 export default function ImageViewer({ file, regions, selectedId, onSelect }) {
-  const [url, setUrl] = useState(null);
-  const [size, setSize] = useState(null);
+  const url = useObjectUrl(file);
+  const [loadedImage, setLoadedImage] = useState(null);
   const imgRef = useRef(null);
 
-  useEffect(() => {
-    if (!file) {
-      setUrl(null);
-      setSize(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
-
   function handleLoad(e) {
-    setSize({
+    setLoadedImage({
+      url,
       width: e.target.naturalWidth,
       height: e.target.naturalHeight,
     });
   }
+
+  const size = loadedImage?.url === url ? loadedImage : null;
 
   if (!url) {
     return <div className="viewer-empty">이미지를 선택하세요</div>;

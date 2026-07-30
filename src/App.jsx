@@ -91,6 +91,7 @@ function App() {
 
           {/* 프로젝트 상세 */}
           <Route path="/worklist/:id" element={<ProjectDetailPage />} />
+          <Route path="/workspace/:id" element={<ProjectDetailPage />} />
 
           {/* 게시판 */}
           <Route path="/board" element={<BoardPage />} />

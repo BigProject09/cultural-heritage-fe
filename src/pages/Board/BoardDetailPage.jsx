@@ -1,6 +1,7 @@
 import "./BoardDetailPage.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { boardData } from "../../data/boardData";
+import HeritagePage from "../../components/workspace/HeritagePage";
 
 function BoardDetailPage() {
   const navigate = useNavigate();
@@ -12,44 +13,42 @@ function BoardDetailPage() {
 
   if (!post) {
     return (
-      <div className="board-detail-page">
-        <h2>게시글을 찾을 수 없습니다.</h2>
-
-        <button
-          className="back-btn"
-          onClick={() => navigate("/board")}
-        >
-          목록으로
+      <HeritagePage
+        active="community"
+        eyebrow="COMMUNITY · CASE ARCHIVE"
+        title="게시글을 찾을 수 없습니다"
+        description="삭제되었거나 존재하지 않는 게시글입니다."
+      >
+        <button className="heritage-button secondary" onClick={() => navigate("/board")}>
+          게시판으로 돌아가기
         </button>
-      </div>
+      </HeritagePage>
     );
   }
 
   return (
-    <div className="board-detail-page">
-      <button
-        className="back-btn"
-        onClick={() => navigate("/board")}
-      >
-        ← 목록
+    <HeritagePage
+      active="community"
+      eyebrow="COMMUNITY · CASE DETAIL"
+      title={post.title}
+      description="보존처리 현장에서 공유된 사례입니다."
+    >
+      <button className="heritage-back" onClick={() => navigate("/board")}>
+        <span aria-hidden="true">←</span> 게시판 목록
       </button>
 
-      <div className="detail-card">
-        <h1>{post.title}</h1>
-
-        <div className="detail-info">
-          <span>작성자 : {post.writer}</span>
-          <span>조회수 : {post.views}</span>
-          <span>작성일 : {post.date}</span>
+      <article className="heritage-panel board-detail-card">
+        <div className="heritage-meta board-detail-meta">
+          <span>작성자 {post.writer}</span>
+          <span>조회수 {post.views.toLocaleString()}</span>
+          <span>작성일 {post.date}</span>
         </div>
 
-        <hr />
+        <div className="board-detail-divider" />
 
-        <div className="detail-content">
-          {post.content}
-        </div>
-      </div>
-    </div>
+        <div className="board-detail-content">{post.content}</div>
+      </article>
+    </HeritagePage>
   );
 }
 

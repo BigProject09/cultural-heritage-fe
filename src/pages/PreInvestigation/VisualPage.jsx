@@ -1,6 +1,10 @@
 import "./VisualPage.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
+import {
+  MODULE_STATUS,
+  markWorkspaceModule,
+} from "../../data/workspaceProjects";
 
 function VisualPage() {
   const navigate = useNavigate();
@@ -10,11 +14,33 @@ function VisualPage() {
 
   const { setPreInvestigation } = useDisassembly();
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    const artifactInfo = JSON.parse(
+      localStorage.getItem("artifactInfo") || "{}",
+    );
+
+    if (artifactInfo.artifactId) {
+      try {
+        await markWorkspaceModule(
+          artifactInfo.artifactId,
+          "visual",
+          MODULE_STATUS.DONE,
+        );
+      } catch (error) {
+        window.alert(`육안 조사 상태 저장 실패: ${error.message}`);
+        return;
+      }
+    }
+
     setPreInvestigation((prev) => ({
       ...prev,
       visual: true,
     }));
+
+    if (location.state?.workspaceEntry && artifactInfo.artifactId) {
+      navigate(`/workspace/${encodeURIComponent(artifactInfo.artifactId)}`);
+      return;
+    }
 
     navigate("/pre-investigation", {
       state: {

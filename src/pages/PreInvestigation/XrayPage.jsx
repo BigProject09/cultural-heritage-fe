@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
+import {
+  MODULE_STATUS,
+  markWorkspaceModule,
+} from "../../data/workspaceProjects";
 import "./XrayPage.css";
 
 import StitchEditor from "../../components/xray/StitchEditor";
 import ImageViewer from "../../components/xray/ImageViewer";
 import ReportPanel from "../../components/xray/ReportPanel";
 import TaskProgress from "../../components/xray/TaskProgress";
+import useObjectUrl from "../../hooks/useObjectUrl";
 import {
   TARGET,
   checkInspectionHealth,
@@ -215,13 +220,7 @@ function defaultNote(region) {
 }
 
 function UploadThumbnail({ file, index, disabled, onRemove }) {
-  const [url, setUrl] = useState(null);
-
-  useEffect(() => {
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
+  const url = useObjectUrl(file);
 
   return (
     <article className="upload-thumbnail">
@@ -254,20 +253,7 @@ function sourceValue(source) {
 }
 
 function ResultPreviewImage({ source, alt }) {
-  const [previewUrl, setPreviewUrl] = useState("");
-
-  useEffect(() => {
-    const resolved = sourceValue(source);
-
-    if (resolved instanceof Blob) {
-      const objectUrl = URL.createObjectURL(resolved);
-      setPreviewUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-
-    setPreviewUrl(typeof resolved === "string" ? resolved : "");
-    return undefined;
-  }, [source]);
+  const previewUrl = useObjectUrl(sourceValue(source));
 
   if (!previewUrl) {
     return (
@@ -352,7 +338,7 @@ export default function XrayPage() {
 
   const [fragmentFiles, setFragmentFiles] = useState([]);
   const [assembledFile, setAssembledFile] = useState(null);
-  const [assembledPreview, setAssembledPreview] = useState("");
+  const assembledPreview = useObjectUrl(assembledFile);
 
   // 결합 상태. STITCH_STEPS 의 key 와 FAILED, IDLE 을 갖는다.
   const [stitchStatus, setStitchStatus] = useState("IDLE");
@@ -409,24 +395,6 @@ export default function XrayPage() {
       .then(setHealth)
       .catch((error) => setHealth({ ok: false, error: error.message }));
   }, []);
-
-  /**
-   * 결합본 미리보기 URL 관리.
-   *
-   * createObjectURL 로 만든 주소는 직접 해제하지 않으면
-   * 메모리에 남는다. 결합을 여러 번 시도하면 그만큼 쌓이므로
-   * 정리 함수에서 반드시 해제한다.
-   */
-  useEffect(() => {
-    if (!assembledFile) {
-      setAssembledPreview("");
-      return undefined;
-    }
-
-    const objectUrl = URL.createObjectURL(assembledFile);
-    setAssembledPreview(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [assembledFile]);
 
   /**
    * 결합 입력 또는 결합본이 바뀌면 이후 분석 결과는 더 이상
@@ -839,13 +807,25 @@ export default function XrayPage() {
    * 검수 결과를 처리 전 조사 화면으로 넘긴다. 문안은 전문가가
    * 고친 최종본이 전달된다.
    */
-  function handleComplete() {
+  async function handleComplete() {
     if (!inspectionDone || !report.trim()) return;
+
+    try {
+      await markWorkspaceModule(artifactId, "xray", MODULE_STATUS.DONE);
+    } catch (error) {
+      setInspectionMessage(`X-RAY 완료 상태 저장 실패: ${error.message}`);
+      return;
+    }
 
     setPreInvestigation((previous) => ({
       ...previous,
       xray: true,
     }));
+
+    if (location.state?.workspaceEntry) {
+      navigate(`/workspace/${encodeURIComponent(artifactId)}`);
+      return;
+    }
 
     navigate("/pre-investigation", {
       state: {

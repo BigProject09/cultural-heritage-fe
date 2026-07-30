@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
-import "../PostRecord/ReportPage.css";
+import "./AccountPages.css";
 import { getMyReports } from "../../utils/myReports";
+import HeritagePage from "../../components/workspace/HeritagePage";
 
 function MyReportDetailPage() {
   const navigate = useNavigate();
@@ -10,19 +11,19 @@ function MyReportDetailPage() {
 
   if (!report) {
     return (
-      <div className="report-page">
-        <div className="top-bar">
-          <button className="nav-btn" onClick={() => navigate("/mypage/reports")}>
-            ← 목록으로
-          </button>
-
-          <div className="logo">VORA</div>
-        </div>
-
-        <div className="report-paper">
-          <p>보고서를 찾을 수 없습니다.</p>
-        </div>
-      </div>
+      <HeritagePage
+        active="account"
+        eyebrow="CONSERVATION REPORT"
+        title="보고서를 찾을 수 없습니다"
+        description="삭제되었거나 존재하지 않는 보고서입니다."
+      >
+        <button
+          className="heritage-button secondary"
+          onClick={() => navigate("/mypage/reports")}
+        >
+          보고서 목록
+        </button>
+      </HeritagePage>
     );
   }
 
@@ -34,20 +35,24 @@ function MyReportDetailPage() {
   } = report;
 
   return (
-    <div className="report-page">
-      <div className="top-bar">
-        <button className="nav-btn" onClick={() => navigate("/mypage/reports")}>
-          ← 목록으로
-        </button>
+    <HeritagePage
+      active="account"
+      eyebrow="CONSERVATION REPORT"
+      title="보고서 상세"
+      description="프로젝트에서 생성한 보존처리 기록입니다."
+    >
+      <button
+        className="heritage-back"
+        onClick={() => navigate("/mypage/reports")}
+      >
+        <span aria-hidden="true">←</span> 보고서 목록
+      </button>
 
-        <div className="logo">VORA</div>
-      </div>
-
-      <div className="report-paper">
-        <h1>{report.title}</h1>
+      <article className="account-report-paper">
+        <h2>{report.title}</h2>
 
         <section>
-          <h2>기본 정보</h2>
+          <h3>기본 정보</h3>
 
           <p><strong>유물명</strong> : {artifactInfo.name || "-"}</p>
           <p><strong>재질</strong> : {artifactInfo.material || "-"}</p>
@@ -55,7 +60,7 @@ function MyReportDetailPage() {
         </section>
 
         <section>
-          <h2>복원 전 상태</h2>
+          <h3>복원 전 상태</h3>
 
           <p>
             {artifactInfo.condition || "등록된 처리 전 상태 정보가 없습니다."}
@@ -63,7 +68,7 @@ function MyReportDetailPage() {
         </section>
 
         <section>
-          <h2>복원 과정</h2>
+          <h3>복원 과정</h3>
 
           {methods.length > 0 ? (
             <ul>
@@ -77,7 +82,7 @@ function MyReportDetailPage() {
         </section>
 
         <section>
-          <h2>복원 결과</h2>
+          <h3>복원 결과</h3>
 
           {summary.length > 0 ? (
             summary.map((item, index) => <p key={index}>{item}</p>)
@@ -87,15 +92,15 @@ function MyReportDetailPage() {
         </section>
 
         <section>
-          <h2>향후 관리</h2>
+          <h3>향후 관리</h3>
 
           <p>
             {futureCare ||
               "직사광선 및 고습 환경을 피하고 정기적인 상태 점검을 권장한다."}
           </p>
         </section>
-      </div>
-    </div>
+      </article>
+    </HeritagePage>
   );
 }
 

@@ -1,90 +1,39 @@
 import "./ProjectPage.css";
+import "./AccountPages.css";
 import { useNavigate } from "react-router-dom";
+import HeritagePage from "../../components/workspace/HeritagePage";
 
 function ProjectPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="project-page">
+    <HeritagePage
+      active="account"
+      eyebrow="MY CONSERVATION DESK"
+      title="내 프로젝트"
+      description="등록된 유물 프로젝트는 프로젝트 메뉴에서 동일한 최신 상태로 관리합니다."
+    >
+      <nav className="account-subnav" aria-label="마이페이지 메뉴">
+        <button onClick={() => navigate("/mypage")}>마이페이지</button>
+        <button onClick={() => navigate("/mypage/profile")}>내 정보</button>
+        <button onClick={() => navigate("/mypage/activity")}>작업 현황</button>
+        <button className="current">내 프로젝트</button>
+      </nav>
 
-      <div className="project-header">
-
-        <button
-          className="back-btn"
-          onClick={() => navigate("/mypage")}
-        >
-          ← 마이페이지
+      <section className="heritage-panel account-project-link">
+        <div>
+          <p>PROJECT WORKSPACE</p>
+          <h2>프로젝트 허브에서 계속 작업하세요</h2>
+          <span>
+            샘플 목록 대신 백엔드에서 조회한 실제 유물과 기능별 진행 상태를
+            표시합니다.
+          </span>
+        </div>
+        <button className="heritage-button" onClick={() => navigate("/worklist")}>
+          프로젝트 목록 열기
         </button>
-
-        <h1>📂 진행 중인 프로젝트</h1>
-
-      </div>
-
-      {/* 검색 */}
-
-      <div className="search-section">
-
-        <select>
-          <option>제목</option>
-          <option>상태</option>
-        </select>
-
-        <input
-          type="text"
-          placeholder="검색어를 입력하세요."
-        />
-
-        <button className="search-btn">
-          🔍
-        </button>
-
-      </div>
-
-      <p className="project-count">
-        총 프로젝트 3건
-      </p>
-
-      {/* 프로젝트 목록 */}
-
-      <table className="project-table">
-
-        <thead>
-          <tr>
-            <th>프로젝트명</th>
-            <th>상태</th>
-            <th>시작일</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          <tr>
-            <td>🏺 고려청자 복원</td>
-            <td>진행 중</td>
-            <td>2026-07-20</td>
-          </tr>
-
-          <tr>
-            <td>⚱️ 청동기 복원</td>
-            <td>완료</td>
-            <td>2026-07-15</td>
-          </tr>
-
-          <tr>
-            <td>🏛️ 백자 복원</td>
-            <td>보고서 작성 완료</td>
-            <td>2026-07-10</td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
-      <div className="pagination">
-        &lt; 1 &gt;
-      </div>
-
-    </div>
+      </section>
+    </HeritagePage>
   );
 }
 

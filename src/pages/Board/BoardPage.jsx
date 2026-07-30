@@ -2,6 +2,7 @@ import "./BoardPage.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { boardData } from "../../data/boardData";
+import HeritagePage from "../../components/workspace/HeritagePage";
 
 function BoardPage() {
   const navigate = useNavigate();
@@ -24,79 +25,107 @@ function BoardPage() {
   });
 
   return (
-    <div className="board-page">
+    <HeritagePage
+      active="community"
+      eyebrow="COMMUNITY · CASE ARCHIVE"
+      title="게시판"
+      description="문화유산 보존처리 사례와 현장 경험을 확인하고 공유합니다."
+    >
+      <section className="heritage-panel board-panel">
+        <div className="heritage-toolbar">
+          <label className="board-search-label" htmlFor="board-search">
+            게시글 검색
+          </label>
+          <select
+            className="heritage-select"
+            aria-label="검색 기준"
+            value={searchType}
+            onChange={(event) => setSearchType(event.target.value)}
+          >
+            <option value="title">제목</option>
+            <option value="writer">작성자</option>
+          </select>
 
-  <header className="board-header">
-  <div
-    className="board-logo"
-    onClick={() => navigate("/")}
-    style={{ cursor: "pointer" }}
-  >
-    VORA
-  </div>
-</header>
+          <input
+            id="board-search"
+            className="heritage-field"
+            type="search"
+            placeholder="검색어를 입력하세요"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+          />
 
-<h1 className="board-title">
-  📜 게시판
-</h1>
+          <button className="heritage-button" type="button">
+            검색
+          </button>
+        </div>
 
-  {/* 검색 */}
-      <div className="search-box">
-        <select
-          value={searchType}
-          onChange={(e) => setSearchType(e.target.value)}
-        >
-          <option value="title">제목</option>
-          <option value="writer">작성자</option>
-        </select>
+        <p className="heritage-count">
+          총 게시글 <strong>{filteredBoard.length}</strong>건
+        </p>
 
-        <input
-          type="text"
-          placeholder="검색어를 입력하세요."
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-        />
+        <div className="heritage-table-wrap">
+          <table className="heritage-table board-table">
+            <thead>
+              <tr>
+                <th>제목</th>
+                <th>작성자</th>
+                <th>조회수</th>
+                <th>작성일</th>
+              </tr>
+            </thead>
 
-        <button>🔍</button>
-      </div>
+            <tbody>
+              {filteredBoard.length > 0 ? (
+                filteredBoard.map((post) => (
+                  <tr
+                    key={post.id}
+                    data-clickable="true"
+                    tabIndex={0}
+                    onClick={() => navigate(`/board/${post.id}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        navigate(`/board/${post.id}`);
+                      }
+                    }}
+                  >
+                    <td>
+                      <span className="board-post-number">
+                        {String(post.id).padStart(2, "0")}
+                      </span>
+                      {post.title}
+                    </td>
+                    <td>{post.writer}</td>
+                    <td>{post.views.toLocaleString()}</td>
+                    <td>{post.date}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="heritage-empty-cell" colSpan={4}>
+                    검색 결과가 없습니다.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      <p className="board-count">
-        총 게시글 {filteredBoard.length}건
-      </p>
-
-      {/* 게시판 */}
-      <table className="board-table">
-        <thead>
-          <tr>
-            <th>제목</th>
-            <th>작성자</th>
-            <th>조회수</th>
-            <th>작성일</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {filteredBoard.map((post) => (
-            <tr
-              key={post.id}
-              onClick={() =>
-                navigate(`/board/${post.id}`)
-              }
-            >
-              <td>{post.title}</td>
-              <td>{post.writer}</td>
-              <td>{post.views}</td>
-              <td>{post.date}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* 페이지네이션(더미) */}
-      <div className="pagination">
-        &lt; 1 2 3 4 5 &gt;
-      </div>
-    </div>
+        <nav className="heritage-pagination" aria-label="게시판 페이지">
+          <button type="button" aria-label="이전 페이지">
+            ‹
+          </button>
+          <button type="button" className="active" aria-current="page">
+            1
+          </button>
+          <button type="button">2</button>
+          <button type="button">3</button>
+          <button type="button" aria-label="다음 페이지">
+            ›
+          </button>
+        </nav>
+      </section>
+    </HeritagePage>
   );
 }
 

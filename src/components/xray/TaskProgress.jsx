@@ -51,30 +51,41 @@ export default function TaskProgress({
   longNote,
   longAfterSeconds = 180,
 }) {
+  if (!active) return null;
+
+  return (
+    <ActiveTaskProgress
+      headline={headline}
+      detail={detail}
+      steps={steps}
+      currentKey={currentKey}
+      note={note}
+      longNote={longNote}
+      longAfterSeconds={longAfterSeconds}
+    />
+  );
+}
+
+function ActiveTaskProgress({
+  headline,
+  detail,
+  steps,
+  currentKey,
+  note,
+  longNote,
+  longAfterSeconds,
+}) {
   const [elapsed, setElapsed] = useState(0);
   const startedAt = useRef(null);
 
   useEffect(() => {
-    if (!active) {
-      startedAt.current = null;
-      setElapsed(0);
-      return undefined;
-    }
-
-    if (startedAt.current === null) {
-      startedAt.current = Date.now();
-    }
-
+    startedAt.current = Date.now();
     const timer = window.setInterval(() => {
       setElapsed(Math.floor((Date.now() - startedAt.current) / 1000));
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [active]);
-
-  if (!active) {
-    return null;
-  }
+  }, []);
 
   const currentIndex = steps.findIndex((step) => step.key === currentKey);
 

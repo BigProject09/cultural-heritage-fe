@@ -1,6 +1,8 @@
 import "./SignUpPage.css";
+import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import HeritageHeader from "../../components/workspace/HeritageHeader";
 
 function SignUpPage() {
   const navigate = useNavigate();
@@ -79,84 +81,96 @@ function SignUpPage() {
   };
 
   return (
-    <div className="signup-container">
-      <header className="signup-header">
-        <div
-          className="signup-logo"
-          onClick={() => navigate("/")}
-          style={{ cursor: "pointer" }}
-        >
-          <h1>VORA</h1>
-          <span>AI와 전문가가 함께하는 문화재 복원 플랫폼</span>
-        </div>
-      </header>
+    <div className="heritage-auth-page heritage-signup-page">
+      <HeritageHeader active="account" />
 
-      <main className="signup-main">
-        <div className="signup-card">
-          <div className="signup-icon">📝</div>
-
-          <h2>회원가입</h2>
+      <main className="heritage-signup-main">
+        <section className="heritage-signup-card" aria-labelledby="signup-title">
+          <div className="heritage-signup-heading">
+            <div>
+              <p className="heritage-auth-eyebrow">CREATE ACCOUNT</p>
+              <h1 id="signup-title">회원가입</h1>
+              <span>VORA 보존처리 워크스페이스를 시작합니다.</span>
+            </div>
+            <b aria-hidden="true">✣</b>
+          </div>
 
           <form onSubmit={handleSignUp}>
-            <input
-              type="text"
-              placeholder="이름"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <div className="heritage-signup-grid">
+              <label>
+                <span>이름</span>
+                <input
+                  type="text"
+                  placeholder="담당자 이름"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  autoComplete="name"
+                />
+              </label>
 
-            <input
-              type="email"
-              placeholder="이메일"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+              <label>
+                <span>전화번호</span>
+                <input
+                  type="tel"
+                  placeholder="010-0000-0000"
+                  value={phone}
+                  maxLength={13}
+                  onChange={(event) => setPhone(formatPhone(event.target.value))}
+                  autoComplete="tel"
+                />
+              </label>
 
-            <input
-              type="text"
-              placeholder="전화번호"
-              value={phone}
-              maxLength={13}
-              onChange={(e) =>
-                setPhone(formatPhone(e.target.value))
-              }
-            />
+              <label className="wide">
+                <span>이메일</span>
+                <input
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  autoComplete="email"
+                />
+              </label>
 
-            <input
-              type="password"
-              placeholder="비밀번호 (8자 이상)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+              <label>
+                <span>비밀번호</span>
+                <input
+                  type="password"
+                  placeholder="8자 이상"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="new-password"
+                />
+              </label>
 
-            <input
-              type="password"
-              placeholder="비밀번호 확인"
-              value={confirmPassword}
-              onChange={(e) =>
-                setConfirmPassword(e.target.value)
-              }
-            />
+              <label>
+                <span>비밀번호 확인</span>
+                <input
+                  type="password"
+                  placeholder="한 번 더 입력"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  autoComplete="new-password"
+                />
+              </label>
+            </div>
 
-            {error && <p className="error-text">{error}</p>}
+            {error && <p className="heritage-auth-error">{error}</p>}
 
-            <button
-              type="submit"
-              className="signup-btn"
-            >
+            <button type="submit" className="heritage-auth-submit">
               회원가입
             </button>
           </form>
 
-          <div className="signup-links">
-            <span onClick={() => navigate("/login")}>
-              로그인으로 돌아가기
-            </span>
+          <div className="heritage-auth-links">
+            <span>이미 계정이 있나요?</span>
+            <button type="button" onClick={() => navigate("/login")}>
+              로그인
+            </button>
           </div>
-        </div>
+        </section>
       </main>
 
-      <footer className="signup-footer">
+      <footer className="heritage-auth-footer">
         © 2026 VORA. All rights reserved.
       </footer>
     </div>

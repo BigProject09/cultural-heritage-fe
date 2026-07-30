@@ -13,6 +13,8 @@ http://localhost:5174
 
 저장소에 포함하지 않는다. `.env` 를 만든다.
 
+    VITE_API_BASE_URL=http://localhost:8080
+    VITE_ARTIFACTS_API_PATH=/api/artifacts
     VITE_USE_XRAY_MOCK=false
 
 값이 없으면 실제 API 를 호출한다. 백엔드 없이 화면만 확인할 때는
@@ -32,6 +34,11 @@ X-RAY 기능은 백엔드 컨테이너가 모두 떠 있어야 동작한다.
 
     cd ../cultural-heritage-be
     docker compose up --build -d
+
+유물 프로젝트 목록·등록·기능 상태는 샘플 데이터가 아니라 Spring API를
+사용한다. 필요한 엔드포인트와 요청·응답 형식은
+[`docs/workspace-api-contract.md`](docs/workspace-api-contract.md)에 정리되어
+있다.
 
 ## 구조
 

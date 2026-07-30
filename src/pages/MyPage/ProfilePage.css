@@ -1,57 +1,35 @@
-.profile-page {
-  min-height: 100vh;
-  padding: 40px;
-  background: #f5f7fa;
+.account-profile-detail {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: 150px 1fr;
 }
 
-.profile-header {
-  display: flex;
+.account-profile-seal {
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 40px;
+  align-self: start;
+  background: var(--heritage-ink);
+  border: 6px double #c8aa80;
+  border-radius: 50%;
+  color: #e8d7bd;
+  display: flex;
+  font-family: Georgia, "Noto Serif KR", serif;
+  font-size: 40px;
+  height: 120px;
+  justify-content: center;
+  width: 120px;
 }
 
-.profile-header h1 {
-  flex: 1;
-  text-align: center;
-  color: #0f4c81;
+.account-profile-detail > .heritage-button {
+  grid-column: 2;
+  justify-self: start;
 }
 
-.back-btn {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 8px;
-  background: #0f4c81;
-  color: white;
-  cursor: pointer;
-}
+@media (max-width: 620px) {
+  .account-profile-detail {
+    grid-template-columns: 1fr;
+  }
 
-.back-btn:hover {
-  background: #0b3b63;
-}
-
-.profile-card {
-  max-width: 600px;
-  margin: 0 auto;
-  background: white;
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-}
-
-.profile-image {
-  font-size: 80px;
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.profile-info p {
-  margin-top: 20px;
-  margin-bottom: 5px;
-  color: #0f4c81;
-}
-
-.profile-info span {
-  color: #555;
-  font-size: 16px;
+  .account-profile-detail > .heritage-button {
+    grid-column: auto;
+  }
 }

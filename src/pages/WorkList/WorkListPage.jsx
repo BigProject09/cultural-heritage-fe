@@ -1,256 +1,193 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ArtifactThumb from "../../components/workspace/ArtifactThumb";
+import HeritageHeader from "../../components/workspace/HeritageHeader";
+import {
+  MODULE_STATUS,
+  WORKSPACE_MODULES,
+  formatWorkspaceDate,
+  getWorkspaceProjects,
+  selectWorkspaceProject,
+} from "../../data/workspaceProjects";
 import "./WorkListPage.css";
 
 function WorkListPage() {
   const navigate = useNavigate();
-
-  const [works, setWorks] = useState([
-    {
-      id: 1,
-      title: "청자 매병 복원",
-      date: "2026.07.18",
-      status: "진행 중",
-      favorite: true,
-    },
-    {
-      id: 2,
-      title: "청동 거울 복원",
-      date: "2026.07.15",
-      status: "전문가 검토",
-      favorite: false,
-    },
-    {
-      id: 3,
-      title: "토기 파편 복원",
-      date: "2026.07.10",
-      status: "완료",
-      favorite: false,
-    },
-  ]);
-
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("latest");
+  const [filter, setFilter] = useState("all");
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case "진행 중":
-        return "progress";
-      case "완료":
-        return "done";
-      case "전문가 검토":
-        return "review";
-      default:
-        return "";
-    }
-  };
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const filteredWorks = useMemo(() => {
-    let result = [...works];
+    getWorkspaceProjects({ signal: controller.signal })
+      .then((items) => {
+        setProjects(items);
+        setError("");
+      })
+      .catch((requestError) => {
+        if (requestError.name !== "AbortError") setError(requestError.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
 
-    result = result.filter((work) =>
-      work.title.toLowerCase().includes(search.toLowerCase())
-    );
+    return () => controller.abort();
+  }, [reloadKey]);
 
-    if (filter === "favorite") {
-      result = result.filter((work) => work.favorite);
-    }
+  const filteredProjects = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    return projects
+      .filter((project) => {
+        const matchesKeyword =
+          !keyword ||
+          [project.name, project.artifactId, project.material, project.period]
+            .join(" ")
+            .toLowerCase()
+            .includes(keyword);
 
-    result.sort((a, b) => b.id - a.id);
+        const completed = Object.values(project.modules).every(
+          (status) => status === MODULE_STATUS.DONE,
+        );
+        const matchesFilter =
+          filter === "all" ||
+          (filter === "completed" && completed) ||
+          (filter === "active" && !completed);
 
-    return result;
-  }, [works, search, filter]);
-
-  // ⭐ 즐겨찾기
-  const toggleFavorite = (id) => {
-    setWorks((prev) =>
-      prev.map((work) =>
-        work.id === id
-          ? {
-              ...work,
-              favorite: !work.favorite,
-            }
-          : work
-      )
-    );
-  };
-
-  // ✏️ 수정
-  const editProject = (id) => {
-    const work = works.find((w) => w.id === id);
-
-    const newTitle = prompt(
-      "프로젝트명을 입력하세요.",
-      work.title
-    );
-
-    if (!newTitle || !newTitle.trim()) return;
-
-    setWorks((prev) =>
-      prev.map((work) =>
-        work.id === id
-          ? {
-              ...work,
-              title: newTitle,
-            }
-          : work
-      )
-    );
-  };
-
-  // 🗑️ 삭제
-  const deleteProject = (id) => {
-    if (window.confirm("프로젝트를 삭제하시겠습니까?")) {
-      setWorks((prev) =>
-        prev.filter((work) => work.id !== id)
+        return matchesKeyword && matchesFilter;
+      })
+      .sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
       );
-    }
+  }, [filter, projects, search]);
+
+  const openProject = (project) => {
+    selectWorkspaceProject(project);
+    navigate(`/workspace/${encodeURIComponent(project.artifactId)}`);
+  };
+
+  const retry = () => {
+    setLoading(true);
+    setError("");
+    setReloadKey((current) => current + 1);
   };
 
   return (
-    <div className="worklist-page">
-      <header className="worklist-header">
-        <div
-          className="worklist-logo"
-          onClick={() => navigate("/")}
-        >
-          VORA
-        </div>
+    <div className="heritage-worklist">
+      <HeritageHeader active="projects" />
 
-        <div className="worklist-profile">
-          👤
-        </div>
-      </header>
-
-      <h1 className="worklist-title">
-        작업 목록
-      </h1>
-
-      <div className="worklist-search">
-
-        <input
-          type="text"
-          placeholder="프로젝트 검색"
-          value={search}
-          onChange={(e) =>
-            setSearch(e.target.value)
-          }
-        />
-
-        <select
-          value={filter}
-          onChange={(e) =>
-            setFilter(e.target.value)
-          }
-        >
-          <option value="latest">
-            최신순
-          </option>
-
-          <option value="favorite">
-            즐겨찾기만 보기
-          </option>
-
-        </select>
-
-        <button
-          className="add-btn"
-          onClick={() =>
-            navigate("/artifact-register")
-          }
-        >
-          + 새 프로젝트
-        </button>
-
-      </div>
-
-      <p className="work-count">
-        총 {filteredWorks.length}개의 프로젝트
-      </p>
-
-      <div className="work-grid">
-
-        {filteredWorks.map((work) => (
-                    <div
-            key={work.id}
-            className="work-card"
-          >
-            <div className="card-top">
-
-              <div className="artifact-thumb">
-                🏺
-              </div>
-
-              <div className="card-info">
-
-                <h3>{work.title}</h3>
-
-                <span
-                  className={`status-badge ${getStatusClass(
-                    work.status
-                  )}`}
-                >
-                  {work.status}
-                </span>
-
-                <p>
-                  마지막 수정 : {work.date}
-                </p>
-
-              </div>
-
-              <div className="card-buttons">
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(work.id);
-                  }}
-                >
-                  {work.favorite ? "⭐" : "☆"}
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    editProject(work.id);
-                  }}
-                >
-                  ✏️
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteProject(work.id);
-                  }}
-                >
-                  🗑️
-                </button>
-
-              </div>
-
-            </div>
-
-            <div className="card-footer">
-
-              <button
-                className="open-btn"
-                onClick={() =>
-                  navigate(`/project/${work.id}`)
-                }
-              >
-                프로젝트 열기 →
-              </button>
-
-            </div>
-
+      <main className="heritage-worklist-main">
+        <section className="heritage-worklist-heading">
+          <div>
+            <span>ARTIFACT PROJECTS</span>
+            <h1>유물 복원 프로젝트</h1>
+            <p>유물별 AI 작업 현황과 최근 저장 결과를 확인합니다.</p>
           </div>
+          <button
+            onClick={() =>
+              navigate("/artifact-register", {
+                state: { entryModule: "guide", workspaceEntry: true },
+              })
+            }
+          >
+            ＋ 신규 유물 등록
+          </button>
+        </section>
 
-        ))}
+        <section className="heritage-worklist-tools">
+          <input
+            type="search"
+            placeholder="유물명, artifactId, 재질 검색"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <select
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          >
+            <option value="all">전체 프로젝트</option>
+            <option value="active">진행 중</option>
+            <option value="completed">완료</option>
+          </select>
+          <span>총 {filteredProjects.length}건</span>
+        </section>
 
-      </div>
+        <section className="heritage-worklist-grid">
+          {loading && (
+            <div className="heritage-worklist-state">
+              프로젝트를 불러오는 중입니다.
+            </div>
+          )}
 
+          {!loading && error && (
+            <div className="heritage-worklist-state error">
+              <strong>프로젝트를 불러오지 못했습니다.</strong>
+              <span>{error}</span>
+              <button onClick={retry}>다시 시도</button>
+            </div>
+          )}
+
+          {!loading && !error && filteredProjects.length === 0 && (
+            <div className="heritage-worklist-state">
+              <strong>
+                {projects.length === 0
+                  ? "등록된 유물이 없습니다."
+                  : "검색 조건에 맞는 프로젝트가 없습니다."}
+              </strong>
+              <span>
+                {projects.length === 0
+                  ? "신규 유물을 등록해 첫 프로젝트를 시작하세요."
+                  : "검색어나 진행 상태 필터를 변경해보세요."}
+              </span>
+            </div>
+          )}
+
+          {filteredProjects.map((project) => {
+            const completed = Object.values(project.modules).filter(
+              (status) => status === MODULE_STATUS.DONE,
+            ).length;
+
+            return (
+              <article key={project.artifactId}>
+                <div className="heritage-worklist-card-head">
+                  <ArtifactThumb project={project} />
+                  <div>
+                    <span>{project.artifactId}</span>
+                    <h2>{project.name}</h2>
+                    <p>
+                      {project.material} · {project.period}
+                    </p>
+                  </div>
+                  <strong>
+                    {completed} / {WORKSPACE_MODULES.length}
+                  </strong>
+                </div>
+
+                <div className="heritage-worklist-progress">
+                  {WORKSPACE_MODULES.map((module) => (
+                    <div key={module.key}>
+                      <i
+                        className={project.modules[module.key].toLowerCase()}
+                      />
+                      <span>{module.shortTitle}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="heritage-worklist-card-foot">
+                  <small>마지막 저장 {formatWorkspaceDate(project.updatedAt)}</small>
+                  <button onClick={() => openProject(project)}>
+                    프로젝트 열기 →
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      </main>
     </div>
   );
 }
