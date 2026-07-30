@@ -1528,7 +1528,7 @@ export default function XrayPage() {
               </section>
             )}
 
-            <div className="complete-area">
+            <div className="xray-complete-bar">
               <div>
                 <strong>최종 검토 전 확인</strong>
                 <span>
@@ -1537,7 +1537,7 @@ export default function XrayPage() {
                 </span>
               </div>
               <button
-                className="complete-btn"
+                className="xray-complete-btn"
                 onClick={openFinalReview}
                 disabled={!inspectionDone || !report.trim()}
               >
@@ -1647,7 +1647,7 @@ export default function XrayPage() {
               </article>
             </section>
 
-            <div className="complete-area final">
+            <div className="xray-complete-bar final">
               <div>
                 <strong>모든 결과를 확인하셨나요?</strong>
                 <span>
