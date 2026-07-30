@@ -511,8 +511,8 @@ function StitchEditorCanvas({
                     ref={transformerRef}
                     rotateEnabled
                     resizeEnabled={false}
-                    borderStroke="#2767df"
-                    anchorStroke="#2767df"
+                    borderStroke="#9b6a3f"
+                    anchorStroke="#9b6a3f"
                     anchorFill="#ffffff"
                     anchorSize={10}
                     rotateAnchorOffset={26}

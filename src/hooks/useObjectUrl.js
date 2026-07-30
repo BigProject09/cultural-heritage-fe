@@ -1,17 +1,31 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 
 export default function useObjectUrl(source) {
-  const url = useMemo(() => {
-    if (source instanceof Blob) return URL.createObjectURL(source);
-    return typeof source === "string" ? source : "";
+  const [preview, setPreview] = useState({
+    source: null,
+    url: "",
+  });
+
+  useEffect(() => {
+    if (!(source instanceof Blob)) {
+      return undefined;
+    }
+
+    const url = URL.createObjectURL(source);
+
+    const frameId = window.requestAnimationFrame(() => {
+      setPreview({ source, url });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      URL.revokeObjectURL(url);
+    };
   }, [source]);
 
-  useEffect(
-    () => () => {
-      if (source instanceof Blob && url) URL.revokeObjectURL(url);
-    },
-    [source, url],
-  );
+  if (source instanceof Blob) {
+    return preview.source === source ? preview.url : "";
+  }
 
-  return url;
+  return typeof source === "string" ? source : "";
 }

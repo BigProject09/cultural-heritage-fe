@@ -1774,7 +1774,7 @@ export default function XrayPage() {
                 </button>
                 <button
                   type="button"
-                  className="complete-btn"
+                  className="xray-complete-btn"
                   onClick={() => setShowCompleteConfirm(true)}
                 >
                   조사 작업 완료

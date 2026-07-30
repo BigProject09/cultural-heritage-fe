@@ -40,7 +40,7 @@ const DIRECT_INSPECTION_API_BASE = (
 ).replace(/\/+$/, "");
 const SPRING_INSPECTION_API_BASE = (
   import.meta.env.VITE_XRAY_SPRING_INSPECTION_API_BASE ||
-  `${SPRING_BASE}/api/xray/anomaly`
+  `${SPRING_BASE}/api/xray`
 ).replace(/\/+$/, "");
 const INSPECTION_API_BASE = VIA_SPRING
   ? SPRING_INSPECTION_API_BASE
