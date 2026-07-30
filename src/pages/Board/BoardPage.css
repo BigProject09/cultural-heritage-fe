@@ -1,0 +1,118 @@
+.board-page {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 35px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* ================= Header ================= */
+
+.board-header {
+  margin-bottom: 20px;
+}
+
+.board-logo {
+  display: inline-block;
+  font-size: 30px;
+  font-weight: bold;
+  color: #8b5e3c;
+  cursor: pointer;
+}
+
+/* ================= Title ================= */
+
+.board-title {
+  font-size: 48px;
+  font-weight: bold;
+  margin: 10px 0 30px;
+}
+
+/* ================= Search ================= */
+
+.search-box {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 25px;
+}
+
+.search-box select {
+  width: 160px;
+  padding: 14px;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+.search-box button {
+  width: 70px;
+  border: none;
+  border-radius: 10px;
+  background: #2d6cdf;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.search-box button:hover {
+  background: #1f58b8;
+}
+
+/* ================= Count ================= */
+
+.board-count {
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 18px;
+}
+
+/* ================= Table ================= */
+
+.board-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.board-table thead {
+  background: #f3f4f6;
+}
+
+.board-table th,
+.board-table td {
+  padding: 18px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.board-table th:first-child,
+.board-table td:first-child {
+  text-align: left;
+}
+
+.board-table tbody tr {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.board-table tbody tr:hover {
+  background: #f8f9ff;
+}
+
+/* ================= Pagination ================= */
+
+.pagination {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 18px;
+  color: #333;
+}

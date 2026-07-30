@@ -1,0 +1,79 @@
+.step-sidebar {
+  width: 240px;
+  background: white;
+  border-radius: 14px;
+  padding: 25px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+.sidebar-title {
+  margin-bottom: 25px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #1f3f73;
+}
+
+.step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  transition: .25s;
+}
+
+.step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-weight: bold;
+}
+
+/* 완료 */
+
+.step-item.completed .step-circle {
+  background: #3b82f6;
+  color: white;
+}
+
+.step-item.completed span {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+/* 현재 */
+
+.step-item.current .step-circle {
+  background: #f59e0b;
+  color: white;
+}
+
+.step-item.current span {
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+/* 예정 */
+
+.step-item.upcoming .step-circle {
+  background: #ececec;
+  color: #888;
+}
+
+.step-item.upcoming span {
+  color: #777;
+}
+
+.step-item:hover {
+  transform: translateX(5px);
+}

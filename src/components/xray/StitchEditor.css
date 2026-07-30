@@ -1,0 +1,262 @@
+/*
+ * 색상은 XrayPage.css 의 기존 값을 따른다.
+ *
+ *   #2767df  기본
+ *   #dfe5ef  테두리
+ *   #f7f9fc  옅은 면
+ *   #748096  보조 텍스트
+ *   #172033  본문
+ */
+
+.stitch-editor {
+  overflow: hidden;
+  border: 1px solid #dfe5ef;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.stitch-editor-loading {
+  padding: 60px 20px;
+  border: 1px solid #dfe5ef;
+  border-radius: 14px;
+  background: #f7f9fc;
+  color: #748096;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* ── 상단 도구 막대 ─────────────────────────── */
+
+.stitch-editor-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #eef2f8;
+  background: #f7f9fc;
+}
+
+.stitch-editor-status {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: #58657a;
+  font-size: 13px;
+}
+
+.stitch-editor-status strong {
+  color: #172033;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stitch-editor-status em {
+  margin-left: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.stitch-editor-moved {
+  background: #eef4ff;
+  color: #2767df;
+}
+
+/* 미배치는 사용자가 반드시 처리해야 하므로 눈에 띄게 둔다 */
+.stitch-editor-warn {
+  background: #fff0f1;
+  color: #c9363e;
+}
+
+.stitch-editor-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stitch-editor-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 4px;
+  color: #58657a;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* ── 본문 ───────────────────────────────── */
+
+.stitch-editor-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.stitch-editor-canvas {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: 18px;
+  overflow: auto;
+  background: #0d1118;
+}
+
+.stitch-editor-side {
+  flex: none;
+  width: 260px;
+  align-self: stretch;
+  padding: 18px;
+  border-left: 1px solid #eef2f8;
+  background: #fff;
+}
+
+.stitch-editor-side section + section {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #eef2f8;
+}
+
+.stitch-editor-side h3 {
+  margin: 0 0 10px;
+  color: #172033;
+  font-size: 13px;
+}
+
+.stitch-editor-hint {
+  margin: 0;
+  color: #748096;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.stitch-editor-detail {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 7px 10px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.stitch-editor-detail dt {
+  color: #94a1b4;
+}
+
+.stitch-editor-detail dd {
+  margin: 0;
+  overflow: hidden;
+  color: #172033;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.stitch-editor-unmatched {
+  margin: 10px 0 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.stitch-editor-unmatched li + li {
+  margin-top: 6px;
+}
+
+.stitch-editor-unmatched button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid #e6ebf3;
+  border-radius: 9px;
+  background: #fff;
+  color: #172033;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.stitch-editor-unmatched button:hover {
+  border-color: #c3d2ea;
+  background: #f7f9fc;
+}
+
+.stitch-editor-unmatched button.selected {
+  border-color: #2767df;
+  background: #eef4ff;
+}
+
+.stitch-editor-unmatched strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stitch-editor-unmatched span {
+  color: #94a1b4;
+  font-size: 11px;
+}
+
+/* ── 하단 ───────────────────────────────── */
+
+.stitch-editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 14px 18px;
+  border-top: 1px solid #eef2f8;
+  background: #f7f9fc;
+}
+
+.stitch-editor-ghost,
+.stitch-editor-primary {
+  padding: 9px 16px;
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stitch-editor-ghost {
+  border: 1px solid #cfd8e6;
+  background: #fff;
+  color: #354158;
+}
+
+.stitch-editor-ghost:hover:not(:disabled) {
+  background: #f2f5fa;
+}
+
+.stitch-editor-primary {
+  border: 0;
+  background: #2767df;
+  color: #fff;
+}
+
+.stitch-editor-ghost:disabled,
+.stitch-editor-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 900px) {
+  .stitch-editor-body {
+    flex-direction: column;
+  }
+
+  .stitch-editor-side {
+    width: 100%;
+    border-top: 1px solid #eef2f8;
+    border-left: 0;
+  }
+}

@@ -1,0 +1,238 @@
+.my-page {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px 50px;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+/* ================= 헤더 ================= */
+
+.mypage-header {
+  position: relative;
+  margin-bottom: 35px;
+}
+
+.mypage-header h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 34px;
+  color: #1f2937;
+}
+
+.back-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: #0f4c81;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.back-btn:hover {
+  background: #0b3b64;
+}
+
+/* ================= 프로필 ================= */
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+
+  background: white;
+  border-radius: 18px;
+
+  padding: 30px;
+
+  margin-bottom: 35px;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+
+  border-radius: 50%;
+
+  background: #eef5ff;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 40px;
+}
+
+.profile-info {
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 6px 10px;
+  transition: background 0.2s;
+}
+
+.profile-info:hover {
+  background: #f5f7fa;
+}
+
+.profile-info h2 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.profile-info p {
+  margin: 10px 0 4px;
+  color: #0f4c81;
+  font-weight: 600;
+}
+
+.profile-info span {
+  color: #666;
+}
+
+.profile-info-editing {
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.profile-info-editing:hover {
+  background: none;
+}
+
+.profile-edit-input {
+  padding: 10px 14px;
+  border: 1px solid #d7dde6;
+  border-radius: 10px;
+  font-size: 16px;
+  max-width: 320px;
+}
+
+.profile-edit-input:focus {
+  outline: none;
+  border-color: #0f4c81;
+  box-shadow: 0 0 0 3px rgba(15, 76, 129, .15);
+}
+
+.profile-edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.profile-save-btn,
+.profile-cancel-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.profile-save-btn {
+  background: #0f4c81;
+  color: white;
+}
+
+.profile-save-btn:hover {
+  background: #0b3b64;
+}
+
+.profile-cancel-btn {
+  background: #f1f3f6;
+  color: #444;
+}
+
+.profile-cancel-btn:hover {
+  background: #e4e7ec;
+}
+
+/* ================= 프로젝트 / 보고서 ================= */
+
+.menu-grid {
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 24px;
+
+}
+
+.menu-card {
+
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 24px;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+
+}
+
+.menu-card h2 {
+
+  margin-top: 0;
+
+  margin-bottom: 20px;
+
+  color: #0f4c81;
+
+}
+
+.list-area {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+}
+
+.list-area p {
+
+  margin: 0;
+
+  padding: 12px 15px;
+
+  background: #f7f9fc;
+
+  border-radius: 10px;
+
+}
+
+.view-btn {
+
+  margin-top: 20px;
+
+  float: right;
+
+  border: none;
+
+  background: #0f4c81;
+
+  color: white;
+
+  padding: 10px 18px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+}
+
+.view-btn:hover {
+
+  background: #0b3b64;
+
+}

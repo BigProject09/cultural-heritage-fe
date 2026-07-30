@@ -1,0 +1,196 @@
+.post-record-page {
+  min-height: 100vh;
+  background: #f8f9fb;
+  padding: 30px;
+}
+
+.top-bar {
+  max-width: 1000px;
+  margin: 20px auto;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2f6fed;
+}
+
+.nav-btn {
+  padding: 10px 22px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2f6fed;
+  color: white;
+
+  cursor: pointer;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  transition: .2s;
+}
+
+.nav-btn:hover {
+  background: #1f5fe0;
+}
+
+.post-record-page h1 {
+  max-width: 1000px;
+  margin: 25px auto;
+
+  font-size: 32px;
+}
+
+.image-section {
+  max-width: 1000px;
+  margin: auto;
+
+  display: flex;
+  gap: 24px;
+
+  margin-bottom: 30px;
+}
+
+.image-card {
+  flex: 1;
+
+  background: white;
+
+  border-radius: 16px;
+
+  padding: 20px;
+
+  box-shadow: 0 6px 18px rgba(15,23,42,.06);
+}
+
+.image-card h3 {
+  margin-bottom: 16px;
+}
+
+.dummy-image {
+  height: 240px;
+
+  border-radius: 14px;
+
+  background: #eceff4;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  color: #888;
+}
+
+.report-card {
+  max-width: 1000px;
+
+  margin: 24px auto;
+
+  background: white;
+
+  border-radius: 16px;
+
+  padding: 24px;
+
+  box-shadow: 0 6px 18px rgba(15,23,42,.06);
+}
+
+.report-card h2 {
+  margin-bottom: 20px;
+}
+
+.report-row {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 14px 0;
+
+  border-bottom: 1px solid #ececec;
+}
+
+.report-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.report-actions button {
+
+  width: 38px;
+  height: 38px;
+
+  border: none;
+
+  border-radius: 50%;
+
+  cursor: pointer;
+
+  background: #f4f6fb;
+
+  font-size: 18px;
+
+  transition: .2s;
+}
+
+.report-actions button:hover {
+  background: #dfe9ff;
+}
+
+.add-btn {
+
+  margin-top: 20px;
+
+  border: 2px dashed #2f6fed;
+
+  background: white;
+
+  color: #2f6fed;
+
+  width: 100%;
+
+  padding: 14px;
+
+  border-radius: 12px;
+
+  cursor: pointer;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  transition: .2s;
+}
+
+.add-btn:hover {
+  background: #eef4ff;
+}
+
+.future-care-textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+
+  padding: 16px;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  font-size: 15px;
+  font-family: inherit;
+  line-height: 1.6;
+
+  outline: none;
+  box-sizing: border-box;
+}
+
+.future-care-textarea:focus {
+  border-color: #2f6fed;
+}

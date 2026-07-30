@@ -1,0 +1,151 @@
+.cleaning-method-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 40px 0 60px;
+}
+
+/* ==========================
+   상단 헤더
+========================== */
+
+.detail-header {
+  max-width: 1400px;
+  margin: 0 auto 50px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vora-logo {
+  font-size: 52px;
+  font-weight: 800;
+  color: #2f64f5;
+}
+
+.nav-btn {
+  padding: 12px 34px;
+  border: none;
+  border-radius: 12px;
+
+  background: #2f64f5;
+  color: white;
+
+  font-size: 17px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: .2s;
+}
+
+.nav-btn:hover {
+  background: #1d4fd8;
+}
+
+/* ==========================
+   본문
+========================== */
+
+.method-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 35px;
+  text-align: center;
+}
+
+.page-header h1 {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: #1f2937;
+}
+
+.page-header p {
+  font-size: 18px;
+  color: #666;
+  line-height: 1.7;
+}
+
+/* ==========================
+   카드
+========================== */
+
+.info-card {
+  background: white;
+  border-radius: 18px;
+  padding: 30px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 15px rgba(0,0,0,.06);
+
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.method-select {
+  display: flex;
+  gap: 20px;
+  margin: 30px 0;
+}
+
+.method-box {
+  flex: 1;
+
+  border: 2px solid #dbe6ff;
+  border-radius: 14px;
+
+  padding: 24px;
+
+  text-align: center;
+
+  background: #f8faff;
+}
+
+.method-box {
+  cursor: pointer;
+}
+
+.method-box strong {
+  display: block;
+  font-size: 20px;
+  color: #1f2937;
+}
+
+.method-box input[type="checkbox"] {
+  margin-top: 20px;
+
+  width: 32px;
+  height: 32px;
+
+  accent-color: #2f64f5;
+  cursor: pointer;
+}
+
+.info-card h2 {
+  font-size: 25px;
+  color: #2f64f5;
+
+  margin-bottom: 22px;
+}
+
+.info-item {
+  margin-bottom: 28px;
+}
+
+.info-item strong {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #111827;
+
+  font-size: 18px;
+}
+
+.info-item span,
+.info-item p {
+  color: #555;
+  line-height: 1.8;
+}

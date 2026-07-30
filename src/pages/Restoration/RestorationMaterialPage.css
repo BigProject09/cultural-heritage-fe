@@ -1,0 +1,263 @@
+.restoration-material-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+
+/* ================= 상단 ================= */
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 20px 70px;
+
+  background: white;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+
+.vora-logo {
+  font-size: 48px;
+  font-weight: 800;
+  color: #2f64f5;
+  letter-spacing: 1px;
+}
+
+
+
+/* ================= 버튼 ================= */
+
+.nav-btn {
+  padding: 14px 28px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #2f6fed;
+  color: white;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+
+.nav-btn:hover {
+  background: #1f56c7;
+}
+
+
+
+/* ================= 컨테이너 ================= */
+
+.material-container {
+
+  max-width: 1000px;
+
+  margin: 60px auto;
+
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 45px;
+
+  box-shadow:
+    0 8px 30px rgba(0,0,0,0.08);
+
+}
+
+
+
+/* ================= 제목 ================= */
+
+.page-header {
+
+  margin-bottom: 35px;
+
+}
+
+
+.page-header h1 {
+
+  font-size: 36px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+
+}
+
+
+
+/* ================= 카드 ================= */
+
+.material-card {
+
+  width: 100%;
+
+}
+
+
+
+/* 재료 이름 */
+
+.material-title {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  font-size: 28px;
+
+  font-weight: 700;
+
+  margin-bottom: 25px;
+
+}
+
+
+.material-title span:last-child {
+
+  margin-left: auto;
+
+  color: #7b8794;
+
+}
+
+
+
+/* 구분선 */
+
+.material-card hr {
+
+  border: none;
+
+  border-top: 1px solid #e5e7eb;
+
+  margin-bottom: 40px;
+
+}
+
+
+
+/* ================= 이미지 ================= */
+
+.material-image {
+
+  display: flex;
+
+  justify-content: center;
+
+  margin-bottom: 40px;
+
+}
+
+
+.material-image img {
+
+  width: 240px;
+
+  height: auto;
+
+  object-fit: contain;
+
+}
+
+
+
+/* ================= 설명 ================= */
+
+.material-description {
+
+  font-size: 17px;
+
+  line-height: 2;
+
+  color: #444;
+
+  text-align: justify;
+
+}
+
+
+
+/* 이미지 없을 때 */
+
+.material-image img:not([src]) {
+
+  display: none;
+
+}
+
+
+
+/* ================= 선택 ================= */
+
+.material-select-group {
+
+  display: flex;
+
+  gap: 24px;
+
+  margin-top: 30px;
+
+}
+
+
+.material-select-item {
+
+  flex: 1;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+}
+
+
+.material-select-item label {
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  color: #374151;
+
+}
+
+
+.material-select-item select {
+
+  padding: 13px 15px;
+
+  border: 1px solid #d7dde6;
+
+  border-radius: 10px;
+
+  font-size: 15px;
+
+  cursor: pointer;
+
+}
+
+
+.material-select-item select:focus {
+
+  outline: none;
+
+  border-color: #2f6fed;
+
+  box-shadow: 0 0 0 3px rgba(47,111,237,.15);
+
+}
