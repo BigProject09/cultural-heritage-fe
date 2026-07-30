@@ -1,62 +1,50 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import "./ReportPage.css";
-import { addMyReport } from "../../utils/myReports";
+import { useNavigate, useParams } from "react-router-dom";
+import "../PostRecord/ReportPage.css";
+import { getMyReports } from "../../utils/myReports";
 
-function ReportPage() {
+function MyReportDetailPage() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { id } = useParams();
+
+  const report = getMyReports().find((item) => item.id === id);
+
+  if (!report) {
+    return (
+      <div className="report-page">
+        <div className="top-bar">
+          <button className="nav-btn" onClick={() => navigate("/mypage/reports")}>
+            ← 목록으로
+          </button>
+
+          <div className="logo">VORA</div>
+        </div>
+
+        <div className="report-paper">
+          <p>보고서를 찾을 수 없습니다.</p>
+        </div>
+      </div>
+    );
+  }
 
   const {
+    artifactInfo = {},
     summary = [],
     methods = [],
-    futureCare = "직사광선 및 고습 환경을 피하고 정기적인 상태 점검을 권장한다.",
-  } = location.state || {};
-
-  const artifactInfo = JSON.parse(
-    localStorage.getItem("artifactInfo") || "{}",
-  );
-
-  const handleSave = () => {
-    const artifactName = artifactInfo.name || "무명 유물";
-
-    addMyReport({
-      id: `report-${Date.now()}`,
-      title: `${artifactName} 복원 보고서`,
-      project: artifactName,
-      date: new Date().toISOString().slice(0, 10),
-      artifactInfo,
-      summary,
-      methods,
-      futureCare,
-    });
-
-    navigate("/report-complete");
-  };
+    futureCare,
+  } = report;
 
   return (
     <div className="report-page">
-
       <div className="top-bar">
-        <button
-          className="nav-btn"
-          onClick={() => navigate("/post-record")}
-        >
-          ← 이전
+        <button className="nav-btn" onClick={() => navigate("/mypage/reports")}>
+          ← 목록으로
         </button>
 
         <div className="logo">VORA</div>
-
-        <button
-          className="nav-btn"
-          onClick={handleSave}
-        >
-          저장
-        </button>
       </div>
 
       <div className="report-paper">
-
-        <h1>AI 복원 보고서</h1>
+        <h1>{report.title}</h1>
 
         <section>
           <h2>기본 정보</h2>
@@ -101,13 +89,14 @@ function ReportPage() {
         <section>
           <h2>향후 관리</h2>
 
-          <p>{futureCare}</p>
+          <p>
+            {futureCare ||
+              "직사광선 및 고습 환경을 피하고 정기적인 상태 점검을 권장한다."}
+          </p>
         </section>
-
       </div>
-
     </div>
   );
 }
 
-export default ReportPage;
+export default MyReportDetailPage;

@@ -10,10 +10,9 @@ function ProgressNavigator({ approvedFlow, currentStep }) {
     { id: 1, name: "처리 전 조사" },
     { id: 2, name: "해체" },
     { id: 3, name: "세척" },
-    { id: 4, name: "강화 처리" },
+    { id: 4, name: "강화" },
     { id: 5, name: "접합" },
     { id: 6, name: "복원" },
-    { id: 7, name: "색 맞춤" },
     { id: 8, name: "처리 후 기록" },
   ];
 

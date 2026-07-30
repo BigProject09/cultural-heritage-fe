@@ -1,6 +1,6 @@
 import "./XrayPage.css";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useDisassembly } from "../../context/DisassemblyContext";
+import { useDisassembly } from "../../context/useDisassembly";
 
 function XrayPage() {
   const navigate = useNavigate();

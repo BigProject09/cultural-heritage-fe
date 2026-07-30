@@ -10,70 +10,87 @@
 }
 
 /* ===========================
-   상단 네비게이션
+   상단 네비게이션 (도구 추천 페이지와 동일한 UI)
 =========================== */
 
-.top-nav {
+.top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 60px;
+
+    margin-bottom: 70px;
 }
 
 .logo {
-    font-size: 40px;
+    margin: 0;
+
+    font-size: 56px;
     font-weight: 700;
     color: #2f6fed;
+
     letter-spacing: 1px;
 }
 
-.back-btn,
-.next-btn {
-    padding: 14px 30px;
+.nav-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-btn {
+    min-width: 120px;
+    height: 48px;
+
     border: none;
     border-radius: 12px;
-    cursor: pointer;
-    font-size: 16px;
+
+    background: #2f6fed;
+    color: white;
+
+    font-size: 18px;
     font-weight: 600;
-    transition: .2s;
+
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-.back-btn {
-    background: #2563eb;
-    color: white;
+.nav-btn:hover {
+    background: #2458c8;
 }
 
-.back-btn:hover {
-    background: #d1d5db;
+.nav-btn.secondary {
+    background: #eef5ff;
+    color: #2f6fed;
 }
 
-.next-btn {
-    background: #2563eb;
-    color: white;
-}
-
-.next-btn:hover {
-    background: #1d4ed8;
+.nav-btn.secondary:hover {
+    background: #dbe9ff;
 }
 
 /* ===========================
-   제목
+   제목 (도구 추천 페이지와 동일한 UI)
 =========================== */
 
-.investigation-header {
-    margin-bottom: 40px;
+.page-header {
+    margin-bottom: 50px;
 }
 
-.title-area h1 {
-    font-size: 42px;
-    margin: 0 0 12px;
+.page-header h1 {
+    margin: 0 0 18px;
+
+    font-size: 58px;
+    font-weight: 700;
+
     color: #1f2937;
 }
 
-.title-area p {
-    font-size: 18px;
-    color: #6b7280;
+.page-header p {
     margin: 0;
+
+    font-size: 22px;
+    color: #6b7280;
+
+    line-height: 1.6;
 }
 
 /* ===========================
@@ -163,12 +180,12 @@
         padding: 24px;
     }
 
-    .top-nav {
+    .top-bar {
         flex-direction: column;
         gap: 20px;
     }
 
-    .title-area h1 {
+    .page-header h1 {
         font-size: 34px;
     }
 

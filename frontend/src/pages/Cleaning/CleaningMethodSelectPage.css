@@ -103,19 +103,24 @@
   background: #f8faff;
 }
 
+.method-box {
+  cursor: pointer;
+}
+
 .method-box strong {
   display: block;
   font-size: 20px;
   color: #1f2937;
 }
 
-.check {
+.method-box input[type="checkbox"] {
   margin-top: 20px;
 
-  font-size: 42px;
-  font-weight: bold;
+  width: 32px;
+  height: 32px;
 
-  color: #2f64f5;
+  accent-color: #2f64f5;
+  cursor: pointer;
 }
 
 .info-card h2 {

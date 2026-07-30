@@ -259,15 +259,18 @@
     box-shadow:0 0 0 3px rgba(44,107,237,.15);
 }
 
-.size-inputs,
-.soil-inputs{
+.weight-inputs{
     display:flex;
     gap:12px;
 }
 
-.size-inputs input,
-.soil-inputs input{
+.weight-inputs input{
     flex:1;
+}
+
+.weight-inputs select{
+    width:90px;
+    flex:none;
 }
 
 .form-group textarea{

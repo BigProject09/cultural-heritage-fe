@@ -17,9 +17,9 @@ function ReportCompletePage() {
 
         <button
           className="complete-btn"
-          onClick={() => navigate("/board")}
+          onClick={() => navigate("/mypage")}
         >
-          게시판 업로드
+          마이페이지로 이동
         </button>
       </div>
     </div>

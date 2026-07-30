@@ -16,7 +16,7 @@ function ProjectPage() {
           ← 마이페이지
         </button>
 
-        <h1>📂 내 프로젝트</h1>
+        <h1>📂 진행 중인 프로젝트</h1>
 
       </div>
 

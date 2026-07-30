@@ -1,8 +1,42 @@
+import { useState } from "react";
 import "./MyPage.css";
 import { useNavigate } from "react-router-dom";
+import { getMyReports } from "../../utils/myReports";
+
+const DEFAULT_PROFILE = {
+  name: "에이블러",
+  role: "복원 전문가",
+  email: "user@vora.com",
+};
 
 function MyPage() {
   const navigate = useNavigate();
+
+  const [profile, setProfile] = useState(() => {
+    const saved = localStorage.getItem("userProfile");
+    return saved ? JSON.parse(saved) : DEFAULT_PROFILE;
+  });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(profile);
+
+  const reports = getMyReports();
+
+  const handleStartEdit = () => {
+    setDraft(profile);
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    setProfile(draft);
+    localStorage.setItem("userProfile", JSON.stringify(draft));
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setDraft(profile);
+    setIsEditing(false);
+  };
 
   return (
     <div className="my-page">
@@ -30,101 +64,61 @@ function MyPage() {
           👤
         </div>
 
-        <div className="profile-info">
+        {isEditing ? (
+          <div className="profile-info profile-info-editing">
 
-          <h2>에이블러</h2>
+            <input
+              className="profile-edit-input"
+              value={draft.name}
+              onChange={(e) =>
+                setDraft((prev) => ({ ...prev, name: e.target.value }))
+              }
+              placeholder="이름"
+            />
 
-          <p>복원 전문가</p>
+            <input
+              className="profile-edit-input"
+              value={draft.role}
+              onChange={(e) =>
+                setDraft((prev) => ({ ...prev, role: e.target.value }))
+              }
+              placeholder="직함"
+            />
 
-          <span>user@vora.com</span>
+            <input
+              className="profile-edit-input"
+              value={draft.email}
+              onChange={(e) =>
+                setDraft((prev) => ({ ...prev, email: e.target.value }))
+              }
+              placeholder="이메일"
+            />
 
-        </div>
+            <div className="profile-edit-actions">
+              <button className="profile-save-btn" onClick={handleSave}>
+                저장
+              </button>
 
-      </div>
+              <button className="profile-cancel-btn" onClick={handleCancel}>
+                취소
+              </button>
+            </div>
 
-      {/* ================= 작업 현황 ================= */}
-
-      <div className="workspace-grid">
-
-        <div className="workspace-card">
-
-          <div className="workspace-icon">
-            📦
           </div>
+        ) : (
+          <div
+            className="profile-info"
+            onClick={handleStartEdit}
+          >
 
-          <h3 className="workspace-count">
-            15
-          </h3>
+            <h2>{profile.name}</h2>
 
-          <div className="workspace-content">
-            <p>진행 프로젝트</p>
+            <p>{profile.role}</p>
+
+            <span>{profile.email}</span>
+
           </div>
-
-          <span className="workspace-arrow">
-            →
-          </span>
-
-        </div>
-
-        <div className="workspace-card">
-
-          <div className="workspace-icon">
-            ✅
-          </div>
-
-          <h3 className="workspace-count">
-            23
-          </h3>
-
-          <div className="workspace-content">
-            <p>완료 프로젝트</p>
-          </div>
-
-          <span className="workspace-arrow">
-            →
-          </span>
-
-        </div>
-
-        <div className="workspace-card">
-
-          <div className="workspace-icon">
-            📄
-          </div>
-
-          <h3 className="workspace-count">
-            18
-          </h3>
-
-          <div className="workspace-content">
-            <p>생성한 보고서</p>
-          </div>
-
-          <span className="workspace-arrow">
-            →
-          </span>
-
-        </div>
-
-        <div className="workspace-card">
-
-          <div className="workspace-icon">
-            📁
-          </div>
-
-          <h3 className="workspace-count">
-            41
-          </h3>
-
-          <div className="workspace-content">
-            <p>업로드 파일</p>
-          </div>
-
-          <span className="workspace-arrow">
-            →
-          </span>
-
-        </div>
+        )}
 
       </div>
 
@@ -134,7 +128,7 @@ function MyPage() {
 
         <div className="menu-card">
 
-          <h2>📂 내 프로젝트</h2>
+          <h2>📂 진행 중인 프로젝트</h2>
 
           <div className="list-area">
 
@@ -159,9 +153,13 @@ function MyPage() {
 
           <div className="list-area">
 
-            <p>고려청자 최종보고서.pdf</p>
-            <p>백자 복원보고서.pdf</p>
-            <p>청동기 복원보고서.pdf</p>
+            {reports.length > 0 ? (
+              reports
+                .slice(0, 3)
+                .map((report) => <p key={report.id}>{report.title}</p>)
+            ) : (
+              <p>아직 생성된 보고서가 없습니다.</p>
+            )}
 
           </div>
 

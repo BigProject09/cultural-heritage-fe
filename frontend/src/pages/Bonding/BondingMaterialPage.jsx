@@ -1,38 +1,79 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDisassembly } from "../../context/DisassemblyContext";
+import { useDisassembly } from "../../context/useDisassembly";
+import { resumeTask } from "../../services/conservationGuideApi";
+import { applyInterrupt } from "../../utils/applyInterrupt";
 
 import "./BondingMaterialPage.css";
+
+const ADHESIVE_OPTIONS = [
+  "Paraloid B-72",
+  "Cemedine C",
+  "Araldite rapid",
+  "Cyaonacrylate",
+  "poly urethane",
+  "Loctite 401",
+];
 
 function BondingMaterialPage() {
   const navigate = useNavigate();
 
-  const { setCompleted } = useDisassembly();
+  const ctx = useDisassembly();
+  const { taskId, bondingAdhesive, setCompleted, setStepSaving } = ctx;
+
+  // AI 추천값을 드롭다운 초기값으로 사용 (사용자가 이후 자유롭게 변경 가능)
+  const [adhesive, setAdhesive] = useState(
+    () => bondingAdhesive?.recommended_adhesive || "",
+  );
 
   const handleComplete = () => {
-    setCompleted((prev) => ({
-      ...prev,
-      bondingMaterial: true,
-    }));
+    if (!taskId) {
+      alert("taskId가 없습니다.");
+      return;
+    }
 
+    setStepSaving("bondingMaterial", true);
     navigate("/bonding");
+
+    (async () => {
+      try {
+        const response = await resumeTask(taskId, {
+          resume: {
+            adhesive,
+          },
+        });
+
+        applyInterrupt(response.interrupt, ctx);
+
+        ctx.setBondingChoice({ adhesive });
+
+        setCompleted((prev) => ({
+          ...prev,
+          bondingMaterial: true,
+        }));
+      } catch (error) {
+        console.error(error);
+        alert("접합제 저장 실패");
+      } finally {
+        setStepSaving("bondingMaterial", false);
+      }
+    })();
   };
 
+  if (!bondingAdhesive) {
+    return <div>불러오는 중...</div>;
+  }
+
   return (
-    <div className="joining-material-page">
+    <div className="bonding-material-page">
       <div className="detail-header">
-        <button
-          className="nav-btn"
-          onClick={() => navigate("/bonding")}
-        >
+        <button className="nav-btn" onClick={() => navigate("/bonding")}>
           ← 이전
         </button>
 
         <h1 className="vora-logo">VORA</h1>
 
-        <button
-          className="nav-btn"
-          onClick={handleComplete}
-        >
+        <button className="nav-btn" onClick={handleComplete}>
           완료
         </button>
       </div>
@@ -46,29 +87,41 @@ function BondingMaterialPage() {
           <div className="material-title">
             <span className="folder-icon">📁</span>
 
-            <span>Paraloid B-72</span>
+            <span>{bondingAdhesive.recommended_adhesive}</span>
 
             <span className="arrow">▶</span>
           </div>
 
           <hr />
 
-          <div className="material-image">
-            <img
-              src="/images/paraloid-b72.png"
-              alt="Paraloid B-72"
-            />
-          </div>
-
           <p className="material-description">
-            유물이 연질토기이므로(점토 낮은 소각건축재 사용 불가 조건)
-            Cyanoacrylate를 제외해야 합니다. 또한 처리 목적이 전시용이어서
-            추후 분리/재처리 가능성이 중요하며, Paraloid B-72는 비교적
-            가역성이 높고 이전 강화처리에서 이미 사용한 강화제
-            (Paraloid B-72)와 용매(아세톤) 조합이 확인되어 상성이 가장
-            좋습니다. 따라서 표면 균열 및 이물질 부착 상태에서 기존 처리
-            체계를 유지하면서 접합 안정성을 확보하기에 적합합니다.
+            {bondingAdhesive.reason}
           </p>
+
+          {bondingAdhesive.precautions?.length > 0 && (
+            <ul className="material-precautions">
+              {bondingAdhesive.precautions.map((precaution) => (
+                <li key={precaution}>⚠ {precaution}</li>
+              ))}
+            </ul>
+          )}
+
+          <div className="material-select-group">
+            <div className="material-select-item">
+              <label>접합제</label>
+
+              <select
+                value={adhesive}
+                onChange={(e) => setAdhesive(e.target.value)}
+              >
+                {ADHESIVE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     </div>
