@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useDisassembly } from "../../context/DisassemblyContext";
+import { useDisassembly } from "../../context/useDisassembly";
 import "./XrayPage.css";
 
 import StitchEditor from "../../components/xray/StitchEditor";

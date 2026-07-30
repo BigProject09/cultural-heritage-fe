@@ -17,6 +17,7 @@ import ProfilePage from "./pages/MyPage/ProfilePage";
 import ActivityPage from "./pages/MyPage/ActivityPage";
 import ProjectPage from "./pages/MyPage/ProjectPage";
 import MyReportPage from "./pages/MyPage/MyReportPage";
+import MyReportDetailPage from "./pages/MyPage/MyReportDetailPage";
 
 //처리 전 조사
 import ArtifactRegisterPage from "./pages/ArtifactRegister/ArtifactRegisterPage";
@@ -30,21 +31,17 @@ import DisassemblyPage from "./pages/Disassembly/DisassemblyPage";
 import DisassemblyChecklistPage from "./pages/Disassembly/DisassemblyChecklistPage";
 import DisassemblyToolPage from "./pages/Disassembly/DisassemblyToolPage";
 import DisassemblyMethodPage from "./pages/Disassembly/DisassemblyMethodPage";
-import DisassemblyPostPage from "./pages/Disassembly/DisassemblyPostPage";
 
 // 세척
 import CleaningPage from "./pages/Cleaning/CleaningPage";
 import CleaningMethodSelectPage from "./pages/Cleaning/CleaningMethodSelectPage";
 import CleaningStepPage from "./pages/Cleaning/CleaningStepPage";
 import CleaningDryingStepPage from "./pages/Cleaning/CleaningDryingStepPage";
-import CleaningPostPage from "./pages/Cleaning/CleaningPostPage";
 
 // 강화 처리
 import StrengtheningPage from "./pages/Strengthening/StrengtheningPage";
 import StrengtheningMethodPage from "./pages/Strengthening/StrengtheningMethodPage";
 import StrengtheningWettingPage from "./pages/Strengthening/StrengtheningWettingPage";
-import StrengtheningWettingResultPage from "./pages/Strengthening/StrengtheningWettingResultPage";
-import StrengtheningPostPage from "./pages/Strengthening/StrengtheningPostPage";
 import StrengtheningMaterialPage from "./pages/Strengthening/StrengtheningMaterialPage";
 
 // 접합
@@ -52,20 +49,11 @@ import BondingPage from "./pages/Bonding/BondingPage";
 import BondingMethodPage from "./pages/Bonding/BondingMethodPage";
 import BondingMaterialPage from "./pages/Bonding/BondingMaterialPage";
 import BondingWorkPage from "./pages/Bonding/BondingWorkPage";
-import BondingPostPage from "./pages/Bonding/BondingPostPage";
 
 //복원
 import RestorationPage from "./pages/Restoration/RestorationPage";
 import RestorationMethodPage from "./pages/Restoration/RestorationMethodPage";
 import RestorationMaterialPage from "./pages/Restoration/RestorationMaterialPage";
-import RestorationPostPage from "./pages/Restoration/RestorationPostPage";
-
-// 색 맞춤
-import ColorMatchingPage from "./pages/ColorMatching/ColorMatchingPage";
-import ColorMatchingMethodPage from "./pages/ColorMatching/ColorMatchingMethodPage";
-import ColorMatchingMaterialPage from "./pages/ColorMatching/ColorMatchingMaterialPage";
-import ColorMatchingWorkPage from "./pages/ColorMatching/ColorMatchingWorkPage";
-import ColorMatchingPostPage from "./pages/ColorMatching/ColorMatchingPostPage";
 
 // 처리 후 기록
 import PostRecordPage from "./pages/PostRecord/PostRecordPage";
@@ -82,6 +70,7 @@ function App() {
           <Route path="/mypage/activity" element={<ActivityPage />} />
           <Route path="/mypage/projects" element={<ProjectPage />} />
           <Route path="/mypage/reports" element={<MyReportPage />} />
+          <Route path="/mypage/reports/:id" element={<MyReportDetailPage />} />
           {/* 홈페이지 */}
           <Route path="/" element={<HomePage />} />
 
@@ -139,8 +128,6 @@ function App() {
             element={<DisassemblyMethodPage />}
           />
 
-          <Route path="/disassembly-post" element={<DisassemblyPostPage />} />
-
           {/* 세척 */}
           <Route path="/cleaning" element={<CleaningPage />} />
 
@@ -155,8 +142,6 @@ function App() {
             path="/cleaning-drying-step"
             element={<CleaningDryingStepPage />}
           />
-
-          <Route path="/cleaning-post" element={<CleaningPostPage />} />
 
           {/* 강화 처리 */}
           <Route path="/strengthening" element={<StrengtheningPage />} />
@@ -176,16 +161,6 @@ function App() {
             element={<StrengtheningWettingPage />}
           />
 
-          <Route
-            path="/strengthening-wetting-result"
-            element={<StrengtheningWettingResultPage />}
-          />
-
-          <Route
-            path="/strengthening-post"
-            element={<StrengtheningPostPage />}
-          />
-
           {/* 접합 */}
           <Route path="/bonding" element={<BondingPage />} />
 
@@ -197,7 +172,6 @@ function App() {
 
           <Route path="/bonding-work" element={<BondingWorkPage />} />
 
-          <Route path="/bonding-post" element={<BondingPostPage />} />
           {/* 복원 */}
           <Route path="/restoration" element={<RestorationPage />} />
 
@@ -209,30 +183,6 @@ function App() {
           <Route
             path="/restoration-material"
             element={<RestorationMaterialPage />}
-          />
-
-          <Route path="/restoration-post" element={<RestorationPostPage />} />
-          {/* 색 맞춤 */}
-          <Route path="/color-matching" element={<ColorMatchingPage />} />
-
-          <Route
-            path="/color-matching-method"
-            element={<ColorMatchingMethodPage />}
-          />
-
-          <Route
-            path="/color-matching-material"
-            element={<ColorMatchingMaterialPage />}
-          />
-
-          <Route
-            path="/color-matching-work"
-            element={<ColorMatchingWorkPage />}
-          />
-
-          <Route
-            path="/color-matching-post"
-            element={<ColorMatchingPostPage />}
           />
 
           {/* 처리 후 기록 */}

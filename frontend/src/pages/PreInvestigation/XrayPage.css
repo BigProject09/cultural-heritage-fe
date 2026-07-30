@@ -1631,6 +1631,7 @@
 /* 공간이 모자라면 안내 문구가 먼저 줄어들고 버튼은 유지된다 */
 .complete-area > div:first-child {
   min-width: 0;
+  flex: 1 1 220px;
 }
 
 .complete-area strong {

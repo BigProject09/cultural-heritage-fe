@@ -1,25 +1,40 @@
 .progress-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 40px;
-  padding: 0 20px;
+  width: 200px;
+  flex-shrink: 0;
+
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+
+  padding: 30px 24px;
   box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  height: fit-content;
+  position: sticky;
+  top: 30px;
 }
 
 .progress-item {
-  flex: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  gap: 14px;
+
   position: relative;
   cursor: pointer;
+
+  padding-bottom: 34px;
+}
+
+.progress-item:last-child {
+  padding-bottom: 0;
 }
 
 .progress-circle {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
 
   background: #e8edf5;
@@ -29,9 +44,10 @@
   justify-content: center;
   align-items: center;
 
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
 
+  flex-shrink: 0;
   z-index: 2;
 
   transition: 0.2s;
@@ -43,14 +59,14 @@
 }
 
 .progress-title {
-  margin-top: 12px;
+  margin-top: 9px;
 
   font-size: 15px;
   font-weight: 600;
 
   color: #666;
 
-  text-align: center;
+  text-align: left;
 
   transition: 0.2s;
 }
@@ -62,11 +78,11 @@
 .progress-line {
   position: absolute;
 
-  top: 22px;
-  left: 50%;
+  top: 40px;
+  left: 19px;
 
-  width: 100%;
-  height: 3px;
+  width: 3px;
+  height: calc(100% - 40px);
 
   background: #d7dde7;
 
@@ -90,15 +106,36 @@
 /* 반응형 */
 
 @media (max-width: 900px) {
-
-  .progress-title{
-    font-size:12px;
+  .progress-wrapper {
+    position: static;
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
   }
 
-  .progress-circle{
-    width:38px;
-    height:38px;
-    font-size:15px;
+  .progress-item {
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 0;
+    padding-right: 34px;
   }
 
+  .progress-title {
+    margin-top: 8px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .progress-circle {
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
+  }
+
+  .progress-line {
+    top: 19px;
+    left: 38px;
+    width: calc(100% - 4px);
+    height: 3px;
+  }
 }

@@ -483,3 +483,86 @@
   cursor:pointer;
 
 }
+
+.work-card {
+  max-width: 900px;
+  margin: 0 auto 24px;
+
+  background: white;
+  border-radius: 20px;
+
+  padding: 30px;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+
+.work-card h2 {
+  margin-bottom: 18px;
+  font-size: 22px;
+  color: #333;
+}
+
+.photo-url-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.photo-url-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.photo-url-input:focus {
+  outline: none;
+  border-color: #2f6fed;
+}
+
+.photo-url-add-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #2f6fed;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.photo-url-add-btn:hover {
+  background: #1f5fe0;
+}
+
+.photo-url-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.photo-url-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 10px 14px;
+  background: #f4f6fb;
+  border-radius: 10px;
+}
+
+.photo-url-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-url-chip button {
+  border: none;
+  background: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 10px;
+}

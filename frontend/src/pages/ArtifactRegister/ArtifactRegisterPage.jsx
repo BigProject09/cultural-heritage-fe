@@ -1,23 +1,42 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./ArtifactRegisterPage.css";
+import { useDisassembly } from "../../context/useDisassembly";
 
 function ArtifactRegisterPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setPreInvestigation } = useDisassembly();
 
-  const [image, setImage] = useState(null);
-  const [artifactType, setArtifactType] = useState("도토기");
-  const [material, setMaterial] = useState("토기");
+  const editMode = !!location.state?.editMode;
 
-  const [width, setWidth] = useState("");
-  const [height, setHeight] = useState("");
-  const [depth, setDepth] = useState("");
+  // 새로 등록할 때는 이전에 남아있던 유물 정보를 불러오지 않고 빈 값으로 시작한다.
+  // 수정 모드일 때만 기존 값을 불러와 채워준다.
+  const savedArtifact = editMode
+    ? JSON.parse(localStorage.getItem("artifactInfo") || "{}")
+    : {};
 
-  const [soilPH, setSoilPH] = useState("");
-  const [soilCL, setSoilCL] = useState("");
-  const [soilEtc, setSoilEtc] = useState("");
-
-  const [device, setDevice] = useState("");
+  const [image, setImage] = useState(savedArtifact.image || null);
+  const [name, setName] = useState(savedArtifact.name || "");
+  const [material, setMaterial] = useState(
+    savedArtifact.material || "연질토기",
+  );
+  const [period, setPeriod] = useState(savedArtifact.period || "고려시대");
+  const [condition, setCondition] = useState(savedArtifact.condition || "");
+  const [weightValue, setWeightValue] = useState(
+    savedArtifact.weight ? savedArtifact.weight.replace(/[a-z]/gi, "") : "",
+  );
+  const [weightUnit, setWeightUnit] = useState(
+    savedArtifact.weight?.includes("g") && !savedArtifact.weight?.includes("kg")
+      ? "g"
+      : "kg",
+  );
+  const [bondingArea, setBondingArea] = useState(
+    savedArtifact.bondingArea || "충분함",
+  );
+  const [treatmentPurpose, setTreatmentPurpose] = useState(
+    savedArtifact.treatmentPurpose || "전시용",
+  );
 
   // 유물 사진을 data URL 로 저장한다.
   //
@@ -104,20 +123,23 @@ function ArtifactRegisterPage() {
       // 구분한다. 없으면 결합이 시작되지 않는다.
       // 서버에서 발급받는 구조로 바뀌면 이 부분을 교체한다.
       artifactId: `artifact-${Date.now()}`,
-
       image,
-      artifactType,
+      name,
       material,
-      width,
-      height,
-      depth,
-      soilPH,
-      soilCL,
-      soilEtc,
-      device,
+      period,
+      condition,
+      weight: weightValue ? `${weightValue}${weightUnit}` : "",
+      bondingArea,
+      treatmentPurpose,
     };
 
     localStorage.setItem("artifactInfo", JSON.stringify(artifactInfo));
+
+    // 수정 후에는 새 taskId로 다시 시작되므로, 이전 taskId 기준으로 완료했던
+    // 처리 전 조사(X-ray/육안) 결과도 더 이상 유효하지 않아 초기화한다.
+    if (editMode) {
+      setPreInvestigation({ xray: false, visual: false });
+    }
 
     navigate("/flow-recommendation");
   };
@@ -137,9 +159,13 @@ function ArtifactRegisterPage() {
 
       {/* Title */}
       <section className="register-title-area">
-        <h1>유물 등록</h1>
+        <h1>{editMode ? "유물 정보 수정" : "유물 등록"}</h1>
 
-        <p>복원 프로젝트를 시작하기 위해 유물 정보를 입력해주세요.</p>
+        <p>
+          {editMode
+            ? "수정할 항목을 변경한 뒤 저장해주세요."
+            : "복원 프로젝트를 시작하기 위해 유물 정보를 입력해주세요."}
+        </p>
       </section>
 
       {/* Step */}
@@ -215,106 +241,124 @@ function ArtifactRegisterPage() {
           <h2>유물 정보</h2>
 
           <div className="form-group">
-            <label>유물 종류</label>
+            <label>유물명</label>
 
-            <select
-              value={artifactType}
-              onChange={(e) => setArtifactType(e.target.value)}
-            >
-              <option>도토기</option>
-              <option>금속 유물</option>
-              <option>석조</option>
-              <option>목재</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>제원 조사 (cm)</label>
-
-            <div className="size-inputs">
-              <input
-                type="number"
-                placeholder="가로"
-                value={width}
-                onChange={(e) => setWidth(e.target.value)}
-              />
-
-              <input
-                type="number"
-                placeholder="세로"
-                value={height}
-                onChange={(e) => setHeight(e.target.value)}
-              />
-
-              <input
-                type="number"
-                placeholder="높이"
-                value={depth}
-                onChange={(e) => setDepth(e.target.value)}
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="예) 청자상감운학문매병"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
 
           <div className="form-group">
-            <label>추정 재질</label>
+            <label>재질</label>
 
             <select
               value={material}
               onChange={(e) => setMaterial(e.target.value)}
             >
-              <option>토기</option>
+              <option>연질토기</option>
+              <option>경질토기</option>
               <option>청동</option>
               <option>철</option>
               <option>석재</option>
               <option>목재</option>
               <option>지류</option>
+              <option>직물</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label>토양 정보</label>
+            <label>시대</label>
 
-            <div className="soil-inputs">
+            <select value={period} onChange={(e) => setPeriod(e.target.value)}>
+              <option>선사시대</option>
+              <option>삼국시대</option>
+              <option>통일신라시대</option>
+              <option>고려시대</option>
+              <option>조선시대</option>
+              <option>근현대</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>상태</label>
+
+            <textarea
+              rows="4"
+              placeholder="예) 표면 균열 및 이물질 부착"
+              value={condition}
+              onChange={(e) => setCondition(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>무게</label>
+
+            <div className="weight-inputs">
               <input
-                placeholder="pH"
-                value={soilPH}
-                onChange={(e) => setSoilPH(e.target.value)}
+                type="number"
+                placeholder="예) 3.2"
+                value={weightValue}
+                onChange={(e) => setWeightValue(e.target.value)}
               />
 
-              <input
-                placeholder="Cl-"
-                value={soilCL}
-                onChange={(e) => setSoilCL(e.target.value)}
-              />
+              <select
+                value={weightUnit}
+                onChange={(e) => setWeightUnit(e.target.value)}
+              >
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+              </select>
 
-              <input
+              {/* <input
                 placeholder="기타"
                 value={soilEtc}
                 onChange={(e) => setSoilEtc(e.target.value)}
-              />
+              /> */}
             </div>
           </div>
 
           <div className="form-group">
-            <label>측정 장비</label>
+            <label>접합 부위</label>
 
-            <textarea
-              rows="4"
-              placeholder="예) Galaxy S25 Ultra"
-              value={device}
-              onChange={(e) => setDevice(e.target.value)}
-            />
+            <select
+              value={bondingArea}
+              onChange={(e) => setBondingArea(e.target.value)}
+            >
+              <option>충분함</option>
+              <option>보통</option>
+              <option>부족함</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>처리 목적</label>
+
+            <select
+              value={treatmentPurpose}
+              onChange={(e) => setTreatmentPurpose(e.target.value)}
+            >
+              <option>전시용</option>
+              <option>보관용</option>
+              <option>연구용</option>
+              <option>복원 처리용</option>
+            </select>
           </div>
 
           <div className="button-group">
             <button
               className="cancel-btn"
-              onClick={() => navigate("/worklist")}
+              onClick={() =>
+                navigate(editMode ? "/pre-investigation" : "/worklist")
+              }
             >
               취소
             </button>
 
             <button className="next-btn" onClick={handleNext}>
-              다음 →
+              {editMode ? "저장" : "다음 →"}
             </button>
           </div>
         </div>

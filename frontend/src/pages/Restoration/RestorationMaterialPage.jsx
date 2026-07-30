@@ -1,53 +1,80 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDisassembly } from "../../context/DisassemblyContext";
+import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
+import { applyInterrupt } from "../../utils/applyInterrupt";
 
 import "./RestorationMaterialPage.css";
 
+const MATERIAL_OPTIONS = [
+  "CDK-520",
+  "Araldite SV427+HV427",
+  "Epo-tec 301",
+  "XTR-311",
+  "Repairit Quik",
+];
 
 function RestorationMaterialPage() {
   const navigate = useNavigate();
 
+  const ctx = useDisassembly();
   const {
     taskId,
+    restorationMaterial,
     setCompleted,
-  } = useDisassembly();
+    setStepSaving,
+  } = ctx;
 
+  // AI 추천값을 드롭다운 초기값으로 사용 (사용자가 이후 자유롭게 변경 가능)
+  const [material, setMaterial] = useState(
+    () => restorationMaterial?.recommended_material || "",
+  );
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
 
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
     }
 
+    setStepSaving("restorationMaterial", true);
+    navigate("/restoration");
 
-    try {
+    (async () => {
+      try {
 
-      await resumeTask(taskId, {
-        resume: {
-          material: "Araldite SV427+HV427",
-        },
-      });
+        const response = await resumeTask(taskId, {
+          resume: {
+            material,
+          },
+        });
 
+        applyInterrupt(response.interrupt, ctx);
 
-      setCompleted((prev) => ({
-        ...prev,
-        restorationMaterial: true,
-      }));
+        ctx.setRestorationChoice({ material });
 
+        setCompleted((prev) => ({
+          ...prev,
+          restorationMaterial: true,
+        }));
 
-      navigate("/restoration");
+      } catch (error) {
 
+        console.error(error);
+        alert("복원 재료 저장 실패");
 
-    } catch (error) {
+      } finally {
 
-      console.error(error);
-      alert("복원 재료 저장 실패");
+        setStepSaving("restorationMaterial", false);
 
-    }
+      }
+    })();
 
   };
+
+  if (!restorationMaterial) {
+    return <div>불러오는 중...</div>;
+  }
 
 
   return (
@@ -104,7 +131,7 @@ function RestorationMaterialPage() {
 
 
             <span>
-              Araldite SV427+HV427
+              {restorationMaterial.recommended_material}
             </span>
 
 
@@ -120,33 +147,27 @@ function RestorationMaterialPage() {
 
 
 
-          <div className="material-image">
-
-            <img
-              src="/images/araldite.png"
-              alt="Araldite SV427+HV427"
-            />
-
-          </div>
-
-
-
           <p className="material-description">
-
-            유물의 결손 부위 복원을 위해
-            Araldite SV427+HV427를 추천합니다.
-            우수한 안정성과 접착력을 가지고 있어
-            형태 복원 및 손상 부위 메움 작업에
-            적합합니다.
-
-            <br />
-            <br />
-
-            기존 접합 단계에서 사용한 재료와의
-            상성을 고려하여 복원 후 안정성을
-            확보할 수 있습니다.
-
+            {restorationMaterial.reason}
           </p>
+
+
+          <div className="material-select-group">
+            <div className="material-select-item">
+              <label>복원제</label>
+
+              <select
+                value={material}
+                onChange={(e) => setMaterial(e.target.value)}
+              >
+                {MATERIAL_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
 
         </div>

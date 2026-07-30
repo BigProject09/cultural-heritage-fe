@@ -1,109 +1,87 @@
+import { useState } from "react";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { useNavigate } from "react-router-dom";
 
-import { useDisassembly } from "../../context/DisassemblyContext";
+import { useDisassembly } from "../../context/useDisassembly";
+import { applyInterrupt } from "../../utils/applyInterrupt";
 
 import "./CleaningMethodSelectPage.css";
 
 function CleaningMethodSelectPage() {
   const navigate = useNavigate();
 
-const {
-  taskId,
-  cleaningMethod,
-  setCleaningGuide,
-  setCompleted,
-} = useDisassembly();
+  const ctx = useDisassembly();
+  const { taskId, cleaningMethod, setCompleted, setStepSaving } = ctx;
 
+  // AI 추천값을 기본 체크 상태로 사용 (사용자가 이후 자유롭게 토글 가능)
+  const [usePhysical, setUsePhysical] = useState(
+    () => !!cleaningMethod?.ai_analysis?.need_physical_cleaning,
+  );
+  const [useChemical, setUseChemical] = useState(
+    () => !!cleaningMethod?.ai_analysis?.need_chemical_cleaning,
+  );
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     const request = {
       resume: {
-        use_physical:
-          cleaningMethod?.ai_analysis?.need_physical_cleaning,
-
-        use_chemical:
-          cleaningMethod?.ai_analysis?.need_chemical_cleaning,
+        use_physical: usePhysical,
+        use_chemical: useChemical,
       },
     };
 
+    setStepSaving("cleaningMethod", true);
+    navigate("/cleaning");
 
-    try {
-      console.log("taskId =", taskId);
-      const response = await resumeTask(taskId, request);
+    (async () => {
+      try {
+        const response = await resumeTask(taskId, request);
 
-      console.log("✅ 백엔드 응답:", response);
+        applyInterrupt(response.interrupt, ctx);
 
-      if (response.interrupt?.ai_guide) {
-        setCleaningGuide(response.interrupt.ai_guide);
+        ctx.setCleaningSelection({ usePhysical, useChemical });
+
+        setCompleted((prev) => ({
+          ...prev,
+          cleaningMethod: true,
+        }));
+      } catch (error) {
+        console.error("❌ 에러:", error);
+        alert("세척 방법 저장 실패");
+      } finally {
+        setStepSaving("cleaningMethod", false);
       }
-
-      setCompleted((prev) => ({
-        ...prev,
-        cleaningMethod: true,
-      }));
-
-      navigate("/cleaning");
-
-    } catch (error) {
-      console.error("❌ 에러:", error);
-      alert("세척 방법 저장 실패");
-    }
+    })();
   };
-
 
   if (!cleaningMethod) {
     return <div>불러오는 중...</div>;
   }
 
-
   return (
     <div className="cleaning-method-page">
-
       <div className="detail-header">
-
-        <button
-          className="nav-btn"
-          onClick={() => navigate("/cleaning")}
-        >
+        <button className="nav-btn" onClick={() => navigate("/cleaning")}>
           ← 이전
         </button>
 
+        <h1 className="vora-logo">VORA</h1>
 
-        <h1 className="vora-logo">
-          VORA
-        </h1>
-
-
-        <button
-          className="nav-btn"
-          onClick={handleComplete}
-        >
+        <button className="nav-btn" onClick={handleComplete}>
           완료
         </button>
-
       </div>
 
-
       <div className="method-container">
-
         <div className="page-header">
           <h1>세척법 선택</h1>
         </div>
 
-
-
         <div className="info-card">
-
-          <h2>AI 분석 결과</h2>
-
-
           <p>
             <strong>유물 상태</strong>
             <br />
             {cleaningMethod?.ai_analysis?.relic_condition_summary}
           </p>
-
 
           <p>
             <strong>오염물 분석</strong>
@@ -111,74 +89,39 @@ const {
             {cleaningMethod?.ai_analysis?.contamination_summary}
           </p>
 
-
           <p>
             <strong>추천 이유</strong>
             <br />
             {cleaningMethod?.ai_analysis?.reason}
           </p>
-
         </div>
-
-
 
         <div className="info-card">
-
-          <h2>AI 추천 세척법</h2>
-
+          <h2>추천 세척법</h2>
 
           <div className="method-select">
+            <label className="method-box">
+              <strong>물리적 세척</strong>
 
+              <input
+                type="checkbox"
+                checked={usePhysical}
+                onChange={(e) => setUsePhysical(e.target.checked)}
+              />
+            </label>
 
-            <div className="method-box">
+            <label className="method-box">
+              <strong>화학적 세척</strong>
 
-              <strong>
-                물리적 세척
-              </strong>
-
-
-              <div className="check">
-
-                {
-                  cleaningMethod?.ai_analysis?.need_physical_cleaning
-                    ? "✓"
-                    : "×"
-                }
-
-              </div>
-
-            </div>
-
-
-
-
-            <div className="method-box">
-
-              <strong>
-                화학적 세척
-              </strong>
-
-
-              <div className="check">
-
-                {
-                  cleaningMethod?.ai_analysis?.need_chemical_cleaning
-                    ? "✓"
-                    : "×"
-                }
-
-              </div>
-
-            </div>
-
-
+              <input
+                type="checkbox"
+                checked={useChemical}
+                onChange={(e) => setUseChemical(e.target.checked)}
+              />
+            </label>
           </div>
-
         </div>
-
-
       </div>
-
     </div>
   );
 }

@@ -1,40 +1,35 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import "./DisassemblyToolPage.css";
-import { useDisassembly } from "../../context/DisassemblyContext";
+import { useDisassembly } from "../../context/useDisassembly";
+import { resumeTask } from "../../services/conservationGuideApi";
+import { applyInterrupt } from "../../utils/applyInterrupt";
 
 function DisassemblyToolPage() {
   const navigate = useNavigate();
 
+  const ctx = useDisassembly();
   const {
     taskId,
     tools,
-    completed,
     setCompleted,
-    setMethods,
-  } = useDisassembly();
-
-  console.log("tools =", tools);
-
-  console.log("tools =", tools);
-
-  const [selectedTools, setSelectedTools] = useState([]);
+    setStepSaving,
+    toolSelection: selectedTools,
+    setToolSelection: setSelectedTools,
+  } = ctx;
 
   const handleSelect = (toolId) => {
     if (selectedTools.includes(toolId)) {
-      setSelectedTools(
-        selectedTools.filter((id) => id !== toolId)
-      );
+      setSelectedTools(selectedTools.filter((id) => id !== toolId));
     } else {
-      setSelectedTools([
-        ...selectedTools,
-        toolId,
-      ]);
+      setSelectedTools([...selectedTools, toolId]);
     }
   };
 
-  const handleComplete = async () => {
+  const handleSelectAll = () => {
+    setSelectedTools(tools.map((tool) => tool.id));
+  };
+
+  const handleComplete = () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -45,41 +40,42 @@ function DisassemblyToolPage() {
       return;
     }
 
-    console.log("선택된 도구", selectedTools);
+    setStepSaving("tool", true);
+    navigate("/disassembly");
 
-    try {
-      const response = await axios.post(
-        `http://localhost:8080/tasks/${taskId}/resume`,
-        {
+    (async () => {
+      try {
+        const result = await resumeTask(taskId, {
           resume: {
             confirmed_tools: selectedTools,
           },
-        }
-      );
+        });
 
-      const methods =
-        response.data.interrupt?.ai_disassembly_method ?? {};
+        applyInterrupt(result.interrupt, ctx);
 
-      setMethods(methods);
+        ctx.setSelectedTools(
+          tools
+            .filter((tool) => selectedTools.includes(tool.id))
+            .map((tool) => tool.name),
+        );
 
-      setCompleted({
-        ...completed,
-        tool: true,
-      });
+        setCompleted((prev) => ({
+          ...prev,
+          tool: true,
+        }));
+      } catch (error) {
+        console.error(error);
+        alert("도구 저장 실패");
+      } finally {
+        setStepSaving("tool", false);
+      }
+    })();
+  };
 
-      navigate("/disassembly-method");
-    } catch (error) {
-      console.error(error);
-      alert("도구 저장 실패");
-    }
-    };
-
-    return (
+  return (
     <div className="tool-page">
-
       {/* 상단 */}
-      <div className="top-bar">
-
+      <div className="detail-header">
         <button
           className="nav-btn"
           onClick={() => navigate("/disassembly")}
@@ -87,63 +83,46 @@ function DisassemblyToolPage() {
           ← 이전
         </button>
 
-        <h1 className="logo">VORA</h1>
+        <h1 className="vora-logo">VORA</h1>
 
-        <button
-          className="nav-btn"
-          onClick={handleComplete}
-        >
-          완료
-        </button>
+        <div className="nav-btn-group">
+          <button className="nav-btn secondary" onClick={handleSelectAll}>
+            전체 선택
+          </button>
 
+          <button className="nav-btn" onClick={handleComplete}>
+            완료
+          </button>
+        </div>
       </div>
 
       {/* 제목 */}
       <div className="page-header">
-
-        <h1>AI 추천 해체 도구</h1>
-
-        <p>
-          유물 정보와 해체 전 조사 결과를 기반으로 추천된 도구입니다.
-        </p>
-
+        <h1>해체 도구 선택</h1>
       </div>
 
       {/* 도구 목록 */}
       <div className="tool-list">
-
         {tools.map((tool) => (
-
           <div
             key={tool.id}
             className={`tool-card ${
-              selectedTools.includes(tool.id)
-                ? "selected"
-                : ""
+              selectedTools.includes(tool.id) ? "selected" : ""
             }`}
           >
-
             <h2>{tool.name}</h2>
 
             <p>{tool.description}</p>
 
             <button
               className="select-btn"
-              onClick={() =>
-                handleSelect(tool.id)
-              }
+              onClick={() => handleSelect(tool.id)}
             >
-              {selectedTools.includes(tool.id)
-                ? "✔ 선택됨"
-                : "선택"}
+              {selectedTools.includes(tool.id) ? "✔ 선택됨" : "선택"}
             </button>
-
           </div>
-
         ))}
-
       </div>
-
     </div>
   );
 }

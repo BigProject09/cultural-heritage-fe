@@ -1,8 +1,11 @@
 import "./MyReportPage.css";
 import { useNavigate } from "react-router-dom";
+import { getMyReports } from "../../utils/myReports";
 
 function MyReportPage() {
   const navigate = useNavigate();
+
+  const reports = getMyReports();
 
   return (
     <div className="report-page">
@@ -48,7 +51,7 @@ function MyReportPage() {
       </div>
 
       <p className="report-count">
-        총 보고서 3건
+        총 보고서 {reports.length}건
       </p>
 
       {/* 보고서 목록 */}
@@ -65,23 +68,22 @@ function MyReportPage() {
 
         <tbody>
 
-          <tr>
-            <td>🏺 고려청자 복원 보고서</td>
-            <td>고려청자 복원</td>
-            <td>2026-07-23</td>
-          </tr>
-
-          <tr>
-            <td>⚱️ 청동기 보존 보고서</td>
-            <td>청동기 복원</td>
-            <td>2026-07-20</td>
-          </tr>
-
-          <tr>
-            <td>🏛️ 백자 복원 보고서</td>
-            <td>백자 복원</td>
-            <td>2026-07-15</td>
-          </tr>
+          {reports.length > 0 ? (
+            reports.map((report) => (
+              <tr
+                key={report.id}
+                onClick={() => navigate(`/mypage/reports/${report.id}`)}
+              >
+                <td>{report.title}</td>
+                <td>{report.project}</td>
+                <td>{report.date}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={3}>생성된 보고서가 없습니다.</td>
+            </tr>
+          )}
 
         </tbody>
 

@@ -1,53 +1,79 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useDisassembly } from "../../context/DisassemblyContext";
+import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
+import { applyInterrupt } from "../../utils/applyInterrupt";
 
 import "./BondingWorkPage.css";
 
 function BondingWorkPage() {
   const navigate = useNavigate();
 
-  const { taskId, setCompleted } = useDisassembly();
+  const ctx = useDisassembly();
+  const { taskId, setCompleted, setStepSaving } = ctx;
 
   const [beforePhotos, setBeforePhotos] = useState([]);
+  const [beforePhotoUrl, setBeforePhotoUrl] = useState("");
   const [afterPhotos, setAfterPhotos] = useState([]);
+  const [afterPhotoUrl, setAfterPhotoUrl] = useState("");
 
-  const beforeInputRef = useRef(null);
-  const afterInputRef = useRef(null);
+  const handleAddBeforePhoto = () => {
+    if (!beforePhotoUrl.trim()) return;
+    setBeforePhotos((prev) => [...prev, beforePhotoUrl.trim()]);
+    setBeforePhotoUrl("");
+  };
 
-  const handleComplete = async () => {
+  const handleRemoveBeforePhoto = (index) => {
+    setBeforePhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddAfterPhoto = () => {
+    if (!afterPhotoUrl.trim()) return;
+    setAfterPhotos((prev) => [...prev, afterPhotoUrl.trim()]);
+    setAfterPhotoUrl("");
+  };
+
+  const handleRemoveAfterPhoto = (index) => {
+    setAfterPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleComplete = () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
     }
 
-    const request = {
-      resume: {
-        before_photo_urls: beforePhotos.map((photo) => photo.name),
-        after_photo_urls: afterPhotos.map((photo) => photo.name),
-      },
-    };
+    setStepSaving("bondingWork", true);
+    navigate("/bonding");
 
-    try {
-      await resumeTask(taskId, request);
+    (async () => {
+      try {
+        const response = await resumeTask(taskId, {
+          resume: {
+            before_photo_urls: beforePhotos,
+            after_photo_urls: afterPhotos,
+          },
+        });
 
-      setCompleted((prev) => ({
-        ...prev,
-        bondingWork: true,
-      }));
+        applyInterrupt(response.interrupt, ctx);
 
-      navigate("/bonding-method");
-    } catch (error) {
-      console.error(error);
-      alert("접합 작업 저장 실패");
-    }
+        setCompleted((prev) => ({
+          ...prev,
+          bondingWork: true,
+        }));
+      } catch (error) {
+        console.error(error);
+        alert("접합 작업 저장 실패");
+      } finally {
+        setStepSaving("bondingWork", false);
+      }
+    })();
   };
 
   return (
     <div className="bonding-work-page">
-      <div className="top-bar">
+      <div className="detail-header">
         <button
           className="nav-btn"
           onClick={() => navigate("/bonding")}
@@ -55,7 +81,7 @@ function BondingWorkPage() {
           ← 이전
         </button>
 
-        <div className="logo">VORA</div>
+        <h1 className="vora-logo">VORA</h1>
 
         <button
           className="nav-btn"
@@ -70,76 +96,56 @@ function BondingWorkPage() {
       <div className="work-card">
         <h2>📷 작업 전 사진</h2>
 
-        <input
-          ref={beforeInputRef}
-          type="file"
-          multiple
-          style={{ display: "none" }}
-          onChange={(e) =>
-            setBeforePhotos((prev) => [
-              ...prev,
-              ...Array.from(e.target.files),
-            ])
-          }
-        />
+        <div className="photo-url-row">
+          <input
+            type="text"
+            className="photo-url-input"
+            placeholder="사진 URL을 입력하세요"
+            value={beforePhotoUrl}
+            onChange={(e) => setBeforePhotoUrl(e.target.value)}
+          />
 
-        <div className="photo-list">
-          {beforePhotos.map((photo, index) => (
-            <div
-              key={index}
-              className="photo-item"
-            >
-              <img
-                src={URL.createObjectURL(photo)}
-                alt={`작업 전 ${index + 1}`}
-              />
+          <button className="photo-url-add-btn" onClick={handleAddBeforePhoto}>
+            + 추가
+          </button>
+        </div>
+
+        <div className="photo-url-list">
+          {beforePhotos.map((url, index) => (
+            <div key={index} className="photo-url-chip">
+              <span>{url}</span>
+
+              <button onClick={() => handleRemoveBeforePhoto(index)}>✕</button>
             </div>
           ))}
-
-          <button
-            className="photo-add-btn"
-            onClick={() => beforeInputRef.current.click()}
-          >
-            +
-          </button>
         </div>
       </div>
 
       <div className="work-card">
         <h2>📷 작업 후 사진</h2>
 
-        <input
-          ref={afterInputRef}
-          type="file"
-          multiple
-          style={{ display: "none" }}
-          onChange={(e) =>
-            setAfterPhotos((prev) => [
-              ...prev,
-              ...Array.from(e.target.files),
-            ])
-          }
-        />
+        <div className="photo-url-row">
+          <input
+            type="text"
+            className="photo-url-input"
+            placeholder="사진 URL을 입력하세요"
+            value={afterPhotoUrl}
+            onChange={(e) => setAfterPhotoUrl(e.target.value)}
+          />
 
-        <div className="photo-list">
-          {afterPhotos.map((photo, index) => (
-            <div
-              key={index}
-              className="photo-item"
-            >
-              <img
-                src={URL.createObjectURL(photo)}
-                alt={`작업 후 ${index + 1}`}
-              />
+          <button className="photo-url-add-btn" onClick={handleAddAfterPhoto}>
+            + 추가
+          </button>
+        </div>
+
+        <div className="photo-url-list">
+          {afterPhotos.map((url, index) => (
+            <div key={index} className="photo-url-chip">
+              <span>{url}</span>
+
+              <button onClick={() => handleRemoveAfterPhoto(index)}>✕</button>
             </div>
           ))}
-
-          <button
-            className="photo-add-btn"
-            onClick={() => afterInputRef.current.click()}
-          >
-            +
-          </button>
         </div>
       </div>
     </div>
