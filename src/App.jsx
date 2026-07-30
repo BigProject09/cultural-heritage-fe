@@ -59,6 +59,7 @@ import RestorationMaterialPage from "./pages/Restoration/RestorationMaterialPage
 import PostRecordPage from "./pages/PostRecord/PostRecordPage";
 import ReportPage from "./pages/PostRecord/ReportPage";
 import ReportCompletePage from "./pages/PostRecord/ReportCompletePage";
+import "./styles/HeritageWorkflow.css";
 
 function App() {
   return (
