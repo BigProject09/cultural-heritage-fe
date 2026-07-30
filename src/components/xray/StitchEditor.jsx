@@ -45,8 +45,8 @@ import "./StitchEditor.css";
  */
 
 /** 화면에 보일 캔버스의 최대 크기. 결합본은 3000px 을 넘는다. */
-const VIEW_MAX_WIDTH = 900;
-const VIEW_MAX_HEIGHT = 620;
+const VIEW_MAX_WIDTH = 620;
+const VIEW_MAX_HEIGHT = 680;
 
 /**
  * 업로드 파일을 Konva 가 그릴 수 있는 이미지 요소로 만든다.
@@ -135,6 +135,44 @@ function useAssembledImage(file) {
   return state;
 }
 
+/** 컬러 기준 이미지를 화면에서 사용할 수 있는 URL로 정리한다. */
+function resolveReferenceSource(source) {
+  if (!source) return "";
+  if (source instanceof Blob) return source;
+
+  if (typeof source === "object") {
+    return resolveReferenceSource(
+      source.file || source.url || source.imageUrl || source.src,
+    );
+  }
+
+  return typeof source === "string" ? source : "";
+}
+
+function useReferencePreview(source) {
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  useEffect(() => {
+    const resolved = resolveReferenceSource(source);
+
+    if (!resolved) {
+      setPreviewUrl("");
+      return undefined;
+    }
+
+    if (resolved instanceof Blob) {
+      const objectUrl = URL.createObjectURL(resolved);
+      setPreviewUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+
+    setPreviewUrl(resolved);
+    return undefined;
+  }, [source]);
+
+  return previewUrl;
+}
+
 /**
  * 배치 정보를 화면에서 다루기 쉬운 형태로 정리한다.
  *
@@ -178,6 +216,7 @@ function buildPieces(fragments, canvasWidth, canvasHeight) {
 
 export default function StitchEditor({
   assembledFile,
+  referenceSource,
   fragmentFiles,
   fragments,
   canvas,
@@ -186,6 +225,7 @@ export default function StitchEditor({
   onCancel,
 }) {
   const assembled = useAssembledImage(assembledFile);
+  const referencePreview = useReferencePreview(referenceSource);
   const images = useFragmentImages(fragmentFiles);
 
   const stageRef = useRef(null);
@@ -388,98 +428,132 @@ export default function StitchEditor({
       </div>
 
       <div className="stitch-editor-body">
-        <div className="stitch-editor-canvas">
-          <Stage
-            ref={stageRef}
-            width={canvasWidth * scale}
-            height={canvasHeight * scale}
-            scaleX={scale}
-            scaleY={scale}
-            onMouseDown={(event) => {
-              // 빈 곳을 누르면 선택을 푼다
-              if (event.target === event.target.getStage()) {
-                setSelectedKey(null);
-              }
-            }}
-          >
-            <Layer ref={layerRef}>
-              {/* 결합본과 같은 배경. 내보낸 이미지가 투명해지지 않게 한다 */}
-              <Rect
-                x={0}
-                y={0}
-                width={canvasWidth}
-                height={canvasHeight}
-                fill="#000000"
-              />
+        <div className="stitch-editor-compare">
+          <section className="stitch-editor-pane">
+            <header className="stitch-editor-pane-header">
+              <div>
+                <span>EDITABLE X-RAY</span>
+                <h3>X-RAY 결합 보정</h3>
+              </div>
+              <small>드래그 · 회전 가능</small>
+            </header>
 
-              {pieces.map((piece) => {
-                const image = images[piece.fileName];
-                const placement = placements[piece.key];
-
-                if (!image || !placement) return null;
-
-                return (
-                  <KonvaImage
-                    key={piece.key}
-                    ref={(node) => {
-                      nodeRefs.current[piece.key] = node;
-                    }}
-                    image={image}
-                    crop={piece.cropRect ?? undefined}
-                    width={piece.size?.width}
-                    height={piece.size?.height}
-                    x={placement.x}
-                    y={placement.y}
-                    rotation={placement.rotation}
-                    draggable
-                    onClick={() => setSelectedKey(piece.key)}
-                    onTap={() => setSelectedKey(piece.key)}
-                    onDragEnd={(event) =>
-                      updatePlacement(piece.key, {
-                        x: event.target.x(),
-                        y: event.target.y(),
-                      })
-                    }
-                    onTransformEnd={(event) => {
-                      const node = event.target;
-
-                      // 회전만 허용하므로 배율은 되돌린다
-                      node.scaleX(1);
-                      node.scaleY(1);
-
-                      updatePlacement(piece.key, {
-                        x: node.x(),
-                        y: node.y(),
-                        rotation: node.rotation(),
-                      });
-                    }}
+            <div className="stitch-editor-canvas">
+              <Stage
+                ref={stageRef}
+                width={canvasWidth * scale}
+                height={canvasHeight * scale}
+                scaleX={scale}
+                scaleY={scale}
+                onMouseDown={(event) => {
+                  // 빈 곳을 누르면 선택을 푼다
+                  if (event.target === event.target.getStage()) {
+                    setSelectedKey(null);
+                  }
+                }}
+              >
+                <Layer ref={layerRef}>
+                  {/* 결합본과 같은 배경. 내보낸 이미지가 투명해지지 않게 한다 */}
+                  <Rect
+                    x={0}
+                    y={0}
+                    width={canvasWidth}
+                    height={canvasHeight}
+                    fill="#000000"
                   />
-                );
-              })}
 
-              {/* 대조용. AI 결합본을 반투명하게 덮어 차이를 본다 */}
-              <KonvaImage
-                ref={overlayRef}
-                image={assembled.image}
-                width={canvasWidth}
-                height={canvasHeight}
-                opacity={0.45}
-                listening={false}
-                visible={showOverlay}
-              />
+                  {pieces.map((piece) => {
+                    const image = images[piece.fileName];
+                    const placement = placements[piece.key];
 
-              <Transformer
-                ref={transformerRef}
-                rotateEnabled
-                resizeEnabled={false}
-                borderStroke="#2767df"
-                anchorStroke="#2767df"
-                anchorFill="#ffffff"
-                anchorSize={10}
-                rotateAnchorOffset={26}
-              />
-            </Layer>
-          </Stage>
+                    if (!image || !placement) return null;
+
+                    return (
+                      <KonvaImage
+                        key={piece.key}
+                        ref={(node) => {
+                          nodeRefs.current[piece.key] = node;
+                        }}
+                        image={image}
+                        crop={piece.cropRect ?? undefined}
+                        width={piece.size?.width}
+                        height={piece.size?.height}
+                        x={placement.x}
+                        y={placement.y}
+                        rotation={placement.rotation}
+                        draggable
+                        onClick={() => setSelectedKey(piece.key)}
+                        onTap={() => setSelectedKey(piece.key)}
+                        onDragEnd={(event) =>
+                          updatePlacement(piece.key, {
+                            x: event.target.x(),
+                            y: event.target.y(),
+                          })
+                        }
+                        onTransformEnd={(event) => {
+                          const node = event.target;
+
+                          // 회전만 허용하므로 배율은 되돌린다
+                          node.scaleX(1);
+                          node.scaleY(1);
+
+                          updatePlacement(piece.key, {
+                            x: node.x(),
+                            y: node.y(),
+                            rotation: node.rotation(),
+                          });
+                        }}
+                      />
+                    );
+                  })}
+
+                  {/* 대조용. AI 결합본을 반투명하게 덮어 차이를 본다 */}
+                  <KonvaImage
+                    ref={overlayRef}
+                    image={assembled.image}
+                    width={canvasWidth}
+                    height={canvasHeight}
+                    opacity={0.45}
+                    listening={false}
+                    visible={showOverlay}
+                  />
+
+                  <Transformer
+                    ref={transformerRef}
+                    rotateEnabled
+                    resizeEnabled={false}
+                    borderStroke="#2767df"
+                    anchorStroke="#2767df"
+                    anchorFill="#ffffff"
+                    anchorSize={10}
+                    rotateAnchorOffset={26}
+                  />
+                </Layer>
+              </Stage>
+            </div>
+          </section>
+
+          <section className="stitch-editor-pane">
+            <header className="stitch-editor-pane-header">
+              <div>
+                <span>REFERENCE IMAGE</span>
+                <h3>컬러 원본 이미지</h3>
+              </div>
+              <small>형상 · 배열 대조</small>
+            </header>
+
+            <div className="stitch-editor-reference">
+              {referencePreview ? (
+                <img
+                  src={referencePreview}
+                  alt="유물 컬러 원본 기준 이미지"
+                  draggable={false}
+                />
+              ) : (
+                <p>등록된 컬러 원본 이미지를 불러올 수 없습니다.</p>
+              )}
+            </div>
+          </section>
         </div>
 
         <aside className="stitch-editor-side">
@@ -502,7 +576,7 @@ export default function StitchEditor({
               </dl>
             ) : (
               <p className="stitch-editor-hint">
-                캔버스에서 조각을 선택하면 위치와 회전을 조절할 수 있습니다.
+                왼쪽 X-RAY 캔버스에서 조각을 선택하면 위치와 회전을 확인할 수 있습니다.
               </p>
             )}
           </section>
