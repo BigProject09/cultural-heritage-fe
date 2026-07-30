@@ -227,22 +227,53 @@
 
 .workflow-steps li {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   min-width: 0;
-  padding: 18px 22px;
   color: var(--xray-text-muted);
 }
 
 .workflow-steps li + li::before {
   position: absolute;
+  z-index: 2;
   top: 20%;
   bottom: 20%;
   left: 0;
   width: 1px;
   background: var(--xray-border);
   content: "";
+  pointer-events: none;
+}
+
+.workflow-step-button {
+  display: flex;
+  width: 100%;
+  min-height: 66px !important;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px !important;
+  border-radius: 0 !important;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.workflow-step-button:disabled {
+  opacity: 1;
+}
+
+.workflow-steps li.available:not(.active) .workflow-step-button {
+  cursor: pointer;
+}
+
+.workflow-steps li.available:not(.active) .workflow-step-button:hover {
+  background: #f8fbff;
+}
+
+.workflow-steps li.available:not(.active) .workflow-step-button:hover strong {
+  color: var(--xray-primary);
+}
+
+.workflow-steps li.locked .workflow-step-button {
+  cursor: not-allowed;
 }
 
 .workflow-step-icon {
@@ -258,7 +289,7 @@
   font-weight: 800;
 }
 
-.workflow-steps li > div {
+.workflow-step-copy {
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -270,15 +301,20 @@
   font-size: 14px;
 }
 
-.workflow-steps li > div span {
+.workflow-step-copy span {
   overflow: hidden;
   font-size: 11px;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .workflow-steps li.active {
   background: #f8fbff;
+}
+
+.workflow-steps li.active .workflow-step-button {
+  cursor: default;
 }
 
 .workflow-steps li.active .workflow-step-icon {
@@ -1605,7 +1641,7 @@
   line-height: 1.85;
 }
 
-.complete-area {
+.xray-page .complete-area {
   position: sticky;
   z-index: 20;
   bottom: 18px;
@@ -1622,49 +1658,47 @@
   backdrop-filter: blur(12px);
 }
 
-.complete-area > div {
+.xray-page .complete-area > div {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
 /* 공간이 모자라면 안내 문구가 먼저 줄어들고 버튼은 유지된다 */
-.complete-area > div:first-child {
+.xray-page .complete-area > div:first-child {
   min-width: 0;
   flex: 1 1 220px;
 }
 
-.complete-area strong {
+.xray-page .complete-area strong {
   font-size: 13px;
 }
 
-.complete-area span {
+.xray-page .complete-area span {
   color: var(--xray-text-muted);
   font-size: 11px;
 }
 
-.complete-btn {
+.xray-page .complete-btn {
   display: inline-flex;
   min-width: 160px;
   min-height: 48px !important;
   align-items: center;
   justify-content: center;
-  /* 화살표를 글자에 가깝게 둔다. 간격이 넓으면 버튼이
-     불필요하게 커져 옆 버튼과 균형이 깨진다. */
   gap: 10px;
   background: var(--xray-primary);
   color: #fff;
 }
 
-.complete-btn > span {
+.xray-page .complete-btn > span {
   color: #fff;
 }
 
-.complete-area > .complete-btn {
+.xray-page .complete-area > .complete-btn {
   flex: none;
 }
 
-.complete-area.final {
+.xray-page .complete-area.final {
   position: static;
 }
 
@@ -1785,11 +1819,11 @@
     display: none;
   }
 
-  .workflow-steps li {
-    padding: 16px;
+  .workflow-step-button {
+    padding: 16px !important;
   }
 
-  .workflow-steps li > div span {
+  .workflow-step-copy span {
     display: none;
   }
 
@@ -1825,7 +1859,7 @@
     overflow-x: auto;
   }
 
-  .workflow-steps li {
+  .workflow-step-button {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -1984,25 +2018,25 @@
     grid-template-columns: 1fr;
   }
 
-  .complete-area {
+  .xray-page .complete-area {
     bottom: 8px;
     padding: 10px;
   }
 
-  .complete-area > div {
+  .xray-page .complete-area > div {
     display: none;
   }
 
-  .complete-btn {
+  .xray-page .complete-btn {
     width: 100%;
   }
 
-  .complete-area.final {
+  .xray-page .complete-area.final {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .complete-area.final > div:first-child {
+  .xray-page .complete-area.final > div:first-child {
     display: flex;
   }
 
@@ -2068,5 +2102,253 @@
   .xray-page button,
   .xray-upload {
     transition: none;
+  }
+}
+
+/*
+ * 완료 바.
+ *
+ * complete-area 라는 이름이 VisualPage.css 와 겹쳐 규칙이 서로
+ * 덮였다. Vite 는 모든 CSS 를 전역으로 묶으므로 페이지별 파일이라도
+ * 클래스명이 같으면 충돌한다. 그래서 접두사를 붙인 이름을 쓴다.
+ */
+.xray-complete-bar {
+  position: sticky;
+  z-index: 20;
+  bottom: 18px;
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 16px 14px 22px;
+  border: 1px solid rgba(210, 216, 222, 0.9);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 40px rgba(25, 31, 40, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.xray-complete-bar > div {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.xray-complete-bar strong {
+  font-size: 13px;
+}
+
+.xray-complete-bar span {
+  color: var(--xray-text-muted);
+  font-size: 11px;
+}
+
+.xray-complete-btn {
+  display: inline-flex;
+  flex: none;
+  min-width: 160px;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  /* 화살표를 글자에 가깝게 둔다. 간격이 넓으면 버튼이
+     불필요하게 커져 옆 버튼과 균형이 깨진다. */
+  gap: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--xray-primary);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.xray-complete-btn:hover:not(:disabled) {
+  background: var(--xray-primary-hover);
+}
+
+.xray-complete-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.xray-complete-btn > span {
+  color: #fff;
+}
+
+/* 최종 검토 화면은 화면 흐름에 그대로 둔다 */
+.xray-complete-bar.final {
+  position: static;
+}
+
+.final-complete-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.final-complete-actions > button {
+  flex: none;
+  min-width: 160px;
+  height: 48px;
+}
+
+@media (max-width: 580px) {
+  .xray-complete-bar {
+    bottom: 8px;
+    padding: 10px;
+  }
+
+  .xray-complete-bar > div {
+    display: none;
+  }
+
+  .xray-complete-btn {
+    width: 100%;
+  }
+
+  .xray-complete-bar.final {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .xray-complete-bar.final > div {
+    display: flex;
+  }
+
+  .final-complete-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .final-complete-actions > button {
+    width: 100%;
+  }
+}
+
+/*
+ * 완료 바.
+ *
+ * complete-area 라는 이름이 VisualPage.css 와 겹쳐 규칙이 서로
+ * 덮였다. Vite 는 모든 CSS 를 전역으로 묶으므로 페이지별 파일이라도
+ * 클래스명이 같으면 충돌한다. 그래서 접두사를 붙인 이름을 쓴다.
+ */
+.xray-complete-bar {
+  position: sticky;
+  z-index: 20;
+  bottom: 18px;
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 16px 14px 22px;
+  border: 1px solid rgba(210, 216, 222, 0.9);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 40px rgba(25, 31, 40, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.xray-complete-bar > div {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.xray-complete-bar strong {
+  font-size: 13px;
+}
+
+.xray-complete-bar span {
+  color: var(--xray-text-muted);
+  font-size: 11px;
+}
+
+.xray-complete-btn {
+  display: inline-flex;
+  flex: none;
+  min-width: 160px;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  /* 화살표를 글자에 가깝게 둔다. 간격이 넓으면 버튼이
+     불필요하게 커져 옆 버튼과 균형이 깨진다. */
+  gap: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--xray-primary);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.xray-complete-btn:hover:not(:disabled) {
+  background: var(--xray-primary-hover);
+}
+
+.xray-complete-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.xray-complete-btn > span {
+  color: #fff;
+}
+
+/* 최종 검토 화면은 화면 흐름에 그대로 둔다 */
+.xray-complete-bar.final {
+  position: static;
+}
+
+.final-complete-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.final-complete-actions > button {
+  flex: none;
+  min-width: 160px;
+  height: 48px;
+}
+
+@media (max-width: 580px) {
+  .xray-complete-bar {
+    bottom: 8px;
+    padding: 10px;
+  }
+
+  .xray-complete-bar > div {
+    display: none;
+  }
+
+  .xray-complete-btn {
+    width: 100%;
+  }
+
+  .xray-complete-bar.final {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .xray-complete-bar.final > div {
+    display: flex;
+  }
+
+  .final-complete-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .final-complete-actions > button {
+    width: 100%;
   }
 }

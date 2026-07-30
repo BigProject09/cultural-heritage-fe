@@ -4,15 +4,14 @@
 
 ## 실행
 
-    cd frontend
     npm install
     npm run dev
 
-http://localhost:5173
+http://localhost:5174
 
 ## .env
 
-저장소에 포함하지 않는다. `frontend/.env` 를 만든다.
+저장소에 포함하지 않는다. `.env` 를 만든다.
 
     VITE_USE_XRAY_MOCK=false
 

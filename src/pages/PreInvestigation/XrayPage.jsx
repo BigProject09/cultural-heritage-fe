@@ -339,6 +339,17 @@ export default function XrayPage() {
   // 1단계 조각 결합, 2단계 결함 분석·검수
   const [workflow, setWorkflow] = useState(WORKFLOW.STITCH);
 
+  /**
+   * 상단 단계 네비게이션 상태.
+   *
+   * activeStep 은 현재 화면에 표시할 단계이고, maxReachedStep 은
+   * 사용자가 실제로 도달한 가장 먼 단계다. 둘을 분리해야 이전
+   * 단계로 돌아가도 완료된 단계가 다시 잠기지 않는다.
+   */
+  const [activeStep, setActiveStep] = useState(1);
+  const [maxReachedStep, setMaxReachedStep] = useState(1);
+  const [stitchView, setStitchView] = useState("UPLOAD");
+
   const [fragmentFiles, setFragmentFiles] = useState([]);
   const [assembledFile, setAssembledFile] = useState(null);
   const [assembledPreview, setAssembledPreview] = useState("");
@@ -417,16 +428,50 @@ export default function XrayPage() {
     return () => URL.revokeObjectURL(objectUrl);
   }, [assembledFile]);
 
+  /**
+   * 결합 입력 또는 결합본이 바뀌면 이후 분석 결과는 더 이상
+   * 같은 입력을 근거로 한 결과가 아니다. 이전 단계 이동이 가능해진
+   * 만큼, 실제 입력이 변경될 때만 하위 단계 데이터를 무효화한다.
+   */
+  function resetInspectionResults() {
+    setRegions([]);
+    setSummaries([]);
+    setExcludedRegions([]);
+    setSelectedId(null);
+    setViewFile(null);
+    setInspectionLoading(false);
+    setInspectionDone(false);
+    setInspectionMessage("");
+    setElapsed(null);
+    setInspectionStep(null);
+    setReport("");
+    setReportMeta(null);
+    setReportLoading(false);
+    setLastRemoved(null);
+    setShowCompleteConfirm(false);
+  }
+
+  function resetToImageRegistration() {
+    setAssembledFile(null);
+    setStitchStatus("IDLE");
+    setStitchMessage("");
+    setStitchJobId("");
+    setStitchLayout(null);
+    setEditingPlacement(false);
+    setCorrectedFragments(null);
+    resetInspectionResults();
+    setWorkflow(WORKFLOW.STITCH);
+    setStitchView("UPLOAD");
+    setActiveStep(1);
+    setMaxReachedStep(1);
+  }
+
   function handleFragmentChange(event) {
     const files = Array.from(event.target.files || []);
 
     // 조각을 다시 고르면 이전 결합 결과는 더 이상 유효하지 않다
     setFragmentFiles(files);
-    setAssembledFile(null);
-    setStitchStatus("IDLE");
-    setStitchMessage("");
-    setStitchLayout(null);
-    setCorrectedFragments(null);
+    resetToImageRegistration();
   }
 
   function acceptFragmentFiles(files) {
@@ -440,20 +485,12 @@ export default function XrayPage() {
     }
 
     setFragmentFiles(images);
-    setAssembledFile(null);
-    setStitchStatus("IDLE");
-    setStitchMessage("");
-    setStitchLayout(null);
-    setCorrectedFragments(null);
+    resetToImageRegistration();
   }
 
   function removeFragment(target) {
     setFragmentFiles((current) => current.filter((file) => file !== target));
-    setAssembledFile(null);
-    setStitchStatus("IDLE");
-    setStitchMessage("");
-    setStitchLayout(null);
-    setCorrectedFragments(null);
+    resetToImageRegistration();
   }
 
   function handleDrop(event) {
@@ -489,6 +526,16 @@ export default function XrayPage() {
       return;
     }
 
+    // 새 결합을 시작하면 기존 결함 분석과 문안은 더 이상 유효하지 않다.
+    resetInspectionResults();
+    setWorkflow(WORKFLOW.STITCH);
+    setStitchView("UPLOAD");
+    setActiveStep(1);
+    setMaxReachedStep(1);
+    setEditingPlacement(false);
+    setStitchLayout(null);
+    setCorrectedFragments(null);
+    setStitchJobId("");
     setStitchStatus("UPLOADING");
     setStitchMessage("입력 이미지를 준비하고 있습니다.");
     setAssembledFile(null);
@@ -540,6 +587,9 @@ export default function XrayPage() {
       setStitchLayout(layout);
       setCorrectedFragments(null);
       setStitchStatus("COMPLETED");
+      setStitchView("RESULT");
+      setActiveStep(2);
+      setMaxReachedStep(2);
       setStitchMessage(
         "결합이 완료되었습니다. 결과를 확인한 뒤 다음 단계로 이동하세요.",
       );
@@ -556,10 +606,16 @@ export default function XrayPage() {
    * 위치가 곧 결과여야 이후 분석과 어긋나지 않는다.
    */
   function applyCorrection({ file, fragments: corrected, movedCount }) {
+    // 배치가 바뀌었으므로 기존 탐지와 문안은 다시 생성해야 한다.
+    resetInspectionResults();
     setAssembledFile(file);
     setViewFile(file);
     setCorrectedFragments(corrected);
     setEditingPlacement(false);
+    setWorkflow(WORKFLOW.STITCH);
+    setStitchView("RESULT");
+    setActiveStep(2);
+    setMaxReachedStep(2);
 
     setStitchMessage(
       movedCount > 0
@@ -578,6 +634,8 @@ export default function XrayPage() {
     if (!assembledFile) return;
 
     setWorkflow(WORKFLOW.INSPECTION);
+    setActiveStep(3);
+    setMaxReachedStep((current) => Math.max(current, 3));
     setViewFile(assembledFile);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -597,6 +655,8 @@ export default function XrayPage() {
       return;
     }
 
+    setActiveStep(3);
+    setMaxReachedStep(3);
     setInspectionLoading(true);
     setInspectionDone(false);
     setInspectionMessage("");
@@ -652,6 +712,8 @@ export default function XrayPage() {
       setSelectedId(firstRegion?.regionId || null);
       setViewFile(firstFile || assembledFile);
       setInspectionDone(true);
+      // 분석이 끝나면 문안 작성 단계까지 이동할 수 있다.
+      setMaxReachedStep(4);
       setElapsed(((performance.now() - startedAt) / 1000).toFixed(1));
       setInspectionMessage(
         allRegions.length === 0 ? "탐지된 검토 필요 영역이 없습니다." : "",
@@ -734,6 +796,8 @@ export default function XrayPage() {
       return;
     }
 
+    setActiveStep(4);
+    setMaxReachedStep((current) => Math.max(current, 4));
     setReportLoading(true);
     setInspectionMessage("");
 
@@ -812,17 +876,78 @@ export default function XrayPage() {
   function openFinalReview() {
     if (!inspectionDone || !report.trim()) return;
     setWorkflow(WORKFLOW.REVIEW);
+    setActiveStep(5);
+    setMaxReachedStep(5);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function returnToReport() {
     setWorkflow(WORKFLOW.INSPECTION);
+    setActiveStep(4);
     window.setTimeout(() => {
       reportSectionRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
     }, 0);
+  }
+
+  /**
+   * 상단 단계 클릭 처리.
+   *
+   * 아직 도달하지 않은 단계는 잠그고, 도달한 단계는 데이터 삭제 없이
+   * 다시 열어 본다. 1단계로 돌아가는 것만으로는 기존 결합 결과를
+   * 지우지 않으며, 실제 파일을 바꾸거나 재결합할 때만 하위 결과를 초기화한다.
+   */
+  function goToWorkflowStep(step) {
+    if (step > maxReachedStep) return;
+
+    if (step === 1) {
+      setWorkflow(WORKFLOW.STITCH);
+      setStitchView("UPLOAD");
+      setEditingPlacement(false);
+      setActiveStep(1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (step === 2) {
+      if (!assembledFile) return;
+      setWorkflow(WORKFLOW.STITCH);
+      setStitchView("RESULT");
+      setEditingPlacement(false);
+      setActiveStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (step === 3) {
+      if (!assembledFile) return;
+      setWorkflow(WORKFLOW.INSPECTION);
+      setActiveStep(3);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (step === 4) {
+      if (!inspectionDone) return;
+      setWorkflow(WORKFLOW.INSPECTION);
+      setActiveStep(4);
+      window.setTimeout(() => {
+        reportSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 0);
+      return;
+    }
+
+    if (step === 5) {
+      if (!inspectionDone || !report.trim()) return;
+      setWorkflow(WORKFLOW.REVIEW);
+      setActiveStep(5);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
   const stitchBusy = STITCH_BUSY.includes(stitchStatus);
@@ -842,16 +967,6 @@ export default function XrayPage() {
     (region) => region.regionId === selectedRegion?.regionId,
   );
   const excludedCount = excludedRegions.length;
-  const currentStep =
-    workflow === WORKFLOW.STITCH
-      ? assembledFile
-        ? 2
-        : 1
-      : workflow === WORKFLOW.REVIEW
-        ? 5
-        : report
-          ? 4
-          : 3;
   const artifactManager = String(
     valueFrom(
       artifactInfo,
@@ -945,19 +1060,37 @@ export default function XrayPage() {
         >
           {WORKFLOW_STEPS.map(([label, description], index) => {
             const step = index + 1;
-            const state =
-              step < currentStep
-                ? "done"
-                : step === currentStep
-                  ? "active"
-                  : "";
+            const isActive = step === activeStep;
+            const isCompleted = step < maxReachedStep && !isActive;
+            const isAvailable = step <= maxReachedStep;
+            const state = [
+              isActive ? "active" : "",
+              isCompleted ? "done" : "",
+              isAvailable ? "available" : "locked",
+            ]
+              .filter(Boolean)
+              .join(" ");
+
             return (
               <li key={label} className={state}>
-                <StepIcon number={step} done={step < currentStep} />
-                <div>
-                  <strong>{label}</strong>
-                  <span>{description}</span>
-                </div>
+                <button
+                  type="button"
+                  className="workflow-step-button"
+                  onClick={() => goToWorkflowStep(step)}
+                  disabled={!isAvailable}
+                  aria-current={isActive ? "step" : undefined}
+                  aria-label={
+                    isAvailable
+                      ? `${step}단계 ${label}로 이동`
+                      : `${step}단계 ${label}, 이전 단계 완료 후 이용 가능`
+                  }
+                >
+                  <StepIcon number={step} done={isCompleted} />
+                  <div className="workflow-step-copy">
+                    <strong>{label}</strong>
+                    <span>{description}</span>
+                  </div>
+                </button>
               </li>
             );
           })}
@@ -965,7 +1098,7 @@ export default function XrayPage() {
 
         {workflow === WORKFLOW.STITCH && (
           <main className="workflow-content">
-            {!assembledPreview && (
+            {stitchView === "UPLOAD" && (
               <section className="xray-section">
                 <div className="section-heading">
                   <div>
@@ -1096,7 +1229,7 @@ export default function XrayPage() {
               </section>
             )}
 
-            {assembledPreview && editingPlacement && (
+            {stitchView === "RESULT" && assembledPreview && editingPlacement && (
               <section className="xray-section">
                 <div className="section-heading">
                   <div>
@@ -1113,6 +1246,7 @@ export default function XrayPage() {
 
                 <StitchEditor
                   assembledFile={assembledFile}
+                  referenceSource={colorSources[0] || null}
                   fragmentFiles={fragmentFiles}
                   fragments={stitchLayout?.fragments ?? []}
                   canvas={stitchLayout?.canvas ?? null}
@@ -1123,7 +1257,7 @@ export default function XrayPage() {
               </section>
             )}
 
-            {assembledPreview && !editingPlacement && (
+            {stitchView === "RESULT" && assembledPreview && !editingPlacement && (
               <section className="xray-section">
                 <div className="section-heading">
                   <div>
@@ -1152,12 +1286,7 @@ export default function XrayPage() {
                   <div className="xray-actions">
                     <button
                       className="xray-secondary"
-                      onClick={() => {
-                        setAssembledFile(null);
-                        setStitchStatus("IDLE");
-                        setStitchLayout(null);
-                        setCorrectedFragments(null);
-                      }}
+                      onClick={resetToImageRegistration}
                       disabled={stitchBusy}
                     >
                       이미지 다시 선택
@@ -1259,7 +1388,7 @@ export default function XrayPage() {
                   <div className="section-action-bar">
                     <button
                       className="text-button"
-                      onClick={() => setWorkflow(WORKFLOW.STITCH)}
+                      onClick={() => goToWorkflowStep(2)}
                       disabled={inspectionLoading}
                     >
                       ← 결합 결과로 돌아가기
@@ -1528,7 +1657,7 @@ export default function XrayPage() {
               </section>
             )}
 
-            <div className="complete-area">
+            <div className="xray-complete-bar">
               <div>
                 <strong>최종 검토 전 확인</strong>
                 <span>
@@ -1537,7 +1666,7 @@ export default function XrayPage() {
                 </span>
               </div>
               <button
-                className="complete-btn"
+                className="xray-complete-btn"
                 onClick={openFinalReview}
                 disabled={!inspectionDone || !report.trim()}
               >
@@ -1647,7 +1776,7 @@ export default function XrayPage() {
               </article>
             </section>
 
-            <div className="complete-area final">
+            <div className="xray-complete-bar final">
               <div>
                 <strong>모든 결과를 확인하셨나요?</strong>
                 <span>
