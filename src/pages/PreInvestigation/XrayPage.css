@@ -227,22 +227,53 @@
 
 .workflow-steps li {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   min-width: 0;
-  padding: 18px 22px;
   color: var(--xray-text-muted);
 }
 
 .workflow-steps li + li::before {
   position: absolute;
+  z-index: 2;
   top: 20%;
   bottom: 20%;
   left: 0;
   width: 1px;
   background: var(--xray-border);
   content: "";
+  pointer-events: none;
+}
+
+.workflow-step-button {
+  display: flex;
+  width: 100%;
+  min-height: 66px !important;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px !important;
+  border-radius: 0 !important;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.workflow-step-button:disabled {
+  opacity: 1;
+}
+
+.workflow-steps li.available:not(.active) .workflow-step-button {
+  cursor: pointer;
+}
+
+.workflow-steps li.available:not(.active) .workflow-step-button:hover {
+  background: #f8fbff;
+}
+
+.workflow-steps li.available:not(.active) .workflow-step-button:hover strong {
+  color: var(--xray-primary);
+}
+
+.workflow-steps li.locked .workflow-step-button {
+  cursor: not-allowed;
 }
 
 .workflow-step-icon {
@@ -258,7 +289,7 @@
   font-weight: 800;
 }
 
-.workflow-steps li > div {
+.workflow-step-copy {
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -270,15 +301,20 @@
   font-size: 14px;
 }
 
-.workflow-steps li > div span {
+.workflow-step-copy span {
   overflow: hidden;
   font-size: 11px;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .workflow-steps li.active {
   background: #f8fbff;
+}
+
+.workflow-steps li.active .workflow-step-button {
+  cursor: default;
 }
 
 .workflow-steps li.active .workflow-step-icon {
@@ -1783,11 +1819,11 @@
     display: none;
   }
 
-  .workflow-steps li {
-    padding: 16px;
+  .workflow-step-button {
+    padding: 16px !important;
   }
 
-  .workflow-steps li > div span {
+  .workflow-step-copy span {
     display: none;
   }
 
@@ -1823,7 +1859,7 @@
     overflow-x: auto;
   }
 
-  .workflow-steps li {
+  .workflow-step-button {
     flex-direction: column;
     align-items: flex-start;
   }
