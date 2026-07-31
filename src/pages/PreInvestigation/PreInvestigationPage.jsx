@@ -17,7 +17,7 @@ function PreInvestigationPage() {
   // context에 저장해둔 값을 우선 쓰고 없을 때만 기본 플로우로 대체한다.
   const approvedFlow = location.state?.approvedFlow ||
     savedApprovedFlow || [
-      { id: 1, name: "처리 전 조사" },
+      { id: 1, name: "X-RAY 분석/육안 상태 조사" },
       { id: 2, name: "해체" },
       { id: 3, name: "세척" },
       { id: 4, name: "강화" },
@@ -36,11 +36,11 @@ function PreInvestigationPage() {
 
   const handleNext = () => {
     if (!preInvestigation.xray || !preInvestigation.visual) {
-      alert("처리 전 조사를 먼저 완료하세요.");
+      alert("X-RAY 분석/육안 상태 조사를 먼저 완료하세요.");
       return;
     }
 
-    moveToNextStep(navigate, approvedFlow, "처리 전 조사");
+    moveToNextStep(navigate, approvedFlow, "X-RAY 분석/육안 상태 조사");
   };
 
   const handleXray = () => {
@@ -73,10 +73,10 @@ function PreInvestigationPage() {
       </div>
 
       <div className="page-layout">
-        {/* 진행 단계 (처리 전 조사 → 해체 → 세척 → ... 이동 바) */}
+        {/* 진행 단계 (X-RAY 분석/육안 상태 조사 → 해체 → 세척 → ... 이동 바) */}
         <ProgressNavigator
           approvedFlow={approvedFlow}
-          currentStep="처리 전 조사"
+          currentStep="X-RAY 분석/육안 상태 조사"
         />
 
         <div className="page-main">

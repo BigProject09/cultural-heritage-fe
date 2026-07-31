@@ -21,7 +21,7 @@ import ProjectPage from "./pages/MyPage/ProjectPage";
 import MyReportPage from "./pages/MyPage/MyReportPage";
 import MyReportDetailPage from "./pages/MyPage/MyReportDetailPage";
 
-//처리 전 조사
+// X-RAY 분석/육안 상태 조사
 import ArtifactRegisterPage from "./pages/ArtifactRegister/ArtifactRegisterPage";
 import FlowRecommendationPage from "./pages/FlowRecommendationPage/FlowRecommendationPage";
 import XrayPage from "./pages/PreInvestigation/XrayPage";

@@ -57,18 +57,116 @@
 .heritage-profile {
   @apply items-center bg-transparent cursor-pointer flex gap-3 justify-self-end border-0;
 }
-.heritage-profile > span {
-  @apply text-[#827767] text-[10px] text-right;
+
+.heritage-profile-link {
+  background: none;
+  border: 0;
+  cursor: pointer;
 }
-.heritage-profile small {
-  @apply text-[color:var(--heritage-ink)] block text-[13px] mt-0.5;
+
+.heritage-profile-link > span {
+  color: #827767;
+  font-size: 10px;
+  text-align: right;
 }
 .heritage-profile b {
   @apply items-center [background:#313630] text-[#eee1c9] flex [font-family:serif] font-medium h-10 justify-center w-10 rounded-full border-2 border-solid border-[#d9c7aa];
 }
-.heritage-profile.active b {
-  @apply shadow-[0_0_0_3px_rgba(150,104,61,0.2)];
+
+.heritage-profile-link.active small {
+  color: var(--heritage-bronze-dark);
 }
+
+.heritage-account-menu {
+  position: relative;
+}
+
+.heritage-logout-trigger {
+  align-items: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+}
+
+.heritage-logout-trigger b {
+  align-items: center;
+  background: #313630;
+  border: 2px solid #d9c7aa;
+  border-radius: 50%;
+  color: #eee1c9;
+  display: flex;
+  font-family: serif;
+  font-weight: 500;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.heritage-logout-trigger:hover b,
+.heritage-account-menu.open .heritage-logout-trigger b {
+  box-shadow: 0 0 0 3px rgba(150, 104, 61, 0.2);
+}
+
+.heritage-account-dropdown {
+  background: rgba(251, 248, 241, 0.98);
+  border: 1px solid rgba(150, 104, 61, 0.2);
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 20px 38px rgba(48, 39, 28, 0.16);
+  left: 50%;
+  min-width: 190px;
+  opacity: 0;
+  overflow: hidden;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  top: 76px;
+  transform: translate(-50%, -8px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+  visibility: hidden;
+}
+
+.heritage-account-menu.open .heritage-account-dropdown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  visibility: visible;
+}
+
+.heritage-account-dropdown button {
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: var(--heritage-ink);
+  cursor: pointer;
+  display: block;
+  padding: 18px 20px;
+  text-align: center;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
+  width: 100%;
+}
+
+.heritage-account-dropdown button + button {
+  border-top: 1px solid rgba(202, 188, 168, 0.45);
+}
+
+.heritage-account-dropdown button:hover,
+.heritage-account-dropdown button:focus-visible {
+  background: #eee6d8;
+  color: var(--heritage-bronze-dark);
+  outline: none;
+}
+
+.heritage-account-dropdown span {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+
 .heritage-artifact-thumb {
   @apply [background:#d8d2c5] h-[98px] overflow-hidden relative w-[120px] rounded-[9px] before:[background:radial-gradient(circle,rgba(255,255,255,0.4),transparent_65%)] before:content-[""] before:absolute before:inset-0;
 }

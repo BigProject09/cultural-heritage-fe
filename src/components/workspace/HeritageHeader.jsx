@@ -7,6 +7,8 @@ function HeritageHeader({ active = "dashboard" }) {
   const location = useLocation();
   const communityRef = useRef(null);
   const [communityOpen, setCommunityOpen] = useState(false);
+  const accountRef = useRef(null);
+  const [accountOpen, setAccountOpen] = useState(false);
   const loginUser = (() => {
     try {
       return JSON.parse(localStorage.getItem("loginUser") || "null");
@@ -24,10 +26,16 @@ function HeritageHeader({ active = "dashboard" }) {
       if (!communityRef.current?.contains(event.target)) {
         setCommunityOpen(false);
       }
+      if (!accountRef.current?.contains(event.target)) {
+        setAccountOpen(false);
+      }
     };
 
     const closeOnEscape = (event) => {
-      if (event.key === "Escape") setCommunityOpen(false);
+      if (event.key === "Escape") {
+        setCommunityOpen(false);
+        setAccountOpen(false);
+      }
     };
 
     document.addEventListener("pointerdown", closeOnOutsideClick);
@@ -44,12 +52,26 @@ function HeritageHeader({ active = "dashboard" }) {
     navigate(path);
   };
 
+  const handleAccountTriggerClick = () => {
+    if (loginUser) {
+      setAccountOpen((open) => !open);
+    } else {
+      navigate("/login");
+    }
+  };
+
+  const handleLogout = () => {
+    setAccountOpen(false);
+    localStorage.removeItem("loginUser");
+    navigate("/");
+  };
+
   return (
     <header className="heritage-header">
       <button
         className="heritage-brand"
         onClick={() => navigate("/")}
-        aria-label="VORA 대시보드로 이동"
+        aria-label="VORA 홈로 이동"
       >
         <span className="heritage-brand-mark">✣</span>
         <span>
@@ -65,7 +87,7 @@ function HeritageHeader({ active = "dashboard" }) {
           }`}
           onClick={() => navigate("/")}
         >
-          대시보드
+          홈
         </button>
         <button
           className={`heritage-nav-button ${
@@ -76,9 +98,7 @@ function HeritageHeader({ active = "dashboard" }) {
           프로젝트
         </button>
         <div
-          className={`heritage-community-menu ${
-            communityOpen ? "open" : ""
-          }`}
+          className={`heritage-community-menu ${communityOpen ? "open" : ""}`}
           ref={communityRef}
           onMouseEnter={() => setCommunityOpen(true)}
           onMouseLeave={() => setCommunityOpen(false)}
@@ -105,7 +125,9 @@ function HeritageHeader({ active = "dashboard" }) {
             <button
               type="button"
               role="menuitem"
-              className={location.pathname.startsWith("/board") ? "current" : ""}
+              className={
+                location.pathname.startsWith("/board") ? "current" : ""
+              }
               onClick={() => moveToCommunity("/board")}
             >
               <span>게시판</span>
@@ -113,7 +135,9 @@ function HeritageHeader({ active = "dashboard" }) {
             <button
               type="button"
               role="menuitem"
-              className={location.pathname.startsWith("/notice") ? "current" : ""}
+              className={
+                location.pathname.startsWith("/notice") ? "current" : ""
+              }
               onClick={() => moveToCommunity("/notice")}
             >
               <span>공지사항</span>
@@ -122,16 +146,46 @@ function HeritageHeader({ active = "dashboard" }) {
         </div>
       </nav>
 
-      <button
-        className={`heritage-profile ${active === "account" ? "active" : ""}`}
-        onClick={() => navigate(loginUser ? "/mypage" : "/login")}
-      >
-        <span>
-          {loginUser ? "보존처리 담당자" : "서비스 이용"}
-          <small>{loginUser?.name || "로그인"}</small>
-        </span>
-        <b>{loginUser?.name?.slice(0, 1) || "V"}</b>
-      </button>
+      <div className="heritage-profile">
+        <button
+          type="button"
+          className={`heritage-profile-link ${
+            active === "account" ? "active" : ""
+          }`}
+          onClick={() => navigate(loginUser ? "/mypage" : "/login")}
+        >
+          <span>
+            <small>마이페이지</small>
+          </span>
+        </button>
+        <div
+          className={`heritage-account-menu ${accountOpen ? "open" : ""}`}
+          ref={accountRef}
+        >
+          <button
+            type="button"
+            className="heritage-logout-trigger"
+            onClick={handleAccountTriggerClick}
+            aria-haspopup={loginUser ? "menu" : undefined}
+            aria-expanded={loginUser ? accountOpen : undefined}
+            aria-label={loginUser ? "계정 메뉴" : "로그인 페이지로 이동"}
+          >
+            <b>{loginUser?.name?.slice(0, 1) || "V"}</b>
+          </button>
+
+          {loginUser && (
+            <div
+              className="heritage-account-dropdown"
+              role="menu"
+              aria-label="계정 메뉴"
+            >
+              <button type="button" role="menuitem" onClick={handleLogout}>
+                <span>로그아웃</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </header>
   );
 }

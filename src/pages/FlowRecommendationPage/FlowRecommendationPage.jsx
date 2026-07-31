@@ -155,16 +155,30 @@ function FlowRecommendationPage() {
         </div>
 
         <button className="nav-btn" disabled={loading} onClick={handleNext}>
-          Flow 결정 →
+          시작하기 →
         </button>
       </div>
 
       <div className="flow-container">
         {/* Flow 수정 */}
         <div className="flow-box">
-          <h2>Flow 수정</h2>
+          <h2>추천 공정</h2>
 
-          {steps.map((step, index) => (
+          {displayAiFlow.map((step, index) => (
+            <div key={step.id} className="flow-step">
+              <div className="ai-step">{step.name}</div>
+
+              {index !== displayAiFlow.length - 1 && (
+                <div className="arrow">↓</div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="flow-box">
+          <h2>최종 공정</h2>
+
+          {displaySteps.map((step, index) => (
             <div key={step.id} className="flow-step">
               <button
                 className={
