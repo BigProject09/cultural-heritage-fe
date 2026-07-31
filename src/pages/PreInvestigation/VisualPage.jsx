@@ -53,7 +53,7 @@ function VisualPage() {
       <div className="visual-container">
         <nav className="visual-breadcrumb" aria-label="현재 위치">
           <button type="button" onClick={() => navigate(-1)}>
-            처리 전 조사
+            X-RAY 분석/육안 상태 조사
           </button>
           <span>/</span>
           <strong>육안 상태 조사</strong>

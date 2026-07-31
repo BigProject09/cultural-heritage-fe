@@ -1,13 +1,13 @@
 // 단계별 라우트
 
 export const flowRoutes = {
-  "처리 전 조사": "/pre-investigation",
+  "X-RAY 분석/육안 상태 조사": "/pre-investigation",
   해체: "/disassembly",
   세척: "/cleaning",
   강화: "/strengthening",
   접합: "/bonding",
   복원: "/restoration",
-  "처리 후 기록": "/post-record",
+  "보고서 생성": "/post-record",
 };
 
 // 다음 단계 찾기
