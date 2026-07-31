@@ -30,6 +30,10 @@ function VisualPage() {
   const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [imageSize, setImageSize] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
 
   const artifactInfo = readStoredArtifactInfo();
   const isPottery = POTTERY_MATERIALS.includes(artifactInfo.material);
@@ -96,6 +100,35 @@ function VisualPage() {
     });
   };
 
+  const ZOOM_STEP = 0.5;
+  const ZOOM_MAX = 3;
+
+  const handleZoomIn = () => setZoom((z) => Math.min(z + ZOOM_STEP, ZOOM_MAX));
+  const handleZoomOut = () =>
+    setZoom((z) => {
+      const next = Math.max(z - ZOOM_STEP, 1);
+      if (next === 1) setPan({ x: 0, y: 0 });
+      return next;
+    });
+  const handleZoomReset = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  const handlePointerDown = (e) => {
+    if (zoom === 1) return;
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+  };
+  const handlePointerMove = (e) => {
+    if (!isDragging) return;
+    setPan({
+      x: e.clientX - dragStart.current.x,
+      y: e.clientY - dragStart.current.y,
+    });
+  };
+  const handlePointerUp = () => setIsDragging(false);
+
   // AI가 "N회 이상 위치 합의되고 판정보류가 아닌 문양만 기본 화면에 표시"하라고
   // 응답의 display_policy로 알려주는 내용을 그대로 반영한 필터.
   // resultIsCurrent가 false면(다른 유물의 예전 결과) patternInfo를 아예 null로
@@ -161,20 +194,63 @@ function VisualPage() {
 
         {artifactInfo.image && (
           <div className="photo-card">
-            <div className="photo-frame">
-              <img
-                ref={imgRef}
-                src={artifactInfo.image}
-                alt="등록한 유물 사진"
-                onLoad={handleImageLoad}
-              />
-              {status === "loading" && (
-                <div className="photo-loading-overlay">
-                  <span className="spinner" aria-hidden="true" />
-                  <p>AI가 분석 중이에요…</p>
-                </div>
+            <div className="photo-toolbar">
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                disabled={zoom === 1}
+                aria-label="축소"
+              >
+                −
+              </button>
+              <span className="photo-zoom-level">{Math.round(zoom * 100)}%</span>
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                disabled={zoom === ZOOM_MAX}
+                aria-label="확대"
+              >
+                ＋
+              </button>
+              {zoom > 1 && (
+                <button
+                  type="button"
+                  className="photo-zoom-reset"
+                  onClick={handleZoomReset}
+                >
+                  원래 크기
+                </button>
               )}
-              {imageSize && (
+            </div>
+            <div
+              className="photo-frame"
+              onMouseDown={handlePointerDown}
+              onMouseMove={handlePointerMove}
+              onMouseUp={handlePointerUp}
+              onMouseLeave={handlePointerUp}
+              style={{ cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default" }}
+            >
+              <div
+                className="photo-zoom-layer"
+                style={{
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                  transition: isDragging ? "none" : "transform 0.15s ease",
+                }}
+              >
+                <img
+                  ref={imgRef}
+                  src={artifactInfo.image}
+                  alt="등록한 유물 사진"
+                  onLoad={handleImageLoad}
+                  draggable={false}
+                />
+                {status === "loading" && (
+                  <div className="photo-loading-overlay">
+                    <span className="spinner" aria-hidden="true" />
+                    <p>AI가 분석 중이에요…</p>
+                  </div>
+                )}
+                {imageSize && (
                 <svg
                   className="pattern-svg"
                   viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
@@ -231,6 +307,7 @@ function VisualPage() {
                   })()}
                 </svg>
               )}
+              </div>
             </div>
           </div>
         )}

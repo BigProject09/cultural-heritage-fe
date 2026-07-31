@@ -1,3 +1,9 @@
+/*
+  XrayPage.css의 색/타이포 토큰을 그대로 가져와 시각적으로 통일했다.
+  단, 클래스 이름은 전부 visual- 접두어로 분리했다 - 이 프로젝트는
+  CSS 모듈이 아니라 전역 스타일시트라서, xray-* 클래스를 그대로 쓰면
+  두 페이지 중 나중에 로드되는 쪽이 조용히 깨질 수 있다.
+*/
 .visual-page {
   --visual-bg: #f7f8fa;
   --visual-surface: #ffffff;
@@ -144,6 +150,51 @@
   background: var(--visual-surface);
 }
 
+.photo-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 12px;
+}
+
+.photo-toolbar button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--visual-border);
+  border-radius: 8px;
+  background: var(--visual-surface);
+  color: var(--visual-text);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.photo-toolbar button:disabled {
+  color: var(--visual-text-muted);
+  cursor: not-allowed;
+}
+
+.photo-toolbar button:not(:disabled):hover {
+  border-color: var(--visual-primary);
+  color: var(--visual-primary);
+}
+
+.photo-zoom-level {
+  min-width: 44px;
+  text-align: center;
+  color: var(--visual-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.photo-zoom-reset {
+  width: auto !important;
+  padding: 0 10px;
+  margin-left: 4px;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
 .photo-frame {
   position: relative;
   width: 100%;
@@ -154,13 +205,25 @@
   border-radius: 10px;
   overflow: hidden;
   background: #eef0f2;
+  user-select: none;
 }
 
-.photo-frame img {
+.photo-zoom-layer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+}
+
+.photo-zoom-layer img {
   width: 100%;
   height: 460px;
   object-fit: contain;
   display: block;
+  pointer-events: none;
 }
 
 .photo-loading-overlay {
