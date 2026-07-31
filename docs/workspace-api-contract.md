@@ -20,10 +20,13 @@
 | `PATCH` | `/api/artifacts/{artifactId}/modules/{moduleType}` | 기능 상태 저장 |
 | `POST` | `/api/artifacts/{artifactId}/files/presign` | 대표 이미지 S3 PUT URL 발급 |
 | `POST` | `/api/artifacts/{artifactId}/files/{fileId}/complete` | S3 업로드 검증 및 완료 |
+| `DELETE` | `/api/artifacts/{artifactId}` | 프로젝트와 연결된 모듈 결과·파일 메타데이터 삭제 |
 
-`moduleType`은 `GUIDE`, `XRAY`, `VISUAL` 중 하나다. 기능 상태는
-`NOT_STARTED`, `IN_PROGRESS`, `REVIEW_REQUIRED`, `DONE`, `NEEDS_UPDATE`,
-`FAILED` 중 하나다.
+`moduleType`은 `GUIDE`, `XRAY`, `VISUAL` 중 하나다. 세 기능은 서로
+독립적으로 실행한다. 기능 상태는 `NOT_STARTED`, `IN_PROGRESS`,
+`REVIEW_REQUIRED`, `DONE`, `NEEDS_UPDATE`, `FAILED` 중 하나다.
+`NEEDS_UPDATE`는 해당 기능 자체의 저장 형식·버전이 바뀌어 다시 확인해야
+할 때만 사용하며, 다른 기능의 완료 여부 때문에 설정하지 않는다.
 
 ## 목록·상세 응답
 
@@ -77,9 +80,16 @@
 ```
 
 가능하면 변경된 전체 유물을 `artifact` 필드에 담아 응답한다. 없으면
-프론트가 상세 API를 한 번 더 호출한다. XRAY 또는 VISUAL이 완료된 뒤 기존
-GUIDE가 오래된 결과를 참조하면, 서버가 GUIDE를 `NEEDS_UPDATE`로 변경해야
-한다.
+프론트가 상세 API를 한 번 더 호출한다. GUIDE, XRAY, VISUAL 중 하나의
+상태가 바뀌어도 다른 기능의 상태는 변경하지 않는다.
+
+최종 통합 보고서 생성 가능 여부만 아래 조건으로 판단한다.
+
+```text
+GUIDE == DONE
+XRAY == DONE
+VISUAL == DONE
+```
 
 ## 대표 이미지 업로드
 
@@ -110,6 +120,16 @@ Presign 요청:
   "etag": "\"abc123\""
 }
 ```
+
+## 프로젝트 삭제
+
+`DELETE /api/artifacts/{artifactId}`는 성공 시 `204 No Content`를 권장한다.
+백엔드는 해당 유물의 GUIDE/XRAY/VISUAL 결과, 작업 레코드, 파일
+메타데이터를 한 트랜잭션에서 삭제하고 S3 객체도 함께 정리해야 한다.
+권한이 없거나 프로젝트가 없으면 각각 `403`, `404`를 반환한다.
+
+로컬 모드에서는 프론트가 프로젝트 메타데이터, IndexedDB 대표 이미지,
+해당 `artifactId`로 생성한 로컬 보고서를 함께 삭제한다.
 
 ## 인증과 오류
 

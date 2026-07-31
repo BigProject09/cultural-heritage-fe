@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .tool-page {
@@ -12,10 +12,10 @@
     @apply flex justify-between items-center mb-[70px];
 }
 .logo {
-    @apply text-[56px] font-bold text-[#2f6fed] tracking-[1px] m-0;
+    @apply text-[56px] font-bold text-guide-primary tracking-[1px] m-0;
 }
 .nav-btn {
-    @apply min-w-[120px] h-12 [background:#2f6fed] text-[white] text-lg font-semibold cursor-pointer transition-[0.2s] rounded-xl border-[none] hover:[background:#2458c8];
+    @apply min-w-[120px] h-12 bg-guide-primary text-white text-lg font-semibold cursor-pointer transition-all duration-200 rounded-xl border-0 hover:[background:#2458c8];
 }
 
 /* =========================
@@ -38,10 +38,10 @@
     @apply grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6;
 }
 .tool-card {
-    @apply [background:white] border transition-all duration-[0.2s] p-6 rounded-2xl border-2 border-solid hover:translate-y-[-3px] hover:border-[#2f6fed];
+    @apply bg-white border transition-all duration-[0.2s] p-6 rounded-2xl border-2 border-solid hover:-translate-y-[3px] hover:border-guide-primary;
 }
 .tool-card.selected {
-    @apply [background:#f5f9ff] border-[#2f6fed];
+    @apply [background:#f5f9ff] border-guide-primary;
 }
 .tool-card h2 {
     @apply text-2xl text-gray-800 mt-0 mb-4 mx-0;
@@ -50,6 +50,6 @@
     @apply text-gray-500 leading-[1.6] mb-6;
 }
 .select-btn {
-    @apply w-full h-[46px] [background:#2f6fed] text-[white] text-base font-semibold cursor-pointer transition-[0.2s] rounded-[10px] border-[none] hover:[background:#2458c8];
+    @apply w-full h-[46px] bg-guide-primary text-white text-base font-semibold cursor-pointer transition-all duration-200 rounded-[10px] border-0 hover:[background:#2458c8];
 }
 }

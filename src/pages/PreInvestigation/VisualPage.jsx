@@ -1,27 +1,44 @@
 import "./VisualPage.css";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useDisassembly } from "../../context/useDisassembly";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   MODULE_STATUS,
+  getWorkspaceProject,
   markWorkspaceModule,
+  selectWorkspaceProject,
 } from "../../data/workspaceProjects";
+import { getArtifactRoute } from "../../utils/artifactRoutes";
 
 function VisualPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const approvedFlow = location.state?.approvedFlow || [];
-  const artifactInfo = JSON.parse(
-    localStorage.getItem("artifactInfo") || "{}",
+  const { artifactId: routeArtifactId = "" } = useParams();
+  const artifactId = decodeURIComponent(routeArtifactId);
+  const [artifactInfo, setArtifactInfo] = useState(() =>
+    JSON.parse(localStorage.getItem("artifactInfo") || "{}"),
   );
 
-  const { setPreInvestigation } = useDisassembly();
+  useEffect(() => {
+    if (!artifactId) return undefined;
+
+    const controller = new AbortController();
+    getWorkspaceProject(artifactId, { signal: controller.signal })
+      .then((project) => {
+        setArtifactInfo(selectWorkspaceProject(project));
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          window.alert(`유물 정보 조회 실패: ${error.message}`);
+        }
+      });
+
+    return () => controller.abort();
+  }, [artifactId]);
 
   const handleComplete = async () => {
-    if (artifactInfo.artifactId) {
+    if (artifactId) {
       try {
         await markWorkspaceModule(
-          artifactInfo.artifactId,
+          artifactId,
           "visual",
           MODULE_STATUS.DONE,
         );
@@ -31,21 +48,7 @@ function VisualPage() {
       }
     }
 
-    setPreInvestigation((prev) => ({
-      ...prev,
-      visual: true,
-    }));
-
-    if (location.state?.workspaceEntry && artifactInfo.artifactId) {
-      navigate(`/workspace/${encodeURIComponent(artifactInfo.artifactId)}`);
-      return;
-    }
-
-    navigate("/pre-investigation", {
-      state: {
-        approvedFlow,
-      },
-    });
+    navigate(getArtifactRoute(artifactId));
   };
 
   return (
@@ -53,7 +56,7 @@ function VisualPage() {
       <div className="visual-container">
         <nav className="visual-breadcrumb" aria-label="현재 위치">
           <button type="button" onClick={() => navigate(-1)}>
-            처리 전 조사
+            유물 워크스페이스
           </button>
           <span>/</span>
           <strong>육안 상태 조사</strong>
@@ -61,7 +64,7 @@ function VisualPage() {
 
         <header className="visual-header">
           <div>
-            <span className="visual-eyebrow">PRE-INVESTIGATION</span>
+            <span className="visual-eyebrow">INDEPENDENT VISUAL MODULE</span>
             <h1 className="visual-title">육안 상태 조사</h1>
             <p>표면 손상과 오염 상태를 확인하고 전문가 검토를 완료합니다.</p>
           </div>

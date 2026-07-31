@@ -1,31 +1,42 @@
-// 단계별 라우트
-
 export const flowRoutes = {
-  "처리 전 조사": "/pre-investigation",
-  해체: "/disassembly",
-  세척: "/cleaning",
-  강화: "/strengthening",
-  접합: "/bonding",
-  복원: "/restoration",
-  "처리 후 기록": "/post-record",
+  해체: "disassembly",
+  세척: "cleaning",
+  강화: "strengthening",
+  접합: "bonding",
+  복원: "restoration",
 };
+
+export const DEFAULT_GUIDE_FLOW = [
+  { id: 2, name: "해체" },
+  { id: 3, name: "세척" },
+  { id: 4, name: "강화" },
+  { id: 5, name: "접합" },
+  { id: 6, name: "복원" },
+];
+
+export function sanitizeGuideFlow(flow) {
+  if (!Array.isArray(flow)) return [];
+  return flow.filter((step) => Boolean(flowRoutes[step?.name]));
+}
 
 // 다음 단계 찾기
 export function getNextStep(approvedFlow, currentStepName) {
-  const currentIndex = approvedFlow.findIndex(
+  const guideFlow = sanitizeGuideFlow(approvedFlow);
+  const currentIndex = guideFlow.findIndex(
     (step) => step.name === currentStepName,
   );
 
-  if (currentIndex === -1 || currentIndex === approvedFlow.length - 1) {
+  if (currentIndex === -1 || currentIndex === guideFlow.length - 1) {
     return null;
   }
 
-  return approvedFlow[currentIndex + 1];
+  return guideFlow[currentIndex + 1];
 }
 
 // 이전 단계 찾기
 export function getPreviousStep(approvedFlow, currentStepName) {
-  const currentIndex = approvedFlow.findIndex(
+  const guideFlow = sanitizeGuideFlow(approvedFlow);
+  const currentIndex = guideFlow.findIndex(
     (step) => step.name === currentStepName,
   );
 
@@ -33,5 +44,5 @@ export function getPreviousStep(approvedFlow, currentStepName) {
     return null;
   }
 
-  return approvedFlow[currentIndex - 1];
+  return guideFlow[currentIndex - 1];
 }

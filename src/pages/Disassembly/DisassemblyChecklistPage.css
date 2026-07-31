@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 /* ===========================
@@ -15,16 +15,16 @@
     @apply flex justify-between items-center mb-[70px];
 }
 .logo {
-    @apply text-[56px] font-bold text-[#2f6fed] tracking-[1px] m-0;
+    @apply text-[56px] font-bold text-guide-primary tracking-[1px] m-0;
 }
 .nav-btn-group {
     @apply flex items-center gap-3;
 }
 .nav-btn {
-    @apply min-w-[120px] h-12 [background:#2f6fed] text-[white] text-lg font-semibold cursor-pointer transition-[0.2s] rounded-xl border-[none] hover:[background:#2458c8];
+    @apply min-w-[120px] h-12 bg-guide-primary text-white text-lg font-semibold cursor-pointer transition-all duration-200 rounded-xl border-0 hover:[background:#2458c8];
 }
 .nav-btn.secondary {
-    @apply [background:#eef5ff] text-[#2f6fed] hover:[background:#dbe9ff];
+    @apply bg-guide-primary-soft text-guide-primary hover:[background:#dbe9ff];
 }
 
 /* ===========================
@@ -44,7 +44,7 @@
    체크리스트 카드
 =========================== */
 .checklist-card {
-    @apply [background:white] shadow-[0_10px_30px_rgba(0,0,0,0.06)] p-[35px] rounded-3xl;
+    @apply bg-white shadow-[0_10px_30px_rgba(0,0,0,0.06)] p-[35px] rounded-3xl;
 }
 .card-title {
     @apply text-[26px] font-bold text-gray-800 mb-[30px];
@@ -54,7 +54,7 @@
    체크리스트 항목
 =========================== */
 .check-item {
-    @apply flex items-center gap-[18px] border border cursor-pointer transition-[0.2s] mb-4 px-5 py-[18px] rounded-[14px] border-solid hover:border-blue-600 hover:[background:#f8fbff];
+    @apply flex items-center gap-[18px] border border cursor-pointer transition-all duration-200 mb-4 px-5 py-[18px] rounded-[14px] border-solid hover:border-blue-600 hover:[background:#f8fbff];
 }
 .check-item input {
     @apply w-[22px] h-[22px] accent-blue-600 cursor-pointer;
@@ -70,7 +70,7 @@
    체크된 항목
 =========================== */
 .check-item:has(input:checked) {
-    @apply border-blue-600 [background:#eef5ff];
+    @apply border-blue-600 bg-guide-primary-soft;
 }
 .check-item:has(input:checked) .check-title {
     @apply text-blue-600 font-semibold;

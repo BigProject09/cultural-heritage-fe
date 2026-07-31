@@ -1,22 +1,36 @@
-import { flowRoutes } from "../data/flowData";
+import {
+  flowRoutes,
+  sanitizeGuideFlow,
+} from "../data/flowData";
+import {
+  getActiveArtifactId,
+  markWorkspaceModule,
+  MODULE_STATUS,
+} from "../data/workspaceProjects";
+import {
+  getArtifactRoute,
+  getArtifactWorkflowRoute,
+} from "./artifactRoutes";
 
 export const getNextStep = (approvedFlow, currentStep) => {
-  const currentIndex = approvedFlow.findIndex(
+  const guideFlow = sanitizeGuideFlow(approvedFlow);
+  const currentIndex = guideFlow.findIndex(
     (step) => step.name === currentStep
   );
 
   if (
     currentIndex === -1 ||
-    currentIndex === approvedFlow.length - 1
+    currentIndex === guideFlow.length - 1
   ) {
     return null;
   }
 
-  return approvedFlow[currentIndex + 1];
+  return guideFlow[currentIndex + 1];
 };
 
 export const getPreviousStep = (approvedFlow, currentStep) => {
-  const currentIndex = approvedFlow.findIndex(
+  const guideFlow = sanitizeGuideFlow(approvedFlow);
+  const currentIndex = guideFlow.findIndex(
     (step) => step.name === currentStep
   );
 
@@ -24,23 +38,53 @@ export const getPreviousStep = (approvedFlow, currentStep) => {
     return null;
   }
 
-  return approvedFlow[currentIndex - 1];
+  return guideFlow[currentIndex - 1];
 };
 
-export const moveToNextStep = (
+export const moveToNextStep = async (
   navigate,
   approvedFlow,
   currentStep
 ) => {
+  const guideFlow = sanitizeGuideFlow(approvedFlow);
+  const currentIndex = guideFlow.findIndex(
+    (step) => step.name === currentStep,
+  );
   const nextStep = getNextStep(approvedFlow, currentStep);
 
-  if (!nextStep) return;
+  if (currentIndex === -1) return;
 
-  navigate(flowRoutes[nextStep.name], {
+  if (!nextStep) {
+    const artifactId = getActiveArtifactId();
+
+    if (!artifactId) {
+      navigate("/worklist", { replace: true });
+      return;
+    }
+
+    await markWorkspaceModule(
+      artifactId,
+      "guide",
+      MODULE_STATUS.DONE,
+    );
+    navigate(getArtifactRoute(artifactId), {
+      replace: true,
+      state: { guideCompleted: true },
+    });
+    return;
+  }
+
+  navigate(
+    getArtifactWorkflowRoute(
+      getActiveArtifactId(),
+      flowRoutes[nextStep.name],
+    ),
+    {
     state: {
-      approvedFlow,
+      approvedFlow: guideFlow,
     },
-  });
+    },
+  );
 };
 
 export const moveToPreviousStep = (
@@ -48,16 +92,23 @@ export const moveToPreviousStep = (
   approvedFlow,
   currentStep
 ) => {
+  const guideFlow = sanitizeGuideFlow(approvedFlow);
   const previousStep = getPreviousStep(
-    approvedFlow,
+    guideFlow,
     currentStep
   );
 
   if (!previousStep) return;
 
-  navigate(flowRoutes[previousStep.name], {
+  navigate(
+    getArtifactWorkflowRoute(
+      getActiveArtifactId(),
+      flowRoutes[previousStep.name],
+    ),
+    {
     state: {
-      approvedFlow,
+      approvedFlow: guideFlow,
     },
-  });
+    },
+  );
 };

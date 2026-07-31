@@ -23,7 +23,6 @@ function PreInvestigationPage() {
       { id: 4, name: "강화" },
       { id: 5, name: "접합" },
       { id: 6, name: "복원" },
-      { id: 8, name: "처리 후 기록" },
     ];
 
   useEffect(() => {

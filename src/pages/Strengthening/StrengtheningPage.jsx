@@ -8,6 +8,7 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 import {
+  getNextStep,
   moveToNextStep,
   moveToPreviousStep,
 } from "../../utils/flowNavigation";
@@ -36,13 +37,11 @@ function StrengtheningPage() {
   const approvedFlow =
     location.state?.approvedFlow ||
     savedApprovedFlow || [
-      { id: 1, name: "처리 전 조사" },
       { id: 2, name: "해체" },
       { id: 3, name: "세척" },
       { id: 4, name: "강화" },
       { id: 5, name: "접합" },
       { id: 6, name: "복원" },
-      { id: 8, name: "처리 후 기록" },
     ];
 
   useEffect(() => {
@@ -109,7 +108,10 @@ function StrengtheningPage() {
         if (!saved) return;
       }
 
-      moveToNextStep(navigate, approvedFlow, "강화");
+      await moveToNextStep(navigate, approvedFlow, "강화");
+    } catch (error) {
+      console.error(error);
+      alert(`복원 가이드 완료 처리 실패: ${error.message}`);
     } finally {
       setMovingNext(false);
     }
@@ -143,7 +145,9 @@ function StrengtheningPage() {
           disabled={!allCompleted || movingNext}
           onClick={handleNextStep}
         >
-          다음 단계 →
+          {getNextStep(approvedFlow, "강화")
+            ? "다음 단계 →"
+            : "가이드 완료 →"}
         </button>
 
 

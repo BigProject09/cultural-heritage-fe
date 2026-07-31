@@ -1,13 +1,13 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .strengthening-material-page {
-    @apply min-h-screen [background:#f5f7fb];
+    @apply min-h-screen bg-guide-canvas;
 }
 
 /* ================= 상단 ================= */
 .detail-header {
-    @apply flex justify-between items-center [background:white] shadow-[0_2px_8px_rgba(0,0,0,0.05)] px-[70px] py-5;
+    @apply flex justify-between items-center bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] px-[70px] py-5;
 }
 .vora-logo {
     @apply text-5xl font-extrabold text-[#2f64f5] tracking-[1px];
@@ -15,12 +15,12 @@
 
 /* ================= 버튼 ================= */
 .nav-btn {
-    @apply [background:#2f6fed] text-[white] text-base font-semibold cursor-pointer transition-[0.2s] px-7 py-3.5 rounded-[10px] border-[none] hover:[background:#1f56c7];
+    @apply bg-guide-primary text-white text-base font-semibold cursor-pointer transition-all duration-200 px-7 py-3.5 rounded-[10px] border-0 hover:[background:#1f56c7];
 }
 
 /* ================= 컨테이너 ================= */
 .material-container {
-    @apply max-w-[1000px] [background:white] shadow-[0_8px_30px_rgba(0,0,0,0.08)] mx-auto my-[60px] p-[45px] rounded-[20px];
+    @apply max-w-[1000px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] mx-auto my-[60px] p-[45px] rounded-[20px];
 }
 
 /* ================= 제목 ================= */
@@ -43,7 +43,7 @@
 
 /* 구분선 */
 .material-card hr {
-    @apply mb-10 border-[none] border-t border-solid;
+    @apply mb-10 border-0 border-t border-solid;
 }
 
 /* ================= 설명 ================= */
@@ -62,6 +62,6 @@
     @apply text-[15px] font-semibold text-gray-700;
 }
 .material-select-item select {
-    @apply border text-[15px] cursor-pointer px-[15px] py-[13px] rounded-[10px] border-solid border-[#d7dde6] focus:[outline:none] focus:shadow-[0_0_0_3px_rgba(47,111,237,0.15)] focus:border-[#2f6fed];
+    @apply border text-[15px] cursor-pointer px-[15px] py-[13px] rounded-[10px] border-solid border-[#d7dde6] focus:outline-none focus:shadow-[0_0_0_3px_rgba(47,111,237,0.15)] focus:border-guide-primary;
 }
 }

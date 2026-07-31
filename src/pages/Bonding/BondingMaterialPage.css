@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .bonding-material-page {
@@ -11,14 +11,14 @@
     @apply flex justify-between items-center mb-[30px];
 }
 .vora-logo {
-    @apply text-[28px] font-[bold] text-[#2f6fed];
+    @apply text-[28px] font-bold text-guide-primary;
 }
 
 
 
 /* ================= 전체 컨테이너 ================= */
 .material-container {
-    @apply max-w-[1000px] [background:white] shadow-[0_8px_25px_rgba(0,0,0,0.08)] mx-auto my-0 p-10 rounded-[20px];
+    @apply max-w-[1000px] bg-white shadow-[0_8px_25px_rgba(0,0,0,0.08)] mx-auto my-0 p-10 rounded-[20px];
 }
 
 
@@ -48,7 +48,7 @@
     @apply flex items-center gap-[15px] text-2xl font-semibold mb-5;
 }
 .material-card hr {
-    @apply mt-5 mb-[30px] mx-0 border-[none] border-t border-solid;
+    @apply mt-5 mb-[30px] mx-0 border-0 border-t border-solid;
 }
 
 
@@ -81,13 +81,13 @@
     @apply text-[15px] font-semibold text-gray-700;
 }
 .material-select-item select {
-    @apply border text-[15px] cursor-pointer px-[15px] py-[13px] rounded-[10px] border-solid border-[#d7dde6] focus:[outline:none] focus:shadow-[0_0_0_3px_rgba(47,111,237,0.15)] focus:border-[#2f6fed];
+    @apply border text-[15px] cursor-pointer px-[15px] py-[13px] rounded-[10px] border-solid border-[#d7dde6] focus:outline-none focus:shadow-[0_0_0_3px_rgba(47,111,237,0.15)] focus:border-guide-primary;
 }
 
 
 
 /* ================= 버튼 ================= */
 .nav-btn {
-    @apply cursor-pointer text-[15px] font-semibold [background:#2563eb] text-[white] px-[18px] py-2.5 rounded-lg border-[none] hover:[background:#1d4ed8];
+    @apply cursor-pointer text-[15px] font-semibold [background:#2563eb] text-white px-[18px] py-2.5 rounded-lg border-0 hover:[background:#1d4ed8];
 }
 }

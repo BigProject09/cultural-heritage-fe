@@ -4,7 +4,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./RestorationPage.css";
 
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
-import { moveToNextStep, moveToPreviousStep } from "../../utils/flowNavigation";
+import {
+  moveToNextStep,
+  moveToPreviousStep,
+} from "../../utils/flowNavigation";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -32,13 +35,11 @@ function RestorationPage() {
   // location.state는 하위 단계 페이지를 오가며 유실될 수 있어,
   // context에 저장해둔 값을 우선 쓰고 없을 때만 기본 플로우로 대체한다.
   const approvedFlow = location.state?.approvedFlow || savedApprovedFlow || [
-    { id: 1, name: "처리 전 조사" },
     { id: 2, name: "해체" },
     { id: 3, name: "세척" },
     { id: 4, name: "강화" },
     { id: 5, name: "접합" },
     { id: 6, name: "복원" },
-    { id: 8, name: "처리 후 기록" },
   ];
 
   useEffect(() => {
@@ -102,7 +103,10 @@ function RestorationPage() {
         if (!saved) return;
       }
 
-      moveToNextStep(navigate, approvedFlow, "복원");
+      await moveToNextStep(navigate, approvedFlow, "복원");
+    } catch (error) {
+      console.error(error);
+      alert(`복원 가이드 완료 처리 실패: ${error.message}`);
     } finally {
       setMovingNext(false);
     }
@@ -127,7 +131,7 @@ function RestorationPage() {
           disabled={!allCompleted || movingNext}
           onClick={handleNextStep}
         >
-          다음 단계 →
+          가이드 완료 →
         </button>
       </div>
 

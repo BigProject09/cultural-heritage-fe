@@ -1,4 +1,12 @@
+const USE_GUIDE_MOCK =
+  import.meta.env.MODE === "mock" ||
+  import.meta.env.VITE_USE_GUIDE_MOCK === "true";
+
 export async function uploadPhoto(file) {
+  if (USE_GUIDE_MOCK) {
+    return URL.createObjectURL(file);
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 

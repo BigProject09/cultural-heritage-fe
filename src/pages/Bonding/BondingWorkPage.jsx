@@ -3,57 +3,135 @@ import { useNavigate } from "react-router-dom";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
+import { uploadPhoto } from "../../services/photoUploadApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
 import "./BondingWorkPage.css";
+
+const ALIGNMENT_METRICS = [
+  ["axis_alignment", "축 정렬"],
+  ["fracture_match_quality", "파단면 매칭"],
+];
+
+const ALIGNMENT_LABELS = {
+  good: "양호",
+  minor_issue: "경미한 문제",
+  major_issue: "심각한 문제",
+  unclear: "판단 불가",
+};
+
+const SEVERITY_LABELS = {
+  mild: "경미",
+  moderate: "보통",
+  severe: "심함",
+};
 
 function BondingWorkPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, setCompleted, setStepSaving } = ctx;
+  const { taskId, bondingTempAnalysis, setBondingTempAnalysis, setCompleted, setStepSaving } = ctx;
 
-  const [beforePhotos, setBeforePhotos] = useState([]);
-  const [beforePhotoUrl, setBeforePhotoUrl] = useState("");
-  const [afterPhotos, setAfterPhotos] = useState([]);
-  const [afterPhotoUrl, setAfterPhotoUrl] = useState("");
+  const [beforePhoto, setBeforePhoto] = useState("");
+  const [afterPhoto, setAfterPhoto] = useState("");
+  const [beforeUploading, setBeforeUploading] = useState(false);
+  const [afterUploading, setAfterUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
 
-  const handleAddBeforePhoto = () => {
-    if (!beforePhotoUrl.trim()) return;
-    setBeforePhotos((prev) => [...prev, beforePhotoUrl.trim()]);
-    setBeforePhotoUrl("");
+  // 백엔드가 추천하는 기본 선택값. 항상 "proceed"로 오지만, 실제 진행 여부는
+  // 아래 severity/recommendation을 보고 작업자가 최종 판단한다 — 자동 진행 아님.
+  const defaultAction = bondingTempAnalysis?.default_action || "proceed";
+
+  const handleBeforeFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setBeforeUploading(true);
+    try {
+      const url = await uploadPhoto(file);
+      setBeforePhoto(url);
+    } catch (error) {
+      console.error(error);
+      alert("임시접합 전 사진 업로드 실패");
+    } finally {
+      setBeforeUploading(false);
+    }
   };
 
-  const handleRemoveBeforePhoto = (index) => {
-    setBeforePhotos((prev) => prev.filter((_, i) => i !== index));
+  const handleAfterFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setAfterUploading(true);
+    try {
+      const url = await uploadPhoto(file);
+      setAfterPhoto(url);
+    } catch (error) {
+      console.error(error);
+      alert("임시접합 후 사진 업로드 실패");
+    } finally {
+      setAfterUploading(false);
+    }
   };
 
-  const handleAddAfterPhoto = () => {
-    if (!afterPhotoUrl.trim()) return;
-    setAfterPhotos((prev) => [...prev, afterPhotoUrl.trim()]);
-    setAfterPhotoUrl("");
-  };
-
-  const handleRemoveAfterPhoto = (index) => {
-    setAfterPhotos((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleComplete = () => {
-    if (!taskId) {
-      alert("taskId가 없습니다.");
+  // 사진을 넣어 임시접합 검증(VLM) 결과를 받는다. 여기서는 완료 처리하지 않고,
+  // 결과를 보고 사용자가 진행/재입력을 선택해야 한다.
+  const handleAnalyze = async () => {
+    if (!beforePhoto || !afterPhoto) {
+      alert("임시접합 전/후 사진을 입력해주세요.");
       return;
     }
 
+    const request = {
+      resume: {
+        before_photo_urls: [beforePhoto],
+        after_photo_urls: [afterPhoto],
+      },
+    };
+
+    setAnalyzing(true);
+    try {
+      const response = await resumeTask(taskId, request, {
+        mockStage: "bonding-temp",
+      });
+      applyInterrupt(response.interrupt, ctx);
+    } catch (error) {
+      console.error(error);
+      alert("임시접합 사진 저장 실패");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  // 검증 결과가 마음에 들지 않으면 사진을 다시 올려 재검증한다.
+  const handleRetry = async () => {
+    setAnalyzing(true);
+    try {
+      const response = await resumeTask(taskId, {
+        resume: { action: "retry" },
+      });
+
+      setBondingTempAnalysis(null);
+      setBeforePhoto("");
+      setAfterPhoto("");
+      applyInterrupt(response.interrupt, ctx);
+    } catch (error) {
+      console.error(error);
+      alert("재입력 요청 실패");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  // 검증 결과를 그대로 승인하고 다음(접합 방법 안내)으로 진행한다.
+  const handleProceed = () => {
     setStepSaving("bondingWork", true);
     navigate("/bonding");
 
     (async () => {
       try {
         const response = await resumeTask(taskId, {
-          resume: {
-            before_photo_urls: beforePhotos,
-            after_photo_urls: afterPhotos,
-          },
+          resume: { action: "proceed" },
         });
 
         applyInterrupt(response.interrupt, ctx);
@@ -64,7 +142,7 @@ function BondingWorkPage() {
         }));
       } catch (error) {
         console.error(error);
-        alert("접합 작업 저장 실패");
+        alert("임시접합 검증 결과 저장 실패");
       } finally {
         setStepSaving("bondingWork", false);
       }
@@ -74,80 +152,137 @@ function BondingWorkPage() {
   return (
     <div className="bonding-work-page">
       <div className="detail-header">
-        <button
-          className="nav-btn"
-          onClick={() => navigate("/bonding")}
-        >
+        <button className="nav-btn" onClick={() => navigate("/bonding")}>
           ← 이전
         </button>
 
         <h1 className="vora-logo">VORA</h1>
 
-        <button
-          className="nav-btn"
-          onClick={handleComplete}
-        >
-          완료
-        </button>
-      </div>
+        <div className="nav-btn-group">
+          {!bondingTempAnalysis && (
+            <button className="nav-btn" disabled={analyzing} onClick={handleAnalyze}>
+              {analyzing ? "분석 중..." : "분석"}
+            </button>
+          )}
 
-      <h1>접합 작업</h1>
+          {bondingTempAnalysis && (
+            <button
+              className={`nav-btn ${defaultAction === "retry" ? "" : "secondary"}`}
+              disabled={analyzing}
+              onClick={handleRetry}
+            >
+              다시 촬영
+            </button>
+          )}
 
-      <div className="work-card">
-        <h2>📷 작업 전 사진</h2>
-
-        <div className="photo-url-row">
-          <input
-            type="text"
-            className="photo-url-input"
-            placeholder="사진 URL을 입력하세요"
-            value={beforePhotoUrl}
-            onChange={(e) => setBeforePhotoUrl(e.target.value)}
-          />
-
-          <button className="photo-url-add-btn" onClick={handleAddBeforePhoto}>
-            + 추가
+          <button
+            className={`nav-btn ${defaultAction === "retry" ? "secondary" : ""}`}
+            disabled={!bondingTempAnalysis}
+            onClick={handleProceed}
+          >
+            다음 →
           </button>
         </div>
-
-        <div className="photo-url-list">
-          {beforePhotos.map((url, index) => (
-            <div key={index} className="photo-url-chip">
-              <span>{url}</span>
-
-              <button onClick={() => handleRemoveBeforePhoto(index)}>✕</button>
-            </div>
-          ))}
-        </div>
       </div>
 
-      <div className="work-card">
-        <h2>📷 작업 후 사진</h2>
-
-        <div className="photo-url-row">
-          <input
-            type="text"
-            className="photo-url-input"
-            placeholder="사진 URL을 입력하세요"
-            value={afterPhotoUrl}
-            onChange={(e) => setAfterPhotoUrl(e.target.value)}
-          />
-
-          <button className="photo-url-add-btn" onClick={handleAddAfterPhoto}>
-            + 추가
-          </button>
+      <div className="method-container">
+        <div className="page-header">
+          <h1>임시접합 검증</h1>
         </div>
 
-        <div className="photo-url-list">
-          {afterPhotos.map((url, index) => (
-            <div key={index} className="photo-url-chip">
-              <span>{url}</span>
+        <div className="photo-row">
+          <div className="info-card">
+            <h2>임시접합 전</h2>
 
-              <button onClick={() => handleRemoveAfterPhoto(index)}>✕</button>
+            <input
+              type="file"
+              accept="image/*"
+              disabled={!!bondingTempAnalysis || beforeUploading}
+              onChange={handleBeforeFileChange}
+            />
+
+            {beforeUploading && <p>업로드 중...</p>}
+
+            {beforePhoto && (
+              <div className="photo-preview">
+                <img src={beforePhoto} alt="임시접합 전" />
+              </div>
+            )}
+          </div>
+
+          <div className="info-card">
+            <h2>임시접합 후</h2>
+
+            <input
+              type="file"
+              accept="image/*"
+              disabled={!!bondingTempAnalysis || afterUploading}
+              onChange={handleAfterFileChange}
+            />
+
+            {afterUploading && <p>업로드 중...</p>}
+
+            {afterPhoto && (
+              <div className="photo-preview">
+                <img src={afterPhoto} alt="임시접합 후" />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {bondingTempAnalysis && (
+          <div className="info-card temp-analysis-card">
+            {!bondingTempAnalysis.is_analyzable && (
+              <p className="temp-analysis-warning">사진으로 판단이 어렵습니다. 다시 촬영해주세요.</p>
+            )}
+
+            <div className="severity-legend">
+              {Object.entries(ALIGNMENT_LABELS).map(([key, label]) => (
+                <span key={key} className="severity-legend-item">
+                  <span className={`severity-dot status-${key}`} />
+                  {label}
+                </span>
+              ))}
             </div>
-          ))}
-        </div>
+
+            <ul className="metric-list">
+              {ALIGNMENT_METRICS.map(([key, label]) => {
+                const value = bondingTempAnalysis[key];
+                if (!value) return null;
+
+                return (
+                  <li key={key} className="metric-row">
+                    <span className="metric-label">{label}</span>
+                    <span className={`severity-dot status-${value}`} />
+                  </li>
+                );
+              })}
+
+              <li className="metric-row">
+                <span className="metric-label">종합 심각도</span>
+                <span className="temp-analysis-severity">
+                  {SEVERITY_LABELS[bondingTempAnalysis.overall_severity] || bondingTempAnalysis.overall_severity}
+                </span>
+              </li>
+            </ul>
+
+            <p className="temp-analysis-description">{bondingTempAnalysis.description}</p>
+            <p className="recommendation">✔ {bondingTempAnalysis.recommendation}</p>
+          </div>
+        )}
       </div>
+
+      {analyzing && (
+        <div className="analyzing-overlay">
+          <div className="analyzing-box">
+            <p>임시접합 상태를 분석하고 있어요...</p>
+
+            <div className="analyzing-bar-track">
+              <div className="analyzing-bar-fill" />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useDisassembly } from "../../context/useDisassembly";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   MODULE_STATUS,
   markWorkspaceModule,
 } from "../../data/workspaceProjects";
+import { getArtifactRoute } from "../../utils/artifactRoutes";
 import "./XrayPage.css";
 
 import StitchEditor from "../../components/xray/StitchEditor";
@@ -30,13 +30,13 @@ import {
  *
  * 전체 흐름
  *
- *   유물 등록 ─ 컬러 전면 사진과 유물 정보를 localStorage 에 저장
+ *   유물 등록 ─ 유물 정보는 localStorage, 컬러 사진은 IndexedDB 에 저장
  *        ↓
  *   이 페이지 1단계 ─ X-RAY 조각 업로드 → AI 결합 → 결과 확정
  *        ↓
  *   이 페이지 2단계 ─ 결함 분석 → 전문가 검수 → 문안 생성
  *        ↓
- *   처리 전 조사 ─ 검수 결과를 넘겨받아 다음 공정으로
+ *   유물 워크스페이스 ─ 결과 저장 후 다른 독립 기능 또는 최종 보고서로
  *
  *
  * 이 페이지가 지키는 원칙
@@ -165,9 +165,8 @@ function collectColorSources(info, locationState) {
 /**
  * 어떤 형태로 전달됐든 업로드 가능한 File 로 바꾼다.
  *
- * 유물 등록 화면은 사진을 data URL 문자열로 저장한다.
- * blob URL 은 새로고침하면 무효가 되어 이후 단계에서 쓸 수
- * 없기 때문이다. 문자열인 경우 fetch 로 가져와 File 을 만든다.
+ * 유물 등록 화면은 사진 Blob을 IndexedDB에 저장하고, 페이지 진입 때
+ * 새 object URL을 만든다. 문자열인 경우 fetch로 가져와 File로 바꾼다.
  */
 async function sourceToFile(source, index) {
   if (source instanceof File) return source;
@@ -278,11 +277,9 @@ function StepIcon({ number, done }) {
 export default function XrayPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setPreInvestigation } = useDisassembly();
+  const { artifactId: routeArtifactId = "" } = useParams();
   const fileInputRef = useRef(null);
   const reportSectionRef = useRef(null);
-
-  const approvedFlow = location.state?.approvedFlow || [];
 
   /**
    * 유물 정보.
@@ -297,12 +294,15 @@ export default function XrayPage() {
   );
 
   const artifactId = String(
-    valueFrom(
-      artifactInfo,
-      ["artifactId", "relicId", "id", "taskId"],
-      location.state?.artifactId || (USE_MOCK ? "artifact-test-001" : ""),
-    ),
+    routeArtifactId
+      ? decodeURIComponent(routeArtifactId)
+      : valueFrom(
+          artifactInfo,
+          ["artifactId", "relicId", "id", "taskId"],
+          location.state?.artifactId || (USE_MOCK ? "artifact-test-001" : ""),
+        ),
   );
+
   const artifactType = String(
     valueFrom(
       artifactInfo,
@@ -343,7 +343,7 @@ export default function XrayPage() {
   // 결합 상태. STITCH_STEPS 의 key 와 FAILED, IDLE 을 갖는다.
   const [stitchStatus, setStitchStatus] = useState("IDLE");
   const [stitchMessage, setStitchMessage] = useState("");
-  const [stitchJobId, setStitchJobId] = useState("");
+  const [, setStitchJobId] = useState("");
 
   /**
    * 조각별 배치 정보.
@@ -368,7 +368,7 @@ export default function XrayPage() {
   const [health, setHealth] = useState(null);
   const [confidence, setConfidence] = useState(0.08);
   const [regions, setRegions] = useState([]);
-  const [summaries, setSummaries] = useState([]);
+  const [, setSummaries] = useState([]);
   const [excludedRegions, setExcludedRegions] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [viewFile, setViewFile] = useState(null);
@@ -804,8 +804,7 @@ export default function XrayPage() {
   /**
    * X-RAY 작업 완료.
    *
-   * 검수 결과를 처리 전 조사 화면으로 넘긴다. 문안은 전문가가
-   * 고친 최종본이 전달된다.
+   * 검수 결과를 artifactId에 저장하고 유물 워크스페이스로 돌아간다.
    */
   async function handleComplete() {
     if (!inspectionDone || !report.trim()) return;
@@ -817,40 +816,7 @@ export default function XrayPage() {
       return;
     }
 
-    setPreInvestigation((previous) => ({
-      ...previous,
-      xray: true,
-    }));
-
-    if (location.state?.workspaceEntry) {
-      navigate(`/workspace/${encodeURIComponent(artifactId)}`);
-      return;
-    }
-
-    navigate("/pre-investigation", {
-      state: {
-        approvedFlow,
-        artifactInfo,
-        xrayResult: {
-          status: "COMPLETED",
-          completedAt: new Date().toISOString(),
-          stitchJobId,
-          regionCount: regions.length,
-          regions,
-          excludedRegionCount: excludedRegions.length,
-          excludedRegions,
-          summaries,
-          report,
-          reportStyle,
-          colorImage: colorSources[0] || null,
-          stitchedXrayImage: assembledFile,
-          // 사람이 조각 위치를 바로잡았는지와 그 결과.
-          // 검수 이력의 일부이므로 함께 남긴다.
-          placementCorrected: Boolean(correctedFragments),
-          correctedFragments,
-        },
-      },
-    });
+    navigate(getArtifactRoute(artifactId));
   }
 
   function openFinalReview() {
@@ -989,7 +955,7 @@ export default function XrayPage() {
       <div className="xray-container">
         <nav className="xray-breadcrumb" aria-label="현재 위치">
           <button type="button" onClick={() => navigate(-1)}>
-            처리 전 조사
+            유물 워크스페이스
           </button>
           <span>/</span>
           <strong>X-RAY 분석</strong>
@@ -997,7 +963,7 @@ export default function XrayPage() {
 
         <header className="xray-header">
           <div className="xray-heading">
-            <span className="xray-eyebrow">PRE-INVESTIGATION</span>
+            <span className="xray-eyebrow">INDEPENDENT X-RAY MODULE</span>
             <h1 className="xray-title">X-RAY 분석</h1>
             <p>AI 분석 결과를 확인하고 전문가 판정을 기록합니다.</p>
           </div>
@@ -1824,8 +1790,8 @@ export default function XrayPage() {
               </span>
               <h2 id="complete-modal-title">X-RAY 조사를 완료할까요?</h2>
               <p>
-                완료된 결과는 처리 전 조사에서 다시 확인할 수 있습니다. 수정이
-                필요하면 작업을 다시 열어야 합니다.
+                완료된 결과는 유물 워크스페이스에 연결됩니다. 다른 기능의
+                진행 여부에는 영향을 주지 않습니다.
               </p>
               <div>
                 <button

@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 /* ===========================
@@ -26,7 +26,7 @@
 
 .analyzing-box {
 
-    @apply w-[280px] [background:white] text-center shadow-[0_10px_30px_rgba(0,0,0,0.2)] px-6 py-7 rounded-[14px];
+    @apply w-[280px] bg-white text-center shadow-[0_10px_30px_rgba(0,0,0,0.2)] px-6 py-7 rounded-[14px];
 }
 
 .analyzing-box p {
@@ -41,17 +41,17 @@
 
 .analyzing-bar-fill {
 
-    @apply w-2/5 h-full rounded [background:#2f6fed] animate-[analyzing-slide_1.1s_ease-in-out_infinite];
+    @apply w-2/5 h-full rounded bg-guide-primary animate-[analyzing-slide_1.1s_ease-in-out_infinite];
 }
 
 .logo{
 
-    @apply text-5xl font-extrabold text-[#2C6BED] cursor-pointer transition-[0.2s] hover:scale-105;
+    @apply text-5xl font-extrabold text-[#2C6BED] cursor-pointer transition-all duration-200 hover:scale-105;
 }
 
 .nav-btn{
 
-    @apply [background:none] text-xl font-semibold text-[#2C6BED] cursor-pointer transition-[0.2s] border-[none] hover:text-[#2C6BED];
+    @apply bg-transparent text-xl font-semibold text-[#2C6BED] cursor-pointer transition-all duration-200 border-0 hover:text-[#2C6BED];
 }
 
 /* ===========================
@@ -74,7 +74,7 @@
 
 .flow-box{
 
-    @apply [background:white] shadow-[0_10px_28px_rgba(0,0,0,0.05)] p-8 rounded-3xl;
+    @apply bg-white shadow-[0_10px_28px_rgba(0,0,0,0.05)] p-8 rounded-3xl;
 }
 
 .flow-box h2{
@@ -92,12 +92,12 @@
 
 .step-btn{
 
-    @apply w-[220px] h-[52px] text-base font-semibold cursor-pointer transition-[0.2s] rounded-xl border-[none];
+    @apply w-[220px] h-[52px] text-base font-semibold cursor-pointer transition-all duration-200 rounded-xl border-0;
 }
 
 .step-btn.active{
 
-    @apply [background:#2C6BED] text-[white] hover:[background:#1E57CF];
+    @apply [background:#2C6BED] text-white hover:[background:#1E57CF];
 }
 
 .step-btn.inactive{

@@ -3,18 +3,50 @@ import "./AccountPages.css";
 import { useNavigate } from "react-router-dom";
 import HeritagePage from "../../components/workspace/HeritagePage";
 
+const DEFAULT_ROLE = "복원 전문가";
+
 function ProfilePage() {
   const navigate = useNavigate();
-  const profile = (() => {
+
+  const loginUser = (() => {
     try {
-      return JSON.parse(localStorage.getItem("userProfile") || "null");
+      return JSON.parse(localStorage.getItem("loginUser") || "null");
     } catch {
       return null;
     }
-  })() || {
-    name: "에이블러",
-    role: "복원 전문가",
-    email: "user@vora.com",
+  })();
+
+  const profileExtra = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("userProfileExtra") || "null");
+    } catch {
+      return null;
+    }
+  })();
+
+  if (!loginUser) {
+    return (
+      <HeritagePage
+        active="account"
+        eyebrow="MY CONSERVATION DESK"
+        title="내 정보"
+        description="워크스페이스에 표시되는 담당자 정보를 확인합니다."
+      >
+        <section className="heritage-panel account-guest-card">
+          <p>담당자 정보를 확인하려면 먼저 로그인해주세요.</p>
+          <button className="heritage-button" onClick={() => navigate("/login")}>
+            로그인하러 가기
+          </button>
+        </section>
+      </HeritagePage>
+    );
+  }
+
+  const profile = {
+    name: loginUser.name,
+    role: profileExtra?.role || DEFAULT_ROLE,
+    email: loginUser.email,
+    phone: loginUser.phone || "-",
   };
 
   return (
@@ -47,6 +79,10 @@ function ProfilePage() {
           <div className="account-info-row">
             <dt>이메일</dt>
             <dd>{profile.email}</dd>
+          </div>
+          <div className="account-info-row">
+            <dt>연락처</dt>
+            <dd>{profile.phone}</dd>
           </div>
         </dl>
         <button

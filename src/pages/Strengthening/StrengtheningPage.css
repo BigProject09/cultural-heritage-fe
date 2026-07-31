@@ -1,9 +1,9 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .strengthening-page {
 
-    @apply min-h-screen [background:#f5f7fb] box-border p-10;
+    @apply min-h-screen bg-guide-canvas box-border p-10;
 }
 
 .page-layout {
@@ -23,12 +23,12 @@
 
 .nav-btn {
 
-    @apply [background:#1f5eff] text-[white] text-[15px] cursor-pointer transition-[0.2s] px-[22px] py-2.5 rounded-lg border-[none] disabled:[background:#c8d1e3] disabled:cursor-not-allowed;
+    @apply bg-guide-primary-vivid text-white text-[15px] cursor-pointer transition-all duration-200 px-[22px] py-2.5 rounded-lg border-0 disabled:[background:#c8d1e3] disabled:cursor-not-allowed;
 }
 
 .top-bar-logo {
 
-    @apply [background:none] text-2xl font-extrabold text-[#2f64f5] tracking-[1px] cursor-pointer border-[none] hover:opacity-85;
+    @apply bg-transparent text-2xl font-extrabold text-[#2f64f5] tracking-[1px] cursor-pointer border-0 hover:opacity-85;
 }
 
 .content-columns {
@@ -43,12 +43,12 @@
 
 .task-card {
 
-    @apply flex items-center gap-7 [background:white] shadow-[0_4px_15px_rgba(0,0,0,0.06)] cursor-pointer transition-[0.2s] mb-[22px] p-7 rounded-2xl hover:translate-y-[-3px] hover:shadow-[0_10px_22px_rgba(0,0,0,0.1)];
+    @apply flex items-center gap-7 bg-white shadow-[0_4px_15px_rgba(0,0,0,0.06)] cursor-pointer transition-all duration-200 mb-[22px] p-7 rounded-2xl hover:-translate-y-[3px] hover:shadow-[0_10px_22px_rgba(0,0,0,0.1)];
 }
 
 .task-icon {
 
-    @apply w-[70px] h-[70px] [background:#1f5eff] text-[white] flex items-center justify-center text-3xl font-[bold] shrink-0 rounded-[50%];
+    @apply w-[70px] h-[70px] bg-guide-primary-vivid text-white flex items-center justify-center text-3xl font-bold shrink-0 rounded-full;
 }
 
 .task-content {
@@ -68,7 +68,7 @@
 
 .task-arrow {
 
-    @apply text-[32px] text-[#1f5eff] font-[bold];
+    @apply text-[32px] text-guide-primary-vivid font-bold;
 }
 
 .analyzing-overlay {
@@ -78,7 +78,7 @@
 
 .analyzing-box {
 
-    @apply w-[280px] [background:white] text-center shadow-[0_10px_30px_rgba(0,0,0,0.2)] px-6 py-7 rounded-[14px];
+    @apply w-[280px] bg-white text-center shadow-[0_10px_30px_rgba(0,0,0,0.2)] px-6 py-7 rounded-[14px];
 }
 
 .analyzing-box p {
@@ -93,12 +93,12 @@
 
 .analyzing-bar-fill {
 
-    @apply w-2/5 h-full rounded [background:#2f6fed] animate-[analyzing-slide_1.1s_ease-in-out_infinite];
+    @apply w-2/5 h-full rounded bg-guide-primary animate-[analyzing-slide_1.1s_ease-in-out_infinite];
 }
 
 .task-icon-spinner {
 
-    @apply w-[26px] h-[26px] animate-[task-icon-spin_0.8s_linear_infinite] rounded-[50%] border-t-white border-[3px] border-solid border-[rgba(255,255,255,0.35)];
+    @apply w-[26px] h-[26px] animate-[task-icon-spin_0.8s_linear_infinite] rounded-full border-t-white border-[3px] border-solid border-[rgba(255,255,255,0.35)];
 }
 
 @keyframes analyzing-slide {

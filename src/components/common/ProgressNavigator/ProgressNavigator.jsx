@@ -1,33 +1,31 @@
 import "./ProgressNavigator.css";
-import { useNavigate } from "react-router-dom";
-import { flowRoutes } from "../../../data/flowData";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  DEFAULT_GUIDE_FLOW,
+  flowRoutes,
+  sanitizeGuideFlow,
+} from "../../../data/flowData";
+import { getActiveArtifactId } from "../../../data/workspaceProjects";
+import { getArtifactWorkflowRoute } from "../../../utils/artifactRoutes";
 
 function ProgressNavigator({ approvedFlow, currentStep }) {
   const navigate = useNavigate();
-
-  // 기본 공정
-  const defaultFlow = [
-    { id: 1, name: "처리 전 조사" },
-    { id: 2, name: "해체" },
-    { id: 3, name: "세척" },
-    { id: 4, name: "강화" },
-    { id: 5, name: "접합" },
-    { id: 6, name: "복원" },
-    { id: 8, name: "처리 후 기록" },
-  ];
+  const { artifactId: routeArtifactId } = useParams();
+  const artifactId = routeArtifactId
+    ? decodeURIComponent(routeArtifactId)
+    : getActiveArtifactId();
 
   // AI Flow가 있으면 사용, 없으면 기본 Flow 사용
+  const selectedSteps = sanitizeGuideFlow(approvedFlow);
   const steps =
-    approvedFlow && approvedFlow.length > 0
-      ? approvedFlow
-      : defaultFlow;
+    selectedSteps.length > 0 ? selectedSteps : DEFAULT_GUIDE_FLOW;
 
   const handleStepClick = (step) => {
-    const path = flowRoutes[step.name];
+    const stepKey = flowRoutes[step.name];
 
-    if (!path) return;
+    if (!stepKey) return;
 
-    navigate(path, {
+    navigate(getArtifactWorkflowRoute(artifactId, stepKey), {
       state: {
         approvedFlow: steps,
       },
