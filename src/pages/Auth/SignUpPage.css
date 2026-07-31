@@ -1,116 +1,57 @@
+@reference "tailwindcss";
+
+@layer components {
 .heritage-signup-main {
-  align-items: center;
-  display: flex;
-  flex: 1;
-  justify-content: center;
-  padding: 58px 24px;
+  @apply items-center flex flex-1 justify-center px-6 py-[58px];
 }
-
 .heritage-signup-card {
-  background: rgba(251, 248, 241, 0.92);
-  border: 1px solid rgba(150, 104, 61, 0.24);
-  border-radius: 18px;
-  box-shadow: 0 24px 58px rgba(58, 46, 31, 0.12);
-  max-width: 720px;
-  padding: 42px 46px;
-  width: 100%;
+  @apply [background:rgba(251,248,241,0.92)] border shadow-[0_24px_58px_rgba(58,46,31,0.12)] max-w-[720px] w-full px-[46px] py-[42px] rounded-[18px] border-solid border-[rgba(150,104,61,0.24)];
 }
-
 .heritage-signup-heading {
-  align-items: center;
-  border-bottom: 1px solid var(--heritage-line);
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 30px;
-  padding-bottom: 25px;
+  @apply items-center border-b-[color:var(--heritage-line)] flex justify-between mb-[30px] pb-[25px] border-b border-solid;
 }
-
 .heritage-signup-heading h1 {
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 36px;
-  font-weight: 500;
-  margin: 10px 0 7px;
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-4xl font-medium mt-2.5 mb-[7px] mx-0;
 }
-
 .heritage-signup-heading span {
-  color: var(--heritage-muted);
-  font-size: 12px;
+  @apply text-[color:var(--heritage-muted)] text-xs;
 }
-
 .heritage-signup-heading b {
-  align-items: center;
-  border: 1px solid var(--heritage-bronze);
-  border-radius: 50%;
-  color: var(--heritage-bronze);
-  display: flex;
-  font-size: 28px;
-  font-weight: 400;
-  height: 58px;
-  justify-content: center;
-  width: 58px;
+  @apply items-center border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)] flex text-[28px] font-normal h-[58px] justify-center w-[58px] rounded-[50%] border-solid;
 }
-
 .heritage-signup-grid {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: 1fr 1fr;
+  @apply grid gap-[18px] grid-cols-[1fr_1fr];
 }
-
 .heritage-signup-grid label {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
 }
-
 .heritage-signup-grid label.wide {
-  grid-column: 1 / -1;
+  @apply col-span-full;
 }
-
 .heritage-signup-grid label > span {
-  color: #5d625d;
-  font-size: 11px;
-  font-weight: 700;
-  margin-bottom: 7px;
+  @apply text-[#5d625d] text-[11px] font-bold mb-[7px];
 }
-
 .heritage-signup-grid input {
-  background: #fffdf8;
-  border: 1px solid var(--heritage-line);
-  border-radius: 8px;
-  color: var(--heritage-ink);
-  font-size: 14px;
-  height: 48px;
-  padding: 0 14px;
+  @apply [background:#fffdf8] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] text-sm h-12 px-3.5 py-0 rounded-lg border-solid focus:border-[color:var(--heritage-bronze)] focus:shadow-[0_0_0_3px_rgba(150,104,61,0.12)] focus:[outline:none];
 }
-
-.heritage-signup-grid input:focus {
-  border-color: var(--heritage-bronze);
-  box-shadow: 0 0 0 3px rgba(150, 104, 61, 0.12);
-  outline: none;
-}
-
 .heritage-signup-card .heritage-auth-error {
-  margin: 18px 0 0;
+  @apply mt-[18px] mb-0 mx-0;
 }
-
 .heritage-signup-card .heritage-auth-submit {
-  margin-top: 24px;
-  width: 100%;
+  @apply w-full mt-6;
 }
-
 @media (max-width: 620px) {
   .heritage-signup-card {
-    padding: 30px 24px;
+    @apply px-6 py-[30px];
   }
-
   .heritage-signup-heading b {
-    display: none;
+    @apply hidden;
   }
-
   .heritage-signup-grid {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   .heritage-signup-grid label.wide {
-    grid-column: auto;
+    @apply col-auto;
   }
+}
 }

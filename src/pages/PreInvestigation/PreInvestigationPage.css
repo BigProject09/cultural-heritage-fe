@@ -1,253 +1,108 @@
-/* 전체 페이지 */
+@reference "tailwindcss";
 
+@layer components {
+/* 전체 페이지 */
 .pre-page {
-  min-height: 100vh;
-  background: #f5f8fd;
-  padding: 40px;
-  box-sizing: border-box;
+  @apply min-h-screen [background:#f5f8fd] box-border p-10;
 }
 
 /* ========================= */
 /* 레이아웃 (진행 단계 바 → 좌측 카드) */
 /* ========================= */
-
 .page-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 30px;
+  @apply flex items-start gap-[30px];
 }
-
 .page-main {
-  flex: 1;
-  min-width: 0;
+  @apply flex-1 min-w-0;
 }
 
 /* ========================= */
 /* 이전 다음 */
 /* ========================= */
-
 .navigation {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+  @apply flex justify-between items-center mb-[30px];
 }
-
 .top-bar-logo {
-  border: none;
-  background: none;
-
-  font-size: 24px;
-  font-weight: 800;
-  color: #2f64f5;
-  letter-spacing: 1px;
-
-  cursor: pointer;
+  @apply [background:none] text-2xl font-extrabold text-[#2f64f5] tracking-[1px] cursor-pointer border-[none] hover:opacity-85;
 }
-
-.top-bar-logo:hover {
-  opacity: 0.85;
-}
-
 .nav-btn {
-  background: white;
-  border: none;
-  border-radius: 12px;
-
-  padding: 12px 24px;
-
-  cursor: pointer;
-
-  font-size: 15px;
-  font-weight: 600;
-
-  color: #2563eb;
-
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-
-  transition: .2s;
-}
-
-.nav-btn:hover {
-  transform: translateY(-2px);
+  @apply [background:white] cursor-pointer text-[15px] font-semibold text-blue-600 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-[0.2s] px-6 py-3 rounded-xl border-[none] hover:-translate-y-0.5;
 }
 
 /* ========================= */
 /* 본문 */
 /* ========================= */
-
 .content {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
+  @apply flex flex-col gap-[30px];
 }
 
 /* ========================= */
 /* 기본 정보 */
 /* ========================= */
-
 .info-card {
-  background: white;
-
-  border-radius: 20px;
-
-  padding: 35px;
-
-  box-shadow: 0 8px 20px rgba(0,0,0,.05);
+  @apply [background:white] shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-[35px] rounded-[20px];
 }
-
 .info-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  margin-bottom: 30px;
+  @apply flex justify-between items-center mb-[30px];
 }
-
 .info-card-header h2 {
-  margin-bottom: 0;
-
-  color: #1f2937;
-  font-size: 30px;
+  @apply text-gray-800 text-3xl mb-0;
 }
-
 .info-card-header .edit-btn {
-  border: none;
-  border-radius: 10px;
-
-  padding: 10px 18px;
-
-  background: #eef5ff;
-  color: #2563eb;
-
-  font-size: 14px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition: .2s;
+  @apply [background:#eef5ff] text-blue-600 text-sm font-semibold cursor-pointer transition-[0.2s] px-[18px] py-2.5 rounded-[10px] border-[none] hover:[background:#dbe9ff];
 }
-
-.info-card-header .edit-btn:hover {
-  background: #dbe9ff;
-}
-
 .info-grid {
-  display: grid;
-
-  grid-template-columns: repeat(2,1fr);
-
-  gap: 30px 80px;
+  @apply grid grid-cols-[repeat(2,1fr)] gap-[30px_80px];
 }
-
 .info-item span {
-  display: block;
-
-  margin-bottom: 8px;
-
-  color: #6b7280;
-  font-size: 14px;
+  @apply block text-gray-500 text-sm mb-2;
 }
-
 .info-item p {
-  margin: 0;
-
-  color: #111827;
-
-  font-size: 24px;
-  font-weight: 700;
+  @apply text-gray-900 text-2xl font-bold m-0;
 }
 
 /* ========================= */
 /* 분석 버튼 */
 /* ========================= */
-
 .analysis-card {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
+  @apply flex justify-center gap-10;
 }
-
 .analysis-btn {
-  width: 300px;
-  height: 190px;
-
-  background: white;
-
-  border: 2px solid #dbe7ff;
-  border-radius: 20px;
-
-  cursor: pointer;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
-  transition: .25s;
-
-  box-shadow: 0 6px 18px rgba(0,0,0,.05);
+  @apply w-[300px] h-[190px] [background:white] cursor-pointer flex flex-col justify-center items-center transition-[0.25s] shadow-[0_6px_18px_rgba(0,0,0,0.05)] rounded-[20px] border-2 border-solid border-[#dbe7ff] hover:border-blue-600 hover:translate-y-[-5px];
 }
-
-.analysis-btn:hover {
-  border-color: #2563eb;
-  transform: translateY(-5px);
-}
-
 .analysis-btn .icon {
-  font-size: 42px;
-  margin-bottom: 16px;
+  @apply text-[42px] mb-4;
 }
-
 .analysis-btn h3 {
-  margin: 0;
-
-  color: #1f2937;
-
-  font-size: 28px;
+  @apply text-gray-800 text-[28px] m-0;
 }
-
 .analysis-btn p {
-  margin-top: 10px;
-
-  color: #6b7280;
-
-  font-size: 15px;
+  @apply text-gray-500 text-[15px] mt-2.5;
 }
 
 /* ========================= */
 /* 반응형 */
 /* ========================= */
-
 @media (max-width:1100px){
-
   .page-layout {
-    flex-direction: column;
+    @apply flex-col;
   }
-
   .analysis-card{
-    flex-direction:column;
-    align-items:center;
+    @apply flex-col items-center;
   }
-
   .analysis-btn{
-    width:100%;
-    max-width:420px;
+    @apply w-full max-w-[420px];
   }
-
   .info-grid{
-    grid-template-columns:1fr;
+    @apply grid-cols-[1fr];
   }
-
 }
-
 .analysis-btn.completed {
-  background: #eaf3ff;
-  border: 2px solid #2563eb;
+  @apply [background:#eaf3ff] border-blue-600 border-2 border-solid;
 }
-
 .analysis-btn.completed .icon,
 .analysis-btn.completed h3,
 .analysis-btn.completed p {
-  color: #2563eb;
+  @apply text-blue-600;
+}
 }

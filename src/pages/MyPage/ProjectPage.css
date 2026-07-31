@@ -1,34 +1,21 @@
+@reference "tailwindcss";
+
+@layer components {
 .account-project-link {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  min-height: 210px;
+  @apply items-center flex justify-between min-h-[210px];
 }
-
 .account-project-link p {
-  color: var(--heritage-bronze);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  @apply text-[color:var(--heritage-bronze)] text-[9px] font-bold tracking-[0.2em];
 }
-
 .account-project-link h2 {
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 26px;
-  font-weight: 500;
-  margin: 14px 0 10px;
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[26px] font-medium mt-3.5 mb-2.5 mx-0;
 }
-
 .account-project-link span {
-  color: var(--heritage-muted);
-  font-size: 13px;
-  line-height: 1.7;
+  @apply text-[color:var(--heritage-muted)] text-[13px] leading-[1.7];
 }
-
 @media (max-width: 720px) {
   .account-project-link {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 24px;
+    @apply items-start flex-col gap-6;
   }
+}
 }

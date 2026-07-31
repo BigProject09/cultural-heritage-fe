@@ -1,46 +1,29 @@
 @import "tailwindcss";
 
-@theme {
-  --color-heritage-paper: #f4f0e7;
-  --color-heritage-paper-2: #fbf8f1;
-  --color-heritage-ink: #17201d;
-  --color-heritage-muted: #687069;
-  --color-heritage-bronze: #96683d;
-  --color-heritage-bronze-dark: #704821;
-  --color-heritage-line: #cabca8;
-  --color-heritage-green: #61735d;
-  --color-heritage-danger: #9c5b47;
-}
+@layer base {
+  * {
+    @apply box-border m-0 p-0;
+  }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+  html,
+  body,
+  #root {
+    @apply w-full min-h-screen;
+  }
 
-html,
-body,
-#root {
-  width: 100%;
-  min-height: 100vh;
-}
+  body {
+    @apply [background:#f5f8fc] [font-family:"Pretendard",sans-serif] m-0;
+  }
 
-body {
-  margin: 0;
-  background: #f5f8fc;
-  font-family: "Pretendard", sans-serif;
-}
+  a {
+    @apply no-underline text-inherit;
+  }
 
-a {
-  text-decoration: none;
-  color: inherit;
-}
+  button {
+    @apply [font-family:inherit];
+  }
 
-button {
-  font-family: inherit;
-}
-
-img {
-  display: block;
-  max-width: 100%;
+  img {
+    @apply block max-w-full;
+  }
 }

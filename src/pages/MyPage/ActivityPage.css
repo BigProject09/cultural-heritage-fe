@@ -1,1 +1,5 @@
+@reference "tailwindcss";
+
+@layer components {
 /* Shared account layout is defined in AccountPages.css. */
+}

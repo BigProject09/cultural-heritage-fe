@@ -1,88 +1,35 @@
+@reference "tailwindcss";
+
+@layer components {
 .report-page {
-  min-height: 100vh;
-  background: #f5f7fb;
-  padding: 30px;
+    @apply min-h-screen [background:#f5f7fb] p-[30px];
 }
-
 .top-bar {
-  max-width: 1100px;
-  margin: 20px auto;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    @apply max-w-[1100px] flex justify-between items-center mx-auto my-5;
 }
-
 .logo {
-  font-size: 28px;
-  font-weight: bold;
-  color: #2f6fed;
+    @apply text-[28px] font-[bold] text-[#2f6fed];
 }
-
 .nav-btn {
-  padding: 10px 22px;
-
-  border: none;
-  border-radius: 8px;
-
-  background: #2f6fed;
-  color: white;
-
-  cursor: pointer;
-
-  font-size: 15px;
-  font-weight: 600;
+    @apply [background:#2f6fed] text-[white] cursor-pointer text-[15px] font-semibold px-[22px] py-2.5 rounded-lg border-[none];
 }
-
 .report-paper {
-
-  max-width: 900px;
-
-  margin: 30px auto;
-
-  background: white;
-
-  padding: 60px;
-
-  border-radius: 18px;
-
-  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+    @apply max-w-[900px] [background:white] shadow-[0_10px_25px_rgba(0,0,0,0.08)] mx-auto my-[30px] p-[60px] rounded-[18px];
 }
-
 .report-paper h1 {
-
-  text-align: center;
-
-  margin-bottom: 50px;
-
-  font-size: 36px;
+    @apply text-center text-4xl mb-[50px];
 }
-
 .report-paper section {
-  margin-bottom: 40px;
+    @apply mb-10;
 }
-
 .report-paper h2 {
-
-  margin-bottom: 15px;
-
-  color: #2f6fed;
-
-  font-size: 22px;
-
-  border-bottom: 2px solid #e6eefc;
-
-  padding-bottom: 8px;
+    @apply text-[#2f6fed] text-[22px] mb-[15px] pb-2 border-b-2 border-b-[#e6eefc] border-solid;
 }
-
 .report-paper p,
 .report-paper li {
-
-  line-height: 1.9;
-
-  font-size: 17px;
+    @apply leading-[1.9] text-[17px];
 }
-
 .report-paper ul {
-  padding-left: 22px;
+    @apply pl-[22px];
+}
 }

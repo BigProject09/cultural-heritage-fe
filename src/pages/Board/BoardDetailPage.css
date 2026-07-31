@@ -1,35 +1,24 @@
+@reference "tailwindcss";
+
+@layer components {
 .board-detail-card {
-  min-height: 390px;
-  padding: 38px 42px;
+  @apply min-h-[390px] px-[42px] py-[38px];
 }
-
 .board-detail-meta {
-  justify-content: flex-end;
+  @apply justify-end;
 }
-
 .board-detail-divider {
-  background: linear-gradient(
-    90deg,
-    var(--heritage-bronze),
-    rgba(202, 188, 168, 0.35)
-  );
-  height: 1px;
-  margin: 25px 0 34px;
+  @apply [background:linear-gradient(_90deg,var(--heritage-bronze),rgba(202,188,168,0.35)_)] h-px mt-[25px] mb-[34px] mx-0;
 }
-
 .board-detail-content {
-  color: #3f4741;
-  font-size: 16px;
-  line-height: 2;
-  white-space: pre-wrap;
+  @apply text-[#3f4741] text-base leading-loose whitespace-pre-wrap;
 }
-
 @media (max-width: 720px) {
   .board-detail-card {
-    padding: 26px 22px;
+    @apply px-[22px] py-[26px];
   }
-
   .board-detail-meta {
-    justify-content: flex-start;
+    @apply justify-start;
   }
+}
 }
