@@ -55,10 +55,54 @@ X-RAY 기능은 백엔드 컨테이너가 모두 떠 있어야 동작한다.
 Tailwind CSS 4와 공식 Vite 플러그인을 사용한다. 새 UI는 JSX의 Tailwind
 유틸리티 클래스로 작성한다.
 
+```jsx
+<button
+  type="button"
+  className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800"
+>
+  저장
+</button>
+```
+
 기존 화면의 복합 선택자와 상태 스타일은 각 컴포넌트 CSS 파일에 유지하되,
 일반 CSS 선언 대신 `@apply`로 Tailwind 유틸리티를 조합한다. 각 스타일
 파일의 `@reference "tailwindcss";`는 `@apply`가 Tailwind 테마를 참조하기
 위해 필요하므로 삭제하지 않는다. 전역 Tailwind 진입점은 `src/index.css`다.
+
+```css
+@reference "tailwindcss";
+
+@layer components {
+  .heritage-card {
+    @apply flex flex-col rounded-xl border border-stone-200 bg-white p-6;
+  }
+
+  .heritage-card-action {
+    @apply mt-auto pt-4 text-sm font-semibold text-amber-800;
+  }
+}
+```
+
+클래스명은 Tailwind가 소스에서 정적으로 찾을 수 있도록 완성된 문자열로
+작성한다.
+
+```jsx
+// 권장
+const colorClasses = {
+  success: "bg-emerald-600 text-white",
+  warning: "bg-amber-500 text-stone-950",
+};
+
+<span className={colorClasses[status]} />
+
+// 사용하지 않음
+<span className={`bg-${color}-600`} />
+```
+
+VS Code에서 `Unknown at rule @apply` 또는 `@reference` 경고가 표시되면
+Tailwind CSS IntelliSense 확장 프로그램을 설치한다. 해당 경고는 에디터의
+기본 CSS 검사기가 Tailwind 지시어를 인식하지 못해 표시하는 것으로,
+`npm run build`가 성공한다면 빌드 오류는 아니다.
 
 ## 기술 스택
 
