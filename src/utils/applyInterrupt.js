@@ -58,6 +58,12 @@ export function applyInterrupt(interrupt, ctx) {
   if (interrupt.ai_adhesive) {
     ctx.setBondingAdhesive(interrupt.ai_adhesive);
   }
+  if (interrupt.ai_temp_analysis) {
+    ctx.setBondingTempAnalysis({
+      ...interrupt.ai_temp_analysis,
+      default_action: interrupt.default_action,
+    });
+  }
   if (interrupt.ai_method && stage.startsWith("접합")) {
     ctx.setBondingGuide(interrupt.ai_method);
   }

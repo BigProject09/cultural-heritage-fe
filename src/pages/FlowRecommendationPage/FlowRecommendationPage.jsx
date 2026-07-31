@@ -6,26 +6,26 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
 const AI_RECOMMENDED_FLOW = [
-  { id: 1, name: "처리 전 조사" },
+  { id: 1, name: "X-RAY 분석/육안 상태 조사" },
   { id: 2, name: "해체" },
   { id: 3, name: "세척" },
   { id: 4, name: "강화" },
   { id: 5, name: "접합" },
   { id: 6, name: "복원" },
-  { id: 8, name: "처리 후 기록" },
+  { id: 8, name: "보고서 생성" },
 ];
 
 function FlowRecommendationPage() {
   const navigate = useNavigate();
 
   const [steps, setSteps] = useState([
-    { id: 1, name: "처리 전 조사", active: true, mandatory: true },
+    { id: 1, name: "X-RAY 분석/육안 상태 조사", active: true, mandatory: true },
     { id: 2, name: "해체", active: true },
     { id: 3, name: "세척", active: true },
     { id: 4, name: "강화", active: true },
     { id: 5, name: "접합", active: true },
     { id: 6, name: "복원", active: true },
-    { id: 8, name: "처리 후 기록", active: true, mandatory: true },
+    { id: 8, name: "보고서 생성", active: true, mandatory: true },
   ]);
 
   const aiFlow = AI_RECOMMENDED_FLOW;
@@ -46,14 +46,24 @@ function FlowRecommendationPage() {
 
   const approvedFlow = steps.filter((step) => step.active);
 
-  // 처리 전 조사는 작업 시작 전 단계이므로 Flow 요청에서 제외
+  // X-RAY 분석/육안 상태 조사, 보고서 생성은 항상 고정 단계라 이 화면에서
+  // 고르거나 볼 필요가 없어 목록에서만 숨긴다 (approvedFlow 자체는 그대로 유지).
+  const HIDDEN_STEP_NAMES = ["X-RAY 분석/육안 상태 조사", "보고서 생성"];
+  const displaySteps = steps.filter(
+    (step) => !HIDDEN_STEP_NAMES.includes(step.name),
+  );
+  const displayAiFlow = aiFlow.filter(
+    (step) => !HIDDEN_STEP_NAMES.includes(step.name),
+  );
+
+  // X-RAY 분석/육안 상태 조사는 작업 시작 전 단계이므로 Flow 요청에서 제외
   const FLOW_NAME_TO_KEY = {
     해체: "disassembly",
     세척: "cleaning",
     강화: "reinforcement",
     접합: "bonding",
     복원: "restoration",
-    "처리 후 기록": "post_record",
+    "보고서 생성": "post_record",
   };
 
   const approvedFlowKeys = approvedFlow
@@ -157,15 +167,29 @@ function FlowRecommendationPage() {
         </div>
 
         <button className="nav-btn" disabled={loading} onClick={handleNext}>
-          Flow 결정 →
+          시작하기 →
         </button>
       </div>
 
       <div className="flow-container">
         <div className="flow-box">
-          <h2>Flow 수정</h2>
+          <h2>추천 공정</h2>
 
-          {steps.map((step, index) => (
+          {displayAiFlow.map((step, index) => (
+            <div key={step.id} className="flow-step">
+              <div className="ai-step">{step.name}</div>
+
+              {index !== displayAiFlow.length - 1 && (
+                <div className="arrow">↓</div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="flow-box">
+          <h2>최종 공정</h2>
+
+          {displaySteps.map((step, index) => (
             <div key={step.id} className="flow-step">
               <button
                 className={
@@ -177,19 +201,9 @@ function FlowRecommendationPage() {
                 {step.name}
               </button>
 
-              {index !== steps.length - 1 && <div className="arrow">↓</div>}
-            </div>
-          ))}
-        </div>
-
-        <div className="flow-box">
-          <h2>추천 Flow</h2>
-
-          {aiFlow.map((step, index) => (
-            <div key={step.id} className="flow-step">
-              <div className="ai-step">{step.name}</div>
-
-              {index !== aiFlow.length - 1 && <div className="arrow">↓</div>}
+              {index !== displaySteps.length - 1 && (
+                <div className="arrow">↓</div>
+              )}
             </div>
           ))}
         </div>

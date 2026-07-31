@@ -36,7 +36,7 @@ import {
  *        ↓
  *   이 페이지 2단계 ─ 결함 분석 → 전문가 검수 → 문안 생성
  *        ↓
- *   처리 전 조사 ─ 검수 결과를 넘겨받아 다음 공정으로
+ *   X-RAY 분석/육안 상태 조사 ─ 검수 결과를 넘겨받아 다음 공정으로
  *
  *
  * 이 페이지가 지키는 원칙
@@ -804,7 +804,7 @@ export default function XrayPage() {
   /**
    * X-RAY 작업 완료.
    *
-   * 검수 결과를 처리 전 조사 화면으로 넘긴다. 문안은 전문가가
+   * 검수 결과를 X-RAY 분석/육안 상태 조사 화면으로 넘긴다. 문안은 전문가가
    * 고친 최종본이 전달된다.
    */
   async function handleComplete() {
@@ -989,7 +989,7 @@ export default function XrayPage() {
       <div className="xray-container">
         <nav className="xray-breadcrumb" aria-label="현재 위치">
           <button type="button" onClick={() => navigate(-1)}>
-            처리 전 조사
+            X-RAY 분석/육안 상태 조사
           </button>
           <span>/</span>
           <strong>X-RAY 분석</strong>
@@ -1824,7 +1824,7 @@ export default function XrayPage() {
               </span>
               <h2 id="complete-modal-title">X-RAY 조사를 완료할까요?</h2>
               <p>
-                완료된 결과는 처리 전 조사에서 다시 확인할 수 있습니다. 수정이
+                완료된 결과는 X-RAY 분석/육안 상태 조사에서 다시 확인할 수 있습니다. 수정이
                 필요하면 작업을 다시 열어야 합니다.
               </p>
               <div>

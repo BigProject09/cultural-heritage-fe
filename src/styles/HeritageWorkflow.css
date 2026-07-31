@@ -366,7 +366,7 @@
   @apply [background:var(--workflow-line)] left-[17px];
 }
 
-/* 처리 전 조사 허브 */
+/* X-RAY 분석/육안 상태 조사 허브 */
 .pre-page .info-card {
   @apply p-[30px];
 }
