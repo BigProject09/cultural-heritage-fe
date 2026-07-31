@@ -164,11 +164,11 @@ function FlowRecommendationPage() {
         <div className="flow-box">
           <h2>추천 공정</h2>
 
-          {displayAiFlow.map((step, index) => (
+          {aiFlow.map((step, index) => (
             <div key={step.id} className="flow-step">
               <div className="ai-step">{step.name}</div>
 
-              {index !== displayAiFlow.length - 1 && (
+              {index !== aiFlow.length - 1 && (
                 <div className="arrow">↓</div>
               )}
             </div>
@@ -178,7 +178,7 @@ function FlowRecommendationPage() {
         <div className="flow-box">
           <h2>최종 공정</h2>
 
-          {displaySteps.map((step, index) => (
+          {steps.map((step, index) => (
             <div key={step.id} className="flow-step">
               <button
                 className={
