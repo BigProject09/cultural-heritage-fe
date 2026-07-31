@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .heritage-worklist {
@@ -20,10 +20,32 @@
   @apply text-[color:var(--heritage-muted)] m-0;
 }
 .heritage-worklist-heading > button {
-  @apply [background:var(--heritage-bronze)] text-[white] cursor-pointer min-h-11 px-5 py-0 rounded-[9px] border-0;
+  @apply [background:var(--heritage-bronze)] text-white cursor-pointer min-h-11 px-5 py-0 rounded-[9px] border-0;
+}
+.heritage-worklist-summary {
+  @apply border border-[color:var(--heritage-line)] grid grid-cols-4 mt-8 overflow-hidden rounded-[14px] border-solid;
+}
+.heritage-worklist-summary button {
+  @apply [background:rgba(255,253,247,0.68)] border-0 border-r border-r-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] cursor-pointer min-h-[104px] text-left px-6 py-[18px] transition-colors last:border-r-0;
+}
+.heritage-worklist-summary button:hover,
+.heritage-worklist-summary button.active {
+  @apply [background:rgba(150,104,61,0.11)];
+}
+.heritage-worklist-summary button.active {
+  @apply shadow-[inset_0_-3px_0_var(--heritage-bronze)];
+}
+.heritage-worklist-summary span {
+  @apply block text-[color:var(--heritage-muted)] text-[10px] font-bold tracking-[0.08em] mb-2;
+}
+.heritage-worklist-summary strong {
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[32px] font-normal;
+}
+.heritage-worklist-summary small {
+  @apply text-[color:var(--heritage-muted)] text-[10px] ml-1.5;
 }
 .heritage-worklist-tools {
-  @apply items-center border-b-[color:var(--heritage-line)] grid gap-3 grid-cols-[minmax(240px,1fr)_170px_auto] mt-8 mb-[22px] mx-0 pb-[22px] border-b border-solid;
+  @apply items-center border-b-[color:var(--heritage-line)] grid gap-3 grid-cols-[minmax(240px,1fr)_190px_auto] mt-5 mb-[22px] mx-0 pb-[22px] border-b border-solid;
 }
 .heritage-worklist-tools input,
 .heritage-worklist-tools select {
@@ -35,6 +57,9 @@
 .heritage-worklist-grid {
   @apply grid gap-[18px] grid-cols-2;
 }
+.heritage-worklist-delete-error {
+  @apply [background:#f3dfd8] border-l-[color:var(--heritage-danger)] text-[#824b39] text-[11px] col-span-full px-[13px] py-[11px] border-l-[3px] border-solid;
+}
 .heritage-worklist-state {
   @apply items-center border border-[color:var(--heritage-line)] text-[color:var(--heritage-muted)] flex flex-col gap-[7px] col-span-full justify-center min-h-60 text-center p-[30px] rounded-[14px] border-dashed;
 }
@@ -45,7 +70,7 @@
   @apply text-[11px];
 }
 .heritage-worklist-state button {
-  @apply [background:var(--heritage-bronze)] text-[white] cursor-pointer min-h-[38px] mt-[7px] px-4 py-0 rounded-lg border-0;
+  @apply [background:var(--heritage-bronze)] text-white cursor-pointer min-h-[38px] mt-[7px] px-4 py-0 rounded-lg border-0;
 }
 .heritage-worklist-state.error {
   @apply border-[color:var(--heritage-danger)];
@@ -75,7 +100,7 @@
   @apply items-center flex gap-2 justify-center;
 }
 .heritage-worklist-progress i {
-  @apply [background:var(--heritage-paper-2)] border block h-[11px] w-[11px] rounded-[50%] border-solid border-[#aaa497];
+  @apply [background:var(--heritage-paper-2)] border block h-[11px] w-[11px] rounded-full border-solid border-[#aaa497];
 }
 .heritage-worklist-progress i.done {
   @apply [background:var(--heritage-green)] border-[color:var(--heritage-green)];
@@ -95,8 +120,14 @@
 .heritage-worklist-card-foot small {
   @apply text-[#8d857a] text-[9px];
 }
-.heritage-worklist-card-foot button {
+.heritage-worklist-card-actions {
+  @apply flex gap-2;
+}
+.heritage-worklist-card-actions button {
   @apply [background:transparent] border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze-dark)] cursor-pointer min-h-[39px] px-[15px] py-0 rounded-lg border-solid;
+}
+.heritage-worklist-card-actions button.delete {
+  @apply border-[#b78b7d] text-[color:var(--heritage-danger)] disabled:cursor-wait disabled:opacity-60;
 }
 @media (max-width: 900px) {
   .heritage-worklist-main {
@@ -104,6 +135,15 @@
   }
   .heritage-worklist-grid {
     @apply grid-cols-[1fr];
+  }
+  .heritage-worklist-summary {
+    @apply grid-cols-2;
+  }
+  .heritage-worklist-summary button:nth-child(2) {
+    @apply border-r-0;
+  }
+  .heritage-worklist-summary button:nth-child(-n+2) {
+    @apply border-b border-b-[color:var(--heritage-line)];
   }
 }
 @media (max-width: 640px) {
@@ -115,6 +155,9 @@
   }
   .heritage-worklist-tools {
     @apply grid-cols-[1fr];
+  }
+  .heritage-worklist-summary button {
+    @apply min-h-[88px] px-[18px] py-3.5;
   }
   .heritage-worklist-card-head {
     @apply grid-cols-[88px_1fr];

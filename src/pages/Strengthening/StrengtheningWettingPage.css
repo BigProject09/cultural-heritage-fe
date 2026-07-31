@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .strengthening-wetting-page {
@@ -58,7 +58,7 @@
 
 .severity-dot {
 
-    @apply relative inline-block w-3.5 h-3.5 shrink-0 cursor-pointer p-0 rounded-[50%] border-[none];
+    @apply relative inline-block w-3.5 h-3.5 shrink-0 cursor-pointer p-0 rounded-full border-0;
 }
 
 .metric-tooltip {
@@ -73,7 +73,7 @@
 
 .analyzing-box {
 
-    @apply w-[280px] [background:white] text-center shadow-[0_10px_30px_rgba(0,0,0,0.2)] px-6 py-7 rounded-[14px];
+    @apply w-[280px] bg-white text-center shadow-[0_10px_30px_rgba(0,0,0,0.2)] px-6 py-7 rounded-[14px];
 }
 
 .analyzing-box p {
@@ -88,7 +88,7 @@
 
 .analyzing-bar-fill {
 
-    @apply w-2/5 h-full rounded [background:#2f6fed] animate-[analyzing-slide_1.1s_ease-in-out_infinite];
+    @apply w-2/5 h-full rounded bg-guide-primary animate-[analyzing-slide_1.1s_ease-in-out_infinite];
 }
 
 .severity-none {

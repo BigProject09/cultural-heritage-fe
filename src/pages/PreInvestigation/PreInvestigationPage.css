@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 /* 전체 페이지 */
@@ -23,10 +23,10 @@
   @apply flex justify-between items-center mb-[30px];
 }
 .top-bar-logo {
-  @apply [background:none] text-2xl font-extrabold text-[#2f64f5] tracking-[1px] cursor-pointer border-[none] hover:opacity-85;
+  @apply bg-transparent text-2xl font-extrabold text-[#2f64f5] tracking-[1px] cursor-pointer border-0 hover:opacity-85;
 }
 .nav-btn {
-  @apply [background:white] cursor-pointer text-[15px] font-semibold text-blue-600 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-[0.2s] px-6 py-3 rounded-xl border-[none] hover:-translate-y-0.5;
+  @apply bg-white cursor-pointer text-[15px] font-semibold text-blue-600 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200 px-6 py-3 rounded-xl border-0 hover:-translate-y-0.5;
 }
 
 /* ========================= */
@@ -40,7 +40,7 @@
 /* 기본 정보 */
 /* ========================= */
 .info-card {
-  @apply [background:white] shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-[35px] rounded-[20px];
+  @apply bg-white shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-[35px] rounded-[20px];
 }
 .info-card-header {
   @apply flex justify-between items-center mb-[30px];
@@ -49,7 +49,7 @@
   @apply text-gray-800 text-3xl mb-0;
 }
 .info-card-header .edit-btn {
-  @apply [background:#eef5ff] text-blue-600 text-sm font-semibold cursor-pointer transition-[0.2s] px-[18px] py-2.5 rounded-[10px] border-[none] hover:[background:#dbe9ff];
+  @apply bg-guide-primary-soft text-blue-600 text-sm font-semibold cursor-pointer transition-all duration-200 px-[18px] py-2.5 rounded-[10px] border-0 hover:[background:#dbe9ff];
 }
 .info-grid {
   @apply grid grid-cols-[repeat(2,1fr)] gap-[30px_80px];
@@ -68,7 +68,7 @@
   @apply flex justify-center gap-10;
 }
 .analysis-btn {
-  @apply w-[300px] h-[190px] [background:white] cursor-pointer flex flex-col justify-center items-center transition-[0.25s] shadow-[0_6px_18px_rgba(0,0,0,0.05)] rounded-[20px] border-2 border-solid border-[#dbe7ff] hover:border-blue-600 hover:translate-y-[-5px];
+  @apply w-[300px] h-[190px] bg-white cursor-pointer flex flex-col justify-center items-center transition-[0.25s] shadow-[0_6px_18px_rgba(0,0,0,0.05)] rounded-[20px] border-2 border-solid border-[#dbe7ff] hover:border-blue-600 hover:translate-y-[-5px];
 }
 .analysis-btn .icon {
   @apply text-[42px] mb-4;

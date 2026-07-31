@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .xray-page {
@@ -55,7 +55,7 @@
   @apply flex items-center gap-2 text-[color:var(--xray-text-secondary)] text-[13px];
 }
 .save-status > span {
-  @apply grid w-5 h-5 place-items-center [background:#e9f8f0] text-[color:var(--xray-success)] text-[11px] font-extrabold rounded-[50%];
+  @apply grid w-5 h-5 place-items-center [background:#e9f8f0] text-[color:var(--xray-success)] text-[11px] font-extrabold rounded-full;
 }
 .artifact-summary {
   @apply grid grid-cols-[minmax(260px,1.4fr)_repeat(3,minmax(150px,1fr))] overflow-hidden border border-[color:var(--xray-border)] [background:var(--xray-surface)] mb-6 rounded-[14px] border-solid;
@@ -98,7 +98,7 @@
   @apply cursor-not-allowed;
 }
 .workflow-step-icon {
-  @apply grid flex-[0_0_30px] w-[30px] h-[30px] place-items-center border border-[color:var(--xray-border)] [background:var(--xray-surface-subtle)] text-xs font-extrabold rounded-[50%] border-solid;
+  @apply grid flex-[0_0_30px] w-[30px] h-[30px] place-items-center border border-[color:var(--xray-border)] [background:var(--xray-surface-subtle)] text-xs font-extrabold rounded-full border-solid;
 }
 .workflow-step-copy {
   @apply flex min-w-0 flex-col gap-1;
@@ -277,7 +277,7 @@
   @apply text-[#8f9ba8];
 }
 .status-dot {
-  @apply inline-block w-[7px] h-[7px] [background:currentColor] rounded-[50%];
+  @apply inline-block w-[7px] h-[7px] [background:currentColor] rounded-full;
 }
 .assembled-preview > img {
   @apply block w-full max-h-[680px] object-contain p-[22px];
@@ -430,7 +430,7 @@
   @apply text-[10px] tabular-nums text-right;
 }
 .review-state {
-  @apply w-[7px] h-[7px] [background:#c5ccd3] rounded-[50%];
+  @apply w-[7px] h-[7px] [background:#c5ccd3] rounded-full;
 }
 .review-state.damage {
   @apply [background:var(--xray-danger)];
@@ -539,7 +539,7 @@
   @apply inline-flex min-h-8 items-center gap-[7px] [background:#e9f8f0] text-[#168653] text-xs font-bold px-3 py-0 rounded-[999px];
 }
 .review-ready-chip > span {
-  @apply grid w-[17px] h-[17px] place-items-center [background:#20a464] text-white text-[9px] rounded-[50%];
+  @apply grid w-[17px] h-[17px] place-items-center [background:#20a464] text-white text-[9px] rounded-full;
 }
 .final-artifact-info {
   @apply grid grid-cols-4 overflow-hidden border border-[color:var(--xray-border)] [background:var(--xray-surface-subtle)] mt-0 mb-5 mx-0 rounded-xl border-solid;
@@ -695,7 +695,7 @@
   @apply w-[min(430px,100%)] [background:#fff] shadow-[0_24px_80px_rgba(10,15,21,0.28)] text-center p-[30px] rounded-[18px];
 }
 .complete-modal-icon {
-  @apply grid w-12 h-12 place-items-center [background:#e9f8f0] text-[color:var(--xray-success)] text-xl font-extrabold mt-0 mb-[18px] mx-auto rounded-[50%];
+  @apply grid w-12 h-12 place-items-center [background:#e9f8f0] text-[color:var(--xray-success)] text-xl font-extrabold mt-0 mb-[18px] mx-auto rounded-full;
 }
 .complete-modal h2 {
   @apply text-xl m-0;

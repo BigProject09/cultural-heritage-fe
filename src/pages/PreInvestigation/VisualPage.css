@@ -1,8 +1,8 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .visual-page {
-    @apply min-h-screen [background:#f5f7fb] flex justify-center px-5 py-[60px];
+    @apply min-h-screen bg-guide-canvas flex justify-center px-5 py-[60px];
 }
 .visual-container {
     @apply w-full max-w-[900px];
@@ -11,7 +11,7 @@
     @apply text-[38px] font-bold text-gray-800 mb-10;
 }
 .result-card {
-    @apply [background:white] shadow-[0_8px_20px_rgba(0,0,0,0.08)] mb-[35px] p-[35px] rounded-[18px];
+    @apply bg-white shadow-[0_8px_20px_rgba(0,0,0,0.08)] mb-[35px] p-[35px] rounded-[18px];
 }
 .result-card h2 {
     @apply text-blue-600 text-[28px] mb-[25px];
@@ -29,6 +29,6 @@
     @apply flex justify-center;
 }
 .complete-btn {
-    @apply w-[220px] h-[58px] [background:#2563eb] text-[white] text-xl font-bold cursor-pointer transition-[0.2s] rounded-[14px] border-[none] hover:[background:#1d4ed8] hover:-translate-y-0.5;
+    @apply w-[220px] h-[58px] [background:#2563eb] text-white text-xl font-bold cursor-pointer transition-all duration-200 rounded-[14px] border-0 hover:[background:#1d4ed8] hover:-translate-y-0.5;
 }
 }

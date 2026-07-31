@@ -1,3 +1,16 @@
+import { getArtifactModuleRoute } from "../utils/artifactRoutes";
+import {
+  compactMyReports,
+  deleteMyReportsByArtifactId,
+} from "../utils/myReports";
+import {
+  createArtifactImageKey,
+  deleteArtifactAsset,
+  deleteArtifactAssets,
+  getArtifactImageUrl,
+  saveArtifactImage,
+} from "./localArtifactAssets";
+
 export const MODULE_STATUS = {
   DONE: "DONE",
   IN_PROGRESS: "IN_PROGRESS",
@@ -17,8 +30,7 @@ export const WORKSPACE_MODULES = [
     shortTitle: "복원 가이드",
     subtitle: "AI 보존처리 가이드",
     description:
-      "유물 정보와 조사 결과를 종합해 단계별 보존처리 초안을 만듭니다.",
-    route: "/flow-recommendation",
+      "유물 기본 정보를 바탕으로 필요한 보존처리 공정을 선택하고 단계별 작업을 기록합니다.",
   },
   {
     key: "xray",
@@ -30,19 +42,17 @@ export const WORKSPACE_MODULES = [
     subtitle: "파편 결합 · 결함 분석",
     description:
       "X-RAY 파편을 결합하고 내부 결함 후보를 검토·확정합니다.",
-    route: "/pre-investigation/xray",
   },
   {
     key: "visual",
     apiKey: "VISUAL",
     number: "03",
     eyebrow: "VISUAL INSPECTION",
-    title: "육안 복원",
+    title: "육안 조사",
     shortTitle: "육안 조사",
     subtitle: "손상 부위 기록 · 판정",
     description:
       "2D 컬러 이미지에서 손상 위치와 유형을 기록하고 판정합니다.",
-    route: "/pre-investigation/visual",
   },
 ];
 
@@ -166,6 +176,7 @@ export function normalizeWorkspaceProject(project = {}) {
     bondingArea: project.bondingArea || "",
     treatmentPurpose: project.treatmentPurpose || "",
     image,
+    imageKey: project.imageKey || project.localImageKey || "",
     updatedAt:
       project.updatedAt ||
       project.updated_at ||
@@ -197,14 +208,25 @@ function readLocalProjects() {
 
 function writeLocalProjects(projects) {
   try {
-    localStorage.setItem(LOCAL_PROJECTS_KEY, JSON.stringify(projects));
+    const persistentProjects = projects.map((project) => {
+      const normalized = normalizeWorkspaceProject(project);
+      return {
+        ...normalized,
+        image: normalized.image?.startsWith?.("blob:") ? null : normalized.image,
+      };
+    });
+
+    localStorage.setItem(
+      LOCAL_PROJECTS_KEY,
+      JSON.stringify(persistentProjects),
+    );
   } catch (error) {
     if (
       error?.name === "QuotaExceededError" ||
       error?.name === "NS_ERROR_DOM_QUOTA_REACHED"
     ) {
       throw new Error(
-        "브라우저 로컬 저장 공간이 부족합니다. 더 작은 대표 이미지를 선택해주세요.",
+        "브라우저 프로젝트 저장 공간이 부족합니다. 기존 Base64 이미지 데이터를 정리한 뒤 다시 시도해주세요.",
         { cause: error },
       );
     }
@@ -236,7 +258,17 @@ function imageFileToThumbnail(file) {
         }
 
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+              return;
+            }
+            reject(new Error("대표 이미지 미리보기를 만들지 못했습니다."));
+          },
+          "image/jpeg",
+          0.82,
+        );
       };
       image.src = String(reader.result || "");
     };
@@ -245,8 +277,73 @@ function imageFileToThumbnail(file) {
   });
 }
 
-function saveLocalProject(project) {
-  const projects = readLocalProjects();
+async function migrateLegacyLocalImages(projects) {
+  const migratedKeys = [];
+  let changed = false;
+
+  try {
+    for (let index = 0; index < projects.length; index += 1) {
+      const project = projects[index];
+
+      if (project.image?.startsWith?.("data:image/")) {
+        const response = await fetch(project.image);
+        const blob = await response.blob();
+        const imageKey = createArtifactImageKey(project.artifactId);
+
+        await saveArtifactImage({
+          key: imageKey,
+          artifactId: project.artifactId,
+          blob,
+          fileName: "legacy-artifact-image.jpg",
+        });
+
+        migratedKeys.push(imageKey);
+        projects[index] = {
+          ...project,
+          image: null,
+          imageKey,
+        };
+        changed = true;
+      } else if (project.image?.startsWith?.("blob:")) {
+        projects[index] = {
+          ...project,
+          image: null,
+        };
+        changed = true;
+      }
+    }
+
+    if (changed) writeLocalProjects(projects);
+    return projects;
+  } catch (error) {
+    await Promise.allSettled(migratedKeys.map(deleteArtifactAsset));
+    throw new Error(
+      "기존 대표 이미지를 새 임시 저장소로 이전하지 못했습니다.",
+      { cause: error },
+    );
+  }
+}
+
+async function prepareLocalProjects() {
+  compactMyReports();
+  return migrateLegacyLocalImages(readLocalProjects());
+}
+
+async function hydrateLocalProject(project) {
+  if (!project) return project;
+
+  const normalized = normalizeWorkspaceProject(project);
+  if (!normalized.imageKey) return normalized;
+
+  const image = await getArtifactImageUrl(normalized.imageKey);
+  return {
+    ...normalized,
+    image: image || null,
+  };
+}
+
+async function saveLocalProject(project, currentProjects = null) {
+  const projects = currentProjects || (await prepareLocalProjects());
   const normalized = normalizeWorkspaceProject(project);
   const index = projects.findIndex(
     (item) => item.artifactId === normalized.artifactId,
@@ -259,11 +356,11 @@ function saveLocalProject(project) {
   }
 
   writeLocalProjects(projects);
-  return normalized;
+  return hydrateLocalProject(normalized);
 }
 
-function getLocalProject(artifactId) {
-  return readLocalProjects().find(
+function getLocalProject(projects, artifactId) {
+  return projects.find(
     (project) => project.artifactId === String(artifactId),
   );
 }
@@ -352,7 +449,11 @@ function artifactPayload(artifactInfo, entryModule) {
 export async function getWorkspaceProjects({ signal } = {}) {
   if (ARTIFACT_STORAGE_MODE === "local") {
     ensureNotAborted(signal);
-    return readLocalProjects().sort(
+    const projects = await prepareLocalProjects();
+    ensureNotAborted(signal);
+    const hydratedProjects = await Promise.all(projects.map(hydrateLocalProject));
+    ensureNotAborted(signal);
+    return hydratedProjects.sort(
       (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
     );
   }
@@ -366,11 +467,13 @@ export async function getWorkspaceProjects({ signal } = {}) {
 export async function getWorkspaceProject(artifactId, { signal } = {}) {
   if (ARTIFACT_STORAGE_MODE === "local") {
     ensureNotAborted(signal);
-    const project = getLocalProject(artifactId);
+    const projects = await prepareLocalProjects();
+    ensureNotAborted(signal);
+    const project = getLocalProject(projects, artifactId);
     if (!project) {
       throw new Error("브라우저에 저장된 유물 프로젝트를 찾을 수 없습니다.");
     }
-    return project;
+    return hydrateLocalProject(project);
   }
 
   const payload = await request(
@@ -426,8 +529,9 @@ export async function upsertWorkspaceProject(
   { editMode = false, imageFile = null } = {},
 ) {
   if (ARTIFACT_STORAGE_MODE === "local") {
+    const projects = await prepareLocalProjects();
     const existing = artifactInfo.artifactId
-      ? getLocalProject(artifactInfo.artifactId)
+      ? getLocalProject(projects, artifactInfo.artifactId)
       : null;
     const artifactId =
       editMode && existing?.artifactId
@@ -441,17 +545,44 @@ export async function upsertWorkspaceProject(
       modules[entryModule] = MODULE_STATUS.IN_PROGRESS;
     }
 
-    const image = imageFile
-      ? await imageFileToThumbnail(imageFile)
-      : existing?.image || artifactInfo.image || null;
-    const project = saveLocalProject({
-      ...existing,
-      ...artifactInfo,
-      artifactId,
-      image,
-      modules,
-      updatedAt: new Date().toISOString(),
-    });
+    const previousImageKey = existing?.imageKey || "";
+    let nextImageKey = previousImageKey;
+
+    if (imageFile) {
+      const imageBlob = await imageFileToThumbnail(imageFile);
+      nextImageKey = createArtifactImageKey(artifactId);
+      await saveArtifactImage({
+        key: nextImageKey,
+        artifactId,
+        blob: imageBlob,
+        fileName: imageFile.name,
+      });
+    }
+
+    let project;
+    try {
+      project = await saveLocalProject(
+        {
+          ...existing,
+          ...artifactInfo,
+          artifactId,
+          image: null,
+          imageKey: nextImageKey,
+          modules,
+          updatedAt: new Date().toISOString(),
+        },
+        projects,
+      );
+    } catch (error) {
+      if (nextImageKey && nextImageKey !== previousImageKey) {
+        await deleteArtifactAsset(nextImageKey).catch(() => {});
+      }
+      throw error;
+    }
+
+    if (previousImageKey && previousImageKey !== nextImageKey) {
+      await deleteArtifactAsset(previousImageKey).catch(() => {});
+    }
 
     selectWorkspaceProject(project);
     return project;
@@ -493,7 +624,8 @@ export async function upsertWorkspaceProject(
 
 export async function markWorkspaceModule(artifactId, moduleKey, status) {
   if (ARTIFACT_STORAGE_MODE === "local") {
-    const project = getLocalProject(artifactId);
+    const projects = await prepareLocalProjects();
+    const project = getLocalProject(projects, artifactId);
     if (!project) {
       throw new Error("브라우저에 저장된 유물 프로젝트를 찾을 수 없습니다.");
     }
@@ -503,19 +635,14 @@ export async function markWorkspaceModule(artifactId, moduleKey, status) {
       [moduleKey]: normalizeStatus(status),
     };
 
-    if (
-      ["xray", "visual"].includes(moduleKey) &&
-      normalizeStatus(status) === MODULE_STATUS.DONE &&
-      modules.guide === MODULE_STATUS.DONE
-    ) {
-      modules.guide = MODULE_STATUS.NEEDS_UPDATE;
-    }
-
-    return saveLocalProject({
-      ...project,
-      modules,
-      updatedAt: new Date().toISOString(),
-    });
+    return saveLocalProject(
+      {
+        ...project,
+        modules,
+        updatedAt: new Date().toISOString(),
+      },
+      projects,
+    );
   }
 
   const payload = await request(
@@ -532,6 +659,43 @@ export async function markWorkspaceModule(artifactId, moduleKey, status) {
   return getWorkspaceProject(artifactId);
 }
 
+export async function deleteWorkspaceProject(artifactId) {
+  const targetId = String(artifactId);
+
+  if (ARTIFACT_STORAGE_MODE === "local") {
+    const projects = await prepareLocalProjects();
+    const existing = getLocalProject(projects, targetId);
+    if (!existing) {
+      throw new Error("삭제할 유물 프로젝트를 찾을 수 없습니다.");
+    }
+
+    writeLocalProjects(
+      projects.filter((project) => project.artifactId !== targetId),
+    );
+
+    try {
+      await deleteArtifactAssets(targetId);
+    } catch (error) {
+      console.warn("프로젝트 임시 이미지 정리를 완료하지 못했습니다.", error);
+    }
+  } else {
+    await request(`${ARTIFACTS_PATH}/${encodeURIComponent(targetId)}`, {
+      method: "DELETE",
+    });
+  }
+
+  deleteMyReportsByArtifactId(targetId);
+
+  const selectedArtifact = safeParse(localStorage.getItem("artifactInfo"), {});
+  if (
+    localStorage.getItem(ACTIVE_ARTIFACT_KEY) === targetId ||
+    String(selectedArtifact.artifactId || "") === targetId
+  ) {
+    localStorage.removeItem(ACTIVE_ARTIFACT_KEY);
+    localStorage.removeItem("artifactInfo");
+  }
+}
+
 export function selectWorkspaceProject(project) {
   const normalized = normalizeWorkspaceProject(project);
   const artifactInfo = {
@@ -546,6 +710,7 @@ export function selectWorkspaceProject(project) {
     bondingArea: normalized.bondingArea,
     treatmentPurpose: normalized.treatmentPurpose,
     image: normalized.image,
+    imageKey: normalized.imageKey,
   };
 
   localStorage.setItem(ACTIVE_ARTIFACT_KEY, normalized.artifactId);
@@ -562,10 +727,8 @@ export function getArtifactStorageMode() {
   return ARTIFACT_STORAGE_MODE;
 }
 
-export function getModuleRoute(moduleKey) {
-  return (
-    WORKSPACE_MODULES.find((module) => module.key === moduleKey)?.route || "/"
-  );
+export function getModuleRoute(moduleKey, artifactId = getActiveArtifactId()) {
+  return getArtifactModuleRoute(artifactId, moduleKey);
 }
 
 export function formatWorkspaceDate(value) {

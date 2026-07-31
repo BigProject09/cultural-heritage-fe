@@ -5,20 +5,55 @@ import HeritageHeader from "../../components/workspace/HeritageHeader";
 import {
   MODULE_STATUS,
   WORKSPACE_MODULES,
+  deleteWorkspaceProject,
   formatWorkspaceDate,
   getWorkspaceProjects,
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
+import { getArtifactRoute } from "../../utils/artifactRoutes";
+import { getMyReports } from "../../utils/myReports";
 import "./WorkListPage.css";
+
+function getReportArtifactId(report) {
+  return String(
+    report.artifactId ||
+      report.artifactInfo?.artifactId ||
+      report.relicInfo?.artifactId ||
+      "",
+  );
+}
 
 function WorkListPage() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
+  const [reports, setReports] = useState(() => getMyReports());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [deletingId, setDeletingId] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+
+  const reportArtifactIds = useMemo(
+    () => new Set(reports.map(getReportArtifactId).filter(Boolean)),
+    [reports],
+  );
+
+  const projectStats = useMemo(() => {
+    const completed = projects.filter((project) =>
+      Object.values(project.modules).every(
+        (status) => status === MODULE_STATUS.DONE,
+      ),
+    ).length;
+
+    return {
+      total: projects.length,
+      active: projects.length - completed,
+      completed,
+      reports: reports.length,
+    };
+  }, [projects, reports]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,24 +90,48 @@ function WorkListPage() {
         const matchesFilter =
           filter === "all" ||
           (filter === "completed" && completed) ||
-          (filter === "active" && !completed);
+          (filter === "active" && !completed) ||
+          (filter === "reports" &&
+            reportArtifactIds.has(String(project.artifactId)));
 
         return matchesKeyword && matchesFilter;
       })
       .sort(
         (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
       );
-  }, [filter, projects, search]);
+  }, [filter, projects, reportArtifactIds, search]);
 
   const openProject = (project) => {
     selectWorkspaceProject(project);
-    navigate(`/workspace/${encodeURIComponent(project.artifactId)}`);
+    navigate(getArtifactRoute(project.artifactId));
   };
 
   const retry = () => {
     setLoading(true);
     setError("");
     setReloadKey((current) => current + 1);
+  };
+
+  const handleDelete = async (project) => {
+    const confirmed = window.confirm(
+      `"${project.name}" 프로젝트를 삭제하시겠습니까?\n\n대표 이미지와 이 프로젝트에서 저장한 보고서가 함께 삭제되며 복구할 수 없습니다.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingId(project.artifactId);
+    setDeleteError("");
+
+    try {
+      await deleteWorkspaceProject(project.artifactId);
+      setProjects((current) =>
+        current.filter((item) => item.artifactId !== project.artifactId),
+      );
+      setReports(getMyReports());
+    } catch (requestError) {
+      setDeleteError(requestError.message);
+    } finally {
+      setDeletingId("");
+    }
   };
 
   return (
@@ -88,12 +147,54 @@ function WorkListPage() {
           </div>
           <button
             onClick={() =>
-              navigate("/artifact-register", {
+              navigate("/artifacts/new", {
                 state: { entryModule: "guide", workspaceEntry: true },
               })
             }
           >
             ＋ 신규 유물 등록
+          </button>
+        </section>
+
+        <section
+          className="heritage-worklist-summary"
+          aria-label="프로젝트 현황"
+        >
+          <button
+            className={filter === "all" ? "active" : ""}
+            aria-pressed={filter === "all"}
+            onClick={() => setFilter("all")}
+          >
+            <span>전체 프로젝트</span>
+            <strong>{projectStats.total}</strong>
+            <small>건</small>
+          </button>
+          <button
+            className={filter === "active" ? "active" : ""}
+            aria-pressed={filter === "active"}
+            onClick={() => setFilter("active")}
+          >
+            <span>진행 중</span>
+            <strong>{projectStats.active}</strong>
+            <small>건</small>
+          </button>
+          <button
+            className={filter === "completed" ? "active" : ""}
+            aria-pressed={filter === "completed"}
+            onClick={() => setFilter("completed")}
+          >
+            <span>완료</span>
+            <strong>{projectStats.completed}</strong>
+            <small>건</small>
+          </button>
+          <button
+            className={filter === "reports" ? "active" : ""}
+            aria-pressed={filter === "reports"}
+            onClick={() => setFilter("reports")}
+          >
+            <span>생성 보고서</span>
+            <strong>{projectStats.reports}</strong>
+            <small>건</small>
           </button>
         </section>
 
@@ -111,11 +212,18 @@ function WorkListPage() {
             <option value="all">전체 프로젝트</option>
             <option value="active">진행 중</option>
             <option value="completed">완료</option>
+            <option value="reports">보고서 생성 프로젝트</option>
           </select>
           <span>총 {filteredProjects.length}건</span>
         </section>
 
         <section className="heritage-worklist-grid">
+          {deleteError && (
+            <div className="heritage-worklist-delete-error" role="alert">
+              {deleteError}
+            </div>
+          )}
+
           {loading && (
             <div className="heritage-worklist-state">
               프로젝트를 불러오는 중입니다.
@@ -179,9 +287,18 @@ function WorkListPage() {
 
                 <div className="heritage-worklist-card-foot">
                   <small>마지막 저장 {formatWorkspaceDate(project.updatedAt)}</small>
-                  <button onClick={() => openProject(project)}>
-                    프로젝트 열기 →
-                  </button>
+                  <div className="heritage-worklist-card-actions">
+                    <button
+                      className="delete"
+                      disabled={deletingId === project.artifactId}
+                      onClick={() => handleDelete(project)}
+                    >
+                      {deletingId === project.artifactId ? "삭제 중…" : "삭제"}
+                    </button>
+                    <button onClick={() => openProject(project)}>
+                      프로젝트 열기 →
+                    </button>
+                  </div>
                 </div>
               </article>
             );

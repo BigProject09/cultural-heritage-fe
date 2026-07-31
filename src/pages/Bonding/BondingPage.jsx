@@ -5,6 +5,7 @@ import "./BondingPage.css";
 
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import {
+  getNextStep,
   moveToNextStep,
   moveToPreviousStep,
 } from "../../utils/flowNavigation";
@@ -37,13 +38,11 @@ function BondingPage() {
   const approvedFlow =
     location.state?.approvedFlow ||
     savedApprovedFlow || [
-      { id: 1, name: "X-RAY 분석/육안 상태 조사" },
       { id: 2, name: "해체" },
       { id: 3, name: "세척" },
       { id: 4, name: "강화" },
       { id: 5, name: "접합" },
       { id: 6, name: "복원" },
-      { id: 8, name: "보고서 생성" },
     ];
 
   useEffect(() => {
@@ -110,7 +109,10 @@ function BondingPage() {
         if (!saved) return;
       }
 
-      moveToNextStep(navigate, approvedFlow, "접합");
+      await moveToNextStep(navigate, approvedFlow, "접합");
+    } catch (error) {
+      console.error(error);
+      alert(`복원 가이드 완료 처리 실패: ${error.message}`);
     } finally {
       setMovingNext(false);
     }
@@ -141,7 +143,9 @@ function BondingPage() {
           disabled={!allCompleted || movingNext}
           onClick={handleNextStep}
         >
-          다음 단계 →
+          {getNextStep(approvedFlow, "접합")
+            ? "다음 단계 →"
+            : "가이드 완료 →"}
         </button>
       </div>
 

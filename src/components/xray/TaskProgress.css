@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 /*
@@ -68,7 +68,7 @@
 
 .task-progress-dot {
 
-  @apply relative z-[1] w-2.5 h-2.5 [background:#d3dbe7] rounded-[50%];
+  @apply relative z-[1] w-2.5 h-2.5 [background:#d3dbe7] rounded-full;
 }
 
 .task-progress-steps li.done .task-progress-dot {

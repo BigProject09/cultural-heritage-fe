@@ -6,24 +6,27 @@ import {
   MODULE_STATUS,
   STATUS_LABEL,
   WORKSPACE_MODULES,
+  deleteWorkspaceProject,
   formatWorkspaceDate,
   getModuleRoute,
   getWorkspaceProject,
   markWorkspaceModule,
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
+import { getFinalReportRoute } from "../../utils/artifactRoutes";
 import "./ProjectDetailPage.css";
 
 const PROGRESS_WIDTH_CLASSES = ["w-0", "w-1/3", "w-2/3", "w-full"];
 
 function ProjectDetailPage() {
   const navigate = useNavigate();
-  const { id } = useParams();
-  const decodedId = decodeURIComponent(id || "");
+  const { artifactId, id } = useParams();
+  const decodedId = decodeURIComponent(artifactId || id || "");
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -95,7 +98,7 @@ function ProjectDetailPage() {
       if (nextProject !== project) setProject(nextProject);
       const artifactInfo = selectWorkspaceProject(nextProject);
 
-      navigate(getModuleRoute(moduleKey), {
+      navigate(getModuleRoute(moduleKey, nextProject.artifactId), {
         state: {
           artifactId: nextProject.artifactId,
           artifactInfo,
@@ -109,18 +112,48 @@ function ProjectDetailPage() {
   };
 
   const reportReady = completedCount === WORKSPACE_MODULES.length;
+  const missingModules = WORKSPACE_MODULES.filter(
+    (module) => project.modules[module.key] !== MODULE_STATUS.DONE,
+  );
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      `"${project.name}" 프로젝트를 삭제하시겠습니까?\n\n대표 이미지와 이 프로젝트에서 저장한 보고서가 함께 삭제되며 복구할 수 없습니다.`,
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setActionError("");
+
+    try {
+      await deleteWorkspaceProject(project.artifactId);
+      navigate("/worklist", { replace: true });
+    } catch (requestError) {
+      setActionError(requestError.message);
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="heritage-project-page">
       <HeritageHeader active="projects" />
 
       <main className="heritage-project-main">
-        <button
-          className="heritage-project-back"
-          onClick={() => navigate("/")}
-        >
-          ← 대시보드
-        </button>
+        <div className="heritage-project-toolbar">
+          <button
+            className="heritage-project-back"
+            onClick={() => navigate("/")}
+          >
+            ← 대시보드
+          </button>
+          <button
+            className="heritage-project-delete"
+            disabled={deleting}
+            onClick={handleDelete}
+          >
+            {deleting ? "프로젝트 삭제 중…" : "프로젝트 삭제"}
+          </button>
+        </div>
 
         <section className="heritage-artifact-banner">
           <ArtifactThumb project={project} large />
@@ -156,7 +189,7 @@ function ProjectDetailPage() {
                 : status === MODULE_STATUS.DONE
                   ? "결과 보기"
                   : status === MODULE_STATUS.NEEDS_UPDATE
-                    ? "가이드 업데이트"
+                    ? "결과 업데이트"
                     : "이어서 작업";
 
             return (
@@ -175,7 +208,7 @@ function ProjectDetailPage() {
 
                 {status === MODULE_STATUS.NEEDS_UPDATE && (
                   <div className="heritage-inline-alert">
-                    다른 조사 결과가 추가되어 가이드 갱신이 필요합니다.
+                    저장된 결과의 갱신이 필요합니다.
                   </div>
                 )}
 
@@ -205,18 +238,24 @@ function ProjectDetailPage() {
             <h2>최종 복원 결과 보고서</h2>
             <p>
               {reportReady
-                ? "모든 작업이 완료되었습니다. 최신 결과로 PPT를 생성할 수 있습니다."
-                : `세 기능의 확정 결과가 모이면 통합 PPT를 생성할 수 있습니다. 현재 ${completedCount}개 완료.`}
+                ? "세 기능이 모두 완료되었습니다. 최종 통합 보고서를 생성할 수 있습니다."
+                : `세 기능은 독립적으로 진행되며, 최종 보고서만 모두 완료된 뒤 생성할 수 있습니다. 현재 ${completedCount}개 완료.`}
             </p>
+            {!reportReady && (
+              <div className="heritage-report-missing">
+                남은 작업:{" "}
+                {missingModules.map((module) => module.shortTitle).join(", ")}
+              </div>
+            )}
           </div>
           <button
             disabled={!reportReady}
             onClick={() => {
               selectWorkspaceProject(project);
-              navigate("/report");
+              navigate(getFinalReportRoute(project.artifactId));
             }}
           >
-            PPT 생성
+            최종 보고서
           </button>
         </section>
       </main>

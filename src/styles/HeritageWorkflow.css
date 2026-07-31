@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../index.css";
 
 @layer components {
 :root {
@@ -232,7 +232,7 @@
   .bonding-page,
   .restoration-page
 ) .task-icon {
-  @apply grid w-[52px] h-[52px] flex-[0_0_52px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] [font-family:Georgia,serif] text-lg rounded-[50%] border-solid;
+  @apply grid w-[52px] h-[52px] flex-[0_0_52px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] [font-family:Georgia,serif] text-lg rounded-full border-solid;
 }
 :is(
   .disassembly-page,
@@ -398,7 +398,7 @@
   @apply w-auto min-h-[190px] border border-[color:var(--workflow-line-soft)] p-[30px] border-solid hover:border-[color:var(--workflow-bronze)] hover:-translate-y-0.5;
 }
 .pre-page .analysis-btn .icon {
-  @apply grid w-[50px] h-[50px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-2xl mb-[18px] rounded-[50%] border-solid;
+  @apply grid w-[50px] h-[50px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-2xl mb-[18px] rounded-full border-solid;
 }
 .pre-page .analysis-btn h3 {
   @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[23px] font-semibold;
@@ -544,7 +544,7 @@
   .select-btn,
   .complete-btn
 ) {
-  @apply border border-[color:var(--workflow-green)] [background:var(--workflow-green)] text-[white] border-solid;
+  @apply border border-[color:var(--workflow-green)] [background:var(--workflow-green)] text-white border-solid;
 }
 :is(
   .checklist-page,
@@ -616,13 +616,13 @@
   @apply border border-[color:var(--workflow-line)] rounded-[9px] border-solid;
 }
 .flow-page .step-btn.active {
-  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[white];
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-white;
 }
 .flow-page .step-btn.inactive {
   @apply [background:var(--workflow-surface-soft)] text-[color:var(--workflow-muted)];
 }
 .flow-page .ai-step {
-  @apply [background:var(--workflow-green)] text-[white];
+  @apply [background:var(--workflow-green)] text-white;
 }
 .flow-page .arrow {
   @apply text-[color:var(--workflow-line)];
@@ -716,7 +716,7 @@
   @apply text-[color:var(--workflow-muted)] text-xs ml-0 mr-auto my-0;
 }
 .visual-page .complete-btn {
-  @apply w-auto min-w-[150px] h-[46px] border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[white] text-sm rounded-lg border-solid;
+  @apply w-auto min-w-[150px] h-[46px] border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-white text-sm rounded-lg border-solid;
 }
 
 /* X-RAY 분석 */
@@ -748,10 +748,10 @@
   @apply border-[color:var(--workflow-line)] [background:var(--workflow-paper-deep)];
 }
 .xray-page .workflow-steps li.active .workflow-step-icon {
-  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[white];
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-white;
 }
 .xray-page .workflow-steps li.done .workflow-step-icon {
-  @apply border-[color:var(--workflow-green)] [background:var(--workflow-green)] text-[white];
+  @apply border-[color:var(--workflow-green)] [background:var(--workflow-green)] text-white;
 }
 .xray-page .xray-primary {
   @apply [background:var(--workflow-bronze)];

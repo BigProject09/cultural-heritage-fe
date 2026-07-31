@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .heritage-project-page {
@@ -7,8 +7,18 @@
 .heritage-project-main {
   @apply max-w-[1500px] mx-auto my-0 pt-[42px] pb-[70px] px-[52px];
 }
+.heritage-project-toolbar {
+  @apply items-center flex justify-between mb-6;
+}
+.heritage-project-back,
+.heritage-project-delete {
+  @apply bg-transparent cursor-pointer text-xs p-0 border-0;
+}
 .heritage-project-back {
-  @apply [background:none] text-[color:var(--heritage-bronze-dark)] cursor-pointer text-xs mb-6 p-0 border-0;
+  @apply text-[color:var(--heritage-bronze-dark)];
+}
+.heritage-project-delete {
+  @apply text-[color:var(--heritage-danger)] disabled:cursor-wait disabled:opacity-60;
 }
 .heritage-artifact-banner {
   @apply items-center border-b-[color:var(--heritage-line)] grid gap-7 grid-cols-[180px_1fr_230px] pb-[30px] border-b border-solid;
@@ -72,7 +82,7 @@
   @apply [background:#f3e6dc] border-l-[color:var(--heritage-danger)] text-[#82503f] text-[10px] leading-normal mt-0 mb-[18px] mx-0 px-[11px] py-[9px] border-l-[3px] border-solid;
 }
 .heritage-module-action {
-  @apply [background:var(--heritage-bronze)] border border-[color:var(--heritage-bronze)] text-[white] cursor-pointer min-h-[43px] mt-auto px-[18px] py-0 rounded-lg border-solid;
+  @apply [background:var(--heritage-bronze)] border border-[color:var(--heritage-bronze)] text-white cursor-pointer min-h-[43px] mt-auto px-[18px] py-0 rounded-lg border-solid;
 }
 .heritage-module-action.result {
   @apply [background:var(--heritage-green)] border-[color:var(--heritage-green)];
@@ -84,7 +94,7 @@
   @apply [background:rgba(231,235,223,0.78)] border-[color:var(--heritage-green)];
 }
 .heritage-report-icon {
-  @apply items-center border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)] flex [font-family:Georgia,serif] text-xs h-[57px] justify-center w-[57px] rounded-[50%] border-solid;
+  @apply items-center border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)] flex [font-family:Georgia,serif] text-xs h-[57px] justify-center w-[57px] rounded-full border-solid;
 }
 .heritage-final-report h2 {
   @apply [font-family:"Noto_Serif_KR",Georgia,serif] text-[22px] font-medium mt-0 mb-[5px] mx-0;
@@ -92,8 +102,11 @@
 .heritage-final-report p {
   @apply text-[color:var(--heritage-muted)] text-[11px] m-0;
 }
+.heritage-report-missing {
+  @apply text-[#82503f] text-[10px] font-semibold mt-2;
+}
 .heritage-final-report button {
-  @apply [background:var(--heritage-bronze)] text-[white] cursor-pointer min-h-[42px] rounded-lg border-0 disabled:[background:#b7b1a8] disabled:cursor-not-allowed;
+  @apply [background:var(--heritage-bronze)] text-white cursor-pointer min-h-[42px] rounded-lg border-0 disabled:[background:#b7b1a8] disabled:cursor-not-allowed;
 }
 .heritage-project-empty {
   @apply max-w-[760px] text-center mx-auto my-0 px-6 py-[120px];
@@ -108,7 +121,7 @@
   @apply text-[color:var(--heritage-muted)];
 }
 .heritage-project-empty button {
-  @apply [background:var(--heritage-bronze)] text-[white] cursor-pointer min-h-[43px] mt-[22px] px-6 py-0 rounded-lg border-0;
+  @apply [background:var(--heritage-bronze)] text-white cursor-pointer min-h-[43px] mt-[22px] px-6 py-0 rounded-lg border-0;
 }
 @media (max-width: 900px) {
   .heritage-project-main {
