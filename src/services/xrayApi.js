@@ -2,15 +2,14 @@
  * X-RAY AI 서비스 호출.
  *
  *
- * 모든 요청은 Spring 게이트웨이를 거친다.
+ * 로컬 개발에서는 결합과 결함 분석의 호출 대상을 나눌 수 있다.
  *
- *   결합    작업 접수 → 상태 폴링 → 결과 내려받기
- *   결함    결합본과 조각 이미지 분석
- *   문안    검수 결과로 상태조사 초안 작성
+ *   결합    Spring(8080) 작업 접수 → 상태 폴링 → 결과 내려받기
+ *   결함    FastAPI(8001) 직접 호출 또는 Spring 경유
+ *   문안    결함 분석과 동일한 호출 대상
  *
- * 브라우저는 같은 오리진으로 보내므로 CORS 설정이 필요 없고,
- * 배포할 때 주소를 한 곳만 관리하면 된다. 개발 중에는
- * vite.config.js 의 프록시가 /api 를 8080 으로 넘긴다.
+ * 주소는 .env 의 VITE_XRAY_STITCH_API_BASE,
+ * VITE_XRAY_INSPECTION_API_BASE, VITE_VIA_SPRING으로 정한다.
  */
 
 /**
@@ -26,14 +25,30 @@
  */
 const USE_MOCK = import.meta.env.VITE_USE_XRAY_MOCK === "true";
 
-const API_BASE = (
+const SPRING_BASE = (
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_BASE ||
-  "/api"
-).replace(/\/$/, "");
-
-const XRAY_API_BASE = `${API_BASE}/xray`;
-const STITCH_JOBS_BASE = `${XRAY_API_BASE}/stitch/jobs`;
+  "http://localhost:8080"
+).replace(/\/+$/, "");
+const VIA_SPRING = import.meta.env.VITE_VIA_SPRING === "true";
+const STITCH_API_BASE = (
+  import.meta.env.VITE_XRAY_STITCH_API_BASE ||
+  `${SPRING_BASE}/api/xray/stitch`
+).replace(/\/+$/, "");
+const DIRECT_INSPECTION_API_BASE = (
+  import.meta.env.VITE_XRAY_INSPECTION_API_BASE || "http://localhost:8001"
+).replace(/\/+$/, "");
+const SPRING_INSPECTION_API_BASE = (
+  import.meta.env.VITE_XRAY_SPRING_INSPECTION_API_BASE ||
+  `${SPRING_BASE}/api/xray`
+).replace(/\/+$/, "");
+const INSPECTION_API_BASE = VIA_SPRING
+  ? SPRING_INSPECTION_API_BASE
+  : DIRECT_INSPECTION_API_BASE;
+const INSPECTION_HEALTH_URL = VIA_SPRING
+  ? `${SPRING_BASE}/api/xray/health`
+  : `${DIRECT_INSPECTION_API_BASE}/health`;
+const STITCH_JOBS_BASE = `${STITCH_API_BASE}/jobs`;
 
 export const TARGET = {
   ASSEMBLED: "결합 완료본",
@@ -320,10 +335,10 @@ export async function checkInspectionHealth() {
     return { ok: true, llmEnabled: true, mock: true };
   }
 
-  const data = await requestJson(`${XRAY_API_BASE}/health`);
+  const data = await requestJson(INSPECTION_HEALTH_URL);
 
   return {
-    ok: data.aiServiceHealthy === true,
+    ok: data.aiServiceHealthy === true || data.status === "ok",
     llmEnabled: data.llmEnabled === true,
     raw: data,
   };
@@ -357,7 +372,7 @@ export async function detectOne(file, target, confidence) {
   const path =
     target === TARGET.ASSEMBLED ? "/detect/assembled" : "/detect/fragments";
 
-  return requestJson(`${XRAY_API_BASE}${path}`, {
+  return requestJson(`${INSPECTION_API_BASE}${path}`, {
     method: "POST",
     body: form,
   });
@@ -388,7 +403,7 @@ export async function detectBatch(files, target, confidence) {
 
   if (confidence != null) form.append("confidence", String(confidence));
 
-  return requestJson(`${XRAY_API_BASE}/detect/fragments`, {
+  return requestJson(`${INSPECTION_API_BASE}/detect/fragments`, {
     method: "POST",
     body: form,
   });
@@ -455,7 +470,7 @@ export async function generateReport({
   fragments.slice(0, 6).forEach((file) => form.append("fragments", file));
   rgbImages.slice(0, 6).forEach((file) => form.append("rgb_images", file));
 
-  return requestJson(`${XRAY_API_BASE}/report`, {
+  return requestJson(`${INSPECTION_API_BASE}/report`, {
     method: "POST",
     body: form,
   });

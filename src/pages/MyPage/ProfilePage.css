@@ -1,57 +1,21 @@
-.profile-page {
-  min-height: 100vh;
-  padding: 40px;
-  background: #f5f7fa;
-}
+@reference "tailwindcss";
 
-.profile-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 40px;
+@layer components {
+.account-profile-detail {
+  @apply grid gap-8 grid-cols-[150px_1fr];
 }
-
-.profile-header h1 {
-  flex: 1;
-  text-align: center;
-  color: #0f4c81;
+.account-profile-seal {
+  @apply items-center [align-self:start] [background:var(--heritage-ink)] text-[#e8d7bd] flex [font-family:Georgia,"Noto_Serif_KR",serif] text-[40px] h-[120px] justify-center w-[120px] rounded-[50%] border-[6px] border-double border-[#c8aa80];
 }
-
-.back-btn {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 8px;
-  background: #0f4c81;
-  color: white;
-  cursor: pointer;
+.account-profile-detail > .heritage-button {
+  @apply col-[2] justify-self-start;
 }
-
-.back-btn:hover {
-  background: #0b3b63;
+@media (max-width: 620px) {
+  .account-profile-detail {
+    @apply grid-cols-[1fr];
+  }
+  .account-profile-detail > .heritage-button {
+    @apply col-auto;
+  }
 }
-
-.profile-card {
-  max-width: 600px;
-  margin: 0 auto;
-  background: white;
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-}
-
-.profile-image {
-  font-size: 80px;
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.profile-info p {
-  margin-top: 20px;
-  margin-bottom: 5px;
-  color: #0f4c81;
-}
-
-.profile-info span {
-  color: #555;
-  font-size: 16px;
 }

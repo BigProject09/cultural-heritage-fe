@@ -1,0 +1,97 @@
+@reference "tailwindcss";
+
+@layer components {
+.account-subnav {
+  @apply items-center flex gap-2 mb-6;
+}
+.account-subnav button {
+  @apply [background:transparent] border border-[color:var(--heritage-line)] text-[color:var(--heritage-muted)] cursor-pointer text-[11px] px-3.5 py-[9px] rounded-[999px] border-solid;
+}
+.account-subnav button:hover,
+.account-subnav button.current {
+  @apply [background:var(--heritage-ink)] border-[color:var(--heritage-ink)] text-[color:var(--heritage-paper-2)];
+}
+.account-info-list {
+  @apply grid gap-0;
+}
+.account-info-row {
+  @apply items-center grid gap-[25px] grid-cols-[150px_1fr] min-h-[72px] border-b-[rgba(202,188,168,0.58)] border-b border-solid last:border-b-0;
+}
+.account-info-row dt {
+  @apply text-[color:var(--heritage-muted)] text-[11px] font-bold tracking-[0.07em];
+}
+.account-info-row dd {
+  @apply text-[color:var(--heritage-ink)] text-[15px];
+}
+.account-stat-grid {
+  @apply grid gap-5 grid-cols-[repeat(3,1fr)];
+}
+.account-stat-card {
+  @apply [background:rgba(251,248,241,0.82)] border min-h-[210px] relative p-7 rounded-[15px] border-solid border-[rgba(150,104,61,0.22)];
+}
+.account-stat-card > p {
+  @apply text-[color:var(--heritage-bronze)] text-[9px] font-bold tracking-[0.19em];
+}
+.account-stat-card h2 {
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[21px] font-medium mt-3;
+}
+.account-stat-value {
+  @apply text-[color:var(--heritage-ink)] [font-family:Georgia,serif] text-[38px] absolute bottom-7;
+}
+.account-stat-value small {
+  @apply text-[color:var(--heritage-muted)] [font-family:"Pretendard",sans-serif] text-[11px] ml-[5px];
+}
+.account-callout {
+  @apply items-center [background:rgba(97,115,93,0.1)] border flex justify-between mt-[22px] px-[22px] py-5 rounded-[13px] border-solid border-[rgba(97,115,93,0.28)];
+}
+.account-callout p {
+  @apply text-[#4f5b4c] text-[13px] leading-[1.65];
+}
+.account-report-title {
+  @apply text-[color:var(--heritage-ink)] font-bold;
+}
+.account-report-paper {
+  @apply [background:#fffdf8] border shadow-[0_22px_55px_rgba(53,43,30,0.1)] max-w-[860px] mx-auto my-0 px-16 py-[58px] border-solid border-[rgba(150,104,61,0.25)];
+}
+.account-report-paper > h2 {
+  @apply border-b-[color:var(--heritage-bronze)] [font-family:Georgia,"Noto_Serif_KR",serif] text-3xl font-medium mb-[35px] pb-[23px] border-b border-solid;
+}
+.account-report-paper section + section {
+  @apply mt-[30px] pt-7 border-t-[rgba(202,188,168,0.55)] border-t border-solid;
+}
+.account-report-paper section h3 {
+  @apply text-[color:var(--heritage-bronze-dark)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[17px] mb-3.5;
+}
+.account-report-paper p,
+.account-report-paper li {
+  @apply text-[#4f5650] text-sm leading-[1.85];
+}
+.account-report-paper ul {
+  @apply pl-5;
+}
+@media (max-width: 800px) {
+  .account-stat-grid {
+    @apply grid-cols-[1fr];
+  }
+  .account-stat-card {
+    @apply min-h-40;
+  }
+  .account-callout {
+    @apply items-start flex-col gap-4;
+  }
+}
+@media (max-width: 620px) {
+  .account-subnav {
+    @apply overflow-x-auto pb-[5px];
+  }
+  .account-subnav button {
+    @apply flex-[0_0_auto];
+  }
+  .account-info-row {
+    @apply gap-1.5 grid-cols-[1fr] px-0 py-[15px];
+  }
+  .account-report-paper {
+    @apply px-6 py-[34px];
+  }
+}
+}

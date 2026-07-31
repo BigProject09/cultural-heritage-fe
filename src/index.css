@@ -1,32 +1,29 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@import "tailwindcss";
 
-html,
-body,
-#root {
-  width: 100%;
-  min-height: 100vh;
-}
+@layer base {
+  * {
+    @apply box-border m-0 p-0;
+  }
 
-body {
-  margin: 0;
-  background: #f5f8fc;
-  font-family: "Pretendard", sans-serif;
-}
+  html,
+  body,
+  #root {
+    @apply w-full min-h-screen;
+  }
 
-a {
-  text-decoration: none;
-  color: inherit;
-}
+  body {
+    @apply [background:#f5f8fc] [font-family:"Pretendard",sans-serif] m-0;
+  }
 
-button {
-  font-family: inherit;
-}
+  a {
+    @apply no-underline text-inherit;
+  }
 
-img {
-  display: block;
-  max-width: 100%;
+  button {
+    @apply [font-family:inherit];
+  }
+
+  img {
+    @apply block max-w-full;
+  }
 }

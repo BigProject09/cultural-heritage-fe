@@ -1,3 +1,6 @@
+@reference "tailwindcss";
+
+@layer components {
 /*
  * 색상과 반경은 XrayPage.css 의 기존 값을 그대로 쓴다.
  *
@@ -9,36 +12,127 @@
  */
 
 .task-progress {
-  overflow: hidden;
-  margin-top: 18px;
-  border: 1px solid #dfe5ef;
-  border-radius: 12px;
-  background: #fff;
+
+  @apply overflow-hidden border [background:#fff] mt-[18px] rounded-xl border-solid border-[#dfe5ef];
 }
 
 /* 진행률이 아니라 살아 있음을 알리는 표시.
    퍼센트를 모르므로 왕복하는 띠로만 나타낸다. */
+
 .task-progress-sweep {
-  position: relative;
-  height: 3px;
-  overflow: hidden;
-  background: #eef2f8;
+
+  @apply relative h-[3px] overflow-hidden [background:#eef2f8];
 }
 
 .task-progress-sweep span {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 38%;
-  height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(
-    90deg,
-    rgba(39, 103, 223, 0) 0%,
-    #2767df 45%,
-    #6b9bef 100%
-  );
-  animation: task-sweep 1.9s ease-in-out infinite;
+
+  @apply absolute w-[38%] h-full [background:linear-gradient(_90deg,rgba(39,103,223,0)_0%,#2767df_45%,#6b9bef_100%_)] animate-[task-sweep_1.9s_ease-in-out_infinite] rounded-[3px] left-0 top-0 motion-reduce:animate-none motion-reduce:w-full motion-reduce:[background:#2767df] motion-reduce:opacity-35;
+}
+
+.task-progress-body {
+
+  @apply pt-5 pb-[22px] px-[22px];
+}
+
+.task-progress-headline {
+
+  @apply text-[#172033] text-[15px] font-bold mt-0 mb-[5px] mx-0;
+}
+
+.task-progress-detail {
+
+  @apply text-[#748096] text-[13px] mt-0 mb-5 mx-0;
+}
+
+/* 단계 표시.
+   실제로 순서가 있는 절차이므로 번호가 아니라
+   진행선으로 잇는다. */
+
+.task-progress-steps {
+
+  @apply flex [list-style:none] mt-0 mb-5 mx-0 p-0;
+}
+
+.task-progress-steps li {
+
+  @apply relative flex-1 flex flex-col items-center gap-2 before:absolute before:h-0.5 before:[background:#e3e9f2] before:content-[""] before:-left-2/4 before:right-2/4 before:top-1 first:before:hidden;
+}
+
+/* 단계 사이 연결선 */
+
+.task-progress-steps li.done::before,
+.task-progress-steps li.current::before {
+
+  @apply [background:#2767df];
+}
+
+.task-progress-dot {
+
+  @apply relative z-[1] w-2.5 h-2.5 [background:#d3dbe7] rounded-[50%];
+}
+
+.task-progress-steps li.done .task-progress-dot {
+
+  @apply [background:#2767df];
+}
+
+.task-progress-steps li.current .task-progress-dot {
+
+  @apply [background:#2767df] shadow-[0_0_0_4px_rgba(39,103,223,0.16)] animate-[task-pulse_1.8s_ease-in-out_infinite] motion-reduce:animate-none;
+}
+
+.task-progress-label {
+
+  @apply text-[#9aa5b6] text-xs font-semibold;
+}
+
+.task-progress-steps li.done .task-progress-label {
+
+  @apply text-[#58657a];
+}
+
+.task-progress-steps li.current .task-progress-label {
+
+  @apply text-[#2767df];
+}
+
+/* 단계가 없는 작업(문안 생성 등)은 구분선 위 여백을 줄인다 */
+
+.task-progress-steps + .task-progress-meta {
+
+  @apply pt-4 border-t-[#eef2f8] border-t border-solid;
+}
+
+.task-progress-meta {
+
+  @apply flex items-baseline flex-wrap gap-[4px_12px];
+}
+
+/* 경과 시간이 이 화면의 핵심 정보다.
+   남은 시간을 모르는 상황에서 사용자가 판단할 수 있는
+   유일한 근거이므로 가장 크게 둔다. */
+
+.task-progress-elapsed {
+
+  @apply text-[#172033] text-xl font-bold tabular-nums tracking-[-0.01em];
+}
+
+.task-progress-note {
+
+  @apply flex-[1_1_240px] text-[#748096] text-xs leading-normal;
+}
+
+@media (max-width: 520px) {
+
+  .task-progress-body {
+
+    @apply pt-[18px] pb-5 px-4;
+  }
+
+  .task-progress-label {
+
+    @apply text-[11px];
+  }
 }
 
 @keyframes task-sweep {
@@ -50,81 +144,6 @@
   }
 }
 
-.task-progress-body {
-  padding: 20px 22px 22px;
-}
-
-.task-progress-headline {
-  margin: 0 0 5px;
-  color: #172033;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.task-progress-detail {
-  margin: 0 0 20px;
-  color: #748096;
-  font-size: 13px;
-}
-
-/* 단계 표시.
-   실제로 순서가 있는 절차이므로 번호가 아니라
-   진행선으로 잇는다. */
-.task-progress-steps {
-  display: flex;
-  margin: 0 0 20px;
-  padding: 0;
-  list-style: none;
-}
-
-.task-progress-steps li {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-/* 단계 사이 연결선 */
-.task-progress-steps li::before {
-  position: absolute;
-  top: 4px;
-  right: 50%;
-  left: -50%;
-  height: 2px;
-  background: #e3e9f2;
-  content: "";
-}
-
-.task-progress-steps li:first-child::before {
-  display: none;
-}
-
-.task-progress-steps li.done::before,
-.task-progress-steps li.current::before {
-  background: #2767df;
-}
-
-.task-progress-dot {
-  position: relative;
-  z-index: 1;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #d3dbe7;
-}
-
-.task-progress-steps li.done .task-progress-dot {
-  background: #2767df;
-}
-
-.task-progress-steps li.current .task-progress-dot {
-  background: #2767df;
-  box-shadow: 0 0 0 4px rgba(39, 103, 223, 0.16);
-  animation: task-pulse 1.8s ease-in-out infinite;
-}
-
 @keyframes task-pulse {
   0%,
   100% {
@@ -134,71 +153,4 @@
     box-shadow: 0 0 0 7px rgba(39, 103, 223, 0.06);
   }
 }
-
-.task-progress-label {
-  color: #9aa5b6;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.task-progress-steps li.done .task-progress-label {
-  color: #58657a;
-}
-
-.task-progress-steps li.current .task-progress-label {
-  color: #2767df;
-}
-
-/* 단계가 없는 작업(문안 생성 등)은 구분선 위 여백을 줄인다 */
-.task-progress-steps + .task-progress-meta {
-  padding-top: 16px;
-  border-top: 1px solid #eef2f8;
-}
-
-.task-progress-meta {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-}
-
-/* 경과 시간이 이 화면의 핵심 정보다.
-   남은 시간을 모르는 상황에서 사용자가 판단할 수 있는
-   유일한 근거이므로 가장 크게 둔다. */
-.task-progress-elapsed {
-  color: #172033;
-  font-size: 20px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-.task-progress-note {
-  flex: 1 1 240px;
-  color: #748096;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-@media (max-width: 520px) {
-  .task-progress-body {
-    padding: 18px 16px 20px;
-  }
-
-  .task-progress-label {
-    font-size: 11px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .task-progress-sweep span {
-    animation: none;
-    width: 100%;
-    background: #2767df;
-    opacity: 0.35;
-  }
-
-  .task-progress-steps li.current .task-progress-dot {
-    animation: none;
-  }
 }

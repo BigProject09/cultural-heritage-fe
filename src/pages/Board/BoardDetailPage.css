@@ -1,50 +1,24 @@
-.board-detail-page {
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 30px;
-}
+@reference "tailwindcss";
 
-.back-btn {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 20px;
-  transition: 0.2s;
+@layer components {
+.board-detail-card {
+  @apply min-h-[390px] px-[42px] py-[38px];
 }
-
-.back-btn:hover {
-  background: #1d4ed8;
+.board-detail-meta {
+  @apply justify-end;
 }
-
-.detail-card {
-  background: white;
-  border-radius: 12px;
-  padding: 35px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.board-detail-divider {
+  @apply [background:linear-gradient(_90deg,var(--heritage-bronze),rgba(202,188,168,0.35)_)] h-px mt-[25px] mb-[34px] mx-0;
 }
-
-.detail-card h1 {
-  font-size: 30px;
-  margin-bottom: 25px;
-  color: #1f2937;
+.board-detail-content {
+  @apply text-[#3f4741] text-base leading-loose whitespace-pre-wrap;
 }
-
-.detail-info {
-  display: flex;
-  gap: 35px;
-  margin-bottom: 20px;
-  color: #6b7280;
-  font-size: 15px;
+@media (max-width: 720px) {
+  .board-detail-card {
+    @apply px-[22px] py-[26px];
+  }
+  .board-detail-meta {
+    @apply justify-start;
+  }
 }
-
-.detail-content {
-  margin-top: 25px;
-  min-height: 300px;
-  line-height: 1.8;
-  font-size: 17px;
-  color: #374151;
-  white-space: pre-wrap;
 }

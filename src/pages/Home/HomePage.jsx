@@ -1,307 +1,404 @@
-import "./HomePage.css";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { boardData } from "../../data/boardData";
-import { noticeData } from "../../data/noticeData";
+import HeritageHeader from "../../components/workspace/HeritageHeader";
+import ArtifactThumb from "../../components/workspace/ArtifactThumb";
+import {
+  MODULE_STATUS,
+  STATUS_LABEL,
+  WORKSPACE_MODULES,
+  formatWorkspaceDate,
+  getModuleRoute,
+  getNextModule,
+  getWorkspaceProjects,
+  markWorkspaceModule,
+  selectWorkspaceProject,
+} from "../../data/workspaceProjects";
+import "./HomePage.css";
+
+const MODULE_ICONS = {
+  guide: "⌑",
+  xray: "⌗",
+  visual: "⌕",
+};
 
 function HomePage() {
   const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+  const [selectedModule, setSelectedModule] = useState(null);
+  const [gateMode, setGateMode] = useState("choice");
+  const [actionError, setActionError] = useState("");
 
-  const loginUser = JSON.parse(localStorage.getItem("loginUser"));
-  const [showMenu, setShowMenu] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const checkLogin = (path) => {
-    navigate(path);
+    getWorkspaceProjects({ signal: controller.signal })
+      .then((items) => {
+        setProjects(items);
+        setProjectsError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setProjectsError(error.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setProjectsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [reloadKey]);
+
+  const moduleMeta = useMemo(
+    () =>
+      WORKSPACE_MODULES.find((module) => module.key === selectedModule) ||
+      WORKSPACE_MODULES[0],
+    [selectedModule],
+  );
+
+  const inProgressCount = projects.filter((project) =>
+    Object.values(project.modules).some(
+      (status) => status === MODULE_STATUS.IN_PROGRESS,
+    ),
+  ).length;
+  const reviewCount = projects.filter((project) =>
+    Object.values(project.modules).some(
+      (status) => status === MODULE_STATUS.NEEDS_UPDATE,
+    ),
+  ).length;
+
+  const openModule = (moduleKey) => {
+    setSelectedModule(moduleKey);
+    setGateMode("choice");
+    setActionError("");
+  };
+
+  const closeGate = () => {
+    setSelectedModule(null);
+    setGateMode("choice");
+  };
+
+  const enterProjectModule = async (project, moduleKey) => {
+    setActionError("");
+
+    try {
+      const nextProject =
+        project.modules[moduleKey] === MODULE_STATUS.NOT_STARTED
+          ? await markWorkspaceModule(
+              project.artifactId,
+              moduleKey,
+              MODULE_STATUS.IN_PROGRESS,
+            )
+          : project;
+
+      if (nextProject !== project) {
+        setProjects((current) =>
+          current.map((item) =>
+            item.artifactId === nextProject.artifactId ? nextProject : item,
+          ),
+        );
+      }
+
+      const artifactInfo = selectWorkspaceProject(nextProject);
+      navigate(getModuleRoute(moduleKey), {
+        state: {
+          artifactId: nextProject.artifactId,
+          artifactInfo,
+          workspaceEntry: true,
+          workspaceModule: moduleKey,
+        },
+      });
+    } catch (error) {
+      setActionError(error.message);
+    }
+  };
+
+  const createProject = () => {
+    navigate("/artifact-register", {
+      state: {
+        entryModule: selectedModule,
+        workspaceEntry: true,
+      },
+    });
+  };
+
+  const openProjectHub = (project) => {
+    selectWorkspaceProject(project);
+    navigate(`/workspace/${encodeURIComponent(project.artifactId)}`);
+  };
+
+  const continueProject = (project) =>
+    enterProjectModule(project, getNextModule(project));
+
+  const retryProjects = () => {
+    setProjectsLoading(true);
+    setProjectsError("");
+    setReloadKey((current) => current + 1);
   };
 
   return (
-    <div className="home-page">
-      {/* ================= Header ================= */}
+    <div className="heritage-home">
+      <HeritageHeader active="dashboard" />
 
-      <header className="header">
-        <div className="logo-area">
-          <div className="logo" onClick={() => navigate("/")}>
-            VORA
+      <main className="heritage-home-main">
+        <section className="heritage-hero">
+          <div>
+            <span className="heritage-kicker">RESTORATION WORKSPACE</span>
+            <h1>유물 복원, 필요한 작업부터 시작하세요</h1>
+            <p>
+              작업 순서는 자유롭게. 모든 AI 결과는 하나의 유물 ID에 차곡차곡
+              연결됩니다.
+            </p>
           </div>
 
-          <div className="logo-text">
-            <h3>AI와 전문가가 함께하는</h3>
-            <p>문화재 복원 플랫폼</p>
+          <div className="heritage-today">
+            <span>오늘의 작업</span>
+            <strong>진행 중 {inProgressCount}</strong>
+            <em>검토 대기 {reviewCount}</em>
           </div>
-        </div>
+        </section>
 
-        <div className="header-right">
-          {loginUser ? (
-            <div
-              className="profile-area"
-              onMouseEnter={() => setShowMenu(true)}
-              onMouseLeave={() => setShowMenu(false)}
+        <section
+          className="heritage-quick-grid"
+          aria-label="AI 복원 기능 빠른 메뉴"
+        >
+          {WORKSPACE_MODULES.map((module) => (
+            <button
+              className={`heritage-quick-card ${module.key}`}
+              key={module.key}
+              onClick={() => openModule(module.key)}
             >
-              <div className="profile-btn">👤 {loginUser.name}님 ▾</div>
-
-              <div className={`logout-slide ${showMenu ? "show" : ""}`}>
-                <div
-                  className="logout-btn"
-                  onClick={() => {
-                    localStorage.removeItem("loginUser");
-                    alert("로그아웃되었습니다.");
-                    navigate("/");
-                    window.location.reload();
-                  }}
-                >
-                  🚪 로그아웃
-                </div>
-              </div>
-            </div>
-          ) : (
-            <button className="login-btn" onClick={() => navigate("/login")}>
-              로그인 / 회원가입
+              <span className="heritage-card-number">{module.number}</span>
+              <span className="heritage-card-icon" aria-hidden="true">
+                {MODULE_ICONS[module.key]}
+              </span>
+              <span className="heritage-eyebrow">{module.eyebrow}</span>
+              <strong>{module.title}</strong>
+              <span className="heritage-card-subtitle">{module.subtitle}</span>
+              <span className="heritage-card-description">
+                {module.description}
+              </span>
+              <span className="heritage-card-action">
+                작업 선택 <b>→</b>
+              </span>
             </button>
-          )}
-        </div>
-      </header>
+          ))}
+        </section>
 
-      {/* ================= Dashboard ================= */}
-
-      <section className="dashboard">
-        {/* ================= Top ================= */}
-
-        <div className="dashboard-grid">
-          {/* ================= 마이페이지================= */}
-
-          <div className="workspace-panel">
-            <div className="section-title">
-              <div className="workspace-title">
-                <div className="workspace-title-icon">📂</div>
-
-                <div className="workspace-title-text">
-                  <h2>마이페이지</h2>
-                  <p>나의 프로젝트와 자료를 한눈에 확인하세요.</p>
-                </div>
-              </div>
-
-              <button className="more-btn" onClick={() => navigate("/mypage")}>
-                더보기 →
-              </button>
+        <section className="heritage-recent">
+          <div className="heritage-section-title">
+            <div>
+              <span className="heritage-kicker">RECENT ARTIFACTS</span>
+              <h2>최근 프로젝트</h2>
             </div>
-            <div className="workspace-grid">
-              <div className="workspace-card">
-                <div className="workspace-icon">📦</div>
-
-                <div className="workspace-content">
-                  <p>진행 프로젝트</p>
-                </div>
-
-                <h3 className="workspace-count">15</h3>
-              </div>
-
-              <div className="workspace-card">
-                <div className="workspace-icon">✅</div>
-
-                <div className="workspace-content">
-                  <p>완료 프로젝트</p>
-                </div>
-
-                <h3 className="workspace-count">23</h3>
-              </div>
-
-              <div className="workspace-card">
-                <div className="workspace-icon">📄</div>
-
-                <div className="workspace-content">
-                  <p>생성한 보고서</p>
-                </div>
-
-                <h3 className="workspace-count">18</h3>
-              </div>
-
-              <div className="workspace-card">
-                <div className="workspace-icon">📁</div>
-
-                <div className="workspace-content">
-                  <p>업로드 파일</p>
-                </div>
-
-                <h3 className="workspace-count">41</h3>
-              </div>
-            </div>
-            <div
-              className="new-project-btn"
-              onClick={() => checkLogin("/artifact-register")}
-            >
-              <div className="plus-circle">＋</div>
-
-              <div className="new-project-text">
-                <h3>새 복원 프로젝트 시작</h3>
-                <p>새로운 유물 복원 프로젝트를 시작해보세요.</p>
-              </div>
-
-              <div className="arrow">→</div>
-            </div>
+            <button onClick={() => navigate("/worklist")}>
+              전체 프로젝트 보기 →
+            </button>
           </div>
 
-          {/* ================= 공지사항 ================= */}
-
-          <div className="notice-panel">
-            <div className="section-title">
-              <div className="workspace-title">
-                <div className="workspace-title-icon">📢</div>
-
-                <div className="workspace-title-text">
-                  <h2>공지사항</h2>
-                  <p>서비스 최신 소식을 확인하세요.</p>
-                </div>
+          <div className="heritage-project-list">
+            {projectsLoading && (
+              <div className="heritage-project-state">
+                프로젝트를 불러오는 중입니다.
               </div>
+            )}
 
-              <button className="more-btn" onClick={() => navigate("/notice")}>
-                더보기 →
-              </button>
-            </div>
+            {!projectsLoading && projectsError && (
+              <div className="heritage-project-state error">
+                <strong>프로젝트를 불러오지 못했습니다.</strong>
+                <span>{projectsError}</span>
+                <button onClick={retryProjects}>다시 시도</button>
+              </div>
+            )}
 
-            {noticeData.map((notice) => (
-              <div
-                key={notice.id}
-                className="board-item"
-                style={{ cursor: "pointer" }}
-              >
+            {!projectsLoading && !projectsError && projects.length === 0 && (
+              <div className="heritage-project-state">
+                <strong>등록된 유물이 없습니다.</strong>
+                <span>상단 기능을 선택해 첫 유물 프로젝트를 등록하세요.</span>
+              </div>
+            )}
+
+            {!projectsLoading &&
+              !projectsError &&
+              projects.slice(0, 2).map((project) => (
+                <article
+                  className="heritage-project-row"
+                  key={project.artifactId}
+                >
+                  <ArtifactThumb project={project} />
+
+                  <button
+                    className="heritage-project-name"
+                    onClick={() => openProjectHub(project)}
+                  >
+                    <strong>{project.name}</strong>
+                    <span>{project.artifactId}</span>
+                    <small>
+                      {project.material} · {project.period}
+                    </small>
+                  </button>
+
+                  <div className="heritage-module-track">
+                    {WORKSPACE_MODULES.map((module, index) => {
+                      const status = project.modules[module.key];
+                      return (
+                        <div className="heritage-track-item" key={module.key}>
+                          <button
+                            className={`heritage-status-node ${status.toLowerCase()}`}
+                            onClick={() =>
+                              enterProjectModule(project, module.key)
+                            }
+                            aria-label={`${module.title} ${STATUS_LABEL[status]}`}
+                          >
+                            {status === MODULE_STATUS.DONE ? "✓" : index + 1}
+                          </button>
+                          <span>{module.shortTitle}</span>
+                          <em className={status.toLowerCase()}>
+                            {STATUS_LABEL[status]}
+                          </em>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="heritage-row-action">
+                    <small>
+                      마지막 저장 {formatWorkspaceDate(project.updatedAt)}
+                    </small>
+                    <button onClick={() => continueProject(project)}>
+                      이어서 작업 <span>→</span>
+                    </button>
+                  </div>
+                </article>
+              ))}
+          </div>
+        </section>
+      </main>
+
+      {selectedModule && (
+        <div
+          className="heritage-modal-backdrop"
+          role="presentation"
+          onMouseDown={closeGate}
+        >
+          <section
+            className="heritage-project-gate"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="project-gate-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button
+              className="heritage-modal-close"
+              onClick={closeGate}
+              aria-label="닫기"
+            >
+              ×
+            </button>
+
+            {gateMode === "choice" && (
+              <>
+                <span className="heritage-kicker">{moduleMeta.eyebrow}</span>
+                <h2 id="project-gate-title">
+                  {moduleMeta.title}을 시작할 유물을 선택하세요
+                </h2>
                 <p>
-                  <span className="notice-dot">●</span>
-                  {notice.title}
+                  기존 유물을 선택하면 이전 결과에 이어서 저장되고, 신규 등록 시
+                  새로운 artifactId가 생성됩니다.
                 </p>
 
-                <small>{notice.date}</small>
-              </div>
-            ))}
-          </div>
+                <div className="heritage-choice-grid">
+                  <button onClick={() => setGateMode("existing")}>
+                    <span>↻</span>
+                    <strong>기존 프로젝트에서 계속</strong>
+                    <small>등록된 유물과 기능별 진행 상태 확인</small>
+                    <b>프로젝트 선택 →</b>
+                  </button>
+                  <button onClick={createProject}>
+                    <span>＋</span>
+                    <strong>신규 유물 등록</strong>
+                    <small>공통 유물 정보를 먼저 등록하고 시작</small>
+                    <b>새로 만들기 →</b>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {gateMode === "existing" && (
+              <>
+                <button
+                  className="heritage-back-link"
+                  onClick={() => setGateMode("choice")}
+                >
+                  ← 이전
+                </button>
+                <span className="heritage-kicker">SELECT ARTIFACT</span>
+                <h2 id="project-gate-title">기존 프로젝트 선택</h2>
+                <p>
+                  선택한 기능의 상태와 최근 저장 시점을 확인한 뒤 이어서
+                  작업하세요.
+                </p>
+
+                <div className="heritage-selector-list">
+                  {actionError && (
+                    <div className="heritage-gate-error">{actionError}</div>
+                  )}
+
+                  {projectsLoading && (
+                    <div className="heritage-selector-empty">
+                      프로젝트를 불러오는 중입니다.
+                    </div>
+                  )}
+
+                  {!projectsLoading && projectsError && (
+                    <div className="heritage-selector-empty">
+                      <strong>프로젝트 목록을 불러오지 못했습니다.</strong>
+                      <button onClick={retryProjects}>다시 시도</button>
+                    </div>
+                  )}
+
+                  {!projectsLoading &&
+                    !projectsError &&
+                    projects.length === 0 && (
+                      <div className="heritage-selector-empty">
+                        <strong>이어갈 프로젝트가 없습니다.</strong>
+                        <button onClick={createProject}>신규 유물 등록</button>
+                      </div>
+                    )}
+
+                  {projects.map((project) => {
+                    const status = project.modules[selectedModule];
+                    return (
+                      <button
+                        key={project.artifactId}
+                        onClick={() =>
+                          enterProjectModule(project, selectedModule)
+                        }
+                      >
+                        <ArtifactThumb project={project} />
+                        <span className="heritage-selector-name">
+                          <strong>{project.name}</strong>
+                          <small>
+                            {project.artifactId} · {project.material} ·{" "}
+                            {project.period}
+                          </small>
+                        </span>
+                        <span
+                          className={`heritage-pill ${status.toLowerCase()}`}
+                        >
+                          {STATUS_LABEL[status]}
+                        </span>
+                        <em>{formatWorkspaceDate(project.updatedAt)}</em>
+                        <b>→</b>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </section>
         </div>
-        {/* ================= Bottom ================= */}
-
-        <div className="dashboard-grid">
-          {/* ================= 게시판 ================= */}
-
-          <div className="board-panel">
-            <div className="section-title">
-              <div className="workspace-title">
-                <div className="workspace-title-icon">📜</div>
-
-                <div>
-                  <h2>게시판</h2>
-                </div>
-              </div>
-
-              <button className="more-btn" onClick={() => navigate("/board")}>
-                전체보기 →
-              </button>
-            </div>
-
-            {boardData.slice(0, 5).map((post) => (
-              <div
-                key={post.id}
-                className="project-card"
-                onClick={() => navigate(`/board/${post.id}`)}
-                style={{ cursor: "pointer" }}
-              >
-                <div className="project-left">
-                  <div className="project-thumbnail">📜</div>
-                  <div className="project-info">
-                    <div className="board-tag">복원 사례</div>
-
-                    <h3>{post.title}</h3>
-
-                    <small>
-                      {post.writer} · {post.date}
-                    </small>
-                  </div>
-                </div>
-
-                <div className="project-right">
-                  <span className="status">조회수 {post.views}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* ================= 즐겨찾기 ================= */}
-
-          <div className="favorite-panel">
-            <div className="section-title">
-              <div className="workspace-title">
-                <div className="workspace-title-icon">⭐</div>
-
-                <div>
-                  <h2>즐겨찾기</h2>
-                </div>
-              </div>
-            </div>
-
-            <div className="favorite-item">
-              <div className="favorite-left">
-                <div className="favorite-icon">📄</div>
-
-                <div>
-                  <h3>고려청자_최종보고서.pdf</h3>
-
-                  <small>내 보고서</small>
-                </div>
-              </div>
-
-              <span className="favorite-star">⭐</span>
-            </div>
-
-            <div className="favorite-item">
-              <div className="favorite-left">
-                <div className="favorite-icon">📂</div>
-
-                <div>
-                  <h3>청동기 복원 프로젝트</h3>
-
-                  <small>프로젝트</small>
-                </div>
-              </div>
-
-              <span className="favorite-star">⭐</span>
-            </div>
-
-            <div className="favorite-item">
-              <div className="favorite-left">
-                <div className="favorite-icon">📄</div>
-
-                <div>
-                  <h3>세척 방법 비교</h3>
-
-                  <small>문서</small>
-                </div>
-              </div>
-
-              <span className="favorite-star">⭐</span>
-            </div>
-
-            <div className="favorite-item">
-              <div className="favorite-left">
-                <div className="favorite-icon">📄</div>
-
-                <div>
-                  <h3>백자 복원 보고서</h3>
-
-                  <small>보고서</small>
-                </div>
-              </div>
-
-              <span className="favorite-star">⭐</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= Footer ================= */}
-
-      <footer className="footer">
-        <div className="footer-logo">VORA</div>
-
-        <p>AI 기반 문화재 복원 지원 플랫폼</p>
-
-        <small>© 2026 VORA. All Rights Reserved.</small>
-      </footer>
+      )}
     </div>
   );
 }

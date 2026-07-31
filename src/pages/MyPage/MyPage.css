@@ -1,238 +1,84 @@
-.my-page {
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 0 20px 50px;
-  background: #f5f7fa;
-  min-height: 100vh;
+@reference "tailwindcss";
+
+@layer components {
+.account-profile-card {
+  @apply items-center [background:linear-gradient(115deg,rgba(28,36,32,0.98),rgba(49,57,50,0.95))] border shadow-[0_20px_44px_rgba(31,34,29,0.17)] text-[#f7f0e3] flex gap-6 min-h-[168px] px-[34px] py-[30px] rounded-[17px] border-solid border-[rgba(150,104,61,0.5)];
 }
-
-/* ================= 헤더 ================= */
-
-.mypage-header {
-  position: relative;
-  margin-bottom: 35px;
+.account-avatar {
+  @apply items-center [background:#d4c4aa] text-[color:var(--heritage-ink)] flex flex-[0_0_auto] [font-family:Georgia,"Noto_Serif_KR",serif] text-[32px] h-[92px] justify-center w-[92px] rounded-[50%] border-2 border-solid border-[#a88762];
 }
-
-.mypage-header h1 {
-  margin: 0;
-  text-align: center;
-  font-size: 34px;
-  color: #1f2937;
+.account-profile-info {
+  @apply flex flex-1 flex-col;
 }
-
-.back-btn {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: #0f4c81;
-  color: white;
-  padding: 10px 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s;
+.account-profile-info p,
+.account-menu-card > p {
+  @apply text-[#c8aa80] text-[9px] font-bold tracking-[0.2em];
 }
-
-.back-btn:hover {
-  background: #0b3b64;
+.account-profile-info h2 {
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-3xl font-medium mt-[9px] mb-[5px] mx-0;
 }
-
-/* ================= 프로필 ================= */
-
-.profile-card {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-
-  background: white;
-  border-radius: 18px;
-
-  padding: 30px;
-
-  margin-bottom: 35px;
-
-  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+.account-profile-info strong {
+  @apply text-[#dccbb0] text-xs;
 }
-
-.profile-avatar {
-  width: 90px;
-  height: 90px;
-
-  border-radius: 50%;
-
-  background: #eef5ff;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  font-size: 40px;
+.account-profile-info span {
+  @apply text-[#aeb4ae] text-[11px] mt-3;
 }
-
-.profile-info {
-  cursor: pointer;
-  border-radius: 12px;
-  padding: 6px 10px;
-  transition: background 0.2s;
+.account-edit-button {
+  @apply text-[#f3eadb] border-[#8e806c] hover:[background:rgba(255,255,255,0.08)];
 }
-
-.profile-info:hover {
-  background: #f5f7fa;
+.account-profile-edit {
+  @apply grid flex-1 gap-3 grid-cols-[repeat(3,1fr)];
 }
-
-.profile-info h2 {
-  margin: 0;
-  font-size: 30px;
+.account-profile-edit label {
+  @apply text-[#bfc3bd] flex flex-col text-[10px] gap-1.5;
 }
-
-.profile-info p {
-  margin: 10px 0 4px;
-  color: #0f4c81;
-  font-weight: 600;
+.account-profile-edit input {
+  @apply [background:rgba(255,255,255,0.08)] border text-[#fffaf0] h-[42px] px-3 py-0 rounded-[7px] border-solid border-[#77786f] focus:[outline:none] focus:border-[#c5a87d];
 }
-
-.profile-info span {
-  color: #666;
+.account-edit-actions {
+  @apply flex gap-2 col-span-full;
 }
-
-.profile-info-editing {
-  cursor: default;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
+.account-menu-grid {
+  @apply grid gap-5 grid-cols-[repeat(3,1fr)] mt-[26px];
 }
-
-.profile-info-editing:hover {
-  background: none;
+.account-menu-card {
+  @apply [background:rgba(251,248,241,0.76)] border min-h-[265px] overflow-hidden relative p-7 rounded-[15px] border-solid border-[rgba(150,104,61,0.22)];
 }
-
-.profile-edit-input {
-  padding: 10px 14px;
-  border: 1px solid #d7dde6;
-  border-radius: 10px;
-  font-size: 16px;
-  max-width: 320px;
+.account-menu-card.muted {
+  @apply [background:rgba(225,218,206,0.55)];
 }
-
-.profile-edit-input:focus {
-  outline: none;
-  border-color: #0f4c81;
-  box-shadow: 0 0 0 3px rgba(15, 76, 129, .15);
+.account-menu-number {
+  @apply text-[rgba(150,104,61,0.15)] [font-family:Georgia,serif] text-[86px] leading-none absolute right-4 top-[15px];
 }
-
-.profile-edit-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
+.account-menu-card h2 {
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[25px] font-medium relative mt-[15px] mb-8 mx-0;
 }
-
-.profile-save-btn,
-.profile-cancel-btn {
-  padding: 8px 20px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
+.account-menu-copy {
+  @apply text-[color:var(--heritage-muted)] text-[13px] leading-[1.7] min-h-12;
 }
-
-.profile-save-btn {
-  background: #0f4c81;
-  color: white;
+.account-menu-copy strong {
+  @apply text-[color:var(--heritage-bronze-dark)];
 }
-
-.profile-save-btn:hover {
-  background: #0b3b64;
+.account-text-link {
+  @apply [background:none] text-[color:var(--heritage-ink)] cursor-pointer text-xs font-bold mt-6 p-0 border-0;
 }
-
-.profile-cancel-btn {
-  background: #f1f3f6;
-  color: #444;
+.account-text-link span {
+  @apply text-[color:var(--heritage-bronze)] ml-[7px];
 }
-
-.profile-cancel-btn:hover {
-  background: #e4e7ec;
+@media (max-width: 900px) {
+  .account-menu-grid {
+    @apply grid-cols-[1fr];
+  }
+  .account-profile-edit {
+    @apply grid-cols-[1fr];
+  }
 }
-
-/* ================= 프로젝트 / 보고서 ================= */
-
-.menu-grid {
-
-  display: grid;
-
-  grid-template-columns: 1fr 1fr;
-
-  gap: 24px;
-
+@media (max-width: 620px) {
+  .account-profile-card {
+    @apply items-start flex-col;
+  }
+  .account-edit-button {
+    @apply self-stretch;
+  }
 }
-
-.menu-card {
-
-  background: white;
-
-  border-radius: 18px;
-
-  padding: 24px;
-
-  box-shadow: 0 8px 20px rgba(0,0,0,.08);
-
-}
-
-.menu-card h2 {
-
-  margin-top: 0;
-
-  margin-bottom: 20px;
-
-  color: #0f4c81;
-
-}
-
-.list-area {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 12px;
-
-}
-
-.list-area p {
-
-  margin: 0;
-
-  padding: 12px 15px;
-
-  background: #f7f9fc;
-
-  border-radius: 10px;
-
-}
-
-.view-btn {
-
-  margin-top: 20px;
-
-  float: right;
-
-  border: none;
-
-  background: #0f4c81;
-
-  color: white;
-
-  padding: 10px 18px;
-
-  border-radius: 8px;
-
-  cursor: pointer;
-
-}
-
-.view-btn:hover {
-
-  background: #0b3b64;
-
 }

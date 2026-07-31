@@ -1,137 +1,78 @@
-* {
-  box-sizing: border-box;
+@reference "tailwindcss";
+
+@layer components {
+.heritage-auth-page {
+  @apply [background:radial-gradient(circle_at_18%_24%,rgba(150,104,61,0.16),transparent_22rem),var(--heritage-paper)] text-[color:var(--heritage-ink)] flex flex-col min-h-screen;
 }
-
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f5f7fb;
+.heritage-auth-main {
+  @apply items-center grid flex-1 gap-[90px] grid-cols-[minmax(0,1fr)_430px] max-w-[1120px] w-full mx-auto my-0 px-12 py-16;
 }
-
-/* ================= Header ================= */
-
-.login-header {
-  width: 100%;
-  height: 80px;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid #e5e5e5;
+.heritage-auth-copy > p,
+.heritage-auth-eyebrow {
+  @apply text-[color:var(--heritage-bronze)] text-[10px] font-bold tracking-[0.23em];
 }
-
-.login-logo {
-  text-align: center;
+.heritage-auth-copy h1 {
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[clamp(42px,5vw,66px)] font-medium tracking-[-0.07em] leading-[1.2] mt-[18px] mb-[22px] mx-0;
 }
-
-.login-logo h1 {
-  color: #2d6cdf;
-  font-size: 34px;
-  margin: 0;
+.heritage-auth-copy > span {
+  @apply text-[color:var(--heritage-muted)] block text-sm leading-[1.8] max-w-[450px];
 }
-
-.login-logo span {
-  font-size: 14px;
-  color: #666;
+.heritage-auth-ornament {
+  @apply items-center text-[color:var(--heritage-bronze)] flex gap-[18px] w-[310px] mt-[52px];
 }
-
-/* ================= Main ================= */
-
-.login-main {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.heritage-auth-ornament i {
+  @apply [background:var(--heritage-line)] flex-1 h-px;
 }
-
-.login-card {
-  width: 420px;
-  background: #fff;
-  border-radius: 15px;
-  padding: 40px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+.heritage-auth-ornament b {
+  @apply items-center border border-[color:var(--heritage-bronze)] flex [font-family:Georgia,serif] text-[15px] font-medium h-[34px] justify-center w-[34px] rounded-[50%] border-solid;
 }
-
-.login-icon {
-  font-size: 48px;
-  text-align: center;
-  margin-bottom: 10px;
+.heritage-auth-card {
+  @apply [background:rgba(251,248,241,0.9)] border shadow-[0_24px_58px_rgba(58,46,31,0.12)] p-[42px] rounded-[18px] border-solid border-[rgba(150,104,61,0.24)];
 }
-
-.login-card h2 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #333;
+.heritage-auth-card h2 {
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[34px] font-medium mt-[11px] mb-2 mx-0;
 }
-
-.login-card form {
-  display: flex;
-  flex-direction: column;
+.heritage-auth-help {
+  @apply text-[color:var(--heritage-muted)] text-xs leading-[1.65] mb-[30px];
 }
-
-.login-card input {
-  width: 100%;
-  padding: 13px;
-  margin-bottom: 16px;
-  border: 1px solid #d8d8d8;
-  border-radius: 8px;
-  font-size: 15px;
+.heritage-auth-card form {
+  @apply flex flex-col;
 }
-
-.login-card input:focus {
-  outline: none;
-  border-color: #2d6cdf;
+.heritage-auth-card label {
+  @apply text-[#5d625d] text-[11px] font-bold mt-0 mb-[7px] mx-0;
 }
-
-.login-btn {
-  width: 100%;
-  padding: 14px;
-  background: #2d6cdf;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
+.heritage-auth-card input {
+  @apply [background:#fffdf8] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] text-sm h-12 mb-[18px] px-3.5 py-0 rounded-lg border-solid focus:border-[color:var(--heritage-bronze)] focus:shadow-[0_0_0_3px_rgba(150,104,61,0.12)] focus:[outline:none];
 }
-
-.login-btn:hover {
-  background: #1f58b8;
+.heritage-auth-submit {
+  @apply [background:var(--heritage-ink)] text-[#fffaf0] cursor-pointer text-sm font-bold h-[50px] transition-[background] duration-[0.16s] ease-[ease] mt-[5px] rounded-lg border-0 hover:[background:var(--heritage-bronze-dark)];
 }
-
-.login-links {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 20px;
-  color: #666;
-  font-size: 14px;
+.heritage-auth-error {
+  @apply [background:rgba(156,91,71,0.1)] text-[color:var(--heritage-danger)] text-xs -mt-1 mb-[15px] mx-0 px-3 py-2.5 rounded-md;
 }
-
-.login-links span {
-  cursor: pointer;
+.heritage-auth-links {
+  @apply items-center text-[color:var(--heritage-line)] flex text-xs gap-2.5 justify-center mt-[22px];
 }
-
-.login-links span:hover {
-  color: #2d6cdf;
+.heritage-auth-links button {
+  @apply [background:none] text-[color:var(--heritage-muted)] cursor-pointer text-xs p-0.5 border-0 hover:text-[color:var(--heritage-bronze-dark)];
 }
-
-.error-text {
-  color: red;
-  font-size: 14px;
-  margin-bottom: 15px;
-  text-align: center;
+.heritage-auth-footer {
+  @apply text-[#8b8173] text-[10px] tracking-[0.08em] text-center p-[18px] border-t-[rgba(202,188,168,0.6)] border-t border-solid;
 }
-
-/* ================= Footer ================= */
-
-.login-footer {
-  text-align: center;
-  padding: 20px;
-  color: #888;
-  font-size: 13px;
-  border-top: 1px solid #e5e5e5;
-  background: white;
+@media (max-width: 900px) {
+  .heritage-auth-main {
+    @apply grid-cols-[1fr] max-w-[560px];
+  }
+  .heritage-auth-copy {
+    @apply hidden;
+  }
+}
+@media (max-width: 540px) {
+  .heritage-auth-main {
+    @apply px-5 py-[38px];
+  }
+  .heritage-auth-card {
+    @apply px-6 py-[30px];
+  }
+}
 }

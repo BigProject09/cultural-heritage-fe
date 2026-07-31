@@ -1,263 +1,93 @@
+@reference "tailwindcss";
+
+@layer components {
 .bonding-material-page {
-  min-height: 100vh;
-  padding: 30px;
-  background: #f5f5f5;
+    @apply min-h-screen [background:#f5f5f5] p-[30px];
 }
 
 
 /* ================= 상단 ================= */
-
 .detail-header {
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  margin-bottom: 30px;
-
+    @apply flex justify-between items-center mb-[30px];
 }
-
-
 .vora-logo {
-
-  font-size: 28px;
-  font-weight: bold;
-
-  color: #2f6fed;
-
+    @apply text-[28px] font-[bold] text-[#2f6fed];
 }
 
 
 
 /* ================= 전체 컨테이너 ================= */
-
 .material-container {
-
-  max-width: 1000px;
-
-  margin: 0 auto;
-
-  background: white;
-
-  padding: 40px;
-
-  border-radius: 20px;
-
-  box-shadow: 0 8px 25px rgba(0,0,0,.08);
-
+    @apply max-w-[1000px] [background:white] shadow-[0_8px_25px_rgba(0,0,0,0.08)] mx-auto my-0 p-10 rounded-[20px];
 }
 
 
 
 /* ================= 제목 ================= */
-
 .page-header {
-
-  margin-bottom: 30px;
-
+    @apply mb-[30px];
 }
-
-
 .page-header h1 {
-
-  font-size: 32px;
-
-  margin: 0 0 10px;
-
-  color:#1f2937;
-
+    @apply text-[32px] text-gray-800 mt-0 mb-2.5 mx-0;
 }
-
-
 .page-header p {
-
-  color:#6b7280;
-
-  font-size:17px;
-
+    @apply text-gray-500 text-[17px];
 }
 
 
 
 /* ================= 접합제 카드 ================= */
-
 .material-card {
-
-  width:100%;
-
+    @apply w-full;
 }
 
 
 
 /* 제목 */
-
 .material-title {
-
-  display:flex;
-
-  align-items:center;
-
-  gap:15px;
-
-  font-size:24px;
-
-  font-weight:600;
-
-  margin-bottom:20px;
-
+    @apply flex items-center gap-[15px] text-2xl font-semibold mb-5;
 }
-
-
-.material-title span:last-child {
-
-  margin-left:auto;
-
-}
-
-
-
 .material-card hr {
-
-  margin:20px 0 30px;
-
-  border:none;
-
-  border-top:1px solid #e5e7eb;
-
+    @apply mt-5 mb-[30px] mx-0 border-[none] border-t border-solid;
 }
 
 
 
 /* ================= 이미지 ================= */
-
 .material-image {
-
-  display:flex;
-
-  justify-content:center;
-
-  margin-bottom:30px;
-
+    @apply flex justify-center mb-[30px];
 }
-
-
 .material-image img {
-
-  width:220px;
-
-  height:auto;
-
-  object-fit:contain;
-
+    @apply w-[220px] h-auto object-contain;
 }
 
 
 
 /* ================= 설명 ================= */
-
 .material-description {
-
-  font-size:18px;
-
-  line-height:2;
-
-  text-align:justify;
-
-  color:#444;
-
+    @apply text-lg leading-loose text-justify text-[#444];
 }
 
 
 
 /* ================= 선택 ================= */
-
 .material-select-group {
-
-  display:flex;
-
-  gap:24px;
-
-  margin-top:30px;
-
+    @apply flex gap-6 mt-[30px];
 }
-
-
 .material-select-item {
-
-  flex:1;
-
-  display:flex;
-
-  flex-direction:column;
-
-  gap:10px;
-
+    @apply flex-1 flex flex-col gap-2.5;
 }
-
-
 .material-select-item label {
-
-  font-size:15px;
-
-  font-weight:600;
-
-  color:#374151;
-
+    @apply text-[15px] font-semibold text-gray-700;
 }
-
-
 .material-select-item select {
-
-  padding:13px 15px;
-
-  border:1px solid #d7dde6;
-
-  border-radius:10px;
-
-  font-size:15px;
-
-  cursor:pointer;
-
-}
-
-
-.material-select-item select:focus {
-
-  outline:none;
-
-  border-color:#2f6fed;
-
-  box-shadow:0 0 0 3px rgba(47,111,237,.15);
-
+    @apply border text-[15px] cursor-pointer px-[15px] py-[13px] rounded-[10px] border-solid border-[#d7dde6] focus:[outline:none] focus:shadow-[0_0_0_3px_rgba(47,111,237,0.15)] focus:border-[#2f6fed];
 }
 
 
 
 /* ================= 버튼 ================= */
-
 .nav-btn {
-
-  padding:10px 18px;
-
-  border:none;
-
-  border-radius:8px;
-
-  cursor:pointer;
-
-  font-size:15px;
-
-  font-weight:600;
-
-  background:#2563eb;
-
-  color:white;
-
+    @apply cursor-pointer text-[15px] font-semibold [background:#2563eb] text-[white] px-[18px] py-2.5 rounded-lg border-[none] hover:[background:#1d4ed8];
 }
-
-
-.nav-btn:hover {
-
-  background:#1d4ed8;
-
 }
