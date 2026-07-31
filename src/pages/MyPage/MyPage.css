@@ -1,84 +1,202 @@
-@reference "tailwindcss";
+.account-top-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 320px 1fr;
+}
 
-@layer components {
 .account-profile-card {
-  @apply items-center [background:linear-gradient(115deg,rgba(28,36,32,0.98),rgba(49,57,50,0.95))] border shadow-[0_20px_44px_rgba(31,34,29,0.17)] text-[#f7f0e3] flex gap-6 min-h-[168px] px-[34px] py-[30px] rounded-[17px] border-solid border-[rgba(150,104,61,0.5)];
+  align-items: center;
+  background:
+    linear-gradient(115deg, rgba(28, 36, 32, 0.98), rgba(49, 57, 50, 0.95));
+  border: 1px solid rgba(150, 104, 61, 0.5);
+  border-radius: 17px;
+  box-shadow: 0 20px 44px rgba(31, 34, 29, 0.17);
+  color: #f7f0e3;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 34px 30px;
+  text-align: center;
 }
+
 .account-avatar {
-  @apply items-center [background:#d4c4aa] text-[color:var(--heritage-ink)] flex flex-[0_0_auto] [font-family:Georgia,"Noto_Serif_KR",serif] text-[32px] h-[92px] justify-center w-[92px] rounded-[50%] border-2 border-solid border-[#a88762];
+  align-items: center;
+  background: #d4c4aa;
+  border: 3px solid #a88762;
+  border-radius: 50%;
+  color: var(--heritage-ink);
+  display: flex;
+  flex: 0 0 auto;
+  font-family: Georgia, "Noto Serif KR", serif;
+  font-size: 52px;
+  height: 148px;
+  justify-content: center;
+  width: 148px;
 }
+
 .account-profile-info {
-  @apply flex flex-1 flex-col;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
-.account-profile-info p,
-.account-menu-card > p {
-  @apply text-[#c8aa80] text-[9px] font-bold tracking-[0.2em];
+
+.account-profile-info p {
+  color: #c8aa80;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
 }
-.account-profile-info h2 {
-  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-3xl font-medium mt-[9px] mb-[5px] mx-0;
-}
+
 .account-profile-info strong {
-  @apply text-[#dccbb0] text-xs;
+  color: #dccbb0;
+  font-size: 12px;
+  margin-top: 9px;
 }
+
 .account-profile-info span {
-  @apply text-[#aeb4ae] text-[11px] mt-3;
+  color: #aeb4ae;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 12px;
 }
+
 .account-edit-button {
-  @apply text-[#f3eadb] border-[#8e806c] hover:[background:rgba(255,255,255,0.08)];
+  align-self: stretch;
+  border-color: #8e806c !important;
+  color: #f3eadb !important;
 }
+
+.account-edit-button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
 .account-profile-edit {
-  @apply grid flex-1 gap-3 grid-cols-[repeat(3,1fr)];
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
 }
+
 .account-profile-edit label {
-  @apply text-[#bfc3bd] flex flex-col text-[10px] gap-1.5;
+  color: #bfc3bd;
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  gap: 6px;
+  text-align: left;
 }
+
 .account-profile-edit input {
-  @apply [background:rgba(255,255,255,0.08)] border text-[#fffaf0] h-[42px] px-3 py-0 rounded-[7px] border-solid border-[#77786f] focus:[outline:none] focus:border-[#c5a87d];
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid #77786f;
+  border-radius: 7px;
+  color: #fffaf0;
+  height: 42px;
+  padding: 0 12px;
 }
+
+.account-profile-edit input:focus {
+  border-color: #c5a87d;
+  outline: none;
+}
+
 .account-edit-actions {
-  @apply flex gap-2 col-span-full;
+  display: flex;
+  gap: 8px;
 }
-.account-menu-grid {
-  @apply grid gap-5 grid-cols-[repeat(3,1fr)] mt-[26px];
+
+.account-edit-actions .heritage-button {
+  flex: 1;
 }
-.account-menu-card {
-  @apply [background:rgba(251,248,241,0.76)] border min-h-[265px] overflow-hidden relative p-7 rounded-[15px] border-solid border-[rgba(150,104,61,0.22)];
+
+.account-info-card {
+  display: flex;
+  flex-direction: column;
 }
-.account-menu-card.muted {
-  @apply [background:rgba(225,218,206,0.55)];
+
+.account-info-card-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
-.account-menu-number {
-  @apply text-[rgba(150,104,61,0.15)] [font-family:Georgia,serif] text-[86px] leading-none absolute right-4 top-[15px];
+
+.card-title {
+  font-family: Georgia, "Noto Serif KR", serif;
+  font-size: 18px;
+  font-weight: 500;
 }
-.account-menu-card h2 {
-  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[25px] font-medium relative mt-[15px] mb-8 mx-0;
+
+.account-withdraw-button {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  color: var(--heritage-danger);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 20px;
+  padding: 0;
 }
-.account-menu-copy {
-  @apply text-[color:var(--heritage-muted)] text-[13px] leading-[1.7] min-h-12;
+
+.account-withdraw-button:hover {
+  text-decoration: underline;
 }
-.account-menu-copy strong {
-  @apply text-[color:var(--heritage-bronze-dark)];
+
+.account-guest-card {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 60px 30px;
+  text-align: center;
 }
-.account-text-link {
-  @apply [background:none] text-[color:var(--heritage-ink)] cursor-pointer text-xs font-bold mt-6 p-0 border-0;
+
+.account-guest-card p {
+  color: var(--heritage-muted);
+  font-size: 14px;
 }
-.account-text-link span {
-  @apply text-[color:var(--heritage-bronze)] ml-[7px];
+
+.account-bottom-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 20px;
 }
+
+.account-card .card-title,
+.notice-card .card-title {
+  margin-bottom: 10px;
+}
+
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notice-list li {
+  color: var(--heritage-muted);
+  font-size: 13px;
+  line-height: 1.65;
+  padding-left: 16px;
+  position: relative;
+}
+
+.notice-list li::before {
+  color: var(--heritage-bronze);
+  content: "·";
+  font-weight: 700;
+  left: 0;
+  position: absolute;
+}
+
 @media (max-width: 900px) {
-  .account-menu-grid {
-    @apply grid-cols-[1fr];
+  .account-top-grid {
+    grid-template-columns: 1fr;
   }
-  .account-profile-edit {
-    @apply grid-cols-[1fr];
+
+  .account-bottom-grid {
+    grid-template-columns: 1fr;
   }
-}
-@media (max-width: 620px) {
-  .account-profile-card {
-    @apply items-start flex-col;
-  }
-  .account-edit-button {
-    @apply self-stretch;
-  }
-}
 }

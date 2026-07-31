@@ -37,13 +37,13 @@ function CleaningPage() {
   const approvedFlow =
     location.state?.approvedFlow ||
     savedApprovedFlow || [
-      { id: 1, name: "처리 전 조사" },
+      { id: 1, name: "X-RAY 분석/육안 상태 조사" },
       { id: 2, name: "해체" },
       { id: 3, name: "세척" },
       { id: 4, name: "강화" },
       { id: 5, name: "접합" },
       { id: 6, name: "복원" },
-      { id: 8, name: "처리 후 기록" },
+      { id: 8, name: "보고서 생성" },
     ];
 
   useEffect(() => {

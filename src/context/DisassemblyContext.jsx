@@ -15,7 +15,8 @@ export function DisassemblyProvider({
   const [approvedFlow, setApprovedFlow] =
     useState(null);
   const [visualResult, setVisualResult] = useState(null);
-  // 처리 전 조사
+
+  // X-RAY 분석/육안 상태 조사
   const [preInvestigation, setPreInvestigation] =
     useState({
       xray: false,
@@ -104,6 +105,10 @@ const [bondingGuide, setBondingGuide] =
 // 접합 - 사용자가 실제로 선택한 접합제 (보고서용)
 const [bondingChoice, setBondingChoice] =
   useState({ adhesive: "" });
+
+// 접합 - 임시접합(가조립) 사진 VLM 검증 결과
+const [bondingTempAnalysis, setBondingTempAnalysis] =
+  useState(null);
 
 // 복원 재료 추천
 const [restorationMaterial, setRestorationMaterial] =
@@ -209,6 +214,7 @@ const [restorationChoice, setRestorationChoice] =
   setBondingAdhesive(null);
   setBondingGuide(null);
   setBondingChoice({ adhesive: "" });
+  setBondingTempAnalysis(null);
   setRestorationMaterial(null);
   setRestorationGuide(null);
   setRestorationChoice({ material: "" });
@@ -321,6 +327,9 @@ const [restorationChoice, setRestorationChoice] =
 
       bondingChoice,
       setBondingChoice,
+
+      bondingTempAnalysis,
+      setBondingTempAnalysis,
 
       restorationMaterial,
       setRestorationMaterial,

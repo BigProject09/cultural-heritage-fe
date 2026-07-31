@@ -19,7 +19,7 @@ import ProjectPage from "./pages/MyPage/ProjectPage";
 import MyReportPage from "./pages/MyPage/MyReportPage";
 import MyReportDetailPage from "./pages/MyPage/MyReportDetailPage";
 
-//처리 전 조사
+// X-RAY 분석/육안 상태 조사
 import ArtifactRegisterPage from "./pages/ArtifactRegister/ArtifactRegisterPage";
 import FlowRecommendationPage from "./pages/FlowRecommendationPage/FlowRecommendationPage";
 import PreInvestigationPage from "./pages/PreInvestigation/PreInvestigationPage";
@@ -55,7 +55,7 @@ import RestorationPage from "./pages/Restoration/RestorationPage";
 import RestorationMethodPage from "./pages/Restoration/RestorationMethodPage";
 import RestorationMaterialPage from "./pages/Restoration/RestorationMaterialPage";
 
-// 처리 후 기록
+// 보고서 생성
 import PostRecordPage from "./pages/PostRecord/PostRecordPage";
 import ReportPage from "./pages/PostRecord/ReportPage";
 import ReportCompletePage from "./pages/PostRecord/ReportCompletePage";
@@ -108,7 +108,7 @@ function App() {
             element={<FlowRecommendationPage />}
           />
 
-          {/* 처리 전 조사 */}
+          {/* X-RAY 분석/육안 상태 조사 */}
           <Route path="/pre-investigation" element={<PreInvestigationPage />} />
 
           <Route path="/pre-investigation/xray" element={<XrayPage />} />
@@ -187,7 +187,7 @@ function App() {
             element={<RestorationMaterialPage />}
           />
 
-          {/* 처리 후 기록 */}
+          {/* 보고서 생성 */}
           <Route path="/post-record" element={<PostRecordPage />} />
 
           <Route path="/report" element={<ReportPage />} />

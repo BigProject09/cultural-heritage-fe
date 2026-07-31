@@ -1,169 +1,46 @@
 @reference "tailwindcss";
 
 @layer components {
-.method-page {
-    @apply min-h-screen [background:#f7f8fa] px-[60px] py-10;
-}
-
-
-/* ================= 상단 ================= */
-.top-bar {
-    @apply flex justify-between items-center mb-[60px];
-}
-.logo {
-    @apply text-[40px] font-bold text-[#2f6fed] tracking-[1px];
-}
-.nav-btn {
-    @apply cursor-pointer text-base font-semibold transition-[0.2s] [background:#2563eb] text-[white] px-[30px] py-3.5 rounded-xl border-[none] hover:[background:#1d4ed8];
-}
-
-
-
-/* ================= 제목 ================= */
-.page-header {
-    @apply max-w-[1200px] mt-0 mb-10 mx-auto;
-}
-.page-header h1 {
-    @apply text-[42px] text-gray-800 mt-0 mb-3 mx-0;
-}
-.page-header p {
-    @apply text-lg text-gray-500 m-0;
-}
-
-
-
-/* ================= 메인 카드 ================= */
-.method-card {
-    @apply w-full max-w-[1200px] [background:white] shadow-[0_8px_30px_rgba(0,0,0,0.06)] mx-auto my-0 p-9 rounded-[26px];
-}
-
-
-
-/* ================= 접합 방식 ================= */
-.reason-card {
-    @apply w-full [background:#fff] border border shadow-[0_4px_12px_rgba(0,0,0,0.05)] mt-2.5 p-6 rounded-[18px] border-solid;
-}
-.reason-card h3 {
-    @apply text-[26px] text-[#1e3a5f] mb-[18px];
-}
-.reason-card p {
-    @apply text-lg leading-[1.7] text-[#444];
-}
-
-
-
-/* ================= 단계 제목 ================= */
-.step-title {
-    @apply flex justify-between items-center text-3xl font-[bold] mt-10 mb-[25px];
-}
-
-
-
-/* ================= 주의사항 ================= */
-.warning-btn {
-    @apply [background:#fff7e6] text-[#c68a00] border font-[bold] cursor-pointer transition-[0.2s] px-[22px] py-3 rounded-xl border-solid border-[#e9d8a6] hover:[background:#ffeec2];
-}
-
-
-
-/* ================= 단계 카드 ================= */
-.step-card {
-    @apply flex items-center gap-[22px] [background:#fafbfc] border cursor-pointer transition-[0.2s] mb-[18px] p-[26px] rounded-[20px] border-solid border-[#e4e8ef] hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)];
-}
-.step-number {
-    @apply w-[55px] h-[55px] [background:#1e3a5f] text-[white] flex justify-center items-center text-[23px] font-[bold] rounded-[50%];
-}
-.step-info {
-    @apply flex-1;
-}
-.step-info h3 {
-    @apply text-[27px] mb-2.5;
-}
-.step-info p {
-    @apply text-lg text-[#666] leading-[1.6] mx-0 my-1.5;
-}
-
-
-
-/* ================= 버튼 ================= */
-.step-actions {
+.nav-btn-group {
     @apply flex items-center gap-3;
 }
-.step-actions button {
-    @apply cursor-pointer font-[bold] transition-[0.2s] px-[18px] py-[11px] rounded-[40px] border-[none];
+.photo-row {
+    @apply flex gap-4;
 }
-
-
-
-/* 수정 */
-.edit-btn {
-    @apply [background:#eef5ff] text-[#1e63d5];
+.photo-row .info-card {
+    @apply flex-1;
 }
-
-
-
-/* 삭제 */
-.delete-btn {
-    @apply [background:#ffecec] text-[#e74c3c];
+.photo-preview img {
+    @apply max-w-[200px] max-h-[200px] object-cover mt-2 rounded-lg;
 }
-
-
-
-/* 승인 */
-.approve-btn {
-    @apply [background:#2e8b57] text-[white] min-w-[95px];
+.temp-analysis-card {
+    @apply mt-5;
 }
-
-
-
-/* ================= 단계 추가 ================= */
-.add-step-btn {
-    @apply w-full [background:white] text-[#1e3a5f] text-xl font-[bold] cursor-pointer mt-[18px] p-[18px] rounded-2xl border-2 border-dashed border-[#b8c2d0];
+.temp-analysis-card .metric-list {
+    @apply grid-cols-1 max-w-[280px];
 }
-
-
-
-/* ================= 모달 ================= */
-.warning-modal {
-    @apply fixed [background:rgba(0,0,0,0.45)] flex justify-center items-center z-[999] inset-0;
+.severity-dot.status-good {
+    @apply [background:#34c759];
 }
-.warning-content {
-    @apply w-[460px] [background:white] shadow-[0_10px_30px_rgba(0,0,0,0.15)] p-8 rounded-[20px];
+.severity-dot.status-minor_issue {
+    @apply [background:#f4c430];
 }
-.warning-content h2 {
-    @apply text-[28px] text-[#1e3a5f] mb-5;
+.severity-dot.status-major_issue {
+    @apply [background:#e0392b];
 }
-.warning-content p {
-    @apply text-lg text-[#444] leading-[1.8];
+.severity-dot.status-unclear {
+    @apply [background:#999];
 }
-.close-btn {
-    @apply w-full [background:#2563eb] text-[white] text-[17px] font-[bold] cursor-pointer mt-7 p-3.5 rounded-xl border-[none];
+.temp-analysis-severity {
+    @apply text-sm font-semibold text-[#555];
 }
-.work-card {
-    @apply max-w-[900px] [background:white] shadow-[0_8px_20px_rgba(0,0,0,0.06)] mt-0 mb-6 mx-auto p-[30px] rounded-[20px];
+.temp-analysis-warning {
+    @apply text-[#e0392b] font-semibold mb-3;
 }
-.work-card h2 {
-    @apply text-[22px] text-[#333] mb-[18px];
+.temp-analysis-description {
+    @apply text-[15px] leading-[1.7] text-[#444] mb-2.5;
 }
-.photo-url-row {
-    @apply flex gap-2.5 mb-3.5;
-}
-.photo-url-input {
-    @apply flex-1 border text-[15px] px-3.5 py-3 rounded-[10px] border-solid border-[#ddd] focus:[outline:none] focus:border-[#2f6fed];
-}
-.photo-url-add-btn {
-    @apply [background:#2f6fed] text-[white] font-semibold cursor-pointer whitespace-nowrap px-5 py-3 rounded-[10px] border-[none] hover:[background:#1f5fe0];
-}
-.photo-url-list {
-    @apply flex flex-col gap-2;
-}
-.photo-url-chip {
-    @apply flex justify-between items-center [background:#f4f6fb] px-3.5 py-2.5 rounded-[10px];
-}
-.photo-url-chip span {
-    @apply overflow-hidden text-ellipsis whitespace-nowrap;
-}
-.photo-url-chip button {
-    @apply [background:none] text-[#e74c3c] cursor-pointer font-[bold] ml-2.5 border-[none];
+.recommendation {
+    @apply font-semibold;
 }
 }
