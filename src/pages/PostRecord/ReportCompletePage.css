@@ -1,52 +1,22 @@
+@reference "tailwindcss";
+
+@layer components {
 .complete-page {
-  min-height: 100vh;
-  background: #f5f7fb;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    @apply min-h-screen [background:#f5f7fb] flex justify-center items-center;
 }
-
 .complete-card {
-  width: 500px;
-
-  background: white;
-
-  padding: 60px;
-
-  border-radius: 20px;
-
-  text-align: center;
-
-  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+    @apply w-[500px] [background:white] text-center shadow-[0_10px_25px_rgba(0,0,0,0.08)] p-[60px] rounded-[20px];
 }
-
 .check {
-  font-size: 70px;
-  margin-bottom: 20px;
+    @apply text-[70px] mb-5;
 }
-
 .complete-card h1 {
-  margin-bottom: 15px;
+    @apply mb-[15px];
 }
-
 .complete-card p {
-  color: gray;
-  margin-bottom: 40px;
+    @apply text-[gray] mb-10;
 }
-
 .complete-btn {
-  width: 100%;
-  padding: 15px;
-
-  border: none;
-  border-radius: 10px;
-
-  background: #2f6fed;
-  color: white;
-
-  font-size: 17px;
-  font-weight: bold;
-
-  cursor: pointer;
+    @apply w-full [background:#2f6fed] text-[white] text-[17px] font-[bold] cursor-pointer p-[15px] rounded-[10px] border-[none];
+}
 }

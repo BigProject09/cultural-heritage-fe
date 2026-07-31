@@ -1,35 +1,22 @@
+@reference "tailwindcss";
+
+@layer components {
 .board-search-label {
-  color: var(--heritage-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 17px;
-  margin-right: auto;
+  @apply text-[color:var(--heritage-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[17px] mr-auto;
 }
-
 .board-post-number {
-  color: var(--heritage-bronze);
-  display: inline-block;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  margin-right: 15px;
-  min-width: 20px;
+  @apply text-[color:var(--heritage-bronze)] inline-block text-[10px] tracking-[0.12em] min-w-5 mr-[15px];
 }
-
-.board-table td:first-child {
-  color: var(--heritage-ink);
-  font-weight: 600;
-}
-
 @media (max-width: 720px) {
   .board-search-label {
-    margin-bottom: 4px;
+    @apply mb-1;
   }
-
   .board-panel {
-    padding: 16px;
+    @apply p-4;
   }
-
   .board-table th:nth-child(3),
   .board-table td:nth-child(3) {
-    display: none;
+    @apply hidden;
   }
+}
 }

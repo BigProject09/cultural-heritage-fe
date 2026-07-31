@@ -1,204 +1,78 @@
+@reference "tailwindcss";
+
+@layer components {
 .heritage-auth-page {
-  background:
-    radial-gradient(circle at 18% 24%, rgba(150, 104, 61, 0.16), transparent 22rem),
-    var(--heritage-paper);
-  color: var(--heritage-ink);
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+  @apply [background:radial-gradient(circle_at_18%_24%,rgba(150,104,61,0.16),transparent_22rem),var(--heritage-paper)] text-[color:var(--heritage-ink)] flex flex-col min-h-screen;
 }
-
 .heritage-auth-main {
-  align-items: center;
-  display: grid;
-  flex: 1;
-  gap: 90px;
-  grid-template-columns: minmax(0, 1fr) 430px;
-  margin: 0 auto;
-  max-width: 1120px;
-  padding: 64px 48px;
-  width: 100%;
+  @apply items-center grid flex-1 gap-[90px] grid-cols-[minmax(0,1fr)_430px] max-w-[1120px] w-full mx-auto my-0 px-12 py-16;
 }
-
 .heritage-auth-copy > p,
 .heritage-auth-eyebrow {
-  color: var(--heritage-bronze);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.23em;
+  @apply text-[color:var(--heritage-bronze)] text-[10px] font-bold tracking-[0.23em];
 }
-
 .heritage-auth-copy h1 {
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: clamp(42px, 5vw, 66px);
-  font-weight: 500;
-  letter-spacing: -0.07em;
-  line-height: 1.2;
-  margin: 18px 0 22px;
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[clamp(42px,5vw,66px)] font-medium tracking-[-0.07em] leading-[1.2] mt-[18px] mb-[22px] mx-0;
 }
-
 .heritage-auth-copy > span {
-  color: var(--heritage-muted);
-  display: block;
-  font-size: 14px;
-  line-height: 1.8;
-  max-width: 450px;
+  @apply text-[color:var(--heritage-muted)] block text-sm leading-[1.8] max-w-[450px];
 }
-
 .heritage-auth-ornament {
-  align-items: center;
-  color: var(--heritage-bronze);
-  display: flex;
-  gap: 18px;
-  margin-top: 52px;
-  width: 310px;
+  @apply items-center text-[color:var(--heritage-bronze)] flex gap-[18px] w-[310px] mt-[52px];
 }
-
 .heritage-auth-ornament i {
-  background: var(--heritage-line);
-  flex: 1;
-  height: 1px;
+  @apply [background:var(--heritage-line)] flex-1 h-px;
 }
-
 .heritage-auth-ornament b {
-  align-items: center;
-  border: 1px solid var(--heritage-bronze);
-  border-radius: 50%;
-  display: flex;
-  font-family: Georgia, serif;
-  font-size: 15px;
-  font-weight: 500;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
+  @apply items-center border border-[color:var(--heritage-bronze)] flex [font-family:Georgia,serif] text-[15px] font-medium h-[34px] justify-center w-[34px] rounded-[50%] border-solid;
 }
-
 .heritage-auth-card {
-  background: rgba(251, 248, 241, 0.9);
-  border: 1px solid rgba(150, 104, 61, 0.24);
-  border-radius: 18px;
-  box-shadow: 0 24px 58px rgba(58, 46, 31, 0.12);
-  padding: 42px;
+  @apply [background:rgba(251,248,241,0.9)] border shadow-[0_24px_58px_rgba(58,46,31,0.12)] p-[42px] rounded-[18px] border-solid border-[rgba(150,104,61,0.24)];
 }
-
 .heritage-auth-card h2 {
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 34px;
-  font-weight: 500;
-  margin: 11px 0 8px;
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[34px] font-medium mt-[11px] mb-2 mx-0;
 }
-
 .heritage-auth-help {
-  color: var(--heritage-muted);
-  font-size: 12px;
-  line-height: 1.65;
-  margin-bottom: 30px;
+  @apply text-[color:var(--heritage-muted)] text-xs leading-[1.65] mb-[30px];
 }
-
 .heritage-auth-card form {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
 }
-
 .heritage-auth-card label {
-  color: #5d625d;
-  font-size: 11px;
-  font-weight: 700;
-  margin: 0 0 7px;
+  @apply text-[#5d625d] text-[11px] font-bold mt-0 mb-[7px] mx-0;
 }
-
 .heritage-auth-card input {
-  background: #fffdf8;
-  border: 1px solid var(--heritage-line);
-  border-radius: 8px;
-  color: var(--heritage-ink);
-  font-size: 14px;
-  height: 48px;
-  margin-bottom: 18px;
-  padding: 0 14px;
+  @apply [background:#fffdf8] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] text-sm h-12 mb-[18px] px-3.5 py-0 rounded-lg border-solid focus:border-[color:var(--heritage-bronze)] focus:shadow-[0_0_0_3px_rgba(150,104,61,0.12)] focus:[outline:none];
 }
-
-.heritage-auth-card input:focus {
-  border-color: var(--heritage-bronze);
-  box-shadow: 0 0 0 3px rgba(150, 104, 61, 0.12);
-  outline: none;
-}
-
 .heritage-auth-submit {
-  background: var(--heritage-ink);
-  border: 0;
-  border-radius: 8px;
-  color: #fffaf0;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-  height: 50px;
-  margin-top: 5px;
-  transition: background 0.16s ease;
+  @apply [background:var(--heritage-ink)] text-[#fffaf0] cursor-pointer text-sm font-bold h-[50px] transition-[background] duration-[0.16s] ease-[ease] mt-[5px] rounded-lg border-0 hover:[background:var(--heritage-bronze-dark)];
 }
-
-.heritage-auth-submit:hover {
-  background: var(--heritage-bronze-dark);
-}
-
 .heritage-auth-error {
-  background: rgba(156, 91, 71, 0.1);
-  border-radius: 6px;
-  color: var(--heritage-danger);
-  font-size: 12px;
-  margin: -4px 0 15px;
-  padding: 10px 12px;
+  @apply [background:rgba(156,91,71,0.1)] text-[color:var(--heritage-danger)] text-xs -mt-1 mb-[15px] mx-0 px-3 py-2.5 rounded-md;
 }
-
 .heritage-auth-links {
-  align-items: center;
-  color: var(--heritage-line);
-  display: flex;
-  font-size: 12px;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 22px;
+  @apply items-center text-[color:var(--heritage-line)] flex text-xs gap-2.5 justify-center mt-[22px];
 }
-
 .heritage-auth-links button {
-  background: none;
-  border: 0;
-  color: var(--heritage-muted);
-  cursor: pointer;
-  font-size: 12px;
-  padding: 2px;
+  @apply [background:none] text-[color:var(--heritage-muted)] cursor-pointer text-xs p-0.5 border-0 hover:text-[color:var(--heritage-bronze-dark)];
 }
-
-.heritage-auth-links button:hover {
-  color: var(--heritage-bronze-dark);
-}
-
 .heritage-auth-footer {
-  border-top: 1px solid rgba(202, 188, 168, 0.6);
-  color: #8b8173;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  padding: 18px;
-  text-align: center;
+  @apply text-[#8b8173] text-[10px] tracking-[0.08em] text-center p-[18px] border-t-[rgba(202,188,168,0.6)] border-t border-solid;
 }
-
 @media (max-width: 900px) {
   .heritage-auth-main {
-    grid-template-columns: 1fr;
-    max-width: 560px;
+    @apply grid-cols-[1fr] max-w-[560px];
   }
-
   .heritage-auth-copy {
-    display: none;
+    @apply hidden;
   }
 }
-
 @media (max-width: 540px) {
   .heritage-auth-main {
-    padding: 38px 20px;
+    @apply px-5 py-[38px];
   }
-
   .heritage-auth-card {
-    padding: 30px 24px;
+    @apply px-6 py-[30px];
   }
+}
 }

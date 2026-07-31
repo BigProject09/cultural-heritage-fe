@@ -93,7 +93,10 @@ function BoxShape({ region, imageWidth, selected, onSelect }) {
   const fontSize = Math.max(12, imageWidth / 70);
 
   return (
-    <g onClick={() => onSelect(region.regionId)} style={{ cursor: "pointer" }}>
+    <g
+      className="cursor-pointer"
+      onClick={() => onSelect(region.regionId)}
+    >
       <rect
         x={x1}
         y={y1}

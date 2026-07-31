@@ -1,269 +1,129 @@
+@reference "tailwindcss";
+
+@layer components {
 .heritage-worklist {
-  background:
-    radial-gradient(circle at 15% 0%, rgba(255, 255, 255, 0.78), transparent 27rem),
-    linear-gradient(rgba(118, 91, 61, 0.025) 1px, transparent 1px),
-    var(--heritage-paper);
-  background-size: auto, 100% 5px, auto;
-  color: var(--heritage-ink);
-  min-height: 100vh;
+  @apply [background:radial-gradient(circle_at_15%_0%,rgba(255,255,255,0.78),transparent_27rem),linear-gradient(rgba(118,91,61,0.025)_1px,transparent_1px),var(--heritage-paper)] bg-[auto,100%_5px,auto] text-[color:var(--heritage-ink)] min-h-screen;
 }
-
 .heritage-worklist-main {
-  margin: 0 auto;
-  max-width: 1400px;
-  padding: 48px 52px 72px;
+  @apply max-w-[1400px] mx-auto my-0 pt-12 pb-[72px] px-[52px];
 }
-
 .heritage-worklist-heading {
-  align-items: end;
-  display: flex;
-  justify-content: space-between;
+  @apply [align-items:end] flex justify-between;
 }
-
 .heritage-worklist-heading span {
-  color: var(--heritage-bronze);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  @apply text-[color:var(--heritage-bronze)] text-[10px] font-bold tracking-[0.18em];
 }
-
 .heritage-worklist-heading h1 {
-  font-family: "Noto Serif KR", Georgia, serif;
-  font-size: 44px;
-  font-weight: 500;
-  letter-spacing: -0.04em;
-  margin: 10px 0 8px;
+  @apply [font-family:"Noto_Serif_KR",Georgia,serif] text-[44px] font-medium tracking-[-0.04em] mt-2.5 mb-2 mx-0;
 }
-
 .heritage-worklist-heading p {
-  color: var(--heritage-muted);
-  margin: 0;
+  @apply text-[color:var(--heritage-muted)] m-0;
 }
-
 .heritage-worklist-heading > button {
-  background: var(--heritage-bronze);
-  border: 0;
-  border-radius: 9px;
-  color: white;
-  cursor: pointer;
-  min-height: 44px;
-  padding: 0 20px;
+  @apply [background:var(--heritage-bronze)] text-[white] cursor-pointer min-h-11 px-5 py-0 rounded-[9px] border-0;
 }
-
 .heritage-worklist-tools {
-  align-items: center;
-  border-bottom: 1px solid var(--heritage-line);
-  display: grid;
-  gap: 12px;
-  grid-template-columns: minmax(240px, 1fr) 170px auto;
-  margin: 32px 0 22px;
-  padding-bottom: 22px;
+  @apply items-center border-b-[color:var(--heritage-line)] grid gap-3 grid-cols-[minmax(240px,1fr)_170px_auto] mt-8 mb-[22px] mx-0 pb-[22px] border-b border-solid;
 }
-
 .heritage-worklist-tools input,
 .heritage-worklist-tools select {
-  background: rgba(255, 253, 247, 0.82);
-  border: 1px solid var(--heritage-line);
-  border-radius: 8px;
-  color: var(--heritage-ink);
-  min-height: 43px;
-  padding: 0 14px;
+  @apply [background:rgba(255,253,247,0.82)] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] min-h-[43px] px-3.5 py-0 rounded-lg border-solid;
 }
-
 .heritage-worklist-tools > span {
-  color: var(--heritage-muted);
-  font-size: 11px;
+  @apply text-[color:var(--heritage-muted)] text-[11px];
 }
-
 .heritage-worklist-grid {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  @apply grid gap-[18px] grid-cols-2;
 }
-
 .heritage-worklist-state {
-  align-items: center;
-  border: 1px dashed var(--heritage-line);
-  border-radius: 14px;
-  color: var(--heritage-muted);
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  grid-column: 1 / -1;
-  justify-content: center;
-  min-height: 240px;
-  padding: 30px;
-  text-align: center;
+  @apply items-center border border-[color:var(--heritage-line)] text-[color:var(--heritage-muted)] flex flex-col gap-[7px] col-span-full justify-center min-h-60 text-center p-[30px] rounded-[14px] border-dashed;
 }
-
 .heritage-worklist-state strong {
-  color: var(--heritage-ink);
-  font-family: "Noto Serif KR", Georgia, serif;
-  font-size: 20px;
-  font-weight: 500;
+  @apply text-[color:var(--heritage-ink)] [font-family:"Noto_Serif_KR",Georgia,serif] text-xl font-medium;
 }
-
 .heritage-worklist-state span {
-  font-size: 11px;
+  @apply text-[11px];
 }
-
 .heritage-worklist-state button {
-  background: var(--heritage-bronze);
-  border: 0;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  margin-top: 7px;
-  min-height: 38px;
-  padding: 0 16px;
+  @apply [background:var(--heritage-bronze)] text-[white] cursor-pointer min-h-[38px] mt-[7px] px-4 py-0 rounded-lg border-0;
 }
-
 .heritage-worklist-state.error {
-  border-color: var(--heritage-danger);
+  @apply border-[color:var(--heritage-danger)];
 }
-
 .heritage-worklist-grid > article {
-  background: rgba(255, 253, 247, 0.74);
-  border: 1px solid var(--heritage-line);
-  border-radius: 14px;
-  padding: 18px;
+  @apply [background:rgba(255,253,247,0.74)] border border-[color:var(--heritage-line)] p-[18px] rounded-[14px] border-solid;
 }
-
 .heritage-worklist-card-head {
-  align-items: center;
-  display: grid;
-  gap: 18px;
-  grid-template-columns: 120px 1fr auto;
+  @apply items-center grid gap-[18px] grid-cols-[120px_1fr_auto];
 }
-
 .heritage-worklist-card-head > div > span {
-  color: var(--heritage-green);
-  font-family: monospace;
-  font-size: 10px;
+  @apply text-[color:var(--heritage-green)] [font-family:monospace] text-[10px];
 }
-
 .heritage-worklist-card-head h2 {
-  font-family: "Noto Serif KR", Georgia, serif;
-  font-size: 23px;
-  font-weight: 500;
-  margin: 5px 0;
+  @apply [font-family:"Noto_Serif_KR",Georgia,serif] text-[23px] font-medium mx-0 my-[5px];
 }
-
 .heritage-worklist-card-head p {
-  color: var(--heritage-muted);
-  font-size: 11px;
-  margin: 0;
+  @apply text-[color:var(--heritage-muted)] text-[11px] m-0;
 }
-
 .heritage-worklist-card-head > strong {
-  color: var(--heritage-bronze-dark);
-  font-family: Georgia, serif;
-  font-size: 24px;
-  font-weight: 400;
+  @apply text-[color:var(--heritage-bronze-dark)] [font-family:Georgia,serif] text-2xl font-normal;
 }
-
 .heritage-worklist-progress {
-  border-bottom: 1px solid #ded4c5;
-  border-top: 1px solid #ded4c5;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: 18px;
-  padding: 14px 0;
+  @apply grid grid-cols-[repeat(3,1fr)] mt-[18px] px-0 py-3.5 border-y-[#ded4c5] border-b border-solid border-t;
 }
-
 .heritage-worklist-progress > div {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  justify-content: center;
+  @apply items-center flex gap-2 justify-center;
 }
-
 .heritage-worklist-progress i {
-  background: var(--heritage-paper-2);
-  border: 1px solid #aaa497;
-  border-radius: 50%;
-  display: block;
-  height: 11px;
-  width: 11px;
+  @apply [background:var(--heritage-paper-2)] border block h-[11px] w-[11px] rounded-[50%] border-solid border-[#aaa497];
 }
-
 .heritage-worklist-progress i.done {
-  background: var(--heritage-green);
-  border-color: var(--heritage-green);
+  @apply [background:var(--heritage-green)] border-[color:var(--heritage-green)];
 }
-
 .heritage-worklist-progress i.in_progress {
-  background: var(--heritage-bronze);
-  border-color: var(--heritage-bronze);
+  @apply [background:var(--heritage-bronze)] border-[color:var(--heritage-bronze)];
 }
-
 .heritage-worklist-progress i.needs_update {
-  background: var(--heritage-danger);
-  border-color: var(--heritage-danger);
+  @apply [background:var(--heritage-danger)] border-[color:var(--heritage-danger)];
 }
-
 .heritage-worklist-progress span {
-  font-size: 10px;
+  @apply text-[10px];
 }
-
 .heritage-worklist-card-foot {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  padding-top: 15px;
+  @apply items-center flex justify-between pt-[15px];
 }
-
 .heritage-worklist-card-foot small {
-  color: #8d857a;
-  font-size: 9px;
+  @apply text-[#8d857a] text-[9px];
 }
-
 .heritage-worklist-card-foot button {
-  background: transparent;
-  border: 1px solid var(--heritage-bronze);
-  border-radius: 8px;
-  color: var(--heritage-bronze-dark);
-  cursor: pointer;
-  min-height: 39px;
-  padding: 0 15px;
+  @apply [background:transparent] border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze-dark)] cursor-pointer min-h-[39px] px-[15px] py-0 rounded-lg border-solid;
 }
-
 @media (max-width: 900px) {
   .heritage-worklist-main {
-    padding-left: 24px;
-    padding-right: 24px;
+    @apply px-6;
   }
-
   .heritage-worklist-grid {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
 }
-
 @media (max-width: 640px) {
   .heritage-worklist-heading {
-    align-items: start;
-    flex-direction: column;
-    gap: 20px;
+    @apply [align-items:start] flex-col gap-5;
   }
-
   .heritage-worklist-heading h1 {
-    font-size: 36px;
+    @apply text-4xl;
   }
-
   .heritage-worklist-tools {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   .heritage-worklist-card-head {
-    grid-template-columns: 88px 1fr;
+    @apply grid-cols-[88px_1fr];
   }
-
   .heritage-worklist-card-head .heritage-artifact-thumb {
-    height: 76px;
-    width: 88px;
+    @apply h-[76px] w-[88px];
   }
-
   .heritage-worklist-card-head > strong {
-    grid-column: 1 / -1;
+    @apply col-span-full;
   }
+}
 }

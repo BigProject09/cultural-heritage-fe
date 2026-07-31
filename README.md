@@ -50,12 +50,23 @@ X-RAY 기능은 백엔드 컨테이너가 모두 떠 있어야 동작한다.
     ├── pages/
     └── services/        API 호출
 
+## 스타일링
+
+Tailwind CSS 4와 공식 Vite 플러그인을 사용한다. 새 UI는 JSX의 Tailwind
+유틸리티 클래스로 작성한다.
+
+기존 화면의 복합 선택자와 상태 스타일은 각 컴포넌트 CSS 파일에 유지하되,
+일반 CSS 선언 대신 `@apply`로 Tailwind 유틸리티를 조합한다. 각 스타일
+파일의 `@reference "tailwindcss";`는 `@apply`가 Tailwind 테마를 참조하기
+위해 필요하므로 삭제하지 않는다. 전역 Tailwind 진입점은 `src/index.css`다.
+
 ## 기술 스택
 
 | 항목                | 버전        |
 | ------------------- | ----------- |
 | React               | 19.2        |
 | Vite                | 8.1         |
+| Tailwind CSS        | 4.3         |
 | react-router-dom    | 7.18        |
 | konva / react-konva | 10.3 / 19.2 |
 | axios               | 1.18        |

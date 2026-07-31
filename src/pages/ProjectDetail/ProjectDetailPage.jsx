@@ -14,6 +14,8 @@ import {
 } from "../../data/workspaceProjects";
 import "./ProjectDetailPage.css";
 
+const PROGRESS_WIDTH_CLASSES = ["w-0", "w-1/3", "w-2/3", "w-full"];
+
 function ProjectDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -139,9 +141,7 @@ function ProjectDetailPage() {
             </strong>
             <div>
               <i
-                style={{
-                  width: `${(completedCount / WORKSPACE_MODULES.length) * 100}%`,
-                }}
+                className={PROGRESS_WIDTH_CLASSES[completedCount] || "w-0"}
               />
             </div>
           </div>

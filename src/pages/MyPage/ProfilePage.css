@@ -1,35 +1,21 @@
+@reference "tailwindcss";
+
+@layer components {
 .account-profile-detail {
-  display: grid;
-  gap: 32px;
-  grid-template-columns: 150px 1fr;
+  @apply grid gap-8 grid-cols-[150px_1fr];
 }
-
 .account-profile-seal {
-  align-items: center;
-  align-self: start;
-  background: var(--heritage-ink);
-  border: 6px double #c8aa80;
-  border-radius: 50%;
-  color: #e8d7bd;
-  display: flex;
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 40px;
-  height: 120px;
-  justify-content: center;
-  width: 120px;
+  @apply items-center [align-self:start] [background:var(--heritage-ink)] text-[#e8d7bd] flex [font-family:Georgia,"Noto_Serif_KR",serif] text-[40px] h-[120px] justify-center w-[120px] rounded-[50%] border-[6px] border-double border-[#c8aa80];
 }
-
 .account-profile-detail > .heritage-button {
-  grid-column: 2;
-  justify-self: start;
+  @apply col-[2] justify-self-start;
 }
-
 @media (max-width: 620px) {
   .account-profile-detail {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   .account-profile-detail > .heritage-button {
-    grid-column: auto;
+    @apply col-auto;
   }
+}
 }

@@ -1,191 +1,84 @@
+@reference "tailwindcss";
+
+@layer components {
 .account-profile-card {
-  align-items: center;
-  background:
-    linear-gradient(115deg, rgba(28, 36, 32, 0.98), rgba(49, 57, 50, 0.95));
-  border: 1px solid rgba(150, 104, 61, 0.5);
-  border-radius: 17px;
-  box-shadow: 0 20px 44px rgba(31, 34, 29, 0.17);
-  color: #f7f0e3;
-  display: flex;
-  gap: 24px;
-  min-height: 168px;
-  padding: 30px 34px;
+  @apply items-center [background:linear-gradient(115deg,rgba(28,36,32,0.98),rgba(49,57,50,0.95))] border shadow-[0_20px_44px_rgba(31,34,29,0.17)] text-[#f7f0e3] flex gap-6 min-h-[168px] px-[34px] py-[30px] rounded-[17px] border-solid border-[rgba(150,104,61,0.5)];
 }
-
 .account-avatar {
-  align-items: center;
-  background: #d4c4aa;
-  border: 2px solid #a88762;
-  border-radius: 50%;
-  color: var(--heritage-ink);
-  display: flex;
-  flex: 0 0 auto;
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 32px;
-  height: 92px;
-  justify-content: center;
-  width: 92px;
+  @apply items-center [background:#d4c4aa] text-[color:var(--heritage-ink)] flex flex-[0_0_auto] [font-family:Georgia,"Noto_Serif_KR",serif] text-[32px] h-[92px] justify-center w-[92px] rounded-[50%] border-2 border-solid border-[#a88762];
 }
-
 .account-profile-info {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
+  @apply flex flex-1 flex-col;
 }
-
 .account-profile-info p,
 .account-menu-card > p {
-  color: #c8aa80;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  @apply text-[#c8aa80] text-[9px] font-bold tracking-[0.2em];
 }
-
 .account-profile-info h2 {
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 30px;
-  font-weight: 500;
-  margin: 9px 0 5px;
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-3xl font-medium mt-[9px] mb-[5px] mx-0;
 }
-
 .account-profile-info strong {
-  color: #dccbb0;
-  font-size: 12px;
+  @apply text-[#dccbb0] text-xs;
 }
-
 .account-profile-info span {
-  color: #aeb4ae;
-  font-size: 11px;
-  margin-top: 12px;
+  @apply text-[#aeb4ae] text-[11px] mt-3;
 }
-
 .account-edit-button {
-  border-color: #8e806c !important;
-  color: #f3eadb !important;
+  @apply text-[#f3eadb] border-[#8e806c] hover:[background:rgba(255,255,255,0.08)];
 }
-
-.account-edit-button:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-}
-
 .account-profile-edit {
-  display: grid;
-  flex: 1;
-  gap: 12px;
-  grid-template-columns: repeat(3, 1fr);
+  @apply grid flex-1 gap-3 grid-cols-[repeat(3,1fr)];
 }
-
 .account-profile-edit label {
-  color: #bfc3bd;
-  display: flex;
-  flex-direction: column;
-  font-size: 10px;
-  gap: 6px;
+  @apply text-[#bfc3bd] flex flex-col text-[10px] gap-1.5;
 }
-
 .account-profile-edit input {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid #77786f;
-  border-radius: 7px;
-  color: #fffaf0;
-  height: 42px;
-  padding: 0 12px;
+  @apply [background:rgba(255,255,255,0.08)] border text-[#fffaf0] h-[42px] px-3 py-0 rounded-[7px] border-solid border-[#77786f] focus:[outline:none] focus:border-[#c5a87d];
 }
-
-.account-profile-edit input:focus {
-  border-color: #c5a87d;
-  outline: none;
-}
-
 .account-edit-actions {
-  display: flex;
-  gap: 8px;
-  grid-column: 1 / -1;
+  @apply flex gap-2 col-span-full;
 }
-
 .account-menu-grid {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: 26px;
+  @apply grid gap-5 grid-cols-[repeat(3,1fr)] mt-[26px];
 }
-
 .account-menu-card {
-  background: rgba(251, 248, 241, 0.76);
-  border: 1px solid rgba(150, 104, 61, 0.22);
-  border-radius: 15px;
-  min-height: 265px;
-  overflow: hidden;
-  padding: 28px;
-  position: relative;
+  @apply [background:rgba(251,248,241,0.76)] border min-h-[265px] overflow-hidden relative p-7 rounded-[15px] border-solid border-[rgba(150,104,61,0.22)];
 }
-
 .account-menu-card.muted {
-  background: rgba(225, 218, 206, 0.55);
+  @apply [background:rgba(225,218,206,0.55)];
 }
-
 .account-menu-number {
-  color: rgba(150, 104, 61, 0.15);
-  font-family: Georgia, serif;
-  font-size: 86px;
-  line-height: 1;
-  position: absolute;
-  right: 16px;
-  top: 15px;
+  @apply text-[rgba(150,104,61,0.15)] [font-family:Georgia,serif] text-[86px] leading-none absolute right-4 top-[15px];
 }
-
 .account-menu-card h2 {
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 25px;
-  font-weight: 500;
-  margin: 15px 0 32px;
-  position: relative;
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[25px] font-medium relative mt-[15px] mb-8 mx-0;
 }
-
 .account-menu-copy {
-  color: var(--heritage-muted);
-  font-size: 13px;
-  line-height: 1.7;
-  min-height: 48px;
+  @apply text-[color:var(--heritage-muted)] text-[13px] leading-[1.7] min-h-12;
 }
-
 .account-menu-copy strong {
-  color: var(--heritage-bronze-dark);
+  @apply text-[color:var(--heritage-bronze-dark)];
 }
-
 .account-text-link {
-  background: none;
-  border: 0;
-  color: var(--heritage-ink);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: 24px;
-  padding: 0;
+  @apply [background:none] text-[color:var(--heritage-ink)] cursor-pointer text-xs font-bold mt-6 p-0 border-0;
 }
-
 .account-text-link span {
-  color: var(--heritage-bronze);
-  margin-left: 7px;
+  @apply text-[color:var(--heritage-bronze)] ml-[7px];
 }
-
 @media (max-width: 900px) {
   .account-menu-grid {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   .account-profile-edit {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
 }
-
 @media (max-width: 620px) {
   .account-profile-card {
-    align-items: flex-start;
-    flex-direction: column;
+    @apply items-start flex-col;
   }
-
   .account-edit-button {
-    align-self: stretch;
+    @apply self-stretch;
   }
+}
 }

@@ -1,22 +1,9 @@
-:root {
-  --workflow-paper: #f4f0e7;
-  --workflow-paper-deep: #e9e1d4;
-  --workflow-surface: #fffdf8;
-  --workflow-surface-soft: #faf6ee;
-  --workflow-ink: #17201d;
-  --workflow-ink-soft: #3f4741;
-  --workflow-muted: #687069;
-  --workflow-bronze: #96683d;
-  --workflow-bronze-dark: #704821;
-  --workflow-bronze-soft: #eee3d2;
-  --workflow-line: #cabca8;
-  --workflow-line-soft: rgba(202, 188, 168, 0.56);
-  --workflow-green: #61735d;
-  --workflow-green-dark: #455643;
-  --workflow-danger: #9c5b47;
-  --workflow-shadow: 0 18px 48px rgba(63, 52, 38, 0.08);
-}
+@reference "tailwindcss";
 
+@layer components {
+:root {
+  @apply [--workflow-paper:#f4f0e7] [--workflow-paper-deep:#e9e1d4] [--workflow-surface:#fffdf8] [--workflow-surface-soft:#faf6ee] [--workflow-ink:#17201d] [--workflow-ink-soft:#3f4741] [--workflow-muted:#687069] [--workflow-bronze:#96683d] [--workflow-bronze-dark:#704821] [--workflow-bronze-soft:#eee3d2] [--workflow-line:#cabca8] [--workflow-line-soft:rgba(202,188,168,0.56)] [--workflow-green:#61735d] [--workflow-green-dark:#455643] [--workflow-danger:#9c5b47] [--workflow-shadow:0_18px_48px_rgba(63,52,38,0.08)];
+}
 :is(
   .flow-page,
   .pre-page,
@@ -40,24 +27,8 @@
   .report-page,
   .complete-page
 ) {
-  min-height: 100vh;
-  background:
-    radial-gradient(
-      circle at 88% 5%,
-      rgba(150, 104, 61, 0.09),
-      transparent 24rem
-    ),
-    var(--workflow-paper);
-  color: var(--workflow-ink);
-  font-family:
-    Pretendard,
-    "Noto Sans KR",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  @apply min-h-screen [background:radial-gradient(_circle_at_88%_5%,rgba(150,104,61,0.09),transparent_24rem_),var(--workflow-paper)] text-[color:var(--workflow-ink)] [font-family:Pretendard,"Noto_Sans_KR",-apple-system,BlinkMacSystemFont,"Segoe_UI",sans-serif];
 }
-
 :is(
   .flow-page,
   .pre-page,
@@ -81,34 +52,7 @@
   .report-page,
   .complete-page
 ) :is(button, input, textarea, select) {
-  font: inherit;
-}
-
-:is(
-  .flow-page,
-  .pre-page,
-  .visual-page,
-  .xray-page,
-  .disassembly-page,
-  .checklist-page,
-  .tool-page,
-  .method-page,
-  .cleaning-page,
-  .cleaning-method-page,
-  .strengthening-page,
-  .strengthening-material-page,
-  .strengthening-wetting-page,
-  .bonding-page,
-  .bonding-material-page,
-  .bonding-work-page,
-  .restoration-page,
-  .restoration-material-page,
-  .post-record-page,
-  .report-page,
-  .complete-page
-) :is(button, input, textarea, select):focus-visible {
-  outline: 3px solid rgba(150, 104, 61, 0.2);
-  outline-offset: 2px;
+  @apply [font:inherit];
 }
 
 /* 공통 작업 상단 바 */
@@ -132,15 +76,8 @@
   .post-record-page,
   .report-page
 ) > :is(.top-bar, .navigation, .detail-header) {
-  width: min(1240px, calc(100% - 64px));
-  min-height: 72px;
-  margin: 0 auto 36px;
-  padding: 0;
-  border-bottom: 1px solid var(--workflow-line);
-  background: transparent;
-  box-shadow: none;
+  @apply w-[min(1240px,calc(100%_-_64px))] min-h-[72px] border-b-[color:var(--workflow-line)] [background:transparent] shadow-none mt-0 mb-9 mx-auto p-0 border-b border-solid;
 }
-
 :is(
   .flow-page,
   .pre-page,
@@ -161,16 +98,8 @@
   .post-record-page,
   .report-page
 ) :is(.logo, .top-bar-logo, .vora-logo) {
-  border: 0;
-  background: transparent;
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 23px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  cursor: pointer;
+  @apply [background:transparent] text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[23px] font-bold tracking-[0.12em] cursor-pointer border-0;
 }
-
 :is(
   .flow-page,
   .pre-page,
@@ -191,48 +120,8 @@
   .post-record-page,
   .report-page
 ) .nav-btn {
-  min-height: 43px;
-  padding: 0 20px;
-  border: 1px solid var(--workflow-bronze);
-  border-radius: 8px;
-  background: var(--workflow-bronze);
-  box-shadow: none;
-  color: #fffaf0;
-  font-size: 13px;
-  font-weight: 700;
-  transition:
-    background 0.16s ease,
-    border-color 0.16s ease,
-    color 0.16s ease,
-    transform 0.16s ease;
+  @apply min-h-[43px] border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] shadow-none text-[#fffaf0] text-[13px] font-bold [transition:background_0.16s_ease,border-color_0.16s_ease,color_0.16s_ease,transform_0.16s_ease] px-5 py-0 rounded-lg border-solid;
 }
-
-:is(
-  .flow-page,
-  .pre-page,
-  .disassembly-page,
-  .checklist-page,
-  .tool-page,
-  .method-page,
-  .cleaning-page,
-  .cleaning-method-page,
-  .strengthening-page,
-  .strengthening-material-page,
-  .strengthening-wetting-page,
-  .bonding-page,
-  .bonding-material-page,
-  .bonding-work-page,
-  .restoration-page,
-  .restoration-material-page,
-  .post-record-page,
-  .report-page
-) .nav-btn:hover:not(:disabled) {
-  border-color: var(--workflow-bronze-dark);
-  background: var(--workflow-bronze-dark);
-  color: #fffaf0;
-  transform: translateY(-1px);
-}
-
 :is(
   .flow-page,
   .pre-page,
@@ -253,35 +142,7 @@
   .post-record-page,
   .report-page
 ) .nav-btn.secondary {
-  border-color: var(--workflow-line);
-  background: transparent;
-  color: var(--workflow-ink);
-}
-
-:is(
-  .flow-page,
-  .pre-page,
-  .disassembly-page,
-  .checklist-page,
-  .tool-page,
-  .method-page,
-  .cleaning-page,
-  .cleaning-method-page,
-  .strengthening-page,
-  .strengthening-material-page,
-  .strengthening-wetting-page,
-  .bonding-page,
-  .bonding-material-page,
-  .bonding-work-page,
-  .restoration-page,
-  .restoration-material-page,
-  .post-record-page,
-  .report-page
-) .nav-btn:disabled {
-  border-color: #d6cfc3;
-  background: #d6cfc3;
-  color: #8c8982;
-  cursor: not-allowed;
+  @apply border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-ink)];
 }
 
 /* 공정 허브 페이지 */
@@ -293,9 +154,8 @@
   .bonding-page,
   .restoration-page
 ) {
-  padding: 28px 32px 88px;
+  @apply pt-7 pb-[88px] px-8;
 }
-
 :is(
   .pre-page,
   .disassembly-page,
@@ -304,13 +164,8 @@
   .bonding-page,
   .restoration-page
 ) .page-layout {
-  display: flex;
-  width: min(1240px, 100%);
-  align-items: flex-start;
-  gap: 28px;
-  margin: 0 auto;
+  @apply flex w-[min(1240px,100%)] items-start gap-7 mx-auto my-0;
 }
-
 :is(
   .pre-page,
   .disassembly-page,
@@ -319,10 +174,8 @@
   .bonding-page,
   .restoration-page
 ) .page-main {
-  min-width: 0;
-  flex: 1;
+  @apply min-w-0 flex-1;
 }
-
 :is(
   .pre-page,
   .disassembly-page,
@@ -331,11 +184,8 @@
   .bonding-page,
   .restoration-page
 ) :is(.content, .content-columns) {
-  width: 100%;
-  max-width: none;
-  gap: 22px;
+  @apply w-full max-w-none gap-[22px];
 }
-
 :is(
   .pre-page,
   .disassembly-page,
@@ -349,12 +199,8 @@
   .post-record-card,
   .analysis-btn
 ) {
-  border: 1px solid var(--workflow-line-soft);
-  border-radius: 14px;
-  background: rgba(255, 253, 248, 0.9);
-  box-shadow: var(--workflow-shadow);
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] rounded-[14px] border-solid;
 }
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -368,11 +214,8 @@
   .bonding-container,
   .restoration-container
 ) {
-  min-width: 0;
-  flex: 1.15;
-  padding: 0;
+  @apply min-w-0 flex-[1.15] p-0;
 }
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -380,25 +223,8 @@
   .bonding-page,
   .restoration-page
 ) .task-card {
-  min-height: 124px;
-  gap: 22px;
-  margin: 0 0 16px;
-  padding: 24px 26px;
-  transform: none;
+  @apply min-h-[124px] gap-[22px] [transform:none] mt-0 mb-4 mx-0 px-[26px] py-6;
 }
-
-:is(
-  .disassembly-page,
-  .cleaning-page,
-  .strengthening-page,
-  .bonding-page,
-  .restoration-page
-) .task-card:hover {
-  border-color: var(--workflow-bronze);
-  box-shadow: 0 18px 42px rgba(63, 52, 38, 0.12);
-  transform: translateY(-2px);
-}
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -406,19 +232,8 @@
   .bonding-page,
   .restoration-page
 ) .task-icon {
-  display: grid;
-  width: 52px;
-  height: 52px;
-  flex: 0 0 52px;
-  place-items: center;
-  border: 1px solid var(--workflow-bronze);
-  border-radius: 50%;
-  background: var(--workflow-bronze-soft);
-  color: var(--workflow-bronze-dark);
-  font-family: Georgia, serif;
-  font-size: 18px;
+  @apply grid w-[52px] h-[52px] flex-[0_0_52px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] [font-family:Georgia,serif] text-lg rounded-[50%] border-solid;
 }
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -426,13 +241,8 @@
   .bonding-page,
   .restoration-page
 ) .task-content h2 {
-  margin: 0 0 7px;
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 22px;
-  font-weight: 600;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[22px] font-semibold mt-0 mb-[7px] mx-0;
 }
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -440,12 +250,8 @@
   .bonding-page,
   .restoration-page
 ) .task-content p {
-  margin: 0;
-  color: var(--workflow-muted);
-  font-size: 14px;
-  line-height: 1.65;
+  @apply text-[color:var(--workflow-muted)] text-sm leading-[1.65] m-0;
 }
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -453,10 +259,8 @@
   .bonding-page,
   .restoration-page
 ) .task-arrow {
-  color: var(--workflow-bronze);
-  font-size: 25px;
+  @apply text-[color:var(--workflow-bronze)] text-[25px];
 }
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -464,10 +268,8 @@
   .bonding-page,
   .restoration-page
 ) .post-record-card {
-  flex: 0.85;
-  padding: 26px;
+  @apply flex-[0.85] p-[26px];
 }
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -475,12 +277,8 @@
   .bonding-page,
   .restoration-page
 ) .post-record-card h3 {
-  margin: 0 0 20px;
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 21px;
-  font-weight: 600;
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[21px] font-semibold mt-0 mb-5 mx-0;
 }
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -491,27 +289,8 @@
   .photo-url-input,
   .post-record-memo
 ) {
-  border: 1px solid var(--workflow-line);
-  border-radius: 8px;
-  background: var(--workflow-surface);
-  color: var(--workflow-ink);
+  @apply border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] text-[color:var(--workflow-ink)] rounded-lg border-solid;
 }
-
-:is(
-  .disassembly-page,
-  .cleaning-page,
-  .strengthening-page,
-  .bonding-page,
-  .restoration-page
-) :is(
-  .photo-url-input,
-  .post-record-memo
-):focus {
-  border-color: var(--workflow-bronze);
-  box-shadow: 0 0 0 3px rgba(150, 104, 61, 0.12);
-  outline: none;
-}
-
 :is(
   .disassembly-page,
   .cleaning-page,
@@ -522,10 +301,7 @@
   .photo-url-add-btn,
   .post-record-save-btn
 ) {
-  border: 1px solid var(--workflow-bronze);
-  border-radius: 8px;
-  background: var(--workflow-bronze);
-  color: #fffaf0;
+  @apply border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[#fffaf0] rounded-lg border-solid;
 }
 
 /* 공정 진행 사이드바 */
@@ -537,15 +313,8 @@
   .bonding-page,
   .restoration-page
 ) .progress-wrapper {
-  width: 210px;
-  top: 24px;
-  padding: 27px 23px;
-  border: 1px solid var(--workflow-line-soft);
-  border-radius: 14px;
-  background: rgba(255, 253, 248, 0.86);
-  box-shadow: var(--workflow-shadow);
+  @apply w-[210px] border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.86)] shadow-[var(--workflow-shadow)] px-[23px] py-[27px] rounded-[14px] border-solid top-6;
 }
-
 :is(
   .pre-page,
   .disassembly-page,
@@ -554,14 +323,8 @@
   .bonding-page,
   .restoration-page
 ) .progress-circle {
-  width: 35px;
-  height: 35px;
-  border: 1px solid var(--workflow-line);
-  background: var(--workflow-paper-deep);
-  color: var(--workflow-muted);
-  font-size: 13px;
+  @apply w-[35px] h-[35px] border border-[color:var(--workflow-line)] [background:var(--workflow-paper-deep)] text-[color:var(--workflow-muted)] text-[13px] border-solid;
 }
-
 :is(
   .pre-page,
   .disassembly-page,
@@ -570,11 +333,8 @@
   .bonding-page,
   .restoration-page
 ) .progress-circle.active {
-  border-color: var(--workflow-bronze);
-  background: var(--workflow-bronze);
-  color: #fffaf0;
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[#fffaf0];
 }
-
 :is(
   .pre-page,
   .disassembly-page,
@@ -583,11 +343,8 @@
   .bonding-page,
   .restoration-page
 ) .progress-title {
-  margin-top: 7px;
-  color: var(--workflow-muted);
-  font-size: 13px;
+  @apply text-[color:var(--workflow-muted)] text-[13px] mt-[7px];
 }
-
 :is(
   .pre-page,
   .disassembly-page,
@@ -596,9 +353,8 @@
   .bonding-page,
   .restoration-page
 ) .progress-title.active {
-  color: var(--workflow-bronze-dark);
+  @apply text-[color:var(--workflow-bronze-dark)];
 }
-
 :is(
   .pre-page,
   .disassembly-page,
@@ -607,105 +363,51 @@
   .bonding-page,
   .restoration-page
 ) .progress-line {
-  left: 17px;
-  background: var(--workflow-line);
+  @apply [background:var(--workflow-line)] left-[17px];
 }
 
 /* 처리 전 조사 허브 */
 .pre-page .info-card {
-  padding: 30px;
+  @apply p-[30px];
 }
-
 .pre-page .info-card-header {
-  margin-bottom: 26px;
+  @apply mb-[26px];
 }
-
 .pre-page .info-card-header h2 {
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 27px;
-  font-weight: 600;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[27px] font-semibold;
 }
-
 .pre-page .info-card-header .edit-btn {
-  border: 1px solid var(--workflow-line);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--workflow-bronze-dark);
+  @apply border border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-bronze-dark)] rounded-lg border-solid;
 }
-
 .pre-page .info-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  border-top: 1px solid var(--workflow-line-soft);
-  border-left: 1px solid var(--workflow-line-soft);
+  @apply grid-cols-3 gap-0 border-t-[color:var(--workflow-line-soft)] border-l-[color:var(--workflow-line-soft)] border-t border-solid border-l;
 }
-
 .pre-page .info-item {
-  min-height: 96px;
-  padding: 20px;
-  border-right: 1px solid var(--workflow-line-soft);
-  border-bottom: 1px solid var(--workflow-line-soft);
+  @apply min-h-24 border-r-[color:var(--workflow-line-soft)] border-b-[color:var(--workflow-line-soft)] p-5 border-r border-solid border-b;
 }
-
 .pre-page .info-item span {
-  margin-bottom: 8px;
-  color: var(--workflow-muted);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  @apply text-[color:var(--workflow-muted)] text-[11px] tracking-[0.08em] mb-2;
 }
-
 .pre-page .info-item p {
-  color: var(--workflow-ink);
-  font-size: 17px;
-  font-weight: 650;
+  @apply text-[color:var(--workflow-ink)] text-[17px] font-[650];
 }
-
 .pre-page .analysis-card {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  @apply grid grid-cols-2 gap-[18px];
 }
-
 .pre-page .analysis-btn {
-  width: auto;
-  min-height: 190px;
-  padding: 30px;
-  border: 1px solid var(--workflow-line-soft);
+  @apply w-auto min-h-[190px] border border-[color:var(--workflow-line-soft)] p-[30px] border-solid hover:border-[color:var(--workflow-bronze)] hover:-translate-y-0.5;
 }
-
-.pre-page .analysis-btn:hover {
-  border-color: var(--workflow-bronze);
-  transform: translateY(-2px);
-}
-
 .pre-page .analysis-btn .icon {
-  display: grid;
-  width: 50px;
-  height: 50px;
-  place-items: center;
-  margin-bottom: 18px;
-  border: 1px solid var(--workflow-bronze);
-  border-radius: 50%;
-  background: var(--workflow-bronze-soft);
-  color: var(--workflow-bronze-dark);
-  font-size: 24px;
+  @apply grid w-[50px] h-[50px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-2xl mb-[18px] rounded-[50%] border-solid;
 }
-
 .pre-page .analysis-btn h3 {
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 23px;
-  font-weight: 600;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[23px] font-semibold;
 }
-
 .pre-page .analysis-btn p {
-  color: var(--workflow-muted);
+  @apply text-[color:var(--workflow-muted)];
 }
-
 .pre-page .analysis-btn.completed {
-  border-color: rgba(97, 115, 93, 0.55);
-  background: rgba(240, 245, 237, 0.92);
+  @apply [background:rgba(240,245,237,0.92)] border-[rgba(97,115,93,0.55)];
 }
 
 /* 상세 작업 페이지 공통 */
@@ -720,9 +422,8 @@
   .bonding-work-page,
   .restoration-material-page
 ) {
-  padding: 28px 32px 90px;
+  @apply pt-7 pb-[90px] px-8;
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -734,12 +435,8 @@
   .bonding-work-page,
   .restoration-material-page
 ) .page-header {
-  width: min(1120px, 100%);
-  margin: 0 auto 26px;
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--workflow-line);
+  @apply w-[min(1120px,100%)] border-b-[color:var(--workflow-line)] mt-0 mb-[26px] mx-auto pb-[22px] border-b border-solid;
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -751,13 +448,8 @@
   .bonding-work-page,
   .restoration-material-page
 ) .page-header h1 {
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: clamp(31px, 4vw, 44px);
-  font-weight: 500;
-  letter-spacing: -0.035em;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[clamp(31px,4vw,44px)] font-medium tracking-[-0.035em];
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -777,16 +469,8 @@
   .work-card,
   .result-box
 ) {
-  width: min(1120px, 100%);
-  max-width: none;
-  margin: 0 auto;
-  padding: 30px;
-  border: 1px solid var(--workflow-line-soft);
-  border-radius: 16px;
-  background: rgba(255, 253, 248, 0.9);
-  box-shadow: var(--workflow-shadow);
+  @apply w-[min(1120px,100%)] max-w-none border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] mx-auto my-0 p-[30px] rounded-2xl border-solid;
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -804,27 +488,8 @@
   .method-box,
   .result-item
 ) {
-  border-color: var(--workflow-line-soft);
-  border-radius: 12px;
-  background: var(--workflow-surface-soft);
-  box-shadow: none;
+  @apply border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface-soft)] shadow-none rounded-xl;
 }
-
-:is(
-  .checklist-page,
-  .tool-page,
-  .method-page,
-  .cleaning-method-page,
-  .strengthening-material-page,
-  .strengthening-wetting-page,
-  .bonding-material-page,
-  .bonding-work-page,
-  .restoration-material-page
-) :is(.step-card, .check-item):hover {
-  border-color: var(--workflow-bronze);
-  box-shadow: 0 12px 28px rgba(63, 52, 38, 0.08);
-}
-
 :is(
   .checklist-page,
   .tool-page,
@@ -836,18 +501,8 @@
   .bonding-work-page,
   .restoration-material-page
 ) .step-number {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  place-items: center;
-  border: 1px solid var(--workflow-bronze);
-  background: var(--workflow-bronze-soft);
-  color: var(--workflow-bronze-dark);
-  font-family: Georgia, serif;
-  font-size: 18px;
+  @apply grid w-12 h-12 flex-[0_0_48px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] [font-family:Georgia,serif] text-lg border-solid;
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -859,11 +514,8 @@
   .bonding-work-page,
   .restoration-material-page
 ) .step-info h3 {
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 22px;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[22px];
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -875,10 +527,8 @@
   .bonding-work-page,
   .restoration-material-page
 ) .step-info p {
-  color: var(--workflow-muted);
-  font-size: 14px;
+  @apply text-[color:var(--workflow-muted)] text-sm;
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -894,11 +544,8 @@
   .select-btn,
   .complete-btn
 ) {
-  border: 1px solid var(--workflow-green);
-  background: var(--workflow-green);
-  color: white;
+  @apply border border-[color:var(--workflow-green)] [background:var(--workflow-green)] text-[white] border-solid;
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -910,11 +557,8 @@
   .bonding-work-page,
   .restoration-material-page
 ) .edit-btn {
-  border: 1px solid var(--workflow-line);
-  background: var(--workflow-bronze-soft);
-  color: var(--workflow-bronze-dark);
+  @apply border border-[color:var(--workflow-line)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] border-solid;
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -926,11 +570,8 @@
   .bonding-work-page,
   .restoration-material-page
 ) .delete-btn {
-  border: 1px solid rgba(156, 91, 71, 0.25);
-  background: #f7eae5;
-  color: var(--workflow-danger);
+  @apply border [background:#f7eae5] text-[color:var(--workflow-danger)] border-solid border-[rgba(156,91,71,0.25)];
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -942,12 +583,8 @@
   .bonding-work-page,
   .restoration-material-page
 ) .add-step-btn {
-  border-color: var(--workflow-line);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--workflow-bronze-dark);
+  @apply border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-bronze-dark)] rounded-[10px];
 }
-
 :is(
   .checklist-page,
   .tool-page,
@@ -959,338 +596,139 @@
   .bonding-work-page,
   .restoration-material-page
 ) :is(input, textarea, select) {
-  border-color: var(--workflow-line);
-  background: var(--workflow-surface);
-  color: var(--workflow-ink);
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface)] text-[color:var(--workflow-ink)];
 }
 
 /* AI Flow */
 .flow-page {
-  padding: 28px 32px 90px;
+  @apply pt-7 pb-[90px] px-8;
 }
-
 .flow-page .flow-container {
-  width: min(960px, 100%);
-  gap: 22px;
+  @apply w-[min(960px,100%)] gap-[22px];
 }
-
 .flow-page .flow-box {
-  padding: 32px;
-  border: 1px solid var(--workflow-line-soft);
-  border-radius: 16px;
-  background: rgba(255, 253, 248, 0.9);
-  box-shadow: var(--workflow-shadow);
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] p-8 rounded-2xl border-solid;
 }
-
 .flow-page .flow-box h2 {
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 25px;
-  font-weight: 600;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[25px] font-semibold;
 }
-
 .flow-page :is(.step-btn, .ai-step) {
-  border: 1px solid var(--workflow-line);
-  border-radius: 9px;
+  @apply border border-[color:var(--workflow-line)] rounded-[9px] border-solid;
 }
-
 .flow-page .step-btn.active {
-  border-color: var(--workflow-bronze);
-  background: var(--workflow-bronze);
-  color: white;
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[white];
 }
-
 .flow-page .step-btn.inactive {
-  background: var(--workflow-surface-soft);
-  color: var(--workflow-muted);
+  @apply [background:var(--workflow-surface-soft)] text-[color:var(--workflow-muted)];
 }
-
 .flow-page .ai-step {
-  background: var(--workflow-green);
-  color: white;
+  @apply [background:var(--workflow-green)] text-[white];
 }
-
 .flow-page .arrow {
-  color: var(--workflow-line);
+  @apply text-[color:var(--workflow-line)];
 }
 
 /* 육안 조사 */
 .visual-page {
-  display: block;
-  padding: 54px 32px 92px;
+  @apply block pt-[54px] pb-[92px] px-8;
 }
-
 .visual-page .visual-container {
-  width: min(1040px, 100%);
-  max-width: none;
-  margin: 0 auto;
+  @apply w-[min(1040px,100%)] max-w-none mx-auto my-0;
 }
-
 .visual-page .visual-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 28px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--workflow-line);
-  color: #827767;
-  font-size: 13px;
+  @apply flex items-center gap-2 border-b-[color:var(--workflow-line)] text-[#827767] text-[13px] mb-7 pb-[15px] border-b border-solid;
 }
-
 .visual-page .visual-breadcrumb button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--workflow-muted);
-  cursor: pointer;
+  @apply [background:transparent] text-[color:var(--workflow-muted)] cursor-pointer p-0 border-0 hover:text-[color:var(--workflow-bronze-dark)];
 }
-
-.visual-page .visual-breadcrumb button:hover {
-  color: var(--workflow-bronze-dark);
-}
-
 .visual-page .visual-breadcrumb strong {
-  color: var(--workflow-ink);
+  @apply text-[color:var(--workflow-ink)];
 }
-
 .visual-page .visual-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 28px;
+  @apply flex items-end justify-between gap-6 mb-7;
 }
-
 .visual-page .visual-eyebrow,
 .visual-page .visual-review-index,
 .visual-page .visual-section-heading span {
-  display: block;
-  margin-bottom: 9px;
-  color: var(--workflow-bronze);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+  @apply block text-[color:var(--workflow-bronze)] text-[10px] font-extrabold tracking-[0.16em] mb-[9px];
 }
-
 .visual-page .visual-title {
-  margin: 0;
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: clamp(34px, 4vw, 48px);
-  font-weight: 500;
-  letter-spacing: -0.04em;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[clamp(34px,4vw,48px)] font-medium tracking-[-0.04em] m-0;
 }
-
 .visual-page .visual-header p {
-  margin: 12px 0 0;
-  color: var(--workflow-muted);
-  font-size: 14px;
+  @apply text-[color:var(--workflow-muted)] text-sm mt-3 mb-0 mx-0;
 }
-
 .visual-page .visual-status {
-  flex: 0 0 auto;
-  padding: 9px 13px;
-  border: 1px solid rgba(97, 115, 93, 0.3);
-  border-radius: 999px;
-  background: #e9eee6;
-  color: var(--workflow-green-dark);
-  font-size: 12px;
-  font-weight: 700;
+  @apply flex-[0_0_auto] border [background:#e9eee6] text-[color:var(--workflow-green-dark)] text-xs font-bold px-[13px] py-[9px] rounded-[999px] border-solid border-[rgba(97,115,93,0.3)];
 }
-
 .visual-page .visual-artifact-summary {
-  display: grid;
-  grid-template-columns: 1.25fr repeat(3, 1fr);
-  overflow: hidden;
-  margin-bottom: 22px;
-  border: 1px solid var(--workflow-line-soft);
-  border-radius: 14px;
-  background: rgba(255, 253, 248, 0.9);
-  box-shadow: var(--workflow-shadow);
+  @apply grid grid-cols-[1.25fr_repeat(3,1fr)] overflow-hidden border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] mb-[22px] rounded-[14px] border-solid;
 }
-
 .visual-page .visual-artifact-summary > div {
-  display: flex;
-  min-width: 0;
-  min-height: 82px;
-  justify-content: center;
-  padding: 18px 20px;
-  border-left: 1px solid var(--workflow-line-soft);
-  flex-direction: column;
-  gap: 6px;
+  @apply flex min-w-0 min-h-[82px] justify-center border-l-[color:var(--workflow-line-soft)] flex-col gap-1.5 px-5 py-[18px] border-l border-solid first:border-l-0;
 }
-
-.visual-page .visual-artifact-summary > div:first-child {
-  border-left: 0;
-}
-
 .visual-page .visual-artifact-summary span {
-  color: var(--workflow-muted);
-  font-size: 11px;
+  @apply text-[color:var(--workflow-muted)] text-[11px];
 }
-
 .visual-page .visual-artifact-summary strong {
-  overflow: hidden;
-  color: var(--workflow-ink);
-  font-size: 14px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  @apply overflow-hidden text-[color:var(--workflow-ink)] text-sm text-ellipsis whitespace-nowrap;
 }
-
 .visual-page .visual-result-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
-  align-items: start;
-  gap: 22px;
+  @apply grid grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] [align-items:start] gap-[22px];
 }
-
 .visual-page .result-card {
-  margin: 0;
-  padding: 30px;
-  border: 1px solid var(--workflow-line-soft);
-  border-radius: 16px;
-  background: rgba(255, 253, 248, 0.9);
-  box-shadow: var(--workflow-shadow);
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] m-0 p-[30px] rounded-2xl border-solid;
 }
-
 .visual-page .visual-section-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 12px;
+  @apply flex items-start justify-between gap-5 mb-3;
 }
-
 .visual-page .result-card h2 {
-  margin: 0;
-  color: var(--workflow-bronze-dark);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 24px;
-  font-weight: 600;
+  @apply text-[color:var(--workflow-bronze-dark)] [font-family:Georgia,"Noto_Serif_KR",serif] text-2xl font-semibold m-0;
 }
-
 .visual-page .visual-section-heading small {
-  color: var(--workflow-muted);
-  font-size: 11px;
+  @apply text-[color:var(--workflow-muted)] text-[11px];
 }
-
 .visual-page .result-item {
-  padding: 18px 4px;
-  border-color: var(--workflow-line-soft);
-  font-size: 15px;
+  @apply border-[color:var(--workflow-line-soft)] text-[15px] px-1 py-[18px];
 }
-
 .visual-page .result-label {
-  color: var(--workflow-muted);
-  font-weight: 600;
+  @apply text-[color:var(--workflow-muted)] font-semibold;
 }
-
 .visual-page .result-value {
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: var(--workflow-bronze-soft);
-  color: var(--workflow-bronze-dark);
-  font-size: 13px;
+  @apply [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[13px] px-3 py-[7px] rounded-[999px];
 }
-
 .visual-page .visual-review-card {
-  padding: 28px;
-  border: 1px solid rgba(97, 115, 93, 0.34);
-  border-radius: 16px;
-  background: rgba(240, 245, 237, 0.86);
-  box-shadow: var(--workflow-shadow);
+  @apply border [background:rgba(240,245,237,0.86)] shadow-[var(--workflow-shadow)] p-7 rounded-2xl border-solid border-[rgba(97,115,93,0.34)];
 }
-
 .visual-page .visual-review-card h2 {
-  margin: 0 0 14px;
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 22px;
-  font-weight: 600;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[22px] font-semibold mt-0 mb-3.5 mx-0;
 }
-
 .visual-page .visual-review-card p {
-  margin: 0;
-  color: var(--workflow-muted);
-  font-size: 13px;
-  line-height: 1.75;
+  @apply text-[color:var(--workflow-muted)] text-[13px] leading-[1.75] m-0;
 }
-
 .visual-page .visual-review-card ul {
-  display: grid;
-  gap: 10px;
-  margin: 22px 0 0;
-  padding: 18px 0 0 19px;
-  border-top: 1px solid rgba(97, 115, 93, 0.25);
-  color: var(--workflow-ink-soft);
-  font-size: 13px;
-  line-height: 1.55;
+  @apply grid gap-2.5 text-[color:var(--workflow-ink-soft)] text-[13px] leading-[1.55] mt-[22px] mb-0 mx-0 pl-[19px] pr-0 pt-[18px] pb-0 border-t-[rgba(97,115,93,0.25)] border-t border-solid;
 }
-
 .visual-page .complete-area {
-  align-items: center;
-  justify-content: flex-end;
-  gap: 22px;
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid var(--workflow-line);
+  @apply items-center justify-end gap-[22px] border-t-[color:var(--workflow-line)] mt-6 pt-6 border-t border-solid;
 }
-
 .visual-page .complete-area p {
-  margin: 0 auto 0 0;
-  color: var(--workflow-muted);
-  font-size: 12px;
+  @apply text-[color:var(--workflow-muted)] text-xs ml-0 mr-auto my-0;
 }
-
 .visual-page .complete-btn {
-  width: auto;
-  min-width: 150px;
-  height: 46px;
-  border: 1px solid var(--workflow-bronze);
-  border-radius: 8px;
-  background: var(--workflow-bronze);
-  color: white;
-  font-size: 14px;
+  @apply w-auto min-w-[150px] h-[46px] border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[white] text-sm rounded-lg border-solid;
 }
 
 /* X-RAY 분석 */
 .xray-page {
-  --xray-bg: var(--workflow-paper);
-  --xray-surface: var(--workflow-surface);
-  --xray-surface-subtle: var(--workflow-surface-soft);
-  --xray-text: var(--workflow-ink);
-  --xray-text-secondary: var(--workflow-muted);
-  --xray-text-muted: #827767;
-  --xray-border: var(--workflow-line-soft);
-  --xray-primary: var(--workflow-bronze);
-  --xray-primary-hover: var(--workflow-bronze-dark);
-  --xray-primary-soft: var(--workflow-bronze-soft);
-  --xray-success: var(--workflow-green);
-  --xray-warning: #b27b2d;
-  --xray-danger: var(--workflow-danger);
-  padding-top: 46px;
-  background:
-    radial-gradient(
-      circle at 88% 5%,
-      rgba(150, 104, 61, 0.09),
-      transparent 24rem
-    ),
-    var(--workflow-paper);
+  @apply [--xray-bg:var(--workflow-paper)] [--xray-surface:var(--workflow-surface)] [--xray-surface-subtle:var(--workflow-surface-soft)] [--xray-text:var(--workflow-ink)] [--xray-text-secondary:var(--workflow-muted)] [--xray-text-muted:#827767] [--xray-border:var(--workflow-line-soft)] [--xray-primary:var(--workflow-bronze)] [--xray-primary-hover:var(--workflow-bronze-dark)] [--xray-primary-soft:var(--workflow-bronze-soft)] [--xray-success:var(--workflow-green)] [--xray-warning:#b27b2d] [--xray-danger:var(--workflow-danger)] [background:radial-gradient(_circle_at_88%_5%,rgba(150,104,61,0.09),transparent_24rem_),var(--workflow-paper)] pt-[46px];
 }
-
 .xray-page .xray-breadcrumb {
-  margin-bottom: 28px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--workflow-line);
+  @apply border-b-[color:var(--workflow-line)] mb-7 pb-[15px] border-b border-solid;
 }
-
 .xray-page .xray-title {
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: clamp(36px, 4vw, 52px);
-  font-weight: 500;
-  letter-spacing: -0.045em;
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[clamp(36px,4vw,52px)] font-medium tracking-[-0.045em];
 }
-
 .xray-page :is(
   .artifact-summary,
   .workflow-steps,
@@ -1298,192 +736,109 @@
   .report-section,
   .final-review-section
 ) {
-  border-color: var(--workflow-line-soft);
-  background: rgba(255, 253, 248, 0.9);
-  box-shadow: var(--workflow-shadow);
+  @apply border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)];
 }
-
 .xray-page .artifact-mark {
-  background: var(--workflow-ink);
-  color: #ead8ba;
+  @apply [background:var(--workflow-ink)] text-[#ead8ba];
 }
-
 .xray-page .workflow-steps li.active {
-  background: #f3eadc;
+  @apply [background:#f3eadc];
 }
-
-.xray-page .workflow-steps li.available:not(.active) .workflow-step-button:hover {
-  background: var(--workflow-surface-soft);
-}
-
 .xray-page .workflow-step-icon {
-  border-color: var(--workflow-line);
-  background: var(--workflow-paper-deep);
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-paper-deep)];
 }
-
 .xray-page .workflow-steps li.active .workflow-step-icon {
-  border-color: var(--workflow-bronze);
-  background: var(--workflow-bronze);
-  color: white;
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[white];
 }
-
 .xray-page .workflow-steps li.done .workflow-step-icon {
-  border-color: var(--workflow-green);
-  background: var(--workflow-green);
-  color: white;
+  @apply border-[color:var(--workflow-green)] [background:var(--workflow-green)] text-[white];
 }
-
 .xray-page .xray-primary {
-  background: var(--workflow-bronze);
+  @apply [background:var(--workflow-bronze)];
 }
-
-.xray-page .xray-primary:hover:not(:disabled) {
-  background: var(--workflow-bronze-dark);
-}
-
 .xray-page .xray-secondary {
-  border-color: var(--workflow-line);
-  background: transparent;
-  color: var(--workflow-ink);
+  @apply border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-ink)];
 }
-
 .xray-page .xray-upload {
-  border-color: var(--workflow-line);
-  background: var(--workflow-surface-soft);
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)];
 }
-
 .xray-page .xray-upload:hover,
 .xray-page .xray-upload.dragging {
-  border-color: var(--workflow-bronze);
-  background: #f3eadc;
+  @apply border-[color:var(--workflow-bronze)] [background:#f3eadc];
 }
-
 .xray-page .xray-message {
-  background: var(--workflow-bronze-soft);
-  color: var(--workflow-bronze-dark);
+  @apply [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)];
 }
-
 .xray-page .upload-icon {
-  border-color: var(--workflow-bronze);
-  background: var(--workflow-bronze-soft);
-  color: var(--workflow-bronze-dark);
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)];
 }
-
 .xray-page :is(.analysis-notice, .ai-finding, .review-default-guide) {
-  border-color: var(--workflow-line);
-  background: var(--workflow-surface-soft);
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)];
 }
-
 .xray-page .image-tabs button.active {
-  border-color: #b58a5e;
-  background: #4b3827;
+  @apply [background:#4b3827] border-[#b58a5e];
 }
-
 .xray-page .undo-toast button {
-  color: #e1bd8f;
+  @apply text-[#e1bd8f];
 }
-
 .xray-page :is(
   .requirement-chip,
   .review-ready-chip,
   .save-status > span
 ) {
-  background: #e9eee6;
-  color: var(--workflow-green-dark);
+  @apply [background:#e9eee6] text-[color:var(--workflow-green-dark)];
 }
-
 .xray-page .review-state.damage,
 .xray-page .decision-chip.damage {
-  background: #f7eae5;
-  color: var(--workflow-danger);
+  @apply [background:#f7eae5] text-[color:var(--workflow-danger)];
 }
-
 .xray-page .normal-exclude-button {
-  border-color: var(--workflow-line);
-  background: var(--workflow-surface);
-  color: var(--workflow-ink);
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface)] text-[color:var(--workflow-ink)];
 }
 
 /* 보고서 */
 :is(.post-record-page, .report-page) {
-  padding: 28px 32px 90px;
+  @apply pt-7 pb-[90px] px-8;
 }
-
 .post-record-page > h1 {
-  width: min(1000px, 100%);
-  margin: 0 auto 30px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--workflow-line);
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: 42px;
-  font-weight: 500;
+  @apply w-[min(1000px,100%)] border-b-[color:var(--workflow-line)] text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[42px] font-medium mt-0 mb-[30px] mx-auto pb-6 border-b border-solid;
 }
-
 .post-record-page :is(.image-card, .report-card),
 .report-page .report-paper {
-  border: 1px solid var(--workflow-line-soft);
-  border-radius: 16px;
-  background: rgba(255, 253, 248, 0.92);
-  box-shadow: var(--workflow-shadow);
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.92)] shadow-[var(--workflow-shadow)] rounded-2xl border-solid;
 }
-
 .post-record-page .dummy-image {
-  border: 1px dashed var(--workflow-line);
-  background: var(--workflow-paper-deep);
-  color: var(--workflow-muted);
+  @apply border border-[color:var(--workflow-line)] [background:var(--workflow-paper-deep)] text-[color:var(--workflow-muted)] border-dashed;
 }
-
 .post-record-page .report-row {
-  border-color: var(--workflow-line-soft);
+  @apply border-[color:var(--workflow-line-soft)];
 }
-
 .post-record-page .report-actions button {
-  background: var(--workflow-bronze-soft);
+  @apply [background:var(--workflow-bronze-soft)];
 }
-
 .post-record-page .add-btn {
-  border-color: var(--workflow-line);
-  background: transparent;
-  color: var(--workflow-bronze-dark);
+  @apply border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-bronze-dark)];
 }
-
 .post-record-page .future-care-textarea {
-  border-color: var(--workflow-line);
-  background: var(--workflow-surface);
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface)];
 }
-
 .report-page .report-paper h1 {
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-weight: 500;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] font-medium;
 }
-
 .report-page .report-paper h2 {
-  border-color: var(--workflow-line);
-  color: var(--workflow-bronze-dark);
+  @apply border-[color:var(--workflow-line)] text-[color:var(--workflow-bronze-dark)];
 }
-
 .complete-page .complete-card {
-  border: 1px solid var(--workflow-line-soft);
-  border-radius: 16px;
-  background: rgba(255, 253, 248, 0.94);
-  box-shadow: var(--workflow-shadow);
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.94)] shadow-[var(--workflow-shadow)] rounded-2xl border-solid;
 }
-
 .complete-page .complete-card h1 {
-  color: var(--workflow-ink);
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-weight: 500;
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] font-medium;
 }
-
 .complete-page .complete-card p {
-  color: var(--workflow-muted);
+  @apply text-[color:var(--workflow-muted)];
 }
-
 .complete-page .complete-btn {
-  border-radius: 8px;
-  background: var(--workflow-bronze);
+  @apply [background:var(--workflow-bronze)] rounded-lg;
 }
 
 /* 로딩 */
@@ -1495,10 +850,8 @@
   .bonding-page,
   .restoration-page
 ) .analyzing-overlay {
-  background: rgba(23, 32, 29, 0.48);
-  backdrop-filter: blur(5px);
+  @apply [background:rgba(23,32,29,0.48)] backdrop-blur-[5px];
 }
-
 :is(
   .flow-page,
   .disassembly-page,
@@ -1507,10 +860,8 @@
   .bonding-page,
   .restoration-page
 ) .analyzing-box {
-  border: 1px solid var(--workflow-line);
-  background: var(--workflow-surface);
+  @apply border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] border-solid;
 }
-
 :is(
   .flow-page,
   .disassembly-page,
@@ -1519,9 +870,8 @@
   .bonding-page,
   .restoration-page
 ) .analyzing-bar-fill {
-  background: var(--workflow-bronze);
+  @apply [background:var(--workflow-bronze)];
 }
-
 @media (max-width: 1040px) {
   :is(
     .pre-page,
@@ -1531,9 +881,8 @@
     .bonding-page,
     .restoration-page
   ) .content-columns {
-    flex-direction: column;
+    @apply flex-col;
   }
-
   :is(
     .disassembly-page,
     .cleaning-page,
@@ -1548,14 +897,12 @@
     .restoration-container,
     .post-record-card
   ) {
-    width: 100%;
+    @apply w-full;
   }
-
   .pre-page .info-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply grid-cols-2;
   }
 }
-
 @media (max-width: 900px) {
   :is(
     .flow-page,
@@ -1579,10 +926,8 @@
     .post-record-page,
     .report-page
   ) {
-    padding-right: 20px;
-    padding-left: 20px;
+    @apply px-5;
   }
-
   :is(
     .flow-page,
     .pre-page,
@@ -1603,9 +948,8 @@
     .post-record-page,
     .report-page
   ) > :is(.top-bar, .navigation, .detail-header) {
-    width: 100%;
+    @apply w-full;
   }
-
   :is(
     .pre-page,
     .disassembly-page,
@@ -1614,9 +958,8 @@
     .bonding-page,
     .restoration-page
   ) .page-layout {
-    flex-direction: column;
+    @apply flex-col;
   }
-
   :is(
     .pre-page,
     .disassembly-page,
@@ -1625,41 +968,32 @@
     .bonding-page,
     .restoration-page
   ) .progress-wrapper {
-    width: 100%;
+    @apply w-full;
   }
-
   .flow-page .flow-container {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   .visual-page .visual-artifact-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply grid-cols-2;
   }
-
   .visual-page .visual-artifact-summary > div:nth-child(3) {
-    border-top: 1px solid var(--workflow-line-soft);
-    border-left: 0;
+    @apply border-t-[color:var(--workflow-line-soft)] border-l-0 border-t border-solid;
   }
-
   .visual-page .visual-artifact-summary > div:nth-child(4) {
-    border-top: 1px solid var(--workflow-line-soft);
+    @apply border-t-[color:var(--workflow-line-soft)] border-t border-solid;
   }
-
   .visual-page .visual-result-layout {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   .xray-page .xray-header {
-    align-items: flex-start;
+    @apply items-start;
   }
 }
-
 @media (max-width: 680px) {
   .pre-page .info-grid,
   .pre-page .analysis-card {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   :is(
     .disassembly-page,
     .cleaning-page,
@@ -1667,10 +1001,8 @@
     .bonding-page,
     .restoration-page
   ) .task-card {
-    align-items: flex-start;
-    padding: 20px;
+    @apply items-start p-5;
   }
-
   :is(
     .checklist-page,
     .tool-page,
@@ -1690,9 +1022,8 @@
     .work-card,
     .result-box
   ) {
-    padding: 20px;
+    @apply p-5;
   }
-
   :is(
     .checklist-page,
     .tool-page,
@@ -1704,10 +1035,8 @@
     .bonding-work-page,
     .restoration-material-page
   ) .step-card {
-    align-items: flex-start;
-    flex-direction: column;
+    @apply items-start flex-col;
   }
-
   :is(
     .checklist-page,
     .tool-page,
@@ -1719,35 +1048,22 @@
     .bonding-work-page,
     .restoration-material-page
   ) .step-actions {
-    width: 100%;
-    flex-wrap: wrap;
+    @apply w-full flex-wrap;
   }
-
   .visual-page .visual-header {
-    align-items: flex-start;
-    flex-direction: column;
+    @apply items-start flex-col;
   }
-
   .visual-page .visual-artifact-summary {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   .visual-page .visual-artifact-summary > div {
-    border-top: 1px solid var(--workflow-line-soft);
-    border-left: 0;
+    @apply border-t-[color:var(--workflow-line-soft)] border-l-0 border-t border-solid first:border-t-0;
   }
-
-  .visual-page .visual-artifact-summary > div:first-child {
-    border-top: 0;
-  }
-
   .visual-page .complete-area {
-    align-items: stretch;
-    flex-direction: column;
-    justify-content: stretch;
+    @apply items-stretch flex-col [justify-content:stretch];
   }
-
   .visual-page .complete-btn {
-    width: 100%;
+    @apply w-full;
   }
+}
 }

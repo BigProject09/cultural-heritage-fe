@@ -1,268 +1,116 @@
+@reference "tailwindcss";
+
+@layer components {
 .heritage-page-shell {
-  background:
-    radial-gradient(circle at 88% 9%, rgba(150, 104, 61, 0.09), transparent 24rem),
-    var(--heritage-paper);
-  color: var(--heritage-ink);
-  min-height: 100vh;
+  @apply [background:radial-gradient(circle_at_88%_9%,rgba(150,104,61,0.09),transparent_24rem),var(--heritage-paper)] text-[color:var(--heritage-ink)] min-h-screen;
 }
-
 .heritage-page-main {
-  margin: 0 auto;
-  max-width: 1240px;
-  padding: 70px 48px 90px;
+  @apply max-w-[1240px] mx-auto my-0 pt-[70px] pb-[90px] px-12;
 }
-
 .heritage-page-intro {
-  align-items: flex-end;
-  border-bottom: 1px solid var(--heritage-line);
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 34px;
-  padding-bottom: 28px;
+  @apply items-end border-b-[color:var(--heritage-line)] flex justify-between mb-[34px] pb-7 border-b border-solid;
 }
-
 .heritage-page-eyebrow {
-  color: var(--heritage-bronze);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  margin-bottom: 12px;
-  text-transform: uppercase;
+  @apply text-[color:var(--heritage-bronze)] text-[10px] font-bold tracking-[0.22em] uppercase mb-3;
 }
-
 .heritage-page-intro h1 {
-  font-family: Georgia, "Noto Serif KR", serif;
-  font-size: clamp(34px, 4vw, 54px);
-  font-weight: 500;
-  letter-spacing: -0.05em;
-  line-height: 1.12;
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[clamp(34px,4vw,54px)] font-medium -tracking-wider leading-[1.12];
 }
-
 .heritage-page-description {
-  color: var(--heritage-muted);
-  font-size: 14px;
-  line-height: 1.75;
-  margin-top: 13px;
+  @apply text-[color:var(--heritage-muted)] text-sm leading-[1.75] mt-[13px];
 }
-
 .heritage-page-action {
-  flex: 0 0 auto;
-  margin-left: 30px;
+  @apply flex-[0_0_auto] ml-[30px];
 }
-
 .heritage-panel {
-  background: rgba(251, 248, 241, 0.82);
-  border: 1px solid rgba(150, 104, 61, 0.2);
-  border-radius: 16px;
-  box-shadow: 0 16px 42px rgba(63, 52, 38, 0.08);
-  padding: 30px;
+  @apply [background:rgba(251,248,241,0.82)] border shadow-[0_16px_42px_rgba(63,52,38,0.08)] p-[30px] rounded-2xl border-solid border-[rgba(150,104,61,0.2)];
 }
-
 .heritage-toolbar {
-  align-items: center;
-  display: flex;
-  gap: 12px;
-  margin-bottom: 26px;
+  @apply items-center flex gap-3 mb-[26px];
 }
-
 .heritage-field,
 .heritage-select {
-  background: rgba(255, 253, 248, 0.92);
-  border: 1px solid var(--heritage-line);
-  border-radius: 8px;
-  color: var(--heritage-ink);
-  font-size: 14px;
-  height: 46px;
-  padding: 0 15px;
+  @apply [background:rgba(255,253,248,0.92)] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] text-sm h-[46px] px-[15px] py-0 rounded-lg border-solid;
 }
-
 .heritage-field {
-  flex: 1;
+  @apply flex-1;
 }
-
 .heritage-select {
-  min-width: 138px;
+  @apply min-w-[138px];
 }
-
 .heritage-field:focus,
 .heritage-select:focus {
-  border-color: var(--heritage-bronze);
-  box-shadow: 0 0 0 3px rgba(150, 104, 61, 0.12);
-  outline: none;
+  @apply border-[color:var(--heritage-bronze)] shadow-[0_0_0_3px_rgba(150,104,61,0.12)] [outline:none];
 }
-
 .heritage-button {
-  align-items: center;
-  background: var(--heritage-bronze);
-  border: 1px solid var(--heritage-bronze);
-  border-radius: 8px;
-  color: #fffaf0;
-  cursor: pointer;
-  display: inline-flex;
-  font-size: 13px;
-  font-weight: 700;
-  height: 44px;
-  justify-content: center;
-  padding: 0 20px;
-  transition:
-    background 0.16s ease,
-    border-color 0.16s ease,
-    transform 0.16s ease;
+  @apply items-center [background:var(--heritage-bronze)] border border-[color:var(--heritage-bronze)] text-[#fffaf0] cursor-pointer inline-flex text-[13px] font-bold h-11 justify-center [transition:background_0.16s_ease,border-color_0.16s_ease,transform_0.16s_ease] px-5 py-0 rounded-lg border-solid hover:[background:var(--heritage-bronze-dark)] hover:border-[color:var(--heritage-bronze-dark)] hover:-translate-y-px;
 }
-
-.heritage-button:hover {
-  background: var(--heritage-bronze-dark);
-  border-color: var(--heritage-bronze-dark);
-  transform: translateY(-1px);
-}
-
 .heritage-button.secondary {
-  background: transparent;
-  border-color: var(--heritage-line);
-  color: var(--heritage-ink);
+  @apply [background:transparent] border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] hover:[background:#ece4d6] hover:border-[color:var(--heritage-bronze)];
 }
-
-.heritage-button.secondary:hover {
-  background: #ece4d6;
-  border-color: var(--heritage-bronze);
-}
-
 .heritage-count {
-  color: var(--heritage-muted);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  margin-bottom: 14px;
+  @apply text-[color:var(--heritage-muted)] text-xs tracking-[0.04em] mb-3.5;
 }
-
 .heritage-table-wrap {
-  overflow-x: auto;
+  @apply overflow-x-auto;
 }
-
 .heritage-table {
-  border-collapse: collapse;
-  width: 100%;
+  @apply w-full border-collapse;
 }
-
 .heritage-table th {
-  border-bottom: 1px solid var(--heritage-bronze);
-  color: #756957;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 15px 16px;
-  text-align: left;
+  @apply border-b-[color:var(--heritage-bronze)] text-[#756957] text-[11px] font-bold tracking-[0.08em] text-left px-4 py-[15px] border-b border-solid;
 }
-
 .heritage-table td {
-  border-bottom: 1px solid rgba(202, 188, 168, 0.58);
-  color: #3f4741;
-  font-size: 14px;
-  padding: 20px 16px;
+  @apply text-[#3f4741] text-sm px-4 py-5 border-b-[rgba(202,188,168,0.58)] border-b border-solid;
 }
-
 .heritage-table th:not(:first-child),
 .heritage-table td:not(:first-child) {
-  text-align: center;
+  @apply text-center;
 }
-
 .heritage-table tbody tr[data-clickable="true"] {
-  cursor: pointer;
-  transition: background 0.15s ease;
+  @apply cursor-pointer transition-[background] duration-[0.15s] ease-[ease] hover:[background:rgba(150,104,61,0.07)];
 }
-
-.heritage-table tbody tr[data-clickable="true"]:hover {
-  background: rgba(150, 104, 61, 0.07);
-}
-
 .heritage-empty-cell {
-  color: var(--heritage-muted) !important;
-  padding: 56px 20px !important;
-  text-align: center !important;
+  @apply text-[color:var(--heritage-muted)] text-center px-5 py-14;
 }
-
 .heritage-pagination {
-  align-items: center;
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 28px;
+  @apply items-center flex gap-1.5 justify-center mt-7;
 }
-
 .heritage-pagination button {
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--heritage-muted);
-  cursor: pointer;
-  height: 34px;
-  width: 34px;
+  @apply [background:transparent] border text-[color:var(--heritage-muted)] cursor-pointer h-[34px] w-[34px] rounded-md border-solid border-transparent;
 }
-
 .heritage-pagination button.active,
 .heritage-pagination button:hover {
-  background: var(--heritage-ink);
-  color: var(--heritage-paper-2);
+  @apply [background:var(--heritage-ink)] text-[color:var(--heritage-paper-2)];
 }
-
 .heritage-back {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  color: var(--heritage-bronze-dark);
-  cursor: pointer;
-  display: inline-flex;
-  font-size: 13px;
-  font-weight: 700;
-  gap: 8px;
-  margin-bottom: 24px;
-  padding: 0;
+  @apply items-center [background:transparent] text-[color:var(--heritage-bronze-dark)] cursor-pointer inline-flex text-[13px] font-bold gap-2 mb-6 p-0 border-0;
 }
-
 .heritage-meta {
-  color: var(--heritage-muted);
-  display: flex;
-  flex-wrap: wrap;
-  font-size: 12px;
-  gap: 22px;
+  @apply text-[color:var(--heritage-muted)] flex flex-wrap text-xs gap-[22px];
 }
-
 .heritage-badge {
-  background: #e5ddd0;
-  border-radius: 999px;
-  color: var(--heritage-bronze-dark);
-  display: inline-flex;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 6px 10px;
+  @apply [background:#e5ddd0] text-[color:var(--heritage-bronze-dark)] inline-flex text-[11px] font-bold px-2.5 py-1.5 rounded-[999px];
 }
-
 @media (max-width: 720px) {
   .heritage-page-main {
-    padding: 42px 20px 64px;
+    @apply pt-[42px] pb-16 px-5;
   }
-
   .heritage-page-intro {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 20px;
+    @apply items-start flex-col gap-5;
   }
-
   .heritage-page-action {
-    margin-left: 0;
+    @apply ml-0;
   }
-
   .heritage-panel {
-    padding: 20px;
+    @apply p-5;
   }
-
   .heritage-toolbar {
-    align-items: stretch;
-    flex-direction: column;
+    @apply items-stretch flex-col;
   }
-
   .heritage-field,
   .heritage-select {
-    flex: auto;
-    width: 100%;
+    @apply flex-[auto] w-full;
   }
+}
 }
