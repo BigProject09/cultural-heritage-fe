@@ -11,6 +11,7 @@ import {
   fragmentToKonvaImage,
   toTransformMatrix,
 } from "../../services/stitchGeometry";
+import useObjectUrl from "../../hooks/useObjectUrl";
 import "./StitchEditor.css";
 
 /**
@@ -55,7 +56,13 @@ const VIEW_MAX_HEIGHT = 680;
  * 여러 노드가 같은 이미지를 공유하게 한다.
  */
 function useFragmentImages(files) {
-  const [images, setImages] = useState({});
+  const signature = files
+    .map((file) => `${file.name}:${file.size}:${file.lastModified}`)
+    .join("|");
+  const [loadedState, setLoadedState] = useState({
+    signature: "",
+    images: {},
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -63,7 +70,6 @@ function useFragmentImages(files) {
     let remaining = files.length;
 
     if (remaining === 0) {
-      setImages({});
       return undefined;
     }
 
@@ -77,7 +83,7 @@ function useFragmentImages(files) {
         remaining -= 1;
 
         if (remaining === 0 && !cancelled) {
-          setImages(loaded);
+          setLoadedState({ signature, images: loaded });
         }
       };
 
@@ -93,9 +99,9 @@ function useFragmentImages(files) {
     return () => {
       cancelled = true;
     };
-  }, [files]);
+  }, [files, signature]);
 
-  return images;
+  return loadedState.signature === signature ? loadedState.images : {};
 }
 
 /** 결합본 이미지와 그 크기를 읽는다. 캔버스 크기의 기준이 된다. */
@@ -104,7 +110,6 @@ function useAssembledImage(file) {
 
   useEffect(() => {
     if (!file) {
-      setState(null);
       return undefined;
     }
 
@@ -117,6 +122,7 @@ function useAssembledImage(file) {
 
       if (!cancelled) {
         setState({
+          file,
           image,
           width: image.naturalWidth,
           height: image.naturalHeight,
@@ -132,7 +138,7 @@ function useAssembledImage(file) {
     };
   }, [file]);
 
-  return state;
+  return state?.file === file ? state : null;
 }
 
 /** 컬러 기준 이미지를 화면에서 사용할 수 있는 URL로 정리한다. */
@@ -150,27 +156,7 @@ function resolveReferenceSource(source) {
 }
 
 function useReferencePreview(source) {
-  const [previewUrl, setPreviewUrl] = useState("");
-
-  useEffect(() => {
-    const resolved = resolveReferenceSource(source);
-
-    if (!resolved) {
-      setPreviewUrl("");
-      return undefined;
-    }
-
-    if (resolved instanceof Blob) {
-      const objectUrl = URL.createObjectURL(resolved);
-      setPreviewUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-
-    setPreviewUrl(resolved);
-    return undefined;
-  }, [source]);
-
-  return previewUrl;
+  return useObjectUrl(resolveReferenceSource(source));
 }
 
 /**
@@ -214,20 +200,37 @@ function buildPieces(fragments, canvasWidth, canvasHeight) {
   });
 }
 
-export default function StitchEditor({
-  assembledFile,
-  referenceSource,
-  fragmentFiles,
+export default function StitchEditor(props) {
+  const assembled = useAssembledImage(props.assembledFile);
+  const referencePreview = useReferencePreview(props.referenceSource);
+  const images = useFragmentImages(props.fragmentFiles);
+
+  if (!assembled) {
+    return (
+      <div className="stitch-editor-loading">결합 결과를 불러오는 중입니다</div>
+    );
+  }
+
+  return (
+    <StitchEditorCanvas
+      {...props}
+      assembled={assembled}
+      referencePreview={referencePreview}
+      images={images}
+    />
+  );
+}
+
+function StitchEditorCanvas({
   fragments,
   canvas,
   artifactId,
   onConfirm,
   onCancel,
+  assembled,
+  referencePreview,
+  images,
 }) {
-  const assembled = useAssembledImage(assembledFile);
-  const referencePreview = useReferencePreview(referenceSource);
-  const images = useFragmentImages(fragmentFiles);
-
   const stageRef = useRef(null);
   const layerRef = useRef(null);
   const overlayRef = useRef(null);
@@ -236,8 +239,6 @@ export default function StitchEditor({
 
   const [selectedKey, setSelectedKey] = useState(null);
   const [showOverlay, setShowOverlay] = useState(false);
-  const [placements, setPlacements] = useState({});
-  const [movedKeys, setMovedKeys] = useState(() => new Set());
 
   // 캔버스 크기는 layout 이 알려주는 값을 먼저 쓴다.
   // 변환행렬이 그 좌표계를 기준으로 하므로 결합본 이미지에서
@@ -249,6 +250,12 @@ export default function StitchEditor({
     () => buildPieces(fragments, canvasWidth, canvasHeight),
     [fragments, canvasWidth, canvasHeight],
   );
+  const [placements, setPlacements] = useState(() =>
+    Object.fromEntries(
+      pieces.map((piece) => [piece.key, { ...piece.initial }]),
+    ),
+  );
+  const [movedKeys, setMovedKeys] = useState(() => new Set());
 
   // 원본 해상도를 화면 크기에 맞춰 줄인다.
   // 노드 좌표는 원본 기준을 유지하고 레이어만 축소하므로
@@ -262,18 +269,6 @@ export default function StitchEditor({
       1,
     );
   }, [canvasWidth, canvasHeight]);
-
-  // 초기 배치를 상태로 옮긴다. 되돌리기의 기준이 된다.
-  useEffect(() => {
-    const initial = {};
-    pieces.forEach((piece) => {
-      initial[piece.key] = { ...piece.initial };
-    });
-
-    setPlacements(initial);
-    setMovedKeys(new Set());
-    setSelectedKey(null);
-  }, [pieces]);
 
   // 선택한 조각에 회전 손잡이를 붙인다.
   useEffect(() => {
@@ -370,12 +365,6 @@ export default function StitchEditor({
       }));
 
     onConfirm({ file, fragments: corrected, movedCount: movedKeys.size });
-  }
-
-  if (!assembled) {
-    return (
-      <div className="stitch-editor-loading">결합 결과를 불러오는 중입니다</div>
-    );
   }
 
   const unmatched = pieces.filter((piece) => !piece.matched);
@@ -522,8 +511,8 @@ export default function StitchEditor({
                     ref={transformerRef}
                     rotateEnabled
                     resizeEnabled={false}
-                    borderStroke="#2767df"
-                    anchorStroke="#2767df"
+                    borderStroke="#9b6a3f"
+                    anchorStroke="#9b6a3f"
                     anchorFill="#ffffff"
                     anchorSize={10}
                     rotateAnchorOffset={26}

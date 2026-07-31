@@ -59,6 +59,7 @@ import RestorationMaterialPage from "./pages/Restoration/RestorationMaterialPage
 import PostRecordPage from "./pages/PostRecord/PostRecordPage";
 import ReportPage from "./pages/PostRecord/ReportPage";
 import ReportCompletePage from "./pages/PostRecord/ReportCompletePage";
+import "./styles/HeritageWorkflow.css";
 
 function App() {
   return (
@@ -91,6 +92,7 @@ function App() {
 
           {/* 프로젝트 상세 */}
           <Route path="/worklist/:id" element={<ProjectDetailPage />} />
+          <Route path="/workspace/:id" element={<ProjectDetailPage />} />
 
           {/* 게시판 */}
           <Route path="/board" element={<BoardPage />} />

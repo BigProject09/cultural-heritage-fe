@@ -1,359 +1,179 @@
-/* ===========================
-   Register Page
-=========================== */
+@reference "tailwindcss";
 
-.register-page{
-    min-height:100vh;
-    background:#f5f8fc;
+@layer components {
+.artifact-register-page {
+  @apply [background:radial-gradient(circle_at_15%_0%,rgba(255,255,255,0.78),transparent_27rem),linear-gradient(rgba(118,91,61,0.025)_1px,transparent_1px),var(--heritage-paper)] bg-[auto,100%_5px,auto] text-[color:var(--heritage-ink)] min-h-screen;
 }
-
-/* ===========================
-   Header
-=========================== */
-
-.register-header{
-    height:70px;
-    background:#ffffff;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    padding:0 60px;
-
-    box-shadow:0 2px 10px rgba(0,0,0,.06);
+.artifact-register-main {
+  @apply max-w-[1380px] mx-auto my-0 pt-[38px] pb-20 px-[52px];
 }
-
-.register-logo{
-    font-size:28px;
-    font-weight:bold;
-    color:#2c6bed;
-    cursor:pointer;
+.artifact-register-back {
+  @apply [background:none] text-[color:var(--heritage-bronze-dark)] cursor-pointer text-xs mb-[25px] p-0 border-0;
 }
-
-.register-profile{
-    font-size:28px;
-    cursor:pointer;
+.artifact-register-heading {
+  @apply [align-items:end] flex gap-[30px] justify-between;
 }
-
-/* ===========================
-   Title
-=========================== */
-
-.register-title-area{
-    width:1200px;
-    margin:40px auto 30px;
+.artifact-register-kicker {
+  @apply text-[color:var(--heritage-bronze)] block text-[10px] font-bold tracking-[0.18em] mb-[9px];
 }
-
-.register-title-area h1{
-    margin:0;
-    font-size:36px;
-    color:#1f2937;
+.artifact-register-heading h1 {
+  @apply [font-family:"Noto_Serif_KR",Georgia,serif] text-[clamp(38px,4vw,50px)] font-medium tracking-[-0.045em] mt-0 mb-[9px] mx-0;
 }
-
-.register-title-area p{
-    margin-top:12px;
-    color:#6b7280;
-    font-size:16px;
+.artifact-register-heading p {
+  @apply text-[color:var(--heritage-muted)] [font-family:"Noto_Serif_KR",Georgia,serif] text-sm m-0;
 }
-
-/* ===========================
-   Step Bar
-=========================== */
-
-.register-step-bar{
-    width:1200px;
-    margin:0 auto 40px;
-
-    display:flex;
-    align-items:center;
+.artifact-entry-module {
+  @apply border-l-[color:var(--heritage-line)] min-w-60 pl-6 pr-0 py-[7px] border-l border-solid;
 }
-
-.register-step{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-
-    gap:10px;
+.artifact-entry-module span,
+.artifact-entry-module small {
+  @apply text-[color:var(--heritage-muted)] block text-[10px];
 }
-
-.register-step span{
-    width:42px;
-    height:42px;
-
-    border-radius:50%;
-
-    background:#e5e7eb;
-    color:#6b7280;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    font-weight:600;
+.artifact-entry-module strong {
+  @apply block [font-family:"Noto_Serif_KR",Georgia,serif] text-lg font-medium mt-1.5 mb-[3px] mx-0;
 }
-
-.register-step p{
-    margin:0;
-    color:#6b7280;
-    font-size:14px;
+.artifact-register-notice {
+  @apply items-center [background:rgba(226,219,207,0.5)] border flex gap-[18px] mt-[30px] mb-[18px] mx-0 px-[17px] py-[13px] rounded-[10px] border-solid border-[rgba(148,124,91,0.42)];
 }
-
-.register-step-line{
-    flex:1;
-    height:2px;
-    background:#d7dde6;
-    margin:0 15px;
+.artifact-register-notice span {
+  @apply border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze-dark)] [font-family:monospace] text-[10px] px-2.5 py-1 rounded-[99px] border-solid;
 }
-
-.register-step.register-active span{
-    background:#2c6bed;
-    color:white;
+.artifact-register-notice p {
+  @apply text-[#686a62] text-[11px] m-0;
 }
-
-.register-step.register-active p{
-    color:#2c6bed;
-    font-weight:600;
+.artifact-register-form {
+  @apply [align-items:start] grid gap-[18px] grid-cols-[minmax(330px,0.78fr)_minmax(520px,1.22fr)];
 }
-/* ===========================
-   Main Layout
-=========================== */
-
-.register-content{
-    width:1200px;
-    margin:0 auto 60px;
-
-    display:grid;
-    grid-template-columns:420px 1fr;
-    gap:30px;
+.artifact-image-panel,
+.artifact-info-panel {
+  @apply [background:rgba(255,253,247,0.76)] border border-[color:var(--heritage-line)] shadow-[0_9px_24px_rgba(84,64,39,0.06)] p-[25px] rounded-[15px] border-solid;
 }
-
-/* ===========================
-   Image Card
-=========================== */
-
-.image-card{
-    background:#ffffff;
-    border:1px solid #edf1f7;
-    border-radius:18px;
-    padding:24px;
-
-    height:fit-content;
+.artifact-panel-heading {
+  @apply [align-items:start] flex gap-3.5 mb-[22px];
 }
-
-.image-card h2{
-    margin:0 0 20px;
-    color:#1f2937;
-    font-size:22px;
+.artifact-panel-heading > span {
+  @apply text-[color:var(--heritage-bronze)] [font-family:Georgia,serif] text-[11px] pt-[5px];
 }
-
-/* ===========================
-   Upload Area
-=========================== */
-
-.upload-area{
-    width:100%;
-    height:320px;
-
-    border:2px dashed #cfd8e3;
-    border-radius:16px;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    cursor:pointer;
-    transition:.2s;
+.artifact-panel-heading h2 {
+  @apply [font-family:"Noto_Serif_KR",Georgia,serif] text-[23px] font-medium mt-0 mb-1 mx-0;
 }
-
-.upload-area:hover{
-    border-color:#2c6bed;
-    background:#f8fbff;
+.artifact-panel-heading p {
+  @apply text-[color:var(--heritage-muted)] text-[10px] leading-[1.6] m-0;
 }
-
-.upload-placeholder{
-    text-align:center;
+.artifact-upload {
+  @apply items-center [background:rgba(230,223,210,0.38)] border cursor-pointer flex h-[380px] justify-center overflow-hidden relative transition-[0.2s] duration-[ease] rounded-xl border-dashed border-[#ad9a7e] hover:[background:rgba(230,223,210,0.58)] hover:border-[color:var(--heritage-bronze)];
 }
-
-.upload-icon{
-    font-size:52px;
-    margin-bottom:15px;
+.artifact-upload.has-image {
+  @apply [background:#d7d2c8] border-solid;
 }
-
-.upload-placeholder h3{
-    margin:0;
-    color:#1f2937;
-    font-size:22px;
+.artifact-upload img {
+  @apply h-full object-contain w-full;
 }
-
-.upload-placeholder p{
-    margin:12px 0;
-    color:#6b7280;
+.artifact-upload-empty {
+  @apply items-center text-[color:var(--heritage-muted)] flex flex-col text-center;
 }
-
-.upload-placeholder span{
-    color:#9ca3af;
-    font-size:14px;
+.artifact-upload-empty b {
+  @apply items-center border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)] flex [font-family:Georgia,serif] text-[25px] font-normal h-[54px] justify-center w-[54px] mb-[17px] rounded-[50%] border-solid;
 }
-
-/* ===========================
-   Preview
-=========================== */
-
-.preview-image{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    border-radius:14px;
+.artifact-upload-empty strong {
+  @apply text-[color:var(--heritage-ink)] [font-family:"Noto_Serif_KR",Georgia,serif] text-[17px] font-medium;
 }
-/* ===========================
-   Form Card
-=========================== */
-
-.form-card{
-    background:#ffffff;
-    border:1px solid #edf1f7;
-    border-radius:18px;
-    padding:30px;
+.artifact-upload-empty small {
+  @apply text-[10px] mt-[7px];
 }
-
-.form-card h2{
-    margin:0 0 24px;
-    color:#1f2937;
-    font-size:22px;
+.artifact-upload-change {
+  @apply [background:rgba(23,32,29,0.82)] text-[white] text-[10px] absolute px-[13px] py-2 rounded-[7px] right-3.5 bottom-3.5;
 }
-
-.form-group{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    margin-bottom:22px;
+.artifact-file-meta {
+  @apply items-center flex text-[10px] justify-between px-0.5 py-3 border-b-[#dfd5c6] border-b border-solid;
 }
-
-.form-group label{
-    font-size:15px;
-    font-weight:600;
-    color:#374151;
+.artifact-file-meta span {
+  @apply max-w-[75%] overflow-hidden text-ellipsis whitespace-nowrap;
 }
-
-.form-group input,
-.form-group select,
-.form-group textarea{
-    width:100%;
-    padding:13px 15px;
-
-    border:1px solid #d7dde6;
-    border-radius:10px;
-
-    font-size:15px;
-    box-sizing:border-box;
-
-    transition:.2s;
+.artifact-file-meta small {
+  @apply text-[color:var(--heritage-muted)];
 }
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus{
-    outline:none;
-    border-color:#2c6bed;
-    box-shadow:0 0 0 3px rgba(44,107,237,.15);
+.artifact-upload-flow {
+  @apply border-l-[color:var(--heritage-green)] mt-4 pl-[11px] pr-0 py-0.5 border-l-2 border-solid;
 }
-
-.weight-inputs{
-    display:flex;
-    gap:12px;
+.artifact-upload-flow span {
+  @apply text-[color:var(--heritage-green)] text-[9px] font-bold;
 }
-
-.weight-inputs input{
-    flex:1;
+.artifact-upload-flow p {
+  @apply text-[color:var(--heritage-muted)] text-[9px] leading-[1.55] mt-1 mb-0 mx-0;
 }
-
-.weight-inputs select{
-    width:90px;
-    flex:none;
+.artifact-form-grid {
+  @apply grid gap-[18px] grid-cols-2;
 }
-
-.form-group textarea{
-    resize:none;
-    min-height:110px;
+.artifact-field {
+  @apply flex flex-col gap-2;
 }
-
-/* ===========================
-   Buttons
-=========================== */
-
-.button-group{
-    display:flex;
-    justify-content:flex-end;
-    gap:12px;
-    margin-top:35px;
+.artifact-field-wide {
+  @apply col-span-full;
 }
-
-.cancel-btn{
-    padding:12px 26px;
-
-    border:1px solid #d7dde6;
-    border-radius:10px;
-
-    background:#ffffff;
-    color:#374151;
-
-    cursor:pointer;
-    transition:.2s;
+.artifact-field em {
+  @apply text-[color:var(--heritage-bronze)] text-[8px] not-italic ml-1;
 }
-
-.cancel-btn:hover{
-    background:#f3f4f6;
+.artifact-field input,
+.artifact-field select,
+.artifact-field textarea {
+  @apply [background:rgba(255,255,252,0.74)] border text-[color:var(--heritage-ink)] [font:inherit] text-xs min-h-[45px] w-full px-[13px] py-0 rounded-lg border-solid border-[#cfc3b2];
 }
-
-.next-btn{
-    padding:12px 28px;
-
-    border:none;
-    border-radius:10px;
-
-    background:#2c6bed;
-    color:#ffffff;
-
-    font-weight:600;
-    cursor:pointer;
-
-    transition:.2s;
+.artifact-field textarea {
+  @apply leading-[1.65] min-h-[110px] resize-y py-[11px];
 }
-
-.next-btn:hover{
-    background:#1d56c8;
+.artifact-field input:focus,
+.artifact-field select:focus,
+.artifact-field textarea:focus {
+  @apply border-[color:var(--heritage-bronze)] shadow-[0_0_0_3px_rgba(150,104,61,0.1)] [outline:none];
 }
-
-/* ===========================
-   Responsive
-=========================== */
-
-@media (max-width:1280px){
-
-    .register-title-area,
-    .register-step-bar,
-    .register-content{
-        width:92%;
-    }
-
-    .register-content{
-        grid-template-columns:1fr;
-    }
-
-    .register-header{
-    height:70px;
-    background:#ffffff;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    padding:0 60px;
-
-    box-shadow:0 2px 10px rgba(0,0,0,.06);
-
-    position: relative;
-    z-index: 1000;
+.artifact-weight-field {
+  @apply grid gap-2 grid-cols-[1fr_78px];
+}
+.artifact-field-error {
+  @apply text-[color:var(--heritage-danger)] text-[10px] mt-[9px] mb-0 mx-0;
+}
+.artifact-submit-error {
+  @apply [background:#f3dfd8] border-l-[color:var(--heritage-danger)] text-[#824b39] text-[11px] leading-normal mt-5 px-[13px] py-[11px] border-l-[3px] border-solid;
+}
+.artifact-form-actions {
+  @apply flex gap-2.5 justify-end mt-[25px] pt-5 border-t-[#dbd0c1] border-t border-solid;
+}
+.artifact-form-actions button {
+  @apply cursor-pointer min-h-11 px-5 py-0 rounded-lg disabled:cursor-wait disabled:opacity-[0.62];
+}
+.artifact-cancel {
+  @apply [background:transparent] border text-[color:var(--heritage-ink)] border-solid border-[#bcb3a5];
+}
+.artifact-submit {
+  @apply [background:var(--heritage-bronze)] border border-[color:var(--heritage-bronze)] text-[white] min-w-[158px] border-solid;
+}
+@media (max-width: 980px) {
+  .artifact-register-main {
+    @apply px-6;
+  }
+  .artifact-register-form {
+    @apply grid-cols-[1fr];
+  }
+  .artifact-upload {
+    @apply h-[330px];
+  }
+}
+@media (max-width: 640px) {
+  .artifact-register-heading {
+    @apply [align-items:start] flex-col;
+  }
+  .artifact-entry-module {
+    @apply border-t-[color:var(--heritage-line)] w-full pt-[15px] pb-0 px-0 border-l-0 border-t border-solid;
+  }
+  .artifact-register-notice {
+    @apply [align-items:start];
+  }
+  .artifact-form-grid {
+    @apply grid-cols-[1fr];
+  }
+  .artifact-field-wide {
+    @apply col-auto;
+  }
 }
 }

@@ -1,151 +1,68 @@
+@reference "tailwindcss";
+
+@layer components {
 .cleaning-method-page {
-  min-height: 100vh;
-  background: #f5f7fb;
-  padding: 40px 0 60px;
+    @apply min-h-screen [background:#f5f7fb] pt-10 pb-[60px] px-0;
 }
 
 /* ==========================
    상단 헤더
 ========================== */
-
 .detail-header {
-  max-width: 1400px;
-  margin: 0 auto 50px;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    @apply max-w-[1400px] flex justify-between items-center mt-0 mb-[50px] mx-auto;
 }
-
 .vora-logo {
-  font-size: 52px;
-  font-weight: 800;
-  color: #2f64f5;
+    @apply text-[52px] font-extrabold text-[#2f64f5];
 }
-
 .nav-btn {
-  padding: 12px 34px;
-  border: none;
-  border-radius: 12px;
-
-  background: #2f64f5;
-  color: white;
-
-  font-size: 17px;
-  font-weight: 600;
-
-  cursor: pointer;
-  transition: .2s;
-}
-
-.nav-btn:hover {
-  background: #1d4fd8;
+    @apply [background:#2f64f5] text-[white] text-[17px] font-semibold cursor-pointer transition-[0.2s] px-[34px] py-3 rounded-xl border-[none] hover:[background:#1d4fd8];
 }
 
 /* ==========================
    본문
 ========================== */
-
 .method-container {
-  max-width: 1200px;
-  margin: 0 auto;
+    @apply max-w-[1200px] mx-auto my-0;
 }
-
 .page-header {
-  margin-bottom: 35px;
-  text-align: center;
+    @apply text-center mb-[35px];
 }
-
 .page-header h1 {
-  font-size: 48px;
-  margin-bottom: 15px;
-  color: #1f2937;
+    @apply text-5xl text-gray-800 mb-[15px];
 }
-
 .page-header p {
-  font-size: 18px;
-  color: #666;
-  line-height: 1.7;
+    @apply text-lg text-[#666] leading-[1.7];
 }
 
 /* ==========================
    카드
 ========================== */
-
 .info-card {
-  background: white;
-  border-radius: 18px;
-  padding: 30px;
-  margin-bottom: 28px;
-  box-shadow: 0 4px 15px rgba(0,0,0,.06);
-
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
+    @apply [background:white] shadow-[0_4px_15px_rgba(0,0,0,0.06)] max-w-[900px] mb-7 mx-auto p-[30px] rounded-[18px];
 }
-
 .method-select {
-  display: flex;
-  gap: 20px;
-  margin: 30px 0;
+    @apply flex gap-5 mx-0 my-[30px];
 }
-
 .method-box {
-  flex: 1;
-
-  border: 2px solid #dbe6ff;
-  border-radius: 14px;
-
-  padding: 24px;
-
-  text-align: center;
-
-  background: #f8faff;
+    @apply flex-1 text-center [background:#f8faff] p-6 rounded-[14px] border-2 border-solid border-[#dbe6ff] cursor-pointer;
 }
-
-.method-box {
-  cursor: pointer;
-}
-
 .method-box strong {
-  display: block;
-  font-size: 20px;
-  color: #1f2937;
+    @apply block text-xl text-gray-800;
 }
-
 .method-box input[type="checkbox"] {
-  margin-top: 20px;
-
-  width: 32px;
-  height: 32px;
-
-  accent-color: #2f64f5;
-  cursor: pointer;
+    @apply w-8 h-8 accent-[#2f64f5] cursor-pointer mt-5;
 }
-
 .info-card h2 {
-  font-size: 25px;
-  color: #2f64f5;
-
-  margin-bottom: 22px;
+    @apply text-[25px] text-[#2f64f5] mb-[22px];
 }
-
 .info-item {
-  margin-bottom: 28px;
+    @apply mb-7;
 }
-
 .info-item strong {
-  display: block;
-
-  margin-bottom: 8px;
-
-  color: #111827;
-
-  font-size: 18px;
+    @apply block text-gray-900 text-lg mb-2;
 }
-
 .info-item span,
 .info-item p {
-  color: #555;
-  line-height: 1.8;
+    @apply text-[#555] leading-[1.8];
+}
 }

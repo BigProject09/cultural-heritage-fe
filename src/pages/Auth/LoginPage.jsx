@@ -1,6 +1,7 @@
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import HeritageHeader from "../../components/workspace/HeritageHeader";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -35,87 +36,81 @@ function LoginPage() {
   };
 
   return (
-    <div className="login-container">
-      {/* Header */}
-      <header className="login-header">
-        <div
-          className="login-logo"
-          onClick={() => navigate("/")}
-          style={{ cursor: "pointer" }}
-        >
-          <h1>VORA</h1>
+    <div className="heritage-auth-page">
+      <HeritageHeader active="account" />
+
+      <main className="heritage-auth-main">
+        <section className="heritage-auth-copy">
+          <p>VORA CONSERVATION WORKSPACE</p>
+          <h1>
+            보존처리의 기록을
+            <br />
+            하나의 공간에서
+          </h1>
           <span>
-            AI와 전문가가 함께하는 문화재 복원 플랫폼
+            프로젝트와 조사 결과, AI 복원 가이드를 안전하게 이어서 관리하세요.
           </span>
-        </div>
-      </header>
+          <div className="heritage-auth-ornament" aria-hidden="true">
+            <i />
+            <b>V</b>
+            <i />
+          </div>
+        </section>
 
-      {/* Main */}
-      <main className="login-main">
-        <div className="login-card">
-          <div className="login-icon">👤</div>
-
-          <h2>로그인</h2>
+        <section className="heritage-auth-card" aria-labelledby="login-title">
+          <p className="heritage-auth-eyebrow">MEMBER ACCESS</p>
+          <h2 id="login-title">로그인</h2>
+          <p className="heritage-auth-help">
+            등록한 계정으로 보존처리 워크스페이스에 접속합니다.
+          </p>
 
           <form onSubmit={handleLogin}>
+            <label htmlFor="login-email">이메일</label>
             <input
+              id="login-email"
               type="email"
-              placeholder="이메일"
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
             />
 
+            <label htmlFor="login-password">비밀번호</label>
             <input
+              id="login-password"
               type="password"
-              placeholder="비밀번호"
+              placeholder="비밀번호를 입력하세요"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
             />
 
-            {error && (
-              <p
-                style={{
-                  color: "red",
-                  fontSize: "14px",
-                  marginTop: "10px",
-                }}
-              >
-                {error}
-              </p>
-            )}
+            {error && <p className="heritage-auth-error">{error}</p>}
 
-            <button
-              type="submit"
-              className="login-btn"
-            >
+            <button type="submit" className="heritage-auth-submit">
               로그인
             </button>
           </form>
 
-          <div className="login-links">
-            <span
-              style={{ cursor: "pointer" }}
+          <div className="heritage-auth-links">
+            <button
+              type="button"
               onClick={() => navigate("/signup")}
             >
               회원가입
-            </span>
-
+            </button>
             <span>|</span>
-
-            <span
-              style={{ cursor: "pointer" }}
-              onClick={() =>
-                alert("준비 중인 기능입니다.")
-              }
+            <button
+              type="button"
+              onClick={() => alert("준비 중인 기능입니다.")}
             >
               비밀번호 찾기
-            </span>
+            </button>
           </div>
-        </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="login-footer">
+      <footer className="heritage-auth-footer">
         © 2026 VORA. All rights reserved.
       </footer>
     </div>

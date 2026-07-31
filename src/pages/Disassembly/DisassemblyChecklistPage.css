@@ -1,196 +1,96 @@
+@reference "tailwindcss";
+
+@layer components {
 /* ===========================
    전체 페이지
 =========================== */
-
 .checklist-page {
-    min-height: 100vh;
-    background: #f7f8fa;
-    padding: 40px 60px;
-    font-family: "Pretendard", sans-serif;
+    @apply min-h-screen [background:#f7f8fa] [font-family:"Pretendard",sans-serif] px-[60px] py-10;
 }
 
 /* ===========================
    상단 네비게이션 (도구 추천 페이지와 동일한 UI)
 =========================== */
-
 .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-bottom: 70px;
+    @apply flex justify-between items-center mb-[70px];
 }
-
 .logo {
-    margin: 0;
-
-    font-size: 56px;
-    font-weight: 700;
-    color: #2f6fed;
-
-    letter-spacing: 1px;
+    @apply text-[56px] font-bold text-[#2f6fed] tracking-[1px] m-0;
 }
-
 .nav-btn-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    @apply flex items-center gap-3;
 }
-
 .nav-btn {
-    min-width: 120px;
-    height: 48px;
-
-    border: none;
-    border-radius: 12px;
-
-    background: #2f6fed;
-    color: white;
-
-    font-size: 18px;
-    font-weight: 600;
-
-    cursor: pointer;
-    transition: 0.2s;
+    @apply min-w-[120px] h-12 [background:#2f6fed] text-[white] text-lg font-semibold cursor-pointer transition-[0.2s] rounded-xl border-[none] hover:[background:#2458c8];
 }
-
-.nav-btn:hover {
-    background: #2458c8;
-}
-
 .nav-btn.secondary {
-    background: #eef5ff;
-    color: #2f6fed;
-}
-
-.nav-btn.secondary:hover {
-    background: #dbe9ff;
+    @apply [background:#eef5ff] text-[#2f6fed] hover:[background:#dbe9ff];
 }
 
 /* ===========================
    제목 (도구 추천 페이지와 동일한 UI)
 =========================== */
-
 .page-header {
-    margin-bottom: 50px;
+    @apply mb-[50px];
 }
-
 .page-header h1 {
-    margin: 0 0 18px;
-
-    font-size: 58px;
-    font-weight: 700;
-
-    color: #1f2937;
+    @apply text-[58px] font-bold text-gray-800 mt-0 mb-[18px] mx-0;
 }
-
 .page-header p {
-    margin: 0;
-
-    font-size: 22px;
-    color: #6b7280;
-
-    line-height: 1.6;
+    @apply text-[22px] text-gray-500 leading-[1.6] m-0;
 }
 
 /* ===========================
    체크리스트 카드
 =========================== */
-
 .checklist-card {
-    background: white;
-    border-radius: 24px;
-    padding: 35px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.06);
+    @apply [background:white] shadow-[0_10px_30px_rgba(0,0,0,0.06)] p-[35px] rounded-3xl;
 }
-
 .card-title {
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 30px;
-    color: #1f2937;
+    @apply text-[26px] font-bold text-gray-800 mb-[30px];
 }
 
 /* ===========================
    체크리스트 항목
 =========================== */
-
 .check-item {
-    display: flex;
-    align-items: center;
-
-    gap: 18px;
-
-    padding: 18px 20px;
-
-    margin-bottom: 16px;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-
-    cursor: pointer;
-
-    transition: .2s;
+    @apply flex items-center gap-[18px] border border cursor-pointer transition-[0.2s] mb-4 px-5 py-[18px] rounded-[14px] border-solid hover:border-blue-600 hover:[background:#f8fbff];
 }
-
-.check-item:hover {
-    border-color: #2563eb;
-    background: #f8fbff;
-}
-
 .check-item input {
-    width: 22px;
-    height: 22px;
-    accent-color: #2563eb;
-    cursor: pointer;
+    @apply w-[22px] h-[22px] accent-blue-600 cursor-pointer;
 }
-
 .check-content {
-    flex: 1;
+    @apply flex-1;
 }
-
 .check-title {
-    font-size: 17px;
-    font-weight: 500;
-    color: #1f2937;
-    line-height: 1.6;
+    @apply text-[17px] font-medium text-gray-800 leading-[1.6];
 }
 
 /* ===========================
    체크된 항목
 =========================== */
-
 .check-item:has(input:checked) {
-    border-color: #2563eb;
-    background: #eef5ff;
+    @apply border-blue-600 [background:#eef5ff];
 }
-
 .check-item:has(input:checked) .check-title {
-    color: #2563eb;
-    font-weight: 600;
+    @apply text-blue-600 font-semibold;
 }
 
 /* ===========================
    반응형
 =========================== */
-
 @media (max-width: 900px) {
-
     .checklist-page {
-        padding: 24px;
+        @apply p-6;
     }
-
     .top-bar {
-        flex-direction: column;
-        gap: 20px;
+        @apply flex-col gap-5;
     }
-
     .page-header h1 {
-        font-size: 34px;
+        @apply text-[34px];
     }
-
     .card-title {
-        font-size: 22px;
+        @apply text-[22px];
     }
-
+}
 }

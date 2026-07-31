@@ -1,0 +1,1069 @@
+@reference "tailwindcss";
+
+@layer components {
+:root {
+  @apply [--workflow-paper:#f4f0e7] [--workflow-paper-deep:#e9e1d4] [--workflow-surface:#fffdf8] [--workflow-surface-soft:#faf6ee] [--workflow-ink:#17201d] [--workflow-ink-soft:#3f4741] [--workflow-muted:#687069] [--workflow-bronze:#96683d] [--workflow-bronze-dark:#704821] [--workflow-bronze-soft:#eee3d2] [--workflow-line:#cabca8] [--workflow-line-soft:rgba(202,188,168,0.56)] [--workflow-green:#61735d] [--workflow-green-dark:#455643] [--workflow-danger:#9c5b47] [--workflow-shadow:0_18px_48px_rgba(63,52,38,0.08)];
+}
+:is(
+  .flow-page,
+  .pre-page,
+  .visual-page,
+  .xray-page,
+  .disassembly-page,
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-page,
+  .cleaning-method-page,
+  .strengthening-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-page,
+  .restoration-material-page,
+  .post-record-page,
+  .report-page,
+  .complete-page
+) {
+  @apply min-h-screen [background:radial-gradient(_circle_at_88%_5%,rgba(150,104,61,0.09),transparent_24rem_),var(--workflow-paper)] text-[color:var(--workflow-ink)] [font-family:Pretendard,"Noto_Sans_KR",-apple-system,BlinkMacSystemFont,"Segoe_UI",sans-serif];
+}
+:is(
+  .flow-page,
+  .pre-page,
+  .visual-page,
+  .xray-page,
+  .disassembly-page,
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-page,
+  .cleaning-method-page,
+  .strengthening-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-page,
+  .restoration-material-page,
+  .post-record-page,
+  .report-page,
+  .complete-page
+) :is(button, input, textarea, select) {
+  @apply [font:inherit];
+}
+
+/* 공통 작업 상단 바 */
+:is(
+  .flow-page,
+  .pre-page,
+  .disassembly-page,
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-page,
+  .cleaning-method-page,
+  .strengthening-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-page,
+  .restoration-material-page,
+  .post-record-page,
+  .report-page
+) > :is(.top-bar, .navigation, .detail-header) {
+  @apply w-[min(1240px,calc(100%_-_64px))] min-h-[72px] border-b-[color:var(--workflow-line)] [background:transparent] shadow-none mt-0 mb-9 mx-auto p-0 border-b border-solid;
+}
+:is(
+  .flow-page,
+  .pre-page,
+  .disassembly-page,
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-page,
+  .cleaning-method-page,
+  .strengthening-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-page,
+  .restoration-material-page,
+  .post-record-page,
+  .report-page
+) :is(.logo, .top-bar-logo, .vora-logo) {
+  @apply [background:transparent] text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[23px] font-bold tracking-[0.12em] cursor-pointer border-0;
+}
+:is(
+  .flow-page,
+  .pre-page,
+  .disassembly-page,
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-page,
+  .cleaning-method-page,
+  .strengthening-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-page,
+  .restoration-material-page,
+  .post-record-page,
+  .report-page
+) .nav-btn {
+  @apply min-h-[43px] border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] shadow-none text-[#fffaf0] text-[13px] font-bold [transition:background_0.16s_ease,border-color_0.16s_ease,color_0.16s_ease,transform_0.16s_ease] px-5 py-0 rounded-lg border-solid;
+}
+:is(
+  .flow-page,
+  .pre-page,
+  .disassembly-page,
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-page,
+  .cleaning-method-page,
+  .strengthening-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-page,
+  .restoration-material-page,
+  .post-record-page,
+  .report-page
+) .nav-btn.secondary {
+  @apply border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-ink)];
+}
+
+/* 공정 허브 페이지 */
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) {
+  @apply pt-7 pb-[88px] px-8;
+}
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .page-layout {
+  @apply flex w-[min(1240px,100%)] items-start gap-7 mx-auto my-0;
+}
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .page-main {
+  @apply min-w-0 flex-1;
+}
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) :is(.content, .content-columns) {
+  @apply w-full max-w-none gap-[22px];
+}
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) :is(
+  .info-card,
+  .task-card,
+  .post-record-card,
+  .analysis-btn
+) {
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] rounded-[14px] border-solid;
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) :is(
+  .disassembly-container,
+  .cleaning-container,
+  .strengthening-container,
+  .bonding-container,
+  .restoration-container
+) {
+  @apply min-w-0 flex-[1.15] p-0;
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .task-card {
+  @apply min-h-[124px] gap-[22px] [transform:none] mt-0 mb-4 mx-0 px-[26px] py-6;
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .task-icon {
+  @apply grid w-[52px] h-[52px] flex-[0_0_52px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] [font-family:Georgia,serif] text-lg rounded-[50%] border-solid;
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .task-content h2 {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[22px] font-semibold mt-0 mb-[7px] mx-0;
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .task-content p {
+  @apply text-[color:var(--workflow-muted)] text-sm leading-[1.65] m-0;
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .task-arrow {
+  @apply text-[color:var(--workflow-bronze)] text-[25px];
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .post-record-card {
+  @apply flex-[0.85] p-[26px];
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .post-record-card h3 {
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[21px] font-semibold mt-0 mb-5 mx-0;
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) :is(
+  .photo-url-input,
+  .post-record-memo
+) {
+  @apply border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] text-[color:var(--workflow-ink)] rounded-lg border-solid;
+}
+:is(
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) :is(
+  .photo-url-add-btn,
+  .post-record-save-btn
+) {
+  @apply border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[#fffaf0] rounded-lg border-solid;
+}
+
+/* 공정 진행 사이드바 */
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .progress-wrapper {
+  @apply w-[210px] border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.86)] shadow-[var(--workflow-shadow)] px-[23px] py-[27px] rounded-[14px] border-solid top-6;
+}
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .progress-circle {
+  @apply w-[35px] h-[35px] border border-[color:var(--workflow-line)] [background:var(--workflow-paper-deep)] text-[color:var(--workflow-muted)] text-[13px] border-solid;
+}
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .progress-circle.active {
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[#fffaf0];
+}
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .progress-title {
+  @apply text-[color:var(--workflow-muted)] text-[13px] mt-[7px];
+}
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .progress-title.active {
+  @apply text-[color:var(--workflow-bronze-dark)];
+}
+:is(
+  .pre-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .progress-line {
+  @apply [background:var(--workflow-line)] left-[17px];
+}
+
+/* 처리 전 조사 허브 */
+.pre-page .info-card {
+  @apply p-[30px];
+}
+.pre-page .info-card-header {
+  @apply mb-[26px];
+}
+.pre-page .info-card-header h2 {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[27px] font-semibold;
+}
+.pre-page .info-card-header .edit-btn {
+  @apply border border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-bronze-dark)] rounded-lg border-solid;
+}
+.pre-page .info-grid {
+  @apply grid-cols-3 gap-0 border-t-[color:var(--workflow-line-soft)] border-l-[color:var(--workflow-line-soft)] border-t border-solid border-l;
+}
+.pre-page .info-item {
+  @apply min-h-24 border-r-[color:var(--workflow-line-soft)] border-b-[color:var(--workflow-line-soft)] p-5 border-r border-solid border-b;
+}
+.pre-page .info-item span {
+  @apply text-[color:var(--workflow-muted)] text-[11px] tracking-[0.08em] mb-2;
+}
+.pre-page .info-item p {
+  @apply text-[color:var(--workflow-ink)] text-[17px] font-[650];
+}
+.pre-page .analysis-card {
+  @apply grid grid-cols-2 gap-[18px];
+}
+.pre-page .analysis-btn {
+  @apply w-auto min-h-[190px] border border-[color:var(--workflow-line-soft)] p-[30px] border-solid hover:border-[color:var(--workflow-bronze)] hover:-translate-y-0.5;
+}
+.pre-page .analysis-btn .icon {
+  @apply grid w-[50px] h-[50px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-2xl mb-[18px] rounded-[50%] border-solid;
+}
+.pre-page .analysis-btn h3 {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[23px] font-semibold;
+}
+.pre-page .analysis-btn p {
+  @apply text-[color:var(--workflow-muted)];
+}
+.pre-page .analysis-btn.completed {
+  @apply [background:rgba(240,245,237,0.92)] border-[rgba(97,115,93,0.55)];
+}
+
+/* 상세 작업 페이지 공통 */
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) {
+  @apply pt-7 pb-[90px] px-8;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .page-header {
+  @apply w-[min(1120px,100%)] border-b-[color:var(--workflow-line)] mt-0 mb-[26px] mx-auto pb-[22px] border-b border-solid;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .page-header h1 {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[clamp(31px,4vw,44px)] font-medium tracking-[-0.035em];
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) :is(
+  .checklist-card,
+  .tool-list,
+  .method-card,
+  .method-container,
+  .material-container,
+  .work-card,
+  .result-box
+) {
+  @apply w-[min(1120px,100%)] max-w-none border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] mx-auto my-0 p-[30px] rounded-2xl border-solid;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) :is(
+  .check-item,
+  .step-card,
+  .material-card,
+  .method-box,
+  .result-item
+) {
+  @apply border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface-soft)] shadow-none rounded-xl;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .step-number {
+  @apply grid w-12 h-12 flex-[0_0_48px] place-items-center border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] [font-family:Georgia,serif] text-lg border-solid;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .step-info h3 {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[22px];
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .step-info p {
+  @apply text-[color:var(--workflow-muted)] text-sm;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) :is(
+  .approve-btn,
+  .select-btn,
+  .complete-btn
+) {
+  @apply border border-[color:var(--workflow-green)] [background:var(--workflow-green)] text-[white] border-solid;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .edit-btn {
+  @apply border border-[color:var(--workflow-line)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] border-solid;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .delete-btn {
+  @apply border [background:#f7eae5] text-[color:var(--workflow-danger)] border-solid border-[rgba(156,91,71,0.25)];
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .add-step-btn {
+  @apply border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-bronze-dark)] rounded-[10px];
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) :is(input, textarea, select) {
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface)] text-[color:var(--workflow-ink)];
+}
+
+/* AI Flow */
+.flow-page {
+  @apply pt-7 pb-[90px] px-8;
+}
+.flow-page .flow-container {
+  @apply w-[min(960px,100%)] gap-[22px];
+}
+.flow-page .flow-box {
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] p-8 rounded-2xl border-solid;
+}
+.flow-page .flow-box h2 {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[25px] font-semibold;
+}
+.flow-page :is(.step-btn, .ai-step) {
+  @apply border border-[color:var(--workflow-line)] rounded-[9px] border-solid;
+}
+.flow-page .step-btn.active {
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[white];
+}
+.flow-page .step-btn.inactive {
+  @apply [background:var(--workflow-surface-soft)] text-[color:var(--workflow-muted)];
+}
+.flow-page .ai-step {
+  @apply [background:var(--workflow-green)] text-[white];
+}
+.flow-page .arrow {
+  @apply text-[color:var(--workflow-line)];
+}
+
+/* 육안 조사 */
+.visual-page {
+  @apply block pt-[54px] pb-[92px] px-8;
+}
+.visual-page .visual-container {
+  @apply w-[min(1040px,100%)] max-w-none mx-auto my-0;
+}
+.visual-page .visual-breadcrumb {
+  @apply flex items-center gap-2 border-b-[color:var(--workflow-line)] text-[#827767] text-[13px] mb-7 pb-[15px] border-b border-solid;
+}
+.visual-page .visual-breadcrumb button {
+  @apply [background:transparent] text-[color:var(--workflow-muted)] cursor-pointer p-0 border-0 hover:text-[color:var(--workflow-bronze-dark)];
+}
+.visual-page .visual-breadcrumb strong {
+  @apply text-[color:var(--workflow-ink)];
+}
+.visual-page .visual-header {
+  @apply flex items-end justify-between gap-6 mb-7;
+}
+.visual-page .visual-eyebrow,
+.visual-page .visual-review-index,
+.visual-page .visual-section-heading span {
+  @apply block text-[color:var(--workflow-bronze)] text-[10px] font-extrabold tracking-[0.16em] mb-[9px];
+}
+.visual-page .visual-title {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[clamp(34px,4vw,48px)] font-medium tracking-[-0.04em] m-0;
+}
+.visual-page .visual-header p {
+  @apply text-[color:var(--workflow-muted)] text-sm mt-3 mb-0 mx-0;
+}
+.visual-page .visual-status {
+  @apply flex-[0_0_auto] border [background:#e9eee6] text-[color:var(--workflow-green-dark)] text-xs font-bold px-[13px] py-[9px] rounded-[999px] border-solid border-[rgba(97,115,93,0.3)];
+}
+.visual-page .visual-artifact-summary {
+  @apply grid grid-cols-[1.25fr_repeat(3,1fr)] overflow-hidden border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] mb-[22px] rounded-[14px] border-solid;
+}
+.visual-page .visual-artifact-summary > div {
+  @apply flex min-w-0 min-h-[82px] justify-center border-l-[color:var(--workflow-line-soft)] flex-col gap-1.5 px-5 py-[18px] border-l border-solid first:border-l-0;
+}
+.visual-page .visual-artifact-summary span {
+  @apply text-[color:var(--workflow-muted)] text-[11px];
+}
+.visual-page .visual-artifact-summary strong {
+  @apply overflow-hidden text-[color:var(--workflow-ink)] text-sm text-ellipsis whitespace-nowrap;
+}
+.visual-page .visual-result-layout {
+  @apply grid grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] [align-items:start] gap-[22px];
+}
+.visual-page .result-card {
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] m-0 p-[30px] rounded-2xl border-solid;
+}
+.visual-page .visual-section-heading {
+  @apply flex items-start justify-between gap-5 mb-3;
+}
+.visual-page .result-card h2 {
+  @apply text-[color:var(--workflow-bronze-dark)] [font-family:Georgia,"Noto_Serif_KR",serif] text-2xl font-semibold m-0;
+}
+.visual-page .visual-section-heading small {
+  @apply text-[color:var(--workflow-muted)] text-[11px];
+}
+.visual-page .result-item {
+  @apply border-[color:var(--workflow-line-soft)] text-[15px] px-1 py-[18px];
+}
+.visual-page .result-label {
+  @apply text-[color:var(--workflow-muted)] font-semibold;
+}
+.visual-page .result-value {
+  @apply [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[13px] px-3 py-[7px] rounded-[999px];
+}
+.visual-page .visual-review-card {
+  @apply border [background:rgba(240,245,237,0.86)] shadow-[var(--workflow-shadow)] p-7 rounded-2xl border-solid border-[rgba(97,115,93,0.34)];
+}
+.visual-page .visual-review-card h2 {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[22px] font-semibold mt-0 mb-3.5 mx-0;
+}
+.visual-page .visual-review-card p {
+  @apply text-[color:var(--workflow-muted)] text-[13px] leading-[1.75] m-0;
+}
+.visual-page .visual-review-card ul {
+  @apply grid gap-2.5 text-[color:var(--workflow-ink-soft)] text-[13px] leading-[1.55] mt-[22px] mb-0 mx-0 pl-[19px] pr-0 pt-[18px] pb-0 border-t-[rgba(97,115,93,0.25)] border-t border-solid;
+}
+.visual-page .complete-area {
+  @apply items-center justify-end gap-[22px] border-t-[color:var(--workflow-line)] mt-6 pt-6 border-t border-solid;
+}
+.visual-page .complete-area p {
+  @apply text-[color:var(--workflow-muted)] text-xs ml-0 mr-auto my-0;
+}
+.visual-page .complete-btn {
+  @apply w-auto min-w-[150px] h-[46px] border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[white] text-sm rounded-lg border-solid;
+}
+
+/* X-RAY 분석 */
+.xray-page {
+  @apply [--xray-bg:var(--workflow-paper)] [--xray-surface:var(--workflow-surface)] [--xray-surface-subtle:var(--workflow-surface-soft)] [--xray-text:var(--workflow-ink)] [--xray-text-secondary:var(--workflow-muted)] [--xray-text-muted:#827767] [--xray-border:var(--workflow-line-soft)] [--xray-primary:var(--workflow-bronze)] [--xray-primary-hover:var(--workflow-bronze-dark)] [--xray-primary-soft:var(--workflow-bronze-soft)] [--xray-success:var(--workflow-green)] [--xray-warning:#b27b2d] [--xray-danger:var(--workflow-danger)] [background:radial-gradient(_circle_at_88%_5%,rgba(150,104,61,0.09),transparent_24rem_),var(--workflow-paper)] pt-[46px];
+}
+.xray-page .xray-breadcrumb {
+  @apply border-b-[color:var(--workflow-line)] mb-7 pb-[15px] border-b border-solid;
+}
+.xray-page .xray-title {
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[clamp(36px,4vw,52px)] font-medium tracking-[-0.045em];
+}
+.xray-page :is(
+  .artifact-summary,
+  .workflow-steps,
+  .xray-section,
+  .report-section,
+  .final-review-section
+) {
+  @apply border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)];
+}
+.xray-page .artifact-mark {
+  @apply [background:var(--workflow-ink)] text-[#ead8ba];
+}
+.xray-page .workflow-steps li.active {
+  @apply [background:#f3eadc];
+}
+.xray-page .workflow-step-icon {
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-paper-deep)];
+}
+.xray-page .workflow-steps li.active .workflow-step-icon {
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] text-[white];
+}
+.xray-page .workflow-steps li.done .workflow-step-icon {
+  @apply border-[color:var(--workflow-green)] [background:var(--workflow-green)] text-[white];
+}
+.xray-page .xray-primary {
+  @apply [background:var(--workflow-bronze)];
+}
+.xray-page .xray-secondary {
+  @apply border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-ink)];
+}
+.xray-page .xray-upload {
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)];
+}
+.xray-page .xray-upload:hover,
+.xray-page .xray-upload.dragging {
+  @apply border-[color:var(--workflow-bronze)] [background:#f3eadc];
+}
+.xray-page .xray-message {
+  @apply [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)];
+}
+.xray-page .upload-icon {
+  @apply border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)];
+}
+.xray-page :is(.analysis-notice, .ai-finding, .review-default-guide) {
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)];
+}
+.xray-page .image-tabs button.active {
+  @apply [background:#4b3827] border-[#b58a5e];
+}
+.xray-page .undo-toast button {
+  @apply text-[#e1bd8f];
+}
+.xray-page :is(
+  .requirement-chip,
+  .review-ready-chip,
+  .save-status > span
+) {
+  @apply [background:#e9eee6] text-[color:var(--workflow-green-dark)];
+}
+.xray-page .review-state.damage,
+.xray-page .decision-chip.damage {
+  @apply [background:#f7eae5] text-[color:var(--workflow-danger)];
+}
+.xray-page .normal-exclude-button {
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface)] text-[color:var(--workflow-ink)];
+}
+
+/* 보고서 */
+:is(.post-record-page, .report-page) {
+  @apply pt-7 pb-[90px] px-8;
+}
+.post-record-page > h1 {
+  @apply w-[min(1000px,100%)] border-b-[color:var(--workflow-line)] text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[42px] font-medium mt-0 mb-[30px] mx-auto pb-6 border-b border-solid;
+}
+.post-record-page :is(.image-card, .report-card),
+.report-page .report-paper {
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.92)] shadow-[var(--workflow-shadow)] rounded-2xl border-solid;
+}
+.post-record-page .dummy-image {
+  @apply border border-[color:var(--workflow-line)] [background:var(--workflow-paper-deep)] text-[color:var(--workflow-muted)] border-dashed;
+}
+.post-record-page .report-row {
+  @apply border-[color:var(--workflow-line-soft)];
+}
+.post-record-page .report-actions button {
+  @apply [background:var(--workflow-bronze-soft)];
+}
+.post-record-page .add-btn {
+  @apply border-[color:var(--workflow-line)] [background:transparent] text-[color:var(--workflow-bronze-dark)];
+}
+.post-record-page .future-care-textarea {
+  @apply border-[color:var(--workflow-line)] [background:var(--workflow-surface)];
+}
+.report-page .report-paper h1 {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] font-medium;
+}
+.report-page .report-paper h2 {
+  @apply border-[color:var(--workflow-line)] text-[color:var(--workflow-bronze-dark)];
+}
+.complete-page .complete-card {
+  @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.94)] shadow-[var(--workflow-shadow)] rounded-2xl border-solid;
+}
+.complete-page .complete-card h1 {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] font-medium;
+}
+.complete-page .complete-card p {
+  @apply text-[color:var(--workflow-muted)];
+}
+.complete-page .complete-btn {
+  @apply [background:var(--workflow-bronze)] rounded-lg;
+}
+
+/* 로딩 */
+:is(
+  .flow-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .analyzing-overlay {
+  @apply [background:rgba(23,32,29,0.48)] backdrop-blur-[5px];
+}
+:is(
+  .flow-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .analyzing-box {
+  @apply border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] border-solid;
+}
+:is(
+  .flow-page,
+  .disassembly-page,
+  .cleaning-page,
+  .strengthening-page,
+  .bonding-page,
+  .restoration-page
+) .analyzing-bar-fill {
+  @apply [background:var(--workflow-bronze)];
+}
+@media (max-width: 1040px) {
+  :is(
+    .pre-page,
+    .disassembly-page,
+    .cleaning-page,
+    .strengthening-page,
+    .bonding-page,
+    .restoration-page
+  ) .content-columns {
+    @apply flex-col;
+  }
+  :is(
+    .disassembly-page,
+    .cleaning-page,
+    .strengthening-page,
+    .bonding-page,
+    .restoration-page
+  ) :is(
+    .disassembly-container,
+    .cleaning-container,
+    .strengthening-container,
+    .bonding-container,
+    .restoration-container,
+    .post-record-card
+  ) {
+    @apply w-full;
+  }
+  .pre-page .info-grid {
+    @apply grid-cols-2;
+  }
+}
+@media (max-width: 900px) {
+  :is(
+    .flow-page,
+    .pre-page,
+    .visual-page,
+    .xray-page,
+    .disassembly-page,
+    .checklist-page,
+    .tool-page,
+    .method-page,
+    .cleaning-page,
+    .cleaning-method-page,
+    .strengthening-page,
+    .strengthening-material-page,
+    .strengthening-wetting-page,
+    .bonding-page,
+    .bonding-material-page,
+    .bonding-work-page,
+    .restoration-page,
+    .restoration-material-page,
+    .post-record-page,
+    .report-page
+  ) {
+    @apply px-5;
+  }
+  :is(
+    .flow-page,
+    .pre-page,
+    .disassembly-page,
+    .checklist-page,
+    .tool-page,
+    .method-page,
+    .cleaning-page,
+    .cleaning-method-page,
+    .strengthening-page,
+    .strengthening-material-page,
+    .strengthening-wetting-page,
+    .bonding-page,
+    .bonding-material-page,
+    .bonding-work-page,
+    .restoration-page,
+    .restoration-material-page,
+    .post-record-page,
+    .report-page
+  ) > :is(.top-bar, .navigation, .detail-header) {
+    @apply w-full;
+  }
+  :is(
+    .pre-page,
+    .disassembly-page,
+    .cleaning-page,
+    .strengthening-page,
+    .bonding-page,
+    .restoration-page
+  ) .page-layout {
+    @apply flex-col;
+  }
+  :is(
+    .pre-page,
+    .disassembly-page,
+    .cleaning-page,
+    .strengthening-page,
+    .bonding-page,
+    .restoration-page
+  ) .progress-wrapper {
+    @apply w-full;
+  }
+  .flow-page .flow-container {
+    @apply grid-cols-[1fr];
+  }
+  .visual-page .visual-artifact-summary {
+    @apply grid-cols-2;
+  }
+  .visual-page .visual-artifact-summary > div:nth-child(3) {
+    @apply border-t-[color:var(--workflow-line-soft)] border-l-0 border-t border-solid;
+  }
+  .visual-page .visual-artifact-summary > div:nth-child(4) {
+    @apply border-t-[color:var(--workflow-line-soft)] border-t border-solid;
+  }
+  .visual-page .visual-result-layout {
+    @apply grid-cols-[1fr];
+  }
+  .xray-page .xray-header {
+    @apply items-start;
+  }
+}
+@media (max-width: 680px) {
+  .pre-page .info-grid,
+  .pre-page .analysis-card {
+    @apply grid-cols-[1fr];
+  }
+  :is(
+    .disassembly-page,
+    .cleaning-page,
+    .strengthening-page,
+    .bonding-page,
+    .restoration-page
+  ) .task-card {
+    @apply items-start p-5;
+  }
+  :is(
+    .checklist-page,
+    .tool-page,
+    .method-page,
+    .cleaning-method-page,
+    .strengthening-material-page,
+    .strengthening-wetting-page,
+    .bonding-material-page,
+    .bonding-work-page,
+    .restoration-material-page
+  ) :is(
+    .checklist-card,
+    .tool-list,
+    .method-card,
+    .method-container,
+    .material-container,
+    .work-card,
+    .result-box
+  ) {
+    @apply p-5;
+  }
+  :is(
+    .checklist-page,
+    .tool-page,
+    .method-page,
+    .cleaning-method-page,
+    .strengthening-material-page,
+    .strengthening-wetting-page,
+    .bonding-material-page,
+    .bonding-work-page,
+    .restoration-material-page
+  ) .step-card {
+    @apply items-start flex-col;
+  }
+  :is(
+    .checklist-page,
+    .tool-page,
+    .method-page,
+    .cleaning-method-page,
+    .strengthening-material-page,
+    .strengthening-wetting-page,
+    .bonding-material-page,
+    .bonding-work-page,
+    .restoration-material-page
+  ) .step-actions {
+    @apply w-full flex-wrap;
+  }
+  .visual-page .visual-header {
+    @apply items-start flex-col;
+  }
+  .visual-page .visual-artifact-summary {
+    @apply grid-cols-[1fr];
+  }
+  .visual-page .visual-artifact-summary > div {
+    @apply border-t-[color:var(--workflow-line-soft)] border-l-0 border-t border-solid first:border-t-0;
+  }
+  .visual-page .complete-area {
+    @apply items-stretch flex-col [justify-content:stretch];
+  }
+  .visual-page .complete-btn {
+    @apply w-full;
+  }
+}
+}

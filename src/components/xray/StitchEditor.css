@@ -1,365 +1,160 @@
-/*
- * 색상은 XrayPage.css 의 기존 값을 따른다.
- *
- *   #2767df  기본
- *   #dfe5ef  테두리
- *   #f7f9fc  옅은 면
- *   #748096  보조 텍스트
- *   #172033  본문
- */
+@reference "tailwindcss";
 
+@layer components {
 .stitch-editor {
-  overflow: hidden;
-  border: 1px solid #dfe5ef;
-  border-radius: 14px;
-  background: #fff;
+  @apply [--stitch-surface:var(--xray-surface,#ffffff)] [--stitch-surface-subtle:var(--xray-surface-subtle,#f7f3ed)] [--stitch-text:var(--xray-text,#25211d)] [--stitch-text-secondary:var(--xray-text-secondary,#746a60)] [--stitch-text-muted:var(--xray-text-muted,#9b9085)] [--stitch-border:var(--xray-border,#e4ddd3)] [--stitch-primary:var(--xray-primary,#9b6a3f)] [--stitch-primary-hover:var(--xray-primary-hover,#835832)] [--stitch-primary-soft:var(--xray-primary-soft,#f3e9de)] overflow-hidden border border-[color:var(--stitch-border)] [background:var(--stitch-surface)] shadow-[0_10px_30px_rgba(70,52,35,0.06)] rounded-2xl border-solid;
 }
-
 .stitch-editor-loading {
-  padding: 60px 20px;
-  border: 1px solid #dfe5ef;
-  border-radius: 14px;
-  background: #f7f9fc;
-  color: #748096;
-  text-align: center;
-  font-size: 14px;
+  @apply border border-[color:var(--xray-border,#e4ddd3)] [background:var(--xray-surface-subtle,#f7f3ed)] text-[color:var(--xray-text-muted,#9b9085)] text-center text-sm px-5 py-[60px] rounded-2xl border-solid;
 }
 
 /* ── 상단 도구 막대 ─────────────────────────── */
-
 .stitch-editor-toolbar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 18px;
-  border-bottom: 1px solid #eef2f8;
-  background: #f7f9fc;
+  @apply flex items-center flex-wrap justify-between gap-3 border-b-[color:var(--stitch-border)] [background:var(--stitch-surface-subtle)] px-[18px] py-3.5 border-b border-solid;
 }
-
 .stitch-editor-status {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  color: #58657a;
-  font-size: 13px;
+  @apply flex items-baseline gap-1.5 text-[color:var(--stitch-text-secondary)] text-[13px];
 }
-
 .stitch-editor-status strong {
-  color: #172033;
-  font-size: 18px;
-  font-variant-numeric: tabular-nums;
+  @apply text-[color:var(--stitch-text)] text-lg tabular-nums;
 }
-
 .stitch-editor-status em {
-  margin-left: 6px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 700;
+  @apply text-xs not-italic font-bold ml-1.5 px-[9px] py-[3px] rounded-[999px];
 }
-
 .stitch-editor-moved {
-  background: #eef4ff;
-  color: #2767df;
+  @apply [background:var(--stitch-primary-soft)] text-[color:var(--stitch-primary)];
 }
 
 /* 미배치는 사용자가 반드시 처리해야 하므로 눈에 띄게 둔다 */
 .stitch-editor-warn {
-  background: #fff0f1;
-  color: #c9363e;
+  @apply [background:#fff0f1] text-[#c9363e];
 }
-
 .stitch-editor-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  @apply flex items-center flex-wrap gap-2;
 }
-
 .stitch-editor-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-right: 4px;
-  color: #58657a;
-  cursor: pointer;
-  font-size: 12px;
+  @apply inline-flex items-center gap-1.5 text-[color:var(--stitch-text-secondary)] cursor-pointer text-xs mr-1;
 }
 
 /* ── 본문 ───────────────────────────────── */
-
 .stitch-editor-body {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
 }
-
 .stitch-editor-compare {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
-  background: #dfe5ef;
+  @apply grid grid-cols-2 gap-px [background:var(--stitch-border)];
 }
-
 .stitch-editor-pane {
-  min-width: 0;
-  background: #fff;
+  @apply min-w-0 [background:var(--stitch-surface)];
 }
-
 .stitch-editor-pane-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 64px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #eef2f8;
-  background: #fff;
+  @apply flex items-center justify-between gap-3 min-h-16 border-b-[color:var(--stitch-border)] [background:var(--stitch-surface)] px-4 py-3 border-b border-solid;
 }
-
 .stitch-editor-pane-header span {
-  display: block;
-  margin-bottom: 3px;
-  color: #2767df;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  @apply block text-[color:var(--stitch-primary)] text-[10px] font-extrabold tracking-widest mb-[3px];
 }
-
 .stitch-editor-pane-header h3 {
-  margin: 0;
-  color: #172033;
-  font-size: 14px;
+  @apply text-[color:var(--stitch-text)] text-sm m-0;
 }
-
 .stitch-editor-pane-header small {
-  color: #94a1b4;
-  font-size: 11px;
-  white-space: nowrap;
+  @apply text-[color:var(--stitch-text-muted)] text-[11px] whitespace-nowrap;
 }
-
 .stitch-editor-canvas,
 .stitch-editor-reference {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: clamp(440px, 58vh, 700px);
-  min-height: 360px;
-  overflow: auto;
+  @apply flex items-center justify-center h-[clamp(440px,58vh,700px)] min-h-[360px] overflow-auto;
 }
-
 .stitch-editor-canvas {
-  padding: 18px;
-  background: #0d1118;
+  @apply [background:#0d1118] p-[18px];
 }
-
 .stitch-editor-reference {
-  padding: 18px;
-  background:
-    linear-gradient(45deg, #edf0f4 25%, transparent 25%),
-    linear-gradient(-45deg, #edf0f4 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #edf0f4 75%),
-    linear-gradient(-45deg, transparent 75%, #edf0f4 75%),
-    #f8f9fb;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
-  background-size: 20px 20px;
+  @apply [background:linear-gradient(45deg,#eee8df_25%,transparent_25%),linear-gradient(-45deg,#eee8df_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#eee8df_75%),linear-gradient(-45deg,transparent_75%,#eee8df_75%),#faf8f4] bg-[0_0,0_10px,10px_-10px,-10px_0] bg-[20px_20px] p-[18px];
 }
-
 .stitch-editor-reference img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  user-select: none;
+  @apply block w-full h-full object-contain select-none;
 }
-
 .stitch-editor-reference p {
-  margin: 0;
-  padding: 24px;
-  color: #748096;
-  text-align: center;
-  font-size: 13px;
-  line-height: 1.6;
+  @apply text-[color:var(--stitch-text-muted)] text-center text-[13px] leading-[1.6] m-0 p-6;
 }
-
 .stitch-editor-side {
-  display: grid;
-  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
-  gap: 24px;
-  padding: 16px 18px;
-  border-top: 1px solid #eef2f8;
-  background: #fff;
+  @apply grid grid-cols-[minmax(240px,0.8fr)_minmax(0,1.2fr)] gap-6 border-t-[color:var(--stitch-border)] [background:var(--stitch-surface)] px-[18px] py-4 border-t border-solid;
 }
-
 .stitch-editor-side section + section {
-  margin: 0;
-  padding: 0 0 0 24px;
-  border-top: 0;
-  border-left: 1px solid #eef2f8;
+  @apply border-l-[color:var(--stitch-border)] m-0 pl-6 pr-0 py-0 border-t-0 border-l border-solid;
 }
-
 .stitch-editor-side h3 {
-  margin: 0 0 10px;
-  color: #172033;
-  font-size: 13px;
+  @apply text-[color:var(--stitch-text)] text-[13px] mt-0 mb-2.5 mx-0;
 }
-
 .stitch-editor-hint {
-  margin: 0;
-  color: #748096;
-  font-size: 12px;
-  line-height: 1.6;
+  @apply text-[color:var(--stitch-text-muted)] text-xs leading-[1.6] m-0;
 }
-
 .stitch-editor-detail {
-  display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
-  gap: 7px 10px;
-  margin: 0;
-  font-size: 12px;
+  @apply grid grid-cols-[52px_minmax(0,1fr)] gap-[7px_10px] text-xs m-0;
 }
-
 .stitch-editor-detail dt {
-  color: #94a1b4;
+  @apply text-[color:var(--stitch-text-muted)];
 }
-
 .stitch-editor-detail dd {
-  margin: 0;
-  overflow: hidden;
-  color: #172033;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  @apply overflow-hidden text-[color:var(--stitch-text)] text-ellipsis whitespace-nowrap tabular-nums m-0;
 }
-
 .stitch-editor-unmatched {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 6px;
-  margin: 10px 0 0;
-  padding: 0;
-  max-height: 150px;
-  overflow-y: auto;
-  list-style: none;
+  @apply grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-1.5 max-h-[150px] overflow-y-auto [list-style:none] mt-2.5 mb-0 mx-0 p-0;
 }
-
 .stitch-editor-unmatched li + li {
-  margin-top: 0;
+  @apply mt-0;
 }
-
 .stitch-editor-unmatched button {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  padding: 9px 11px;
-  border: 1px solid #e6ebf3;
-  border-radius: 9px;
-  background: #fff;
-  color: #172033;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
+  @apply flex flex-col gap-0.5 w-full border border-[color:var(--stitch-border)] [background:var(--stitch-surface)] text-[color:var(--stitch-text)] cursor-pointer text-left [font:inherit] px-[11px] py-[9px] rounded-[9px] border-solid hover:border-[color-mix(in_srgb,var(--stitch-primary)_40%,var(--stitch-border))] hover:[background:var(--stitch-surface-subtle)];
 }
-
-.stitch-editor-unmatched button:hover {
-  border-color: #c3d2ea;
-  background: #f7f9fc;
-}
-
 .stitch-editor-unmatched button.selected {
-  border-color: #2767df;
-  background: #eef4ff;
+  @apply border-[color:var(--stitch-primary)] [background:var(--stitch-primary-soft)];
 }
-
 .stitch-editor-unmatched strong {
-  overflow: hidden;
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  @apply overflow-hidden text-xs text-ellipsis whitespace-nowrap;
 }
-
 .stitch-editor-unmatched span {
-  color: #94a1b4;
-  font-size: 11px;
+  @apply text-[color:var(--stitch-text-muted)] text-[11px];
 }
 
 /* ── 하단 ───────────────────────────────── */
-
 .stitch-editor-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 9px;
-  padding: 14px 18px;
-  border-top: 1px solid #eef2f8;
-  background: #f7f9fc;
+  @apply flex justify-end gap-[9px] border-t-[color:var(--stitch-border)] [background:var(--stitch-surface-subtle)] px-[18px] py-3.5 border-t border-solid;
 }
-
 .stitch-editor-ghost,
 .stitch-editor-primary {
-  padding: 9px 16px;
-  border-radius: 9px;
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  @apply cursor-pointer [font:inherit] text-[13px] font-bold px-4 py-[9px] rounded-[9px];
 }
-
 .stitch-editor-ghost {
-  border: 1px solid #cfd8e6;
-  background: #fff;
-  color: #354158;
+  @apply border border-[color:var(--stitch-border)] [background:var(--stitch-surface)] text-[color:var(--stitch-text-secondary)] border-solid;
 }
-
-.stitch-editor-ghost:hover:not(:disabled) {
-  background: #f2f5fa;
-}
-
 .stitch-editor-primary {
-  border: 0;
-  background: #2767df;
-  color: #fff;
+  @apply [background:var(--stitch-primary)] text-white border-0;
 }
-
 .stitch-editor-ghost:disabled,
 .stitch-editor-primary:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
+  @apply cursor-not-allowed opacity-45;
 }
-
 @media (max-width: 1050px) {
   .stitch-editor-compare {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   .stitch-editor-canvas,
   .stitch-editor-reference {
-    height: min(620px, 62vh);
+    @apply h-[min(620px,62vh)];
   }
 }
-
 @media (max-width: 700px) {
   .stitch-editor-toolbar,
   .stitch-editor-pane-header {
-    align-items: flex-start;
-    flex-direction: column;
+    @apply items-start flex-col;
   }
-
   .stitch-editor-side {
-    grid-template-columns: 1fr;
+    @apply grid-cols-[1fr];
   }
-
   .stitch-editor-side section + section {
-    padding: 16px 0 0;
-    border-top: 1px solid #eef2f8;
-    border-left: 0;
+    @apply border-t-[color:var(--stitch-border)] pt-4 pb-0 px-0 border-l-0 border-t border-solid;
   }
-
   .stitch-editor-canvas,
   .stitch-editor-reference {
-    height: min(520px, 58vh);
-    padding: 10px;
+    @apply h-[min(520px,58vh)] p-2.5;
   }
+}
 }

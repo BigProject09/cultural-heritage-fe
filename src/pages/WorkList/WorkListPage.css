@@ -1,251 +1,129 @@
-.worklist-page {
-  min-height: 100vh;
-  background: #f5f8fc;
+@reference "tailwindcss";
+
+@layer components {
+.heritage-worklist {
+  @apply [background:radial-gradient(circle_at_15%_0%,rgba(255,255,255,0.78),transparent_27rem),linear-gradient(rgba(118,91,61,0.025)_1px,transparent_1px),var(--heritage-paper)] bg-[auto,100%_5px,auto] text-[color:var(--heritage-ink)] min-h-screen;
 }
-
-/* Header */
-.worklist-header {
-  height: 70px;
-  background: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 60px;
-  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+.heritage-worklist-main {
+  @apply max-w-[1400px] mx-auto my-0 pt-12 pb-[72px] px-[52px];
 }
-
-.worklist-logo {
-  font-size: 28px;
-  font-weight: bold;
-  color: #2c6bed;
-  cursor: pointer;
+.heritage-worklist-heading {
+  @apply [align-items:end] flex justify-between;
 }
-
-.worklist-profile {
-  font-size: 28px;
-  cursor: pointer;
+.heritage-worklist-heading span {
+  @apply text-[color:var(--heritage-bronze)] text-[10px] font-bold tracking-[0.18em];
 }
-
-/* Title */
-.worklist-title {
-  width: 1200px;
-  margin: 40px auto 20px;
-  font-size: 34px;
-  color: #1f2937;
+.heritage-worklist-heading h1 {
+  @apply [font-family:"Noto_Serif_KR",Georgia,serif] text-[44px] font-medium tracking-[-0.04em] mt-2.5 mb-2 mx-0;
 }
-
-/* Search */
-.worklist-search {
-  width: 1200px;
-  margin: auto;
-  display: flex;
-  gap: 15px;
-  align-items: center;
+.heritage-worklist-heading p {
+  @apply text-[color:var(--heritage-muted)] m-0;
 }
-
-.worklist-search input {
-  flex: 1;
-  padding: 13px 18px;
-  border: 1px solid #d7dde6;
-  border-radius: 10px;
-  font-size: 15px;
+.heritage-worklist-heading > button {
+  @apply [background:var(--heritage-bronze)] text-[white] cursor-pointer min-h-11 px-5 py-0 rounded-[9px] border-0;
 }
-
-.worklist-search select {
-  width: 140px;
-  padding: 13px;
-  border: 1px solid #d7dde6;
-  border-radius: 10px;
+.heritage-worklist-tools {
+  @apply items-center border-b-[color:var(--heritage-line)] grid gap-3 grid-cols-[minmax(240px,1fr)_170px_auto] mt-8 mb-[22px] mx-0 pb-[22px] border-b border-solid;
 }
-
-.add-btn {
-  background: #2c6bed;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 13px 22px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: .2s;
+.heritage-worklist-tools input,
+.heritage-worklist-tools select {
+  @apply [background:rgba(255,253,247,0.82)] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] min-h-[43px] px-3.5 py-0 rounded-lg border-solid;
 }
-
-.add-btn:hover {
-  background: #1d56c8;
+.heritage-worklist-tools > span {
+  @apply text-[color:var(--heritage-muted)] text-[11px];
 }
-
-/* Count */
-.work-count {
-  width: 1200px;
-  margin: 25px auto;
-  color: #6b7280;
+.heritage-worklist-grid {
+  @apply grid gap-[18px] grid-cols-2;
 }
-
-/* Grid */
-.work-grid {
-  width: 1200px;
-  margin: auto;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  padding-bottom: 60px;
+.heritage-worklist-state {
+  @apply items-center border border-[color:var(--heritage-line)] text-[color:var(--heritage-muted)] flex flex-col gap-[7px] col-span-full justify-center min-h-60 text-center p-[30px] rounded-[14px] border-dashed;
 }
-
-/* Card */
-.work-card {
-  background: white;
-  border-radius: 18px;
-  padding: 25px;
-  border: 1px solid #edf1f7;
-  transition: .25s;
+.heritage-worklist-state strong {
+  @apply text-[color:var(--heritage-ink)] [font-family:"Noto_Serif_KR",Georgia,serif] text-xl font-medium;
 }
-
-.work-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(0,0,0,.08);
+.heritage-worklist-state span {
+  @apply text-[11px];
 }
-
-.card-top {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
+.heritage-worklist-state button {
+  @apply [background:var(--heritage-bronze)] text-[white] cursor-pointer min-h-[38px] mt-[7px] px-4 py-0 rounded-lg border-0;
 }
-
-/* Thumbnail */
-.artifact-thumb {
-  width: 80px;
-  height: 80px;
-  background: #eef4ff;
-  border-radius: 15px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 42px;
-  flex-shrink: 0;
+.heritage-worklist-state.error {
+  @apply border-[color:var(--heritage-danger)];
 }
-
-/* Info */
-.card-info {
-  flex: 1;
-  min-width: 0;
+.heritage-worklist-grid > article {
+  @apply [background:rgba(255,253,247,0.74)] border border-[color:var(--heritage-line)] p-[18px] rounded-[14px] border-solid;
 }
-
-.card-info h3 {
-  margin: 0;
-  font-size: 22px;
-  color: #1f2937;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.heritage-worklist-card-head {
+  @apply items-center grid gap-[18px] grid-cols-[120px_1fr_auto];
 }
-
-.card-info p {
-  margin-top: 12px;
-  color: #6b7280;
+.heritage-worklist-card-head > div > span {
+  @apply text-[color:var(--heritage-green)] [font-family:monospace] text-[10px];
 }
-
-/* Status */
-.status-badge {
-  display: inline-block;
-  margin-top: 10px;
-  padding: 6px 14px;
-  border-radius: 30px;
-  font-size: 13px;
-  font-weight: 600;
+.heritage-worklist-card-head h2 {
+  @apply [font-family:"Noto_Serif_KR",Georgia,serif] text-[23px] font-medium mx-0 my-[5px];
 }
-
-.progress {
-  background: #eaf3ff;
-  color: #2c6bed;
+.heritage-worklist-card-head p {
+  @apply text-[color:var(--heritage-muted)] text-[11px] m-0;
 }
-
-.done {
-  background: #e8f8ec;
-  color: #27ae60;
+.heritage-worklist-card-head > strong {
+  @apply text-[color:var(--heritage-bronze-dark)] [font-family:Georgia,serif] text-2xl font-normal;
 }
-
-.review {
-  background: #fff6df;
-  color: #d99000;
+.heritage-worklist-progress {
+  @apply grid grid-cols-[repeat(3,1fr)] mt-[18px] px-0 py-3.5 border-y-[#ded4c5] border-b border-solid border-t;
 }
-
-/* Buttons */
-.card-buttons {
-  width: 52px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-  flex-shrink: 0;
+.heritage-worklist-progress > div {
+  @apply items-center flex gap-2 justify-center;
 }
-
-.card-buttons button {
-  width: 42px;
-  height: 42px;
-  border: none;
-  background: #f3f5f9;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 18px;
-  transition: .2s;
+.heritage-worklist-progress i {
+  @apply [background:var(--heritage-paper-2)] border block h-[11px] w-[11px] rounded-[50%] border-solid border-[#aaa497];
 }
-
-.card-buttons button:hover {
-  background: #dfe8ff;
+.heritage-worklist-progress i.done {
+  @apply [background:var(--heritage-green)] border-[color:var(--heritage-green)];
 }
-
-.card-buttons button:first-child {
-  color: #f4b400;
+.heritage-worklist-progress i.in_progress {
+  @apply [background:var(--heritage-bronze)] border-[color:var(--heritage-bronze)];
 }
-
-/* Footer */
-.card-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 25px;
+.heritage-worklist-progress i.needs_update {
+  @apply [background:var(--heritage-danger)] border-[color:var(--heritage-danger)];
 }
-
-.open-btn {
-  border: none;
-  background: #2c6bed;
-  color: white;
-  padding: 11px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: .2s;
+.heritage-worklist-progress span {
+  @apply text-[10px];
 }
-
-.open-btn:hover {
-  background: #1d56c8;
+.heritage-worklist-card-foot {
+  @apply items-center flex justify-between pt-[15px];
 }
-
-/* Responsive */
-@media (max-width:1280px){
-
-  .worklist-title,
-  .worklist-search,
-  .work-count,
-  .work-grid{
-    width:92%;
+.heritage-worklist-card-foot small {
+  @apply text-[#8d857a] text-[9px];
+}
+.heritage-worklist-card-foot button {
+  @apply [background:transparent] border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze-dark)] cursor-pointer min-h-[39px] px-[15px] py-0 rounded-lg border-solid;
+}
+@media (max-width: 900px) {
+  .heritage-worklist-main {
+    @apply px-6;
   }
-
-  .work-grid{
-    grid-template-columns:1fr;
+  .heritage-worklist-grid {
+    @apply grid-cols-[1fr];
   }
-
-  .worklist-header{
-    padding:0 25px;
+}
+@media (max-width: 640px) {
+  .heritage-worklist-heading {
+    @apply [align-items:start] flex-col gap-5;
   }
-
-  .card-top{
-    flex-wrap:wrap;
+  .heritage-worklist-heading h1 {
+    @apply text-4xl;
   }
-
-  .card-buttons{
-    flex-direction:row;
-    width:100%;
-    justify-content:flex-end;
-    margin-top:15px;
+  .heritage-worklist-tools {
+    @apply grid-cols-[1fr];
   }
+  .heritage-worklist-card-head {
+    @apply grid-cols-[88px_1fr];
+  }
+  .heritage-worklist-card-head .heritage-artifact-thumb {
+    @apply h-[76px] w-[88px];
+  }
+  .heritage-worklist-card-head > strong {
+    @apply col-span-full;
+  }
+}
 }

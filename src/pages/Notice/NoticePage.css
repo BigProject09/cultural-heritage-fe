@@ -1,67 +1,37 @@
-.notice-page {
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 35px;
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
+@reference "tailwindcss";
 
-.notice-header {
-  margin-bottom: 20px;
-}
-
-.notice-logo {
-  display: inline-block;
-  font-size: 30px;
-  font-weight: bold;
-  color: #8b5e3c;
-  cursor: pointer;
-}
-
-.notice-title {
-  font-size: 48px;
-  font-weight: bold;
-  margin: 10px 0 30px;
-}
-
-.notice-count {
-  margin-bottom: 20px;
-  color: #666;
-  font-size: 18px;
-}
-
-.notice-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.notice-table thead {
-  background: #f3f4f6;
-}
-
-.notice-table th,
-.notice-table td {
-  padding: 18px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
+@layer components {
 .notice-table th:first-child,
 .notice-table td:first-child {
-  text-align: left;
+  @apply text-[color:var(--heritage-bronze)] text-center w-[82px];
 }
-
+.notice-table th:nth-child(2),
+.notice-table td:nth-child(2) {
+  @apply text-left;
+}
+.notice-table td:nth-child(2) {
+  @apply items-center flex gap-3.5;
+}
+.notice-table td:nth-child(2) strong {
+  @apply text-[color:var(--heritage-ink)] text-sm;
+}
+.notice-table td:nth-child(2) p {
+  @apply text-[color:var(--heritage-muted)] text-xs mt-1.5;
+}
 .notice-table th:last-child,
 .notice-table td:last-child {
-  width: 180px;
-  text-align: center;
+  @apply w-[150px];
 }
-
-.notice-table tbody tr {
-  cursor: pointer;
-  transition: background 0.2s;
+@media (max-width: 720px) {
+  .notice-panel {
+    @apply p-4;
+  }
+  .notice-table td:nth-child(2) p {
+    @apply hidden;
+  }
+  .notice-table th:first-child,
+  .notice-table td:first-child {
+    @apply hidden;
+  }
 }
-
-.notice-table tbody tr:hover {
-  background: #f8f9ff;
 }

@@ -1,141 +1,55 @@
+@reference "tailwindcss";
+
+@layer components {
 .progress-wrapper {
-  width: 200px;
-  flex-shrink: 0;
-
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-
-  padding: 30px 24px;
-  box-sizing: border-box;
-
-  display: flex;
-  flex-direction: column;
-
-  height: fit-content;
-  position: sticky;
-  top: 30px;
+  @apply w-[200px] shrink-0 [background:white] shadow-[0_8px_20px_rgba(0,0,0,0.06)] box-border flex flex-col h-fit sticky px-6 py-[30px] rounded-[20px] top-[30px];
 }
-
 .progress-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-
-  position: relative;
-  cursor: pointer;
-
-  padding-bottom: 34px;
+  @apply flex items-start gap-3.5 relative cursor-pointer pb-[34px] last:pb-0;
 }
-
-.progress-item:last-child {
-  padding-bottom: 0;
-}
-
 .progress-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-
-  background: #e8edf5;
-  color: #555;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  font-size: 16px;
-  font-weight: 700;
-
-  flex-shrink: 0;
-  z-index: 2;
-
-  transition: 0.2s;
+  @apply w-10 h-10 [background:#e8edf5] text-[#555] flex justify-center items-center text-base font-bold shrink-0 z-[2] transition-[0.2s] rounded-[50%];
 }
-
 .progress-circle.active {
-  background: #2f6fed;
-  color: white;
+  @apply [background:#2f6fed] text-[white];
 }
-
 .progress-title {
-  margin-top: 9px;
-
-  font-size: 15px;
-  font-weight: 600;
-
-  color: #666;
-
-  text-align: left;
-
-  transition: 0.2s;
+  @apply text-[15px] font-semibold text-[#666] text-left transition-[0.2s] mt-[9px];
 }
-
 .progress-title.active {
-  color: #2f6fed;
+  @apply text-[#2f6fed];
 }
-
 .progress-line {
-  position: absolute;
-
-  top: 40px;
-  left: 19px;
-
-  width: 3px;
-  height: calc(100% - 40px);
-
-  background: #d7dde7;
-
-  z-index: 1;
+  @apply absolute w-[3px] h-[calc(100%_-_40px)] [background:#d7dde7] z-[1] left-[19px] top-10;
 }
-
 .progress-item:last-child .progress-line {
-  display: none;
+  @apply hidden;
 }
 
 /* hover */
-
 .progress-item:hover .progress-circle {
-  transform: scale(1.08);
+  @apply scale-[1.08];
 }
-
 .progress-item:hover .progress-title {
-  color: #2f6fed;
+  @apply text-[#2f6fed];
 }
 
 /* 반응형 */
-
 @media (max-width: 900px) {
   .progress-wrapper {
-    position: static;
-    width: 100%;
-    flex-direction: row;
-    overflow-x: auto;
+    @apply static w-full flex-row overflow-x-auto;
   }
-
   .progress-item {
-    flex-direction: column;
-    align-items: center;
-    padding-bottom: 0;
-    padding-right: 34px;
+    @apply flex-col items-center pr-[34px] pb-0;
   }
-
   .progress-title {
-    margin-top: 8px;
-    font-size: 12px;
-    text-align: center;
+    @apply text-xs text-center mt-2;
   }
-
   .progress-circle {
-    width: 38px;
-    height: 38px;
-    font-size: 15px;
+    @apply w-[38px] h-[38px] text-[15px];
   }
-
   .progress-line {
-    top: 19px;
-    left: 38px;
-    width: calc(100% - 4px);
-    height: 3px;
+    @apply w-[calc(100%_-_4px)] h-[3px] left-[38px] top-[19px];
   }
+}
 }
