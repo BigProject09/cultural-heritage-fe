@@ -1,3 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-heritage-paper: #f4f0e7;
+  --color-heritage-paper-2: #fbf8f1;
+  --color-heritage-ink: #17201d;
+  --color-heritage-muted: #687069;
+  --color-heritage-bronze: #96683d;
+  --color-heritage-bronze-dark: #704821;
+  --color-heritage-line: #cabca8;
+  --color-heritage-green: #61735d;
+  --color-heritage-danger: #9c5b47;
+}
+
 * {
   margin: 0;
   padding: 0;

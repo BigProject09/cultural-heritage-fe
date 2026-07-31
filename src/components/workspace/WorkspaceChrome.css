@@ -173,28 +173,47 @@
 
 .heritage-profile {
   align-items: center;
-  background: none;
-  border: 0;
-  cursor: pointer;
   display: flex;
   gap: 12px;
   justify-self: end;
 }
 
-.heritage-profile > span {
+.heritage-profile-link {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.heritage-profile-link > span {
   color: #827767;
   font-size: 10px;
   text-align: right;
 }
 
-.heritage-profile small {
+.heritage-profile-link small {
   color: var(--heritage-ink);
   display: block;
   font-size: 13px;
   margin-top: 2px;
 }
 
-.heritage-profile b {
+.heritage-profile-link.active small {
+  color: var(--heritage-bronze-dark);
+}
+
+.heritage-account-menu {
+  position: relative;
+}
+
+.heritage-logout-trigger {
+  align-items: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+}
+
+.heritage-logout-trigger b {
   align-items: center;
   background: #313630;
   border: 2px solid #d9c7aa;
@@ -208,8 +227,68 @@
   width: 40px;
 }
 
-.heritage-profile.active b {
+.heritage-logout-trigger:hover b,
+.heritage-account-menu.open .heritage-logout-trigger b {
   box-shadow: 0 0 0 3px rgba(150, 104, 61, 0.2);
+}
+
+.heritage-account-dropdown {
+  background: rgba(251, 248, 241, 0.98);
+  border: 1px solid rgba(150, 104, 61, 0.2);
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 20px 38px rgba(48, 39, 28, 0.16);
+  left: 50%;
+  min-width: 190px;
+  opacity: 0;
+  overflow: hidden;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  top: 76px;
+  transform: translate(-50%, -8px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+  visibility: hidden;
+}
+
+.heritage-account-menu.open .heritage-account-dropdown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  visibility: visible;
+}
+
+.heritage-account-dropdown button {
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: var(--heritage-ink);
+  cursor: pointer;
+  display: block;
+  padding: 18px 20px;
+  text-align: center;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
+  width: 100%;
+}
+
+.heritage-account-dropdown button + button {
+  border-top: 1px solid rgba(202, 188, 168, 0.45);
+}
+
+.heritage-account-dropdown button:hover,
+.heritage-account-dropdown button:focus-visible {
+  background: #eee6d8;
+  color: var(--heritage-bronze-dark);
+  outline: none;
+}
+
+.heritage-account-dropdown span {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .heritage-artifact-thumb {

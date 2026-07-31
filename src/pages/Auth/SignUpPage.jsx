@@ -69,6 +69,7 @@ function SignUpPage() {
       email,
       phone,
       password,
+      joinedAt: new Date().toISOString(),
     };
 
     users.push(newUser);

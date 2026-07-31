@@ -22,10 +22,13 @@ function LoginPage() {
     );
 
     if (user) {
-      localStorage.setItem(
-        "loginUser",
-        JSON.stringify(user)
+      const updatedUser = { ...user, lastLoginAt: new Date().toISOString() };
+      const updatedUsers = users.map((existing) =>
+        existing.email === updatedUser.email ? updatedUser : existing
       );
+
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      localStorage.setItem("loginUser", JSON.stringify(updatedUser));
 
       setError("");
       alert(`${user.name}님 환영합니다!`);
