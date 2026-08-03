@@ -1,8 +1,8 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .cleaning-method-page {
-    @apply min-h-screen [background:#f5f7fb] pt-10 pb-[60px] px-0;
+    @apply min-h-screen bg-guide-canvas pt-10 pb-[60px] px-0;
 }
 
 /* ==========================
@@ -15,7 +15,7 @@
     @apply text-[52px] font-extrabold text-[#2f64f5];
 }
 .nav-btn {
-    @apply [background:#2f64f5] text-[white] text-[17px] font-semibold cursor-pointer transition-[0.2s] px-[34px] py-3 rounded-xl border-[none] hover:[background:#1d4fd8];
+    @apply [background:#2f64f5] text-white text-[17px] font-semibold cursor-pointer transition-all duration-200 px-[34px] py-3 rounded-xl border-0 hover:[background:#1d4fd8];
 }
 
 /* ==========================
@@ -38,7 +38,7 @@
    카드
 ========================== */
 .info-card {
-    @apply [background:white] shadow-[0_4px_15px_rgba(0,0,0,0.06)] max-w-[900px] mb-7 mx-auto p-[30px] rounded-[18px];
+    @apply bg-white shadow-[0_4px_15px_rgba(0,0,0,0.06)] max-w-[900px] mb-7 mx-auto p-[30px] rounded-[18px];
 }
 .method-select {
     @apply flex gap-5 mx-0 my-[30px];

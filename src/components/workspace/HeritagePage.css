@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .heritage-page-shell {
@@ -40,7 +40,7 @@
 }
 .heritage-field:focus,
 .heritage-select:focus {
-  @apply border-[color:var(--heritage-bronze)] shadow-[0_0_0_3px_rgba(150,104,61,0.12)] [outline:none];
+  @apply border-[color:var(--heritage-bronze)] shadow-[0_0_0_3px_rgba(150,104,61,0.12)] outline-none;
 }
 .heritage-button {
   @apply items-center [background:var(--heritage-bronze)] border border-[color:var(--heritage-bronze)] text-[#fffaf0] cursor-pointer inline-flex text-[13px] font-bold h-11 justify-center [transition:background_0.16s_ease,border-color_0.16s_ease,transform_0.16s_ease] px-5 py-0 rounded-lg border-solid hover:[background:var(--heritage-bronze-dark)] hover:border-[color:var(--heritage-bronze-dark)] hover:-translate-y-px;

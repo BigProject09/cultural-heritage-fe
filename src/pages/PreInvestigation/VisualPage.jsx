@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./VisualPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import { inspectPottery } from "../../services/potteryInspectionApi";
 import { parseInspectionSections, compareEra } from "../../utils/inspectionText";
 import {
   MODULE_STATUS,
+  getWorkspaceProject,
   markWorkspaceModule,
+  selectWorkspaceProject,
 } from "../../data/workspaceProjects";
+import { getArtifactRoute } from "../../utils/artifactRoutes";
 
 
 const POTTERY_MATERIAL_KEYWORDS = [
@@ -35,11 +38,14 @@ function readStoredArtifactInfo() {
 
 function VisualPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const approvedFlow = location.state?.approvedFlow || [];
+  const { artifactId: routeArtifactId = "" } = useParams();
+  const artifactId = decodeURIComponent(routeArtifactId);
 
-  const { setPreInvestigation, visualResult, setVisualResult } =
-    useDisassembly();
+  const { visualResult, setVisualResult } = useDisassembly();
+
+  // 등록 직후 잠깐은 로컬 저장값으로 먼저 보여주고, 워크스페이스 조회가
+  // 끝나면(아래 useEffect) 서버 최신값으로 갱신한다.
+  const [artifactInfo, setArtifactInfo] = useState(() => readStoredArtifactInfo());
 
   // idle | loading | done | error | unsupported
   const [status, setStatus] = useState("idle");
@@ -53,24 +59,50 @@ function VisualPage() {
   // VLM 호출은 한 번만 나가게 막는 가드.
   const hasStartedRef = useRef(false);
 
-  const artifactInfo = readStoredArtifactInfo();
   const isPottery = isPotteryMaterial(artifactInfo.material);
   const imgRef = useRef(null);
 
   // 지금 화면에 뜬 유물이랑 context에 남아있는 visualResult가 정말 같은
-  // 건인지 판단하는 단일 기준.
+  // 건인지 판단하는 단일 기준. artifactInfo.artifactId 대신 URL의
+  // artifactId를 쓴다 - 워크스페이스 조회가 아직 안 끝난 시점에도 즉시
+  // 알 수 있는 값이라서다.
   const resultIsCurrent =
-    !!visualResult && visualResult.__artifactId === artifactInfo.artifactId;
+    !!visualResult && visualResult.__artifactId === artifactId;
+
+  // 워크스페이스에서 유물 정보(사진·재질·시대 등)를 가져온다.
+  useEffect(() => {
+    if (!artifactId) return undefined;
+
+    const controller = new AbortController();
+    getWorkspaceProject(artifactId, { signal: controller.signal })
+      .then((project) => {
+        setArtifactInfo(selectWorkspaceProject(project));
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          window.alert(`유물 정보 조회 실패: ${error.message}`);
+        }
+      });
+
+    return () => controller.abort();
+  }, [artifactId]);
+
+  // artifactId가 바뀌면(같은 컴포넌트 인스턴스로 다른 유물 페이지로
+  // 넘어온 경우) 이전 유물 기준으로 이미 시작했다는 표시를 초기화한다.
+  useEffect(() => {
+    hasStartedRef.current = false;
+    setStatus("idle");
+  }, [artifactId]);
 
   const runInspection = async () => {
     setStatus("loading");
     setErrorMessage("");
     try {
-      // 등록 화면이 사진을 data URL로 저장해두므로, 다시 업로드 가능한
+      // 워크스페이스가 사진을 data URL로 내려주므로, 다시 업로드 가능한
       // 형태(Blob)로 복원해서 보낸다.
       const blob = await fetch(artifactInfo.image).then((res) => res.blob());
       const data = await inspectPottery(blob);
-      setVisualResult({ ...data, __artifactId: artifactInfo.artifactId });
+      setVisualResult({ ...data, __artifactId: artifactId });
       setStatus("done");
     } catch (err) {
       setErrorMessage(
@@ -82,6 +114,8 @@ function VisualPage() {
 
   useEffect(() => {
     if (hasStartedRef.current) return;
+    // 워크스페이스 조회가 끝나서 사진이 도착할 때까지 기다린다.
+    if (!artifactInfo?.image) return;
     hasStartedRef.current = true;
 
     if (!isPottery) {
@@ -92,39 +126,21 @@ function VisualPage() {
       setStatus("done");
       return;
     }
-    if (!artifactInfo?.image) {
-      setErrorMessage(
-        "등록된 유물 사진을 찾을 수 없습니다. 유물 등록을 다시 진행해주세요.",
-      );
-      setStatus("error");
-      return;
-    }
     runInspection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [artifactInfo]);
 
   const handleComplete = async () => {
-    if (artifactInfo.artifactId) {
+    if (artifactId) {
       try {
-        await markWorkspaceModule(
-          artifactInfo.artifactId,
-          "visual",
-          MODULE_STATUS.DONE,
-        );
+        await markWorkspaceModule(artifactId, "visual", MODULE_STATUS.DONE);
       } catch (error) {
         window.alert(`육안 조사 상태 저장 실패: ${error.message}`);
         return;
       }
     }
 
-    setPreInvestigation((prev) => ({ ...prev, visual: true }));
-
-    if (location.state?.workspaceEntry && artifactInfo.artifactId) {
-      navigate(`/workspace/${encodeURIComponent(artifactInfo.artifactId)}`);
-      return;
-    }
-
-    navigate("/pre-investigation", { state: { approvedFlow } });
+    navigate(getArtifactRoute(artifactId));
   };
 
   const handleImageLoad = (e) => {
@@ -191,7 +207,7 @@ function VisualPage() {
       <div className="visual-container">
         <nav className="visual-breadcrumb" aria-label="현재 위치">
           <button type="button" onClick={() => navigate(-1)}>
-            X-RAY 분석/육안 상태 조사
+            유물 워크스페이스
           </button>
           <span>/</span>
           <strong>육안 상태 조사</strong>
@@ -199,7 +215,7 @@ function VisualPage() {
 
         <header className="visual-header">
           <div>
-            <span className="visual-eyebrow">PRE-INVESTIGATION</span>
+            <span className="visual-eyebrow">INDEPENDENT VISUAL MODULE</span>
             <h1 className="visual-title">육안 상태 조사</h1>
             <p>사진 한 장으로 형태·유약·시대·문양을 함께 분석합니다.</p>
           </div>

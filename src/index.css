@@ -1,10 +1,35 @@
 @import "tailwindcss";
 
-@layer base {
-  * {
-    @apply box-border m-0 p-0;
-  }
+/*
+ * Tailwind CSS v4 theme.
+ * 프로젝트 전역에서 재사용하는 색상과 글꼴만 이곳에서 관리한다.
+ */
+@theme {
+  --font-sans: "Pretendard", "Noto Sans KR", sans-serif;
+  --font-serif: "Noto Serif KR", "Nanum Myeongjo", Georgia, serif;
 
+  /* VORA workspace */
+  --color-vora-paper: #f4f0e7;
+  --color-vora-surface: #fffdf8;
+  --color-vora-ink: #17201d;
+  --color-vora-muted: #687069;
+  --color-vora-bronze: #96683d;
+  --color-vora-bronze-dark: #704821;
+  --color-vora-line: #cabca8;
+  --color-vora-green: #61735d;
+  --color-vora-danger: #9c5b47;
+
+  /* Conservation guide */
+  --color-guide-canvas: #f5f7fb;
+  --color-guide-primary: #2f6fed;
+  --color-guide-primary-vivid: #1f5eff;
+  --color-guide-primary-soft: #eef5ff;
+  --color-guide-navy: #1e3a5f;
+  --color-guide-success: #2e8b57;
+  --color-guide-danger: #e74c3c;
+}
+
+@layer base {
   html,
   body,
   #root {
@@ -12,18 +37,28 @@
   }
 
   body {
-    @apply [background:#f5f8fc] [font-family:"Pretendard",sans-serif] m-0;
+    @apply bg-vora-paper font-sans text-vora-ink;
+  }
+}
+
+@layer components {
+  .artifact-route-state {
+    @apply min-h-screen bg-vora-paper text-vora-ink flex flex-col items-center justify-center text-center px-6;
   }
 
-  a {
-    @apply no-underline text-inherit;
+  .artifact-route-state > span {
+    @apply text-vora-bronze text-[10px] font-bold tracking-[0.18em];
   }
 
-  button {
-    @apply [font-family:inherit];
+  .artifact-route-state h1 {
+    @apply font-serif text-3xl font-medium mt-4 mb-2;
   }
 
-  img {
-    @apply block max-w-full;
+  .artifact-route-state p {
+    @apply text-vora-muted text-sm;
+  }
+
+  .artifact-route-state a {
+    @apply bg-vora-bronze text-white text-sm mt-6 px-5 py-3 rounded-lg;
   }
 }

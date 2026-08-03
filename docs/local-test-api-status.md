@@ -10,10 +10,11 @@ VITE_ARTIFACT_STORAGE_MODE=local
 VITE_API_BASE_URL=http://localhost:8080
 VITE_ARTIFACTS_API_PATH=/api/artifacts
 VITE_USE_XRAY_MOCK=false
+VITE_USE_GUIDE_MOCK=false
 VITE_XRAY_STITCH_API_BASE=http://localhost:8080/api/xray/stitch
 VITE_XRAY_INSPECTION_API_BASE=http://localhost:8001
-VITE_VIA_SPRING=false
-VITE_XRAY_SPRING_INSPECTION_API_BASE=http://localhost:8080/api/xray/anomaly
+VITE_VIA_SPRING=true
+VITE_XRAY_SPRING_INSPECTION_API_BASE=http://localhost:8080/api/xray
 ```
 
 `.env.example`을 `.env`로 복사하면 같은 설정을 사용할 수 있다.
@@ -24,6 +25,17 @@ cp .env.example .env
 
 환경변수를 수정한 뒤에는 실행 중인 Vite 서버를 종료하고 `npm run dev`로
 다시 시작해야 한다.
+
+Spring과 FastAPI를 호출하지 않고 전체 UI 흐름을 확인할 때는 다음 명령을
+사용한다.
+
+```bash
+npm run dev:mock
+```
+
+`.env.mock`이 X-RAY와 복원 가이드 mock을 모두 활성화한다. 해체·세척·강화·
+접합·복원 안내와 강화 습윤 분석, 접합 임시접합 분석까지 화면에서 진행할 수
+있다.
 
 ## 2. 유물 프로젝트 저장 방식
 
@@ -50,23 +62,20 @@ cp .env.example .env
 | --- | --- | --- | --- |
 | 복원 가이드 시작 | Spring `8080` | `POST /tasks/{taskId}/start` | 선택한 복원 Flow로 작업 시작 |
 | 복원 단계 진행 | Spring `8080` | `POST /tasks/{taskId}/resume` | 해체·세척·강화·접합·복원 단계 응답 전달 |
-| 습윤 사진 업로드 | Spring `8080` | `POST /photos/upload` | 강화 처리 사진 URL 발급 |
+| 공정 사진 업로드 | Spring `8080` | `POST /photos/upload` | 강화 습윤·접합 임시검증 사진 URL 발급 |
 | X-RAY 결합 접수 | Spring `8080` | `POST /api/xray/stitch/jobs` | 컬러 이미지와 X-RAY 조각 업로드 |
 | X-RAY 결합 상태 | Spring `8080` | `GET /api/xray/stitch/jobs/{jobId}` | `PENDING/RUNNING/COMPLETED/FAILED` 확인 |
 | X-RAY 결합 결과 | Spring `8080` | `GET /api/xray/stitch/jobs/{jobId}/result` | 결합 이미지 다운로드 |
 | X-RAY 배치 정보 | Spring `8080` | `GET /api/xray/stitch/jobs/{jobId}/layout` | 수동 보정용 조각 배치 조회 |
-| AI 상태 확인 | FastAPI `8001` | `GET /health` | 모델·LLM 상태 확인 |
-| 결합본 결함 분석 | FastAPI `8001` | `POST /detect/assembled` | 결합 이미지 후보 탐지 |
-| 조각 결함 분석 | FastAPI `8001` | `POST /detect/fragments` | 한 장 또는 여러 조각 후보 탐지 |
-| 상태조사 문안 | FastAPI `8001` | `POST /report` | 검수 결과 기반 문안 생성 |
+| AI 상태 확인 | Spring `8080` | `GET /api/xray/health` | 모델·LLM 상태 확인 |
+| 결합본 결함 분석 | Spring `8080` | `POST /api/xray/detect/assembled` | 결합 이미지 후보 탐지 |
+| 조각 결함 분석 | Spring `8080` | `POST /api/xray/detect/fragments` | 한 장 또는 여러 조각 후보 탐지 |
+| 상태조사 문안 | Spring `8080` | `POST /api/xray/report` | 검수 결과 기반 문안 생성 |
 
 복원 가이드 요청은 Vite의 `/tasks` 프록시를 통해 Spring으로 전달한다.
-X-RAY는 `.env`에 적힌 전체 주소를 직접 사용한다.
-
-`VITE_VIA_SPRING=true`로 바꾸면 결함 분석과 문안도
-`VITE_XRAY_SPRING_INSPECTION_API_BASE`를 사용하고, 상태 확인은
-`GET http://localhost:8080/api/xray/health`를 사용한다. 현재 로컬
-설정은 FastAPI 직접 호출이므로 `false`를 유지한다.
+X-RAY 결합·결함 분석·문안도 Spring을 호출하고, Spring이 내부 FastAPI
+서비스와 통신한다. `VITE_XRAY_INSPECTION_API_BASE`는 직접 호출을 확인해야
+하는 경우를 위한 예비값이며 기본 실행에서는 사용하지 않는다.
 
 ## 4. 현재 로컬에서 확인할 수 있는 범위
 
@@ -101,4 +110,3 @@ npm run dev
 ```
 
 React 개발 서버는 `http://localhost:5174`를 사용한다.
-

@@ -91,7 +91,9 @@ function BondingWorkPage() {
 
     setAnalyzing(true);
     try {
-      const response = await resumeTask(taskId, request);
+      const response = await resumeTask(taskId, request, {
+        mockStage: "bonding-temp",
+      });
       applyInterrupt(response.interrupt, ctx);
     } catch (error) {
       console.error(error);

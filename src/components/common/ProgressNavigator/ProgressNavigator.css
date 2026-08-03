@@ -1,23 +1,23 @@
-@reference "tailwindcss";
+@reference "../../../index.css";
 
 @layer components {
 .progress-wrapper {
-  @apply w-[200px] shrink-0 [background:white] shadow-[0_8px_20px_rgba(0,0,0,0.06)] box-border flex flex-col h-fit sticky px-6 py-[30px] rounded-[20px] top-[30px];
+  @apply w-[200px] shrink-0 bg-white shadow-[0_8px_20px_rgba(0,0,0,0.06)] box-border flex flex-col h-fit sticky px-6 py-[30px] rounded-[20px] top-[30px];
 }
 .progress-item {
   @apply flex items-start gap-3.5 relative cursor-pointer pb-[34px] last:pb-0;
 }
 .progress-circle {
-  @apply w-10 h-10 [background:#e8edf5] text-[#555] flex justify-center items-center text-base font-bold shrink-0 z-[2] transition-[0.2s] rounded-[50%];
+  @apply w-10 h-10 [background:#e8edf5] text-[#555] flex justify-center items-center text-base font-bold shrink-0 z-[2] transition-all duration-200 rounded-full;
 }
 .progress-circle.active {
-  @apply [background:#2f6fed] text-[white];
+  @apply bg-guide-primary text-white;
 }
 .progress-title {
-  @apply text-[15px] font-semibold text-[#666] text-left transition-[0.2s] mt-[9px];
+  @apply text-[15px] font-semibold text-[#666] text-left transition-all duration-200 mt-[9px];
 }
 .progress-title.active {
-  @apply text-[#2f6fed];
+  @apply text-guide-primary;
 }
 .progress-line {
   @apply absolute w-[3px] h-[calc(100%_-_40px)] [background:#d7dde7] z-[1] left-[19px] top-10;
@@ -31,7 +31,7 @@
   @apply scale-[1.08];
 }
 .progress-item:hover .progress-title {
-  @apply text-[#2f6fed];
+  @apply text-guide-primary;
 }
 
 /* 반응형 */

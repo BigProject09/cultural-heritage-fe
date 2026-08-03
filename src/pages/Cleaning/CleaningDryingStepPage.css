@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .method-page {
@@ -10,16 +10,16 @@
     @apply flex justify-between items-center mb-[60px];
 }
 .logo {
-    @apply text-[40px] font-bold text-[#2f6fed] tracking-[1px];
+    @apply text-[40px] font-bold text-guide-primary tracking-[1px];
 }
 .nav-btn {
-    @apply cursor-pointer text-base font-semibold transition-[0.2s] [background:#2563eb] text-[white] px-[30px] py-3.5 rounded-xl border-[none] hover:[background:#1d4ed8];
+    @apply cursor-pointer text-base font-semibold transition-all duration-200 [background:#2563eb] text-white px-[30px] py-3.5 rounded-xl border-0 hover:[background:#1d4ed8];
 }
 .nav-btn-group {
     @apply flex items-center gap-3;
 }
 .nav-btn.secondary {
-    @apply [background:#eef5ff] text-blue-600 hover:[background:#dbe9ff];
+    @apply bg-guide-primary-soft text-blue-600 hover:[background:#dbe9ff];
 }
 
 /* ================= 제목 ================= */
@@ -35,7 +35,7 @@
 
 /* ================= 메인 카드 ================= */
 .method-card {
-    @apply max-w-[1200px] [background:white] shadow-[0_8px_30px_rgba(0,0,0,0.06)] mx-auto my-0 p-9 rounded-[26px];
+    @apply max-w-[1200px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] mx-auto my-0 p-9 rounded-[26px];
 }
 
 /* ================= 단계 제목 ================= */
@@ -43,17 +43,17 @@
     @apply flex justify-between items-center mb-[25px];
 }
 .step-title span {
-    @apply text-3xl font-[bold];
+    @apply text-3xl font-bold;
 }
 
 /* ================= 단계 카드 ================= */
 .step-card {
-    @apply flex items-center gap-[22px] [background:#fafbfc] border transition-[0.2s] mb-[18px] p-[26px] rounded-[20px] border-solid border-[#e4e8ef] hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)];
+    @apply flex items-center gap-[22px] [background:#fafbfc] border transition-all duration-200 mb-[18px] p-[26px] rounded-[20px] border-solid border-[#e4e8ef] hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)];
 }
 
 /* 번호 */
 .step-number {
-    @apply w-[55px] h-[55px] [background:#1e3a5f] text-[white] flex justify-center items-center text-[23px] font-[bold] shrink-0 rounded-[50%];
+    @apply w-[55px] h-[55px] bg-guide-navy text-white flex justify-center items-center text-[23px] font-bold shrink-0 rounded-full;
 }
 
 /* 내용 */
@@ -72,15 +72,15 @@
     @apply flex items-center gap-3;
 }
 .step-actions button {
-    @apply cursor-pointer font-[bold] px-[18px] py-[11px] rounded-[40px] border-[none];
+    @apply cursor-pointer font-bold px-[18px] py-[11px] rounded-[40px] border-0;
 }
 .approve-btn {
-    @apply [background:#2e8b57] text-[white] min-w-[95px] hover:[background:#227047];
+    @apply bg-guide-success text-white min-w-[95px] hover:[background:#227047];
 }
 .edit-btn {
-    @apply [background:#eef5ff] text-[#1e63d5] hover:[background:#ddebff];
+    @apply bg-guide-primary-soft text-[#1e63d5] hover:[background:#ddebff];
 }
 .delete-btn {
-    @apply [background:#ffecec] text-[#e74c3c] hover:[background:#ffdada];
+    @apply [background:#ffecec] text-guide-danger hover:[background:#ffdada];
 }
 }

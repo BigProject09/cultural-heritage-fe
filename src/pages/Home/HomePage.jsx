@@ -13,6 +13,7 @@ import {
   markWorkspaceModule,
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
+import { getArtifactRoute } from "../../utils/artifactRoutes";
 import "./HomePage.css";
 
 const MODULE_ICONS = {
@@ -100,7 +101,7 @@ function HomePage() {
       }
 
       const artifactInfo = selectWorkspaceProject(nextProject);
-      navigate(getModuleRoute(moduleKey), {
+      navigate(getModuleRoute(moduleKey, nextProject.artifactId), {
         state: {
           artifactId: nextProject.artifactId,
           artifactInfo,
@@ -114,7 +115,7 @@ function HomePage() {
   };
 
   const createProject = () => {
-    navigate("/artifact-register", {
+    navigate("/artifacts/new", {
       state: {
         entryModule: selectedModule,
         workspaceEntry: true,
@@ -124,7 +125,7 @@ function HomePage() {
 
   const openProjectHub = (project) => {
     selectWorkspaceProject(project);
-    navigate(`/workspace/${encodeURIComponent(project.artifactId)}`);
+    navigate(getArtifactRoute(project.artifactId));
   };
 
   const continueProject = (project) =>
@@ -146,8 +147,8 @@ function HomePage() {
             <span className="heritage-kicker">RESTORATION WORKSPACE</span>
             <h1>유물 복원, 필요한 작업부터 시작하세요</h1>
             <p>
-              작업 순서는 자유롭게. 모든 AI 결과는 하나의 유물 ID에 차곡차곡
-              연결됩니다.
+              작업 순서는 자유롭게. 모든 AI 결과는 하나의 유물 ID에
+              차곡차곡 연결됩니다.
             </p>
           </div>
 
@@ -158,10 +159,7 @@ function HomePage() {
           </div>
         </section>
 
-        <section
-          className="heritage-quick-grid"
-          aria-label="AI 복원 기능 빠른 메뉴"
-        >
+        <section className="heritage-quick-grid" aria-label="AI 복원 기능 빠른 메뉴">
           {WORKSPACE_MODULES.map((module) => (
             <button
               className={`heritage-quick-card ${module.key}`}
@@ -198,9 +196,7 @@ function HomePage() {
 
           <div className="heritage-project-list">
             {projectsLoading && (
-              <div className="heritage-project-state">
-                프로젝트를 불러오는 중입니다.
-              </div>
+              <div className="heritage-project-state">프로젝트를 불러오는 중입니다.</div>
             )}
 
             {!projectsLoading && projectsError && (
@@ -218,59 +214,52 @@ function HomePage() {
               </div>
             )}
 
-            {!projectsLoading &&
-              !projectsError &&
-              projects.slice(0, 2).map((project) => (
-                <article
-                  className="heritage-project-row"
-                  key={project.artifactId}
+            {!projectsLoading && !projectsError && projects.slice(0, 2).map((project) => (
+              <article className="heritage-project-row" key={project.artifactId}>
+                <ArtifactThumb project={project} />
+
+                <button
+                  className="heritage-project-name"
+                  onClick={() => openProjectHub(project)}
                 >
-                  <ArtifactThumb project={project} />
+                  <strong>{project.name}</strong>
+                  <span>{project.artifactId}</span>
+                  <small>
+                    {project.material} · {project.period}
+                  </small>
+                </button>
 
-                  <button
-                    className="heritage-project-name"
-                    onClick={() => openProjectHub(project)}
-                  >
-                    <strong>{project.name}</strong>
-                    <span>{project.artifactId}</span>
-                    <small>
-                      {project.material} · {project.period}
-                    </small>
+                <div className="heritage-module-track">
+                  {WORKSPACE_MODULES.map((module, index) => {
+                    const status = project.modules[module.key];
+                    return (
+                      <div className="heritage-track-item" key={module.key}>
+                        <button
+                          className={`heritage-status-node ${status.toLowerCase()}`}
+                          onClick={() =>
+                            enterProjectModule(project, module.key)
+                          }
+                          aria-label={`${module.title} ${STATUS_LABEL[status]}`}
+                        >
+                          {status === MODULE_STATUS.DONE ? "✓" : index + 1}
+                        </button>
+                        <span>{module.shortTitle}</span>
+                        <em className={status.toLowerCase()}>
+                          {STATUS_LABEL[status]}
+                        </em>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="heritage-row-action">
+                  <small>마지막 저장 {formatWorkspaceDate(project.updatedAt)}</small>
+                  <button onClick={() => continueProject(project)}>
+                    이어서 작업 <span>→</span>
                   </button>
-
-                  <div className="heritage-module-track">
-                    {WORKSPACE_MODULES.map((module, index) => {
-                      const status = project.modules[module.key];
-                      return (
-                        <div className="heritage-track-item" key={module.key}>
-                          <button
-                            className={`heritage-status-node ${status.toLowerCase()}`}
-                            onClick={() =>
-                              enterProjectModule(project, module.key)
-                            }
-                            aria-label={`${module.title} ${STATUS_LABEL[status]}`}
-                          >
-                            {status === MODULE_STATUS.DONE ? "✓" : index + 1}
-                          </button>
-                          <span>{module.shortTitle}</span>
-                          <em className={status.toLowerCase()}>
-                            {STATUS_LABEL[status]}
-                          </em>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="heritage-row-action">
-                    <small>
-                      마지막 저장 {formatWorkspaceDate(project.updatedAt)}
-                    </small>
-                    <button onClick={() => continueProject(project)}>
-                      이어서 작업 <span>→</span>
-                    </button>
-                  </div>
-                </article>
-              ))}
+                </div>
+              </article>
+            ))}
           </div>
         </section>
       </main>
@@ -303,8 +292,8 @@ function HomePage() {
                   {moduleMeta.title}을 시작할 유물을 선택하세요
                 </h2>
                 <p>
-                  기존 유물을 선택하면 이전 결과에 이어서 저장되고, 신규 등록 시
-                  새로운 artifactId가 생성됩니다.
+                  기존 유물을 선택하면 이전 결과에 이어서 저장되고, 신규
+                  등록 시 새로운 artifactId가 생성됩니다.
                 </p>
 
                 <div className="heritage-choice-grid">

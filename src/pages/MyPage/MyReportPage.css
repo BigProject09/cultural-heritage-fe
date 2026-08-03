@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 /* Shared report layout is defined in HeritagePage.css and AccountPages.css. */

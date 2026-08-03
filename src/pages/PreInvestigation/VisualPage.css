@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 /*
   간격 체계: 큰 간격은 24px(mb-6/p-6/gap-6), 카드 안쪽 작은 요소 사이는
@@ -8,7 +8,7 @@
 
 @layer components {
   .visual-page {
-    @apply min-h-screen [background:#f5f7fb] flex justify-center px-5 py-[60px];
+    @apply min-h-screen bg-guide-canvas flex justify-center px-5 py-[60px];
   }
   .visual-container {
     @apply w-full max-w-[900px];

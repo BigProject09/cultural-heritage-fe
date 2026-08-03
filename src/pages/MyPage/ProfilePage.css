@@ -1,11 +1,11 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .account-profile-detail {
   @apply grid gap-8 grid-cols-[150px_1fr];
 }
 .account-profile-seal {
-  @apply items-center [align-self:start] [background:var(--heritage-ink)] text-[#e8d7bd] flex [font-family:Georgia,"Noto_Serif_KR",serif] text-[40px] h-[120px] justify-center w-[120px] rounded-[50%] border-[6px] border-double border-[#c8aa80];
+  @apply items-center [align-self:start] [background:var(--heritage-ink)] text-[#e8d7bd] flex [font-family:Georgia,"Noto_Serif_KR",serif] text-[40px] h-[120px] justify-center w-[120px] rounded-full border-[6px] border-double border-[#c8aa80];
 }
 .account-profile-detail > .heritage-button {
   @apply col-[2] justify-self-start;

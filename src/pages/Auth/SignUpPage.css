@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../../index.css";
 
 @layer components {
 .heritage-signup-main {
@@ -17,7 +17,7 @@
   @apply text-[color:var(--heritage-muted)] text-xs;
 }
 .heritage-signup-heading b {
-  @apply items-center border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)] flex text-[28px] font-normal h-[58px] justify-center w-[58px] rounded-[50%] border-solid;
+  @apply items-center border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)] flex text-[28px] font-normal h-[58px] justify-center w-[58px] rounded-full border-solid;
 }
 .heritage-signup-grid {
   @apply grid gap-[18px] grid-cols-[1fr_1fr];
@@ -32,7 +32,7 @@
   @apply text-[#5d625d] text-[11px] font-bold mb-[7px];
 }
 .heritage-signup-grid input {
-  @apply [background:#fffdf8] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] text-sm h-12 px-3.5 py-0 rounded-lg border-solid focus:border-[color:var(--heritage-bronze)] focus:shadow-[0_0_0_3px_rgba(150,104,61,0.12)] focus:[outline:none];
+  @apply [background:#fffdf8] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] text-sm h-12 px-3.5 py-0 rounded-lg border-solid focus:border-[color:var(--heritage-bronze)] focus:shadow-[0_0_0_3px_rgba(150,104,61,0.12)] focus:outline-none;
 }
 .heritage-signup-card .heritage-auth-error {
   @apply mt-[18px] mb-0 mx-0;

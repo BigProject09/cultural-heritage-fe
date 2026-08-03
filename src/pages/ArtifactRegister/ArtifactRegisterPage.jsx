@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import HeritageHeader from "../../components/workspace/HeritageHeader";
-import { useDisassembly } from "../../context/useDisassembly";
 import {
   WORKSPACE_MODULES,
   getArtifactStorageMode,
@@ -24,7 +23,6 @@ function readSavedArtifact(editMode) {
 function ArtifactRegisterPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setPreInvestigation } = useDisassembly();
 
   const editMode = Boolean(location.state?.editMode);
   const entryModule = location.state?.entryModule || "guide";
@@ -128,11 +126,7 @@ function ArtifactRegisterPage() {
       });
       const selectedArtifact = selectWorkspaceProject(project);
 
-      if (editMode) {
-        setPreInvestigation({ xray: false, visual: false });
-      }
-
-      navigate(getModuleRoute(entryModule), {
+      navigate(getModuleRoute(entryModule, project.artifactId), {
         state: {
           artifactId: project.artifactId,
           artifactInfo: selectedArtifact,
@@ -181,7 +175,7 @@ function ArtifactRegisterPage() {
           <span>{localStorageMode ? "LOCAL TEST" : "artifactId"}</span>
           <p>
             {localStorageMode
-              ? "로컬 테스트 모드입니다. 임시 유물 ID와 대표 이미지가 현재 브라우저에만 저장됩니다."
+              ? "로컬 테스트 모드입니다. 유물 정보는 브라우저에, 대표 이미지는 용량이 더 큰 IndexedDB 임시 저장소에 보관됩니다."
               : "저장이 완료되면 서버가 고유 유물 ID를 발급합니다. 이후의 모든 분석 결과는 이 ID에 누적됩니다."}
           </p>
         </div>
@@ -233,7 +227,7 @@ function ArtifactRegisterPage() {
               <span>업로드 방식</span>
               <p>
                 {localStorageMode
-                  ? "대표 이미지를 테스트용 미리보기로 변환해 브라우저에 저장합니다. S3에는 전송하지 않습니다."
+                  ? "대표 이미지를 압축된 Blob으로 변환해 IndexedDB에 저장합니다. S3 연동 전 임시 방식이며 브라우저 데이터 삭제 시 함께 사라집니다."
                   : "저장 시 S3에 직접 업로드하고 서버에서 완료 여부를 검증합니다."}
               </p>
             </div>

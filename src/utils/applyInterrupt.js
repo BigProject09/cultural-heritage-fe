@@ -6,6 +6,37 @@ export function applyInterrupt(interrupt, ctx) {
   if (!interrupt) return;
 
   const stage = interrupt.stage || "";
+  const mockContext = interrupt.mock_context;
+
+  // dev:mock에서는 실제 LangGraph 인터럽트를 순차 호출하지 않는다.
+  // 첫 start 응답에 모든 화면용 데이터를 채워 각 공정을 독립적으로 테스트한다.
+  if (mockContext) {
+    ctx.setChecklist(mockContext.checklist || []);
+    ctx.setTools(mockContext.tools || []);
+    ctx.setToolSelection(
+      (mockContext.tools || [])
+        .filter((tool) => tool.recommended)
+        .map((tool) => tool.id),
+    );
+    ctx.setDisassemblyMethod(mockContext.disassemblyMethod || null);
+    ctx.setMethodWorkingSteps(
+      (mockContext.disassemblyMethod?.steps || []).map((step) => ({
+        ...step,
+        approved: false,
+      })),
+    );
+    ctx.setCleaningMethod(mockContext.cleaningMethod || null);
+    ctx.setCleaningGuide(mockContext.cleaningGuide || null);
+    ctx.setDryingGuide(mockContext.dryingGuide || null);
+    ctx.setStrengtheningRecommendation(
+      mockContext.strengtheningRecommendation || null,
+    );
+    ctx.setStrengtheningGuide(mockContext.strengtheningGuide || null);
+    ctx.setBondingAdhesive(mockContext.bondingAdhesive || null);
+    ctx.setBondingGuide(mockContext.bondingGuide || null);
+    ctx.setRestorationMaterial(mockContext.restorationMaterial || null);
+    ctx.setRestorationGuide(mockContext.restorationGuide || null);
+  }
 
   // 해체
   if (interrupt.ai_checklist) {
