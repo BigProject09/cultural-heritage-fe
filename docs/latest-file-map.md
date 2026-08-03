@@ -1,6 +1,6 @@
 # 최신 프론트엔드 파일 맵
 
-기준일: 2026-07-31
+기준일: 2026-08-03
 
 현재 구조의 기준은 `artifactId`다. 복원 가이드, X-RAY, 육안 조사는
 독립적으로 실행하며 세 기능의 `DONE` 여부는 최종 통합 보고서에서만
@@ -9,9 +9,9 @@
 ## 최상위 설정
 
 - `.env.example`: 로컬 실행용 환경변수 예시
+- `.env.mock`: 백엔드 없는 Mock 실행용 환경변수
 - `.gitignore`: 의존성, 빌드 결과, 로컬 환경변수 제외
-- `CLAUDE.md`: 저장소 작업 참고 문서
-- `README.md`: 설치, 실행, Tailwind 사용 규칙
+- `README.md`: 전체 서비스 흐름, 설치, 환경변수, 협업 및 Tailwind 사용 규칙
 - `eslint.config.js`: ESLint 설정
 - `index.html`: Vite HTML 진입점
 - `package.json`, `package-lock.json`: 패키지와 실행 스크립트
