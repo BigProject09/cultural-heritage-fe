@@ -7,11 +7,11 @@ import { applyInterrupt } from "../../utils/applyInterrupt";
 import "./StrengtheningMaterialPage.css";
 
 const AGENT_OPTIONS = [
-  "Paraloid B72",
-  "HPC",
-  "폴리비닐부티랄",
-  "수용성 Emulsion",
-  "Paraloid NAD-10",
+  { name: "Paraloid B72", image: "/images/agents/paraloid-b72.jpg" },
+  { name: "HPC", image: "/images/agents/hpc.jpg" },
+  { name: "폴리비닐부티랄", image: "/images/agents/pvb.jpg" },
+  { name: "수용성 Emulsion", image: "/images/agents/water-emulsion.jpg" },
+  { name: "Paraloid NAD-10", image: "/images/agents/paraloid-nad-10.jpg" },
 ];
 
 // 강화제별 사용 가능한 용제 (대표 + 사용 가능한 기타 용매)
@@ -32,6 +32,32 @@ const AGENT_SOLVENT_MAP = {
   "Paraloid NAD-10": ["나프타", "화이트스피릿"],
 };
 
+// 용제별 미리보기 이미지
+const SOLVENT_OPTIONS = [
+  { name: "아세톤", image: "/images/solvents/acetone.jpg" },
+  { name: "톨루엔", image: "/images/solvents/toluene.jpg" },
+  { name: "자일렌", image: "/images/solvents/xylene.jpg" },
+  { name: "에틸아세테이트", image: "/images/solvents/ethyl-acetate.jpg" },
+  { name: "이소프로판올", image: "/images/solvents/isopropanol.jpg" },
+  { name: "에탄올", image: "/images/solvents/ethanol.jpg" },
+  { name: "MEK", image: "/images/solvents/mek.jpg" },
+  { name: "아밀아세테이트", image: "/images/solvents/amyl-acetate.jpg" },
+  { name: "물", image: "/images/solvents/water.jpg" },
+  { name: "메탄올", image: "/images/solvents/methanol.jpg" },
+  { name: "나프타", image: "/images/solvents/naphtha.jpg" },
+  { name: "화이트스피릿", image: "/images/solvents/white-spirit.jpg" },
+];
+
+function MaterialThumbnail({ src, alt }) {
+  const [errored, setErrored] = useState(false);
+
+  if (errored) {
+    return <div className="material-image-placeholder">사진 준비 중</div>;
+  }
+
+  return <img src={src} alt={alt} onError={() => setErrored(true)} />;
+}
+
 function StrengtheningMaterialPage() {
   const navigate = useNavigate();
 
@@ -46,8 +72,14 @@ function StrengtheningMaterialPage() {
     () => strengtheningRecommendation?.recommended_solvent || "",
   );
 
-  const handleAgentChange = (e) => {
-    const nextAgent = e.target.value;
+  const selectedAgentOption = AGENT_OPTIONS.find(
+    (option) => option.name === agent,
+  );
+  const selectedSolventOption = SOLVENT_OPTIONS.find(
+    (option) => option.name === solvent,
+  );
+
+  const handleAgentChange = (nextAgent) => {
     setAgent(nextAgent);
 
     const allowedSolvents = AGENT_SOLVENT_MAP[nextAgent] || [];
@@ -117,46 +149,59 @@ function StrengtheningMaterialPage() {
         </div>
 
         <div className="material-card">
-          <div className="material-title">
-            <span>📁</span>
+          <div className="material-layout">
+            <div className="material-image-col">
+              <div className="material-image-box">
+                <MaterialThumbnail
+                  key={agent}
+                  src={selectedAgentOption?.image}
+                  alt={agent}
+                />
+              </div>
 
-            <span>{strengtheningRecommendation.recommended_agent}</span>
+              <div className="material-select-item">
+                <label>강화제</label>
 
-            <span>▶</span>
-          </div>
+                <select
+                  value={agent}
+                  onChange={(e) => handleAgentChange(e.target.value)}
+                >
+                  {AGENT_OPTIONS.map((option) => (
+                    <option key={option.name} value={option.name}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <hr />
+              <div className="material-image-box">
+                <MaterialThumbnail
+                  key={solvent}
+                  src={selectedSolventOption?.image}
+                  alt={solvent}
+                />
+              </div>
 
-          <p className="material-description">
-            {strengtheningRecommendation.reason}
-          </p>
+              <div className="material-select-item">
+                <label>용제</label>
 
-          <div className="material-select-group">
-            <div className="material-select-item">
-              <label>강화제</label>
-
-              <select value={agent} onChange={handleAgentChange}>
-                {AGENT_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+                <select
+                  value={solvent}
+                  onChange={(e) => setSolvent(e.target.value)}
+                >
+                  {solventOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="material-select-item">
-              <label>용제</label>
-
-              <select
-                value={solvent}
-                onChange={(e) => setSolvent(e.target.value)}
-              >
-                {solventOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+            <div className="material-info-col">
+              <p className="material-description">
+                {strengtheningRecommendation.reason}
+              </p>
             </div>
           </div>
         </div>

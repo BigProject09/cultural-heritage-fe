@@ -103,25 +103,33 @@ function DisassemblyToolPage() {
 
       {/* 도구 목록 */}
       <div className="tool-list">
-        {tools.map((tool) => (
-          <div
-            key={tool.id}
-            className={`tool-card ${
-              selectedTools.includes(tool.id) ? "selected" : ""
-            }`}
-          >
-            <h2>{tool.name}</h2>
+        {tools.map((tool) => {
+          const isSelected = selectedTools.includes(tool.id);
 
-            <p>{tool.description}</p>
-
-            <button
-              className="select-btn"
+          return (
+            <div
+              key={tool.id}
+              className={`tool-card ${isSelected ? "selected" : ""}`}
+              role="button"
+              tabIndex={0}
               onClick={() => handleSelect(tool.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleSelect(tool.id);
+                }
+              }}
             >
-              {selectedTools.includes(tool.id) ? "✔ 선택됨" : "선택"}
-            </button>
-          </div>
-        ))}
+              <div className="tool-card-header">
+                <span className="tool-card-radio" aria-hidden="true" />
+
+                <h2>{tool.name}</h2>
+              </div>
+
+              <p>{tool.description}</p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

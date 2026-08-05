@@ -47,18 +47,31 @@
 .material-title {
     @apply flex items-center gap-[15px] text-2xl font-semibold mb-5;
 }
-.material-card hr {
-    @apply mt-5 mb-[30px] mx-0 border-0 border-t border-solid;
+
+
+
+/* ================= 좌우 2단 레이아웃 ================= */
+.material-layout {
+    @apply flex gap-9 items-start;
+}
+.material-image-col {
+    @apply w-[200px] shrink-0 flex flex-col items-stretch gap-3;
+}
+.material-info-col {
+    @apply flex-1 flex flex-col gap-5 min-w-0;
 }
 
 
 
-/* ================= 이미지 ================= */
-.material-image {
-    @apply flex justify-center mb-[30px];
+/* ================= 접합제 미리보기 이미지 ================= */
+.material-image-box {
+    @apply w-full h-[180px] flex items-center justify-center overflow-hidden rounded-xl bg-[#f0f2f5];
 }
-.material-image img {
-    @apply w-[220px] h-auto object-contain;
+.material-image-box img {
+    @apply w-full h-full object-contain;
+}
+.material-image-placeholder {
+    @apply text-[13px] text-gray-400;
 }
 
 
@@ -70,12 +83,16 @@
 
 
 
-/* ================= 선택 ================= */
-.material-select-group {
-    @apply flex gap-6 mt-[30px];
+/* ================= 주의사항 ================= */
+.material-precautions {
+    @apply flex flex-col gap-1.5 text-[15px] text-guide-primary bg-guide-primary-soft px-4 py-3 rounded-[10px] list-none;
 }
+
+
+
+/* ================= 선택 ================= */
 .material-select-item {
-    @apply flex-1 flex flex-col gap-2.5;
+    @apply flex flex-col gap-2.5;
 }
 .material-select-item label {
     @apply text-[15px] font-semibold text-gray-700;

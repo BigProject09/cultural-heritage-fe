@@ -7,13 +7,18 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
-function RestorationMethodPage() {
+function RestorationMethodPage({
+  title = "복원",
+  guideField = "restorationGuide",
+  completedKey = "restorationMethod",
+  backPath = "/restoration",
+}) {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, restorationGuide, setCompleted, setStepSaving } = ctx;
+  const { taskId, setCompleted, setStepSaving } = ctx;
 
-  const { steps: restorationSteps = [] } = restorationGuide || {};
+  const { steps: restorationSteps = [] } = ctx[guideField] || {};
 
   const [steps, setSteps] = useState(
     restorationSteps.map((step) => ({
@@ -101,8 +106,8 @@ function RestorationMethodPage() {
       return;
     }
 
-    setStepSaving("restorationMethod", true);
-    navigate("/restoration");
+    setStepSaving(completedKey, true);
+    navigate(backPath);
 
     (async () => {
       try {
@@ -117,14 +122,14 @@ function RestorationMethodPage() {
         setCompleted((prev) => ({
           ...prev,
 
-          restorationMethod: true,
+          [completedKey]: true,
         }));
       } catch (error) {
         console.error(error);
 
-        alert("복원 단계 저장 실패");
+        alert(`${title} 단계 저장 실패`);
       } finally {
-        setStepSaving("restorationMethod", false);
+        setStepSaving(completedKey, false);
       }
     })();
   };
@@ -134,7 +139,7 @@ function RestorationMethodPage() {
       {/* 상단 */}
 
       <div className="detail-header">
-        <button className="nav-btn" onClick={() => navigate("/restoration")}>
+        <button className="nav-btn" onClick={() => navigate(backPath)}>
           ← 이전
         </button>
 
@@ -154,16 +159,10 @@ function RestorationMethodPage() {
       {/* 제목 */}
 
       <div className="page-header">
-        <h1>AI 단계별 복원 안내</h1>
-
-        <p>AI가 분석한 최적의 복원 작업 절차입니다.</p>
+        <h1>{title}</h1>
       </div>
 
       <div className="method-card">
-        <div className="step-title">
-          <span>추천 복원 방법</span>
-        </div>
-
         {steps.map((step, index) => (
           <div key={step.id} className="step-card">
             <div className="step-number">{index + 1}</div>

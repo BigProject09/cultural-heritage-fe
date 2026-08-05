@@ -13,7 +13,8 @@ function BondingMethodPage() {
   const ctx = useDisassembly();
   const { taskId, bondingGuide, setCompleted, setStepSaving } = ctx;
 
-  const { steps: bondingSteps = [], method_type: methodType } = bondingGuide || {};
+  const { steps: bondingSteps = [], method_type: methodType } =
+    bondingGuide || {};
 
   const [steps, setSteps] = useState(
     bondingSteps.map((step) => ({
@@ -145,15 +146,13 @@ function BondingMethodPage() {
       </div>
 
       <div className="page-header">
-        <h1>AI 단계별 접합 안내</h1>
-
-        <p>AI가 분석한 최적의 접합 작업 절차입니다.</p>
+        <h1>접합</h1>
       </div>
 
       <div className="method-card">
         <div className="step-title">
           <span>
-            추천 접합 방법
+            추천
             {methodType && <span className="method-badge">{methodType}</span>}
           </span>
         </div>

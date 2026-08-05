@@ -188,8 +188,13 @@ function BondingPage() {
 
               {/* ② 임시접합 */}
               <div
-                className="task-card"
-                onClick={() => navigate("/bonding-work")}
+                className={`task-card${
+                  !completed.bondingMaterial ? " locked" : ""
+                }`}
+                onClick={() => {
+                  if (!completed.bondingMaterial) return;
+                  navigate("/bonding-work");
+                }}
               >
                 <div className="task-icon">
                   {savingSteps.has("bondingWork") ? (
@@ -215,8 +220,13 @@ function BondingPage() {
 
               {/* ③ 단계별 안내 */}
               <div
-                className="task-card"
-                onClick={() => navigate("/bonding-method")}
+                className={`task-card${
+                  !completed.bondingWork ? " locked" : ""
+                }`}
+                onClick={() => {
+                  if (!completed.bondingWork) return;
+                  navigate("/bonding-method");
+                }}
               >
                 <div className="task-icon">
                   {savingSteps.has("bondingMethod") ? (

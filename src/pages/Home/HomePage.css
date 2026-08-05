@@ -39,7 +39,7 @@
   @apply grid gap-6 grid-cols-[repeat(3,1fr)];
 }
 .heritage-quick-card {
-  @apply [background:rgba(255,253,247,0.72)] border border-[color:var(--heritage-line)] shadow-[0_9px_24px_rgba(84,64,39,0.07)] cursor-pointer min-h-[300px] overflow-hidden relative text-left transition-all duration-200 duration-[ease] p-[30px] rounded-[15px] border-solid after:border after:content-[""] after:h-[245px] after:absolute after:right-[-90px] after:w-[245px] after:rounded-full after:border-solid after:border-[rgba(151,105,62,0.14)] after:top-[26px] hover:border-[color:var(--heritage-bronze)] hover:shadow-[0_15px_34px_rgba(84,64,39,0.13)] hover:-translate-y-[3px];
+  @apply [background:rgba(255,253,247,0.72)] border border-[color:var(--heritage-line)] shadow-[0_9px_24px_rgba(84,64,39,0.07)] cursor-pointer flex flex-col min-h-[300px] overflow-hidden relative text-left transition-all duration-200 duration-[ease] p-[30px] rounded-[15px] border-solid after:border after:content-[""] after:h-[245px] after:absolute after:right-[-90px] after:w-[245px] after:rounded-full after:border-solid after:border-[rgba(151,105,62,0.14)] after:top-[26px] hover:border-[color:var(--heritage-bronze)] hover:shadow-[0_15px_34px_rgba(84,64,39,0.13)] hover:-translate-y-[3px];
 }
 .heritage-quick-card > span,
 .heritage-quick-card > strong {
@@ -61,7 +61,7 @@
   @apply text-[#7b7e75] block text-[11px] leading-[1.7] max-w-[64%] mt-[18px];
 }
 .heritage-card-action {
-  @apply items-center text-[color:var(--heritage-bronze-dark)] flex text-[11px] gap-2.5 absolute bottom-[23px];
+  @apply items-center text-[color:var(--heritage-bronze-dark)] flex text-[11px] gap-2.5 mt-auto pt-[18px];
 }
 .heritage-card-action b {
   @apply text-[19px] font-normal transition-all duration-200;

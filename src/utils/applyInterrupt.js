@@ -36,6 +36,7 @@ export function applyInterrupt(interrupt, ctx) {
     ctx.setBondingGuide(mockContext.bondingGuide || null);
     ctx.setRestorationMaterial(mockContext.restorationMaterial || null);
     ctx.setRestorationGuide(mockContext.restorationGuide || null);
+    ctx.setRestorationFinishingGuide(mockContext.restorationFinishingGuide || null);
   }
 
   // 해체
@@ -105,5 +106,8 @@ export function applyInterrupt(interrupt, ctx) {
   }
   if (interrupt.ai_guide && stage.startsWith("복원")) {
     ctx.setRestorationGuide(interrupt.ai_guide);
+  }
+  if (interrupt.ai_finishing) {
+    ctx.setRestorationFinishingGuide(interrupt.ai_finishing);
   }
 }
