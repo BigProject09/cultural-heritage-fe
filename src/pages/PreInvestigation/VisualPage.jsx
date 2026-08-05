@@ -1,147 +1,289 @@
-import "./VisualPage.css";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   MODULE_STATUS,
-  getWorkspaceProject,
   markWorkspaceModule,
-  selectWorkspaceProject,
 } from "../../data/workspaceProjects";
 import { getArtifactRoute } from "../../utils/artifactRoutes";
+import VisualReport from "./VisualReport";
+import { useVisualInvestigation } from "./useVisualInvestigation";
+import "./VisualPage.css";
 
-function VisualPage() {
+const IMAGE_TYPES = "image/png,image/jpeg,image/webp";
+const RUN_STATUS_LABELS = {
+  QUEUED: "분석 대기",
+  RUNNING: "분석 중",
+  COMPLETED: "분석 완료",
+  FAILED: "분석 실패",
+};
+const RUN_STATUS_HELP = {
+  QUEUED: "분석 작업이 접수되어 순서를 기다리고 있습니다.",
+  RUNNING: "등록 이미지를 바탕으로 손상 후보와 권고 초안을 생성하고 있습니다.",
+  COMPLETED: "분석이 완료되어 보고서를 불러오는 중이거나 표시할 수 있습니다.",
+  FAILED: "분석 작업이 실패했습니다. 이미지를 확인한 뒤 다시 시작하세요.",
+};
+const RUN_STATUS_PROGRESS = {
+  QUEUED: 20,
+  RUNNING: 65,
+  COMPLETED: 100,
+  FAILED: 100,
+};
+
+function statusLabel(status) {
+  return RUN_STATUS_LABELS[status] || status || "상태 확인 필요";
+}
+
+function formatDate(value) {
+  if (!value) return "시간 정보 없음";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("ko-KR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function runProgress(run) {
+  if (!run) return 0;
+  if (Number.isFinite(run.progressPercent)) return run.progressPercent;
+  return RUN_STATUS_PROGRESS[run.status] || 0;
+}
+
+export default function VisualPage() {
   const navigate = useNavigate();
   const { artifactId: routeArtifactId = "" } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
-  const [artifactInfo, setArtifactInfo] = useState(() =>
-    JSON.parse(localStorage.getItem("artifactInfo") || "{}"),
-  );
+  const fileInputRef = useRef(null);
+  const [completionError, setCompletionError] = useState("");
+  const investigation = useVisualInvestigation(artifactId);
+  const {
+    artifact,
+    error,
+    handlePdfJob,
+    isMock,
+    loadArtifact,
+    loading,
+    notice,
+    pdfJob,
+    refreshStatus,
+    removeImage,
+    report,
+    runIsActive,
+    selectFiles,
+    selectedRun,
+    startRun,
+    uploadedImages,
+    working,
+    workspaceArtifact,
+  } = investigation;
+  const canComplete = Boolean(report) && selectedRun?.status === "COMPLETED";
+  const canStartRun = uploadedImages.length > 0 && !runIsActive && !working;
+  const progressValue = runProgress(selectedRun);
 
-  useEffect(() => {
-    if (!artifactId) return undefined;
-
-    const controller = new AbortController();
-    getWorkspaceProject(artifactId, { signal: controller.signal })
-      .then((project) => {
-        setArtifactInfo(selectWorkspaceProject(project));
-      })
-      .catch((error) => {
-        if (error.name !== "AbortError") {
-          window.alert(`유물 정보 조회 실패: ${error.message}`);
-        }
-      });
-
-    return () => controller.abort();
-  }, [artifactId]);
-
-  const handleComplete = async () => {
-    if (artifactId) {
-      try {
-        await markWorkspaceModule(
-          artifactId,
-          "visual",
-          MODULE_STATUS.DONE,
-        );
-      } catch (error) {
-        window.alert(`육안 조사 상태 저장 실패: ${error.message}`);
-        return;
-      }
+  async function handleComplete() {
+    if (!canComplete) {
+      setCompletionError("완료된 분석 보고서를 먼저 열어 확인하세요.");
+      return;
     }
 
-    navigate(getArtifactRoute(artifactId));
-  };
+    try {
+      setCompletionError("");
+      await markWorkspaceModule(artifactId, "visual", MODULE_STATUS.DONE);
+      navigate(getArtifactRoute(artifactId));
+    } catch (completionFailure) {
+      setCompletionError(`육안 조사 완료 상태 저장 실패: ${completionFailure.message}`);
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="visual-page visual-vca-page visual-state" aria-live="polite">
+        VCA 조사 정보를 불러오는 중입니다.
+      </main>
+    );
+  }
+
+  if (error) {
+    const notReady = error.status === 404 || error.status === 409;
+    return (
+      <main className="visual-page visual-vca-page visual-state" role="alert">
+        <span className="visual-vca-kicker">VCA CONNECTION</span>
+        <h1>{notReady ? "육안 조사 준비 중" : "조사 정보를 불러오지 못했습니다"}</h1>
+        <p>
+          {notReady
+            ? "이 유물의 VCA 조사 데이터가 아직 준비되지 않았습니다. 잠시 후 다시 시도하세요."
+            : error.message}
+        </p>
+        <button type="button" className="visual-primary-button" onClick={loadArtifact}>
+          다시 시도
+        </button>
+      </main>
+    );
+  }
 
   return (
-    <div className="visual-page">
-      <div className="visual-container">
-        <nav className="visual-breadcrumb" aria-label="현재 위치">
+    <main className="visual-page visual-vca-page">
+      <div className="visual-container visual-vca-container">
+        <nav className="visual-vca-breadcrumb" aria-label="현재 위치">
           <button type="button" onClick={() => navigate(-1)}>
             유물 워크스페이스
           </button>
-          <span>/</span>
+          <span aria-hidden="true">/</span>
           <strong>육안 상태 조사</strong>
         </nav>
 
-        <header className="visual-header">
+        <header className="visual-vca-header">
           <div>
-            <span className="visual-eyebrow">INDEPENDENT VISUAL MODULE</span>
-            <h1 className="visual-title">육안 상태 조사</h1>
-            <p>표면 손상과 오염 상태를 확인하고 전문가 검토를 완료합니다.</p>
+            <span className="visual-vca-kicker">VISUAL CONDITION ANALYSIS</span>
+            <h1>육안 상태 조사</h1>
+            <p>등록 이미지를 바탕으로 AI 초안을 검토하고 조사 기록을 준비합니다.</p>
           </div>
-          <span className="visual-status">AI 분석 초안</span>
+          <span className="visual-vca-status">
+            {isMock ? "Mock 분석 환경" : statusLabel(artifact.status)}
+          </span>
         </header>
 
-        <section className="visual-artifact-summary">
-          <div>
-            <span>조사 대상</span>
-            <strong>{artifactInfo.name || "유물 정보 없음"}</strong>
-          </div>
-          <div>
-            <span>관리번호</span>
-            <strong>{artifactInfo.artifactId || "정보 없음"}</strong>
-          </div>
-          <div>
-            <span>재질</span>
-            <strong>{artifactInfo.material || "정보 없음"}</strong>
-          </div>
-          <div>
-            <span>시대</span>
-            <strong>
-              {artifactInfo.period || artifactInfo.era || "정보 없음"}
-            </strong>
-          </div>
+        <section className="visual-vca-summary" aria-label="조사 대상 요약">
+          <div><span>조사 대상</span><strong>{artifact.displayName || workspaceArtifact.name || "유물 정보 없음"}</strong></div>
+          <div><span>관리번호</span><strong>{artifact.artifactId || artifactId}</strong></div>
+          <div><span>재질</span><strong>{workspaceArtifact.material || "정보 없음"}</strong></div>
+          <div><span>등록 이미지</span><strong>{uploadedImages.length}장</strong></div>
         </section>
 
-        <div className="visual-result-layout">
-          <section className="result-card">
-            <div className="visual-section-heading">
+        <div className="visual-vca-layout">
+          <section className="visual-vca-card" aria-labelledby="visual-images-title">
+            <div className="visual-vca-heading">
               <div>
-                <span>ANALYSIS 01</span>
-                <h2>AI 분석 결과</h2>
+                <span className="visual-vca-kicker">STEP 01</span>
+                <h2 id="visual-images-title">조사 이미지</h2>
+                <p>원본 이미지는 변경되지 않으며, 업로드 후 분석 실행에 사용됩니다.</p>
               </div>
-              <small>3개 항목</small>
+              <span className="visual-vca-count">{uploadedImages.length}장 등록</span>
             </div>
-
-            <div className="result-item">
-              <span className="result-label">표면 균열</span>
-              <span className="result-value">경미</span>
+            <input
+              ref={fileInputRef}
+              className="visual-vca-hidden"
+              type="file"
+              accept={IMAGE_TYPES}
+              multiple
+              aria-label="조사 이미지 파일 선택"
+              onChange={selectFiles}
+              disabled={Boolean(working)}
+            />
+            <div className="visual-vca-upload">
+              <div>
+                <strong>이미지를 선택하면 바로 등록됩니다</strong>
+                <p>PNG, JPG, WEBP 형식을 지원하며 선택 즉시 VCA 서버로 업로드합니다.</p>
+              </div>
+              <div className="visual-vca-actions">
+                <button
+                  type="button"
+                  className="visual-secondary-button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={Boolean(working)}
+                >
+                  {working === "upload" ? "업로드 중" : "파일 선택 및 업로드"}
+                </button>
+              </div>
             </div>
-
-            <div className="result-item">
-              <span className="result-label">오염도</span>
-              <span className="result-value">보통</span>
-            </div>
-
-            <div className="result-item">
-              <span className="result-label">결손 여부</span>
-              <span className="result-value">없음</span>
-            </div>
+            {uploadedImages.length === 0 ? (
+              <p className="visual-vca-empty">등록된 이미지가 없습니다. 분석을 시작하려면 이미지를 업로드하세요.</p>
+            ) : (
+              <ul className="visual-vca-image-grid">
+                {uploadedImages.map((image) => (
+                  <li key={image.imageId}>
+                    {image.imageUrl ? (
+                      <img src={image.imageUrl} alt={`${image.fileName || "조사"} 이미지`} />
+                    ) : (
+                      <div className="visual-vca-image-placeholder" aria-label={`${image.fileName || "조사"} 이미지 미리보기 준비 중`}>
+                        PREVIEW
+                      </div>
+                    )}
+                    <div>
+                      <strong>{image.fileName || "등록 이미지"}</strong>
+                      <button type="button" onClick={() => removeImage(image.imageId)} disabled={working === `delete-${image.imageId}`}>
+                        {working === `delete-${image.imageId}` ? "삭제 중" : "삭제"}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
-          <aside className="visual-review-card">
-            <span className="visual-review-index">REVIEW NOTE</span>
-            <h2>전문가 검수 안내</h2>
-            <p>
-              AI 결과는 조사 초안입니다. 실제 표면 상태와 촬영 조건을 함께
-              확인한 뒤 조사 결과를 확정하세요.
-            </p>
-            <ul>
-              <li>균열의 위치와 진행 방향 확인</li>
-              <li>표면 이물질과 부식 생성물 구분</li>
-              <li>결손부 및 기존 보수 흔적 확인</li>
-            </ul>
+          <aside className="visual-vca-review" aria-labelledby="visual-run-title">
+            <span className="visual-vca-kicker">STEP 02</span>
+            <h2 id="visual-run-title">AI 분석 실행</h2>
+            <p>분석 상태는 실제 VCA API에서 주기적으로 갱신합니다. 필요한 경우 수동으로 다시 확인할 수 있습니다.</p>
+            <div className="visual-vca-status-panel" role="status" aria-live="polite">
+              <span className={`visual-vca-status-state ${selectedRun?.status?.toLowerCase() || "idle"}`}>
+                {selectedRun ? statusLabel(selectedRun.status) : "분석 전"}
+              </span>
+              <strong>{selectedRun?.currentStage || RUN_STATUS_HELP[selectedRun?.status] || "이미지를 등록한 뒤 분석을 시작하세요."}</strong>
+              <div className="visual-vca-progress" aria-label="분석 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow={progressValue} role="progressbar">
+                <span style={{ width: `${progressValue}%` }} />
+              </div>
+              <dl className="visual-vca-status-meta">
+                <div>
+                  <dt>접수 시간</dt>
+                  <dd>{selectedRun ? formatDate(selectedRun.createdAt) : "대기 중"}</dd>
+                </div>
+                <div>
+                  <dt>이미지 수</dt>
+                  <dd>{selectedRun?.imageCount || uploadedImages.length}장</dd>
+                </div>
+                <div>
+                  <dt>완료 시간</dt>
+                  <dd>{selectedRun?.completedAt ? formatDate(selectedRun.completedAt) : "미완료"}</dd>
+                </div>
+              </dl>
+            </div>
+            <div className="visual-vca-status-actions">
+              <button type="button" className="visual-primary-button" onClick={startRun} disabled={!canStartRun}>{working === "run" ? "분석 접수 중" : "분석 시작"}</button>
+              <button type="button" className="visual-secondary-button" onClick={refreshStatus} disabled={Boolean(working)}>{working === "refresh" ? "갱신 중" : "상태 새로고침"}</button>
+            </div>
           </aside>
         </div>
 
-        <footer className="complete-area">
-          <p>완료하면 현재 유물의 육안 조사 상태가 저장됩니다.</p>
-          <button className="complete-btn" onClick={handleComplete}>
+        {notice && <p className="visual-vca-notice" role="status" aria-live="polite">{notice}</p>}
+        {completionError && <p className="visual-vca-notice" role="alert">{completionError}</p>}
+
+        <section className="visual-vca-card visual-vca-report" aria-labelledby="visual-report-title">
+          <div className="visual-vca-heading">
+            <div>
+              <span className="visual-vca-kicker">STEP 03</span>
+              <h2 id="visual-report-title">조사 보고서</h2>
+              <p>AI가 생성한 결과는 검토 자료이며, 최종 판단은 전문가가 수행합니다.</p>
+            </div>
+            {selectedRun && <span className="visual-vca-count">{statusLabel(selectedRun.status)}</span>}
+          </div>
+          {report ? (
+            <VisualReport
+              report={report}
+              pdfJob={pdfJob}
+              working={working}
+              onPdfJob={handlePdfJob}
+            />
+          ) : (
+            <div className="visual-vca-empty">
+              <p>
+                {selectedRun?.status === "COMPLETED"
+                  ? "완료된 분석 보고서를 불러오고 있습니다. 잠시 후 자동으로 표시됩니다."
+                  : selectedRun
+                    ? "분석이 완료되면 보고서가 자동으로 표시됩니다."
+                    : "이미지를 등록하고 분석을 시작하면 보고서를 불러올 수 있습니다."}
+              </p>
+            </div>
+          )}
+        </section>
+
+        <footer className="visual-vca-complete">
+          <p>보고서를 확인한 뒤 완료하면 현재 유물의 육안 조사 상태가 저장됩니다.</p>
+          <button type="button" className="visual-primary-button" onClick={handleComplete} disabled={!canComplete}>
             육안 조사 완료
           </button>
         </footer>
       </div>
-    </div>
+    </main>
   );
 }
-
-export default VisualPage;

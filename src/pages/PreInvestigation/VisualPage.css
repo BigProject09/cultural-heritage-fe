@@ -1,34 +1,112 @@
 @reference "../../index.css";
 
 @layer components {
-.visual-page {
-    @apply min-h-screen bg-guide-canvas flex justify-center px-5 py-[60px];
-}
-.visual-container {
-    @apply w-full max-w-[900px];
-}
-.visual-title {
-    @apply text-[38px] font-bold text-gray-800 mb-10;
-}
-.result-card {
-    @apply bg-white shadow-[0_8px_20px_rgba(0,0,0,0.08)] mb-[35px] p-[35px] rounded-[18px];
-}
-.result-card h2 {
-    @apply text-blue-600 text-[28px] mb-[25px];
-}
-.result-item {
-    @apply flex justify-between items-center text-xl px-0 py-[18px] border-b border-solid last:border-b-[none];
-}
-.result-label {
-    @apply font-semibold text-gray-700;
-}
-.result-value {
-    @apply font-bold text-gray-900;
-}
-.complete-area {
-    @apply flex justify-center;
-}
-.complete-btn {
-    @apply w-[220px] h-[58px] [background:#2563eb] text-white text-xl font-bold cursor-pointer transition-all duration-200 rounded-[14px] border-0 hover:[background:#1d4ed8] hover:-translate-y-0.5;
-}
+  .visual-page.visual-vca-page {
+    --workflow-paper: var(--color-vora-paper);
+    --workflow-surface: var(--color-vora-surface);
+    --workflow-surface-soft: var(--color-vora-paper);
+    --workflow-ink: var(--color-vora-ink);
+    --workflow-ink-soft: var(--color-vora-ink);
+    --workflow-muted: var(--color-vora-muted);
+    --workflow-bronze: var(--color-vora-bronze);
+    --workflow-bronze-dark: var(--color-vora-bronze-dark);
+    --workflow-bronze-soft: var(--color-vora-paper);
+    --workflow-line: var(--color-vora-line);
+    --workflow-line-soft: var(--color-vora-line);
+    --workflow-green: var(--color-vora-green);
+    --workflow-green-dark: var(--color-vora-green);
+    --workflow-danger: var(--color-vora-danger);
+    --workflow-shadow: 0 18px 48px rgb(63 52 38 / 8%);
+    @apply min-h-screen [background:var(--workflow-paper)] text-[color:var(--workflow-ink)] pt-12 pb-24 px-8;
+  }
+  .visual-vca-container { @apply w-[min(1040px,100%)] mx-auto; }
+  .visual-vca-breadcrumb { @apply flex items-center gap-2 border-b border-[color:var(--workflow-line)] text-[color:var(--workflow-muted)] text-[13px] mb-7 pb-4; }
+  .visual-vca-breadcrumb button { @apply bg-transparent text-[color:var(--workflow-muted)] cursor-pointer p-0 border-0 hover:text-[color:var(--workflow-bronze-dark)]; }
+  .visual-vca-breadcrumb strong { @apply text-[color:var(--workflow-ink)]; }
+  .visual-vca-header { @apply flex items-end justify-between gap-6 mb-7; }
+  .visual-vca-kicker { @apply block text-[color:var(--workflow-bronze)] text-[10px] font-bold tracking-[0.18em] mb-2; }
+  .visual-vca-header h1, .visual-state h1 { @apply [font-family:var(--font-serif)] text-[clamp(34px,4vw,48px)] font-medium tracking-[-0.04em] m-0; }
+  .visual-vca-header p { @apply text-[color:var(--workflow-muted)] text-sm mt-3 mb-0; }
+  .visual-vca-status, .visual-vca-count { @apply inline-flex flex-none border border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)] text-[color:var(--workflow-green-dark)] text-xs font-bold px-3 py-2 rounded-full; }
+  .visual-vca-summary { @apply grid grid-cols-[1.25fr_repeat(3,1fr)] overflow-hidden border border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface)] shadow-[var(--workflow-shadow)] mb-6 rounded-[14px]; }
+  .visual-vca-summary > div { @apply flex min-w-0 min-h-[82px] justify-center border-l border-[color:var(--workflow-line-soft)] flex-col gap-1.5 px-5 py-[18px] first:border-l-0; }
+  .visual-vca-summary span { @apply text-[color:var(--workflow-muted)] text-[11px]; }
+  .visual-vca-summary strong { @apply overflow-hidden text-sm text-ellipsis whitespace-nowrap; }
+  .visual-vca-summary > div:first-child strong { @apply whitespace-normal [overflow-wrap:anywhere] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]; }
+  .visual-vca-layout { @apply grid grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)] items-start gap-6; }
+  .visual-vca-card, .visual-vca-review { @apply border border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface)] shadow-[var(--workflow-shadow)] p-7 rounded-2xl; }
+  .visual-vca-heading { @apply flex items-start justify-between gap-5 mb-5; }
+  .visual-vca-heading h2, .visual-vca-review h2 { @apply [font-family:var(--font-serif)] text-[color:var(--workflow-bronze-dark)] text-2xl font-semibold m-0; }
+  .visual-vca-heading p, .visual-vca-review > p { @apply text-[color:var(--workflow-muted)] text-[13px] leading-[1.7] [word-break:keep-all] [overflow-wrap:break-word] mt-2 mb-0; }
+  .visual-vca-upload { @apply flex items-center justify-between gap-4 border border-dashed border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)] p-5 rounded-xl; }
+  .visual-vca-upload strong { @apply text-sm; }
+  .visual-vca-upload p { @apply text-[color:var(--workflow-muted)] text-xs [word-break:keep-all] [overflow-wrap:break-word] mt-1 mb-0; }
+  .visual-vca-actions { @apply flex flex-none gap-2; }
+  .visual-primary-button, .visual-secondary-button { @apply inline-flex min-h-11 items-center justify-center cursor-pointer text-[13px] font-bold transition-[background,border-color,color,transform] duration-[160ms] rounded-lg px-5 py-0 border; }
+  .visual-primary-button { @apply [background:var(--workflow-bronze)] border-[color:var(--workflow-bronze)] text-[color:var(--workflow-surface)] hover:[background:var(--workflow-bronze-dark)] hover:border-[color:var(--workflow-bronze-dark)] hover:-translate-y-px; }
+  .visual-secondary-button { @apply [background:transparent] border-[color:var(--workflow-line)] text-[color:var(--workflow-ink)] hover:[background:var(--workflow-surface-soft)] hover:border-[color:var(--workflow-bronze)]; }
+  .visual-primary-button:disabled, .visual-secondary-button:disabled { @apply cursor-not-allowed opacity-50 hover:transform-none; }
+  .visual-vca-hidden { @apply absolute w-px h-px overflow-hidden [clip:rect(0,0,0,0)] whitespace-nowrap; }
+  .visual-vca-image-grid { @apply grid grid-cols-2 gap-3 [list-style:none] mt-4 mb-0 p-0; }
+  .visual-vca-image-grid li { @apply overflow-hidden border border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface-soft)] rounded-xl; }
+  .visual-vca-image-grid img { @apply block w-full h-40 object-contain [background:var(--workflow-paper)] p-3; }
+  .visual-vca-image-placeholder { @apply grid h-40 place-items-center border border-dashed border-[color:var(--workflow-line)] [background:var(--workflow-paper)] text-[color:var(--workflow-muted)] text-[10px] font-bold tracking-[0.18em] p-3; }
+  .visual-vca-image-grid li > div { @apply flex items-center justify-between gap-3 p-3; }
+  .visual-vca-image-grid strong { @apply min-w-0 overflow-hidden text-xs text-ellipsis whitespace-nowrap; }
+  .visual-vca-image-grid button { @apply flex-none [background:transparent] text-[color:var(--workflow-danger)] text-xs font-bold cursor-pointer p-0 border-0; }
+  .visual-vca-empty { @apply grid min-h-32 place-items-center border border-dashed border-[color:var(--workflow-line)] text-[color:var(--workflow-muted)] text-[13px] leading-[1.7] text-center [word-break:keep-all] [overflow-wrap:break-word] mt-4 px-5 py-6 rounded-xl; }
+  .visual-vca-review { @apply [background:var(--workflow-surface-soft)] border-[color:var(--workflow-line)]; }
+  .visual-vca-wide-button { @apply w-full mt-5; }
+  .visual-vca-status-panel { @apply grid gap-4 border border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface)] mt-5 p-4 rounded-xl; }
+  .visual-vca-status-panel > strong { @apply text-[color:var(--workflow-ink)] text-sm leading-[1.65] [word-break:keep-all] [overflow-wrap:break-word]; }
+  .visual-vca-status-state { @apply inline-flex w-fit border border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)] text-[color:var(--workflow-muted)] text-[11px] font-bold px-3 py-1.5 rounded-full; }
+  .visual-vca-status-state.running, .visual-vca-status-state.queued { @apply text-[color:var(--workflow-bronze-dark)] border-[color:var(--workflow-bronze)]; }
+  .visual-vca-status-state.completed { @apply text-[color:var(--workflow-green-dark)]; }
+  .visual-vca-status-state.failed { @apply text-[color:var(--workflow-danger)]; }
+  .visual-vca-progress { @apply h-2 overflow-hidden [background:var(--workflow-paper)] rounded-full; }
+  .visual-vca-progress > span { @apply block h-full [background:var(--workflow-bronze)] transition-[width] duration-200 rounded-full; }
+  .visual-vca-status-meta { @apply grid grid-cols-1 gap-2 m-0; }
+  .visual-vca-status-meta > div { @apply flex items-center justify-between gap-3 border-t border-[color:var(--workflow-line-soft)] pt-2; }
+  .visual-vca-status-meta dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
+  .visual-vca-status-meta dd { @apply text-[color:var(--workflow-ink-soft)] text-xs font-bold text-right m-0; }
+  .visual-vca-status-actions { @apply grid gap-2 mt-4; }
+  .visual-vca-notice { @apply border border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)] text-[color:var(--workflow-ink-soft)] text-[13px] leading-[1.6] [word-break:keep-all] [overflow-wrap:break-word] my-6 px-4 py-3 rounded-xl; }
+  .visual-vca-report { @apply mt-6; }
+  .visual-vca-report-body { @apply grid grid-cols-[1fr_1fr] gap-4; }
+  .visual-vca-report-body section { @apply border border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface-soft)] text-[color:var(--workflow-ink-soft)] text-[13px] leading-[1.75] [word-break:keep-all] [overflow-wrap:break-word] p-5 rounded-xl; }
+  .visual-vca-report-body section:first-child, .visual-vca-report-body section:last-child { @apply col-span-full; }
+  .visual-vca-report-body h3 { @apply [font-family:var(--font-serif)] text-[color:var(--workflow-bronze-dark)] text-lg font-semibold m-0; }
+  .visual-vca-report-body p { @apply m-0 mt-3; }
+  .visual-vca-report-body ul, .visual-vca-report-body ol { @apply grid gap-3 mt-3 mb-0 pl-5; }
+  .visual-vca-report-body li strong { @apply inline-block [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[11px] mr-2 px-2 py-0.5 rounded-full; }
+  .visual-vca-report-body li span { @apply text-[color:var(--workflow-muted)] text-xs font-bold; }
+  .visual-vca-report-body li p { @apply text-xs mt-1.5; }
+  .visual-vca-report-body li small { @apply block text-[color:var(--workflow-muted)] text-[11px] mt-1.5; }
+  .visual-vca-summary-details { @apply grid grid-cols-2 gap-2 mt-4 mb-0; }
+  .visual-vca-summary-details > div { @apply border border-[color:var(--workflow-line)] p-2.5 rounded-lg; }
+  .visual-vca-summary-details dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
+  .visual-vca-summary-details dd { @apply text-xs font-bold mt-1 m-0; }
+  .visual-vca-report-images { @apply grid grid-cols-2 gap-3 mt-3; }
+  .visual-vca-report-images img, .visual-vca-report-images .visual-vca-image-placeholder { @apply w-full h-44 object-contain border border-[color:var(--workflow-line-soft)] [background:var(--workflow-paper)] p-3 rounded-lg; }
+  .visual-vca-pdf { @apply flex items-center justify-between gap-5 border-t border-[color:var(--workflow-line-soft)] mt-6 pt-5; }
+  .visual-vca-pdf > div:first-child { @apply flex flex-col gap-1; }
+  .visual-vca-pdf strong { @apply text-sm; }
+  .visual-vca-pdf span { @apply text-[color:var(--workflow-muted)] text-xs; }
+  .visual-vca-pdf > div:last-child { @apply flex flex-wrap gap-2; }
+  .visual-vca-complete { @apply static flex items-center justify-between gap-5 border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] shadow-[var(--workflow-shadow)] mt-6 px-5 py-4 rounded-xl; }
+  .visual-vca-complete p { @apply text-[color:var(--workflow-muted)] text-xs [word-break:keep-all] [overflow-wrap:break-word] m-0; }
+  .visual-state { @apply grid place-items-center content-center text-center px-6; }
+  .visual-state p { @apply max-w-lg text-[color:var(--workflow-muted)] text-sm leading-[1.7] mt-4 mb-6; }
+  .visual-vca-page button:focus-visible, .visual-vca-page a:focus-visible, .visual-vca-page input:focus-visible { @apply outline-2 outline-offset-2 outline-[color:var(--workflow-bronze)]; }
+  @media (max-width: 760px) {
+    .visual-page.visual-vca-page { @apply pt-8 px-4; }
+    .visual-vca-header, .visual-vca-upload, .visual-vca-pdf, .visual-vca-complete { @apply items-stretch flex-col; }
+    .visual-vca-summary, .visual-vca-layout, .visual-vca-report-body { @apply grid-cols-1; }
+    .visual-vca-summary > div { @apply border-l-0 border-t border-[color:var(--workflow-line-soft)] first:border-t-0; }
+    .visual-vca-report-body section:first-child, .visual-vca-report-body section:last-child { @apply col-span-1; }
+    .visual-vca-actions, .visual-vca-pdf > div:last-child { @apply items-stretch flex-col; }
+    .visual-vca-status-actions { @apply grid-cols-1; }
+    .visual-vca-image-grid { @apply grid-cols-1; }
+  }
+  @media (prefers-reduced-motion: reduce) { .visual-vca-page * { @apply transition-none; } }
 }
