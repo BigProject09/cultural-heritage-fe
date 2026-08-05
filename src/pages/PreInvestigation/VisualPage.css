@@ -1,34 +1,357 @@
 @reference "../../index.css";
 
+/*
+  간격 체계: 큰 간격은 24px(mb-6/p-6/gap-6), 카드 안쪽 작은 요소 사이는
+  16px(mb-4/gap-4)로 두 단계만 쓴다. 예전엔 카드마다 12/20/24/28/35px가
+  섞여있어서 전체적으로 여백이 들쭉날쭉해 보였다.
+*/
+
 @layer components {
-.visual-page {
+  .visual-page {
     @apply min-h-screen bg-guide-canvas flex justify-center px-5 py-[60px];
-}
-.visual-container {
+  }
+  .visual-container {
     @apply w-full max-w-[900px];
+  }
+
+  .visual-breadcrumb {
+    @apply flex items-center gap-2 mb-4 text-gray-500 text-[13px];
+  }
+  .visual-breadcrumb button {
+    @apply border-0 [background:transparent] text-gray-500 cursor-pointer p-0;
+  }
+  .visual-breadcrumb strong {
+    @apply text-gray-800;
+  }
+
+  .visual-header {
+    @apply flex items-start justify-between gap-4 mb-6;
+  }
+  .visual-eyebrow {
+    @apply block mb-2 text-blue-600 text-[11px] font-extrabold tracking-widest;
+  }
+  .visual-title {
+    @apply text-[38px] font-bold text-gray-800 mb-2 leading-tight;
+  }
+  .visual-header p {
+    @apply text-gray-500 text-[15px] m-0;
+  }
+  .visual-status {
+    @apply text-xs font-bold text-blue-600 [background:#eef4ff] px-3 py-1.5 rounded-full whitespace-nowrap;
+  }
+
+  .visual-artifact-summary {
+    @apply grid grid-cols-4 [background:white] border border-gray-200 rounded-2xl overflow-hidden mb-6;
+  }
+  .visual-artifact-summary > div {
+    @apply flex flex-col justify-center gap-1 p-5 border-r border-gray-200 last:border-r-0;
+  }
+  .visual-artifact-summary span {
+    @apply text-gray-400 text-xs;
+  }
+  .visual-artifact-summary strong {
+    @apply text-gray-800 text-[15px] font-bold;
+  }
+
+  .photo-card {
+    @apply [background:white] border border-gray-200 rounded-2xl p-4 mb-6;
+  }
+  .photo-toolbar {
+    @apply flex items-center gap-2 px-1 pb-3;
+  }
+  .photo-toolbar button {
+    @apply w-[30px] h-[30px] border border-gray-200 rounded-lg [background:white] text-gray-800 text-base font-bold cursor-pointer;
+    @apply disabled:text-gray-300 disabled:cursor-not-allowed;
+    @apply hover:enabled:border-blue-600 hover:enabled:text-blue-600;
+  }
+  .photo-zoom-level {
+    @apply min-w-[44px] text-center text-gray-500 text-[13px] font-semibold;
+  }
+  .photo-zoom-reset {
+    @apply !w-auto px-2.5 ml-1 !text-xs !font-semibold;
+  }
+
+  .photo-frame {
+    @apply relative w-full max-h-[460px] flex items-center justify-center rounded-[10px] overflow-hidden [background:#eef0f2] select-none;
+  }
+  .photo-zoom-layer {
+    @apply relative w-full h-full flex items-center justify-center;
+    transform-origin: center center;
+  }
+  .photo-zoom-layer img {
+    @apply w-full h-[460px] object-contain block pointer-events-none;
+  }
+
+  .photo-loading-overlay {
+    @apply absolute inset-0 flex flex-col items-center justify-center gap-3.5 text-white;
+    background: rgba(25, 31, 40, 0.55);
+  }
+  .photo-loading-overlay p {
+    @apply m-0 text-sm font-semibold;
+  }
+
+  .spinner {
+    @apply w-[34px] h-[34px] rounded-full;
+    border: 3px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    animation: visual-spin 0.8s linear infinite;
+  }
+
+  .pattern-svg {
+    @apply absolute inset-0 w-full h-full;
+  }
+  .pattern-rect {
+    fill: rgba(245, 159, 0, 0.12);
+    stroke: #f59f00;
+  }
+  .pattern-label-bg {
+    fill: none;
+    stroke: #191f28;
+    stroke-linejoin: round;
+    font-weight: 700;
+  }
+  .pattern-label {
+    fill: #ffffff;
+    font-weight: 700;
+  }
+
+  .visual-notice {
+    @apply [background:white] border border-gray-200 rounded-2xl p-6 mb-6 text-gray-500 text-[15px];
+  }
+  .visual-notice--error {
+    @apply border-red-200 text-red-600;
+  }
+  .retry-btn {
+    @apply mt-3 px-4 py-2.5 border border-red-500 rounded-lg [background:white] text-red-500 font-semibold cursor-pointer;
+  }
+
+  .visual-result-layout {
+    @apply grid [grid-template-columns:2fr_1fr] gap-6 mb-6;
+  }
+
+  .result-card {
+    @apply [background:white] border border-gray-200 rounded-2xl p-6;
+  }
+
+  .visual-section-heading {
+    @apply flex items-start justify-between gap-3 mb-4;
+  }
+  .visual-section-heading span {
+    @apply block text-blue-600 text-xs font-extrabold tracking-widest mb-1;
+  }
+  .visual-section-heading h2 {
+    @apply text-2xl font-bold text-gray-800 m-0;
+  }
+  .review-badge {
+    @apply px-3 py-1.5 border rounded-full text-[13px] font-bold whitespace-nowrap;
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #b45309;
+  }
+
+  .era-compare {
+    @apply flex flex-wrap items-center gap-2.5 px-4 py-3.5 rounded-xl mb-4 text-sm font-semibold;
+  }
+  .era-compare.match {
+    @apply border;
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #15803d;
+  }
+  .era-compare.mismatch {
+    @apply border;
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #b45309;
+  }
+  .era-compare-tag {
+    @apply ml-auto px-2.5 py-1 rounded-full text-xs;
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  .inspection-sections {
+    @apply flex flex-col gap-4;
+  }
+  .visual-result-heading {
+    @apply flex items-center mb-2 text-gray-800 text-[17px] font-bold;
+  }
+  .section-body {
+    @apply m-0 text-gray-500 [line-height:1.7] text-[15px];
+  }
+
+  .caveat-icon {
+    @apply inline-flex items-center justify-center w-[18px] h-[18px] ml-2 rounded-full text-white text-xs font-bold cursor-help relative;
+    background: #f59f00;
+  }
+  .caveat-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 130%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #191f28;
+    color: white;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease;
+    z-index: 10;
+  }
+  .caveat-icon:hover::after,
+  .caveat-icon:focus::after {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .status-note {
+    @apply text-gray-500 text-[15px];
+  }
+
+  .pottery-loading {
+    @apply flex flex-col items-center gap-3 py-2;
+  }
+  .pottery-track {
+    @apply relative w-full h-[70px] overflow-hidden;
+  }
+  .pottery-runner {
+    position: absolute;
+    top: 0;
+    width: 56px;
+    height: 60px;
+    animation: pottery-run-move 2.6s ease-in-out infinite;
+  }
+  .pottery-flip {
+    width: 100%;
+    height: 100%;
+    animation: pottery-run-flip 2.6s steps(1, end) infinite;
+  }
+  .pottery-bounce {
+    width: 100%;
+    height: 100%;
+    animation: pottery-run-bounce 0.32s ease-in-out infinite alternate;
+  }
+  .pottery-figure {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .pottery-leg {
+    transform-box: fill-box;
+    transform-origin: top center;
+    animation: pottery-run-leg 0.32s ease-in-out infinite alternate;
+  }
+  .pottery-leg-right {
+    animation-delay: 0.16s;
+    animation-direction: alternate-reverse;
+  }
+  .pottery-arm {
+    transform-box: fill-box;
+    transform-origin: top center;
+    animation: pottery-run-arm 0.32s ease-in-out infinite alternate;
+  }
+  .pottery-arm-left {
+    animation-delay: 0.16s;
+    animation-direction: alternate-reverse;
+  }
+
+  .visual-review-card {
+    @apply [background:white] border border-gray-200 rounded-2xl p-6;
+  }
+  .visual-review-index {
+    @apply block text-xs font-extrabold tracking-widest mb-2;
+    color: #b45309;
+  }
+  .visual-review-card h2 {
+    @apply text-lg font-bold text-gray-800 mb-3;
+  }
+  .visual-review-card p {
+    @apply text-gray-500 text-sm [line-height:1.6] mb-4;
+  }
+  .visual-review-card ul {
+    @apply list-disc pl-5 text-gray-600 text-sm space-y-2;
+  }
+
+  .complete-area {
+    @apply flex items-center justify-between [background:white] border border-gray-200 rounded-2xl p-6;
+  }
+  .complete-area p {
+    @apply m-0 text-gray-500 text-sm;
+  }
+  .complete-btn {
+    @apply w-[220px] h-[58px] text-white text-xl font-bold cursor-pointer transition-[0.2s] rounded-[14px] border-[none];
+    background: #2563eb;
+  }
+  .complete-btn:hover:enabled {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+  }
+  .complete-btn:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
+  }
 }
-.visual-title {
-    @apply text-[38px] font-bold text-gray-800 mb-10;
+
+@keyframes visual-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
-.result-card {
-    @apply bg-white shadow-[0_8px_20px_rgba(0,0,0,0.08)] mb-[35px] p-[35px] rounded-[18px];
+
+@keyframes pottery-run-move {
+  0% {
+    left: 2%;
+  }
+  50% {
+    left: 82%;
+  }
+  100% {
+    left: 2%;
+  }
 }
-.result-card h2 {
-    @apply text-blue-600 text-[28px] mb-[25px];
+
+@keyframes pottery-run-flip {
+  0%,
+  49.9% {
+    transform: scaleX(1);
+  }
+  50%,
+  99.9% {
+    transform: scaleX(-1);
+  }
+  100% {
+    transform: scaleX(1);
+  }
 }
-.result-item {
-    @apply flex justify-between items-center text-xl px-0 py-[18px] border-b border-solid last:border-b-[none];
+
+@keyframes pottery-run-bounce {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-6px);
+  }
 }
-.result-label {
-    @apply font-semibold text-gray-700;
+
+@keyframes pottery-run-leg {
+  from {
+    transform: rotate(-18deg);
+  }
+  to {
+    transform: rotate(18deg);
+  }
 }
-.result-value {
-    @apply font-bold text-gray-900;
-}
-.complete-area {
-    @apply flex justify-center;
-}
-.complete-btn {
-    @apply w-[220px] h-[58px] [background:#2563eb] text-white text-xl font-bold cursor-pointer transition-all duration-200 rounded-[14px] border-0 hover:[background:#1d4ed8] hover:-translate-y-0.5;
-}
+
+@keyframes pottery-run-arm {
+  from {
+    transform: rotate(20deg);
+  }
+  to {
+    transform: rotate(-20deg);
+  }
 }

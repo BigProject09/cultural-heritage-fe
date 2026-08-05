@@ -1,6 +1,9 @@
-import "./VisualPage.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import "./VisualPage.css";
+import { useDisassembly } from "../../context/useDisassembly";
+import { inspectPottery } from "../../services/potteryInspectionApi";
+import { parseInspectionSections, compareEra } from "../../utils/inspectionText";
 import {
   MODULE_STATUS,
   getWorkspaceProject,
@@ -9,14 +12,84 @@ import {
 } from "../../data/workspaceProjects";
 import { getArtifactRoute } from "../../utils/artifactRoutes";
 
+
+const POTTERY_MATERIAL_KEYWORDS = [
+  "연질토기",
+  "경질토기",
+  "도자기",
+  "백자",
+  "청자",
+  "분청사기",
+  "옹기",
+];
+
+function isPotteryMaterial(material) {
+  if (!material) return false;
+  return POTTERY_MATERIAL_KEYWORDS.some((keyword) => material.includes(keyword));
+}
+
+function readStoredArtifactInfo() {
+  try {
+    return JSON.parse(localStorage.getItem("artifactInfo")) || {};
+  } catch {
+    return {};
+  }
+}
+
 function VisualPage() {
   const navigate = useNavigate();
   const { artifactId: routeArtifactId = "" } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
-  const [artifactInfo, setArtifactInfo] = useState(() =>
-    JSON.parse(localStorage.getItem("artifactInfo") || "{}"),
-  );
 
+  const { visualResult, setVisualResult } = useDisassembly();
+
+  // 등록 직후 잠깐은 로컬 저장값으로 먼저 보여주고, 워크스페이스 조회가
+  // 끝나면(아래 useEffect) 서버 최신값으로 갱신한다.
+  const [artifactInfo, setArtifactInfo] = useState(() => readStoredArtifactInfo());
+
+  // idle | loading | done | error | unsupported
+  const [requestState, setRequestState] = useState({
+    artifactId: "",
+    status: "idle",
+  });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [imageSize, setImageSize] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  // React StrictMode(개발 모드) 또는 재렌더링으로 같은 유물의 분석 요청이
+  // 중복 실행되지 않도록, 마지막으로 요청을 시작한 유물 ID를 저장한다.
+  const startedArtifactIdRef = useRef("");
+
+  const isPottery = isPotteryMaterial(artifactInfo.material);
+  const imgRef = useRef(null);
+
+  // 지금 화면에 뜬 유물이랑 context에 남아있는 visualResult가 정말 같은
+  // 건인지 판단하는 단일 기준. artifactInfo.artifactId 대신 URL의
+  // artifactId를 쓴다 - 워크스페이스 조회가 아직 안 끝난 시점에도 즉시
+  // 알 수 있는 값이라서다.
+  const resultIsCurrent =
+    !!visualResult && visualResult.__artifactId === artifactId;
+
+  // 현재 유물과 관계없는 이전 요청 상태가 잠깐 노출되지 않도록,
+  // 요청 상태는 artifactId가 일치할 때만 사용한다.
+  const currentRequestStatus =
+    requestState.artifactId === artifactId
+      ? requestState.status
+      : "idle";
+
+  // unsupported / done은 별도의 state로 저장하지 않고 현재 데이터에서 계산한다.
+  // 실제 요청 과정에서만 loading / error 상태를 저장한다.
+  const status = !artifactInfo?.image
+    ? currentRequestStatus
+    : !isPottery
+      ? "unsupported"
+      : resultIsCurrent
+        ? "done"
+        : currentRequestStatus;
+
+  // 워크스페이스에서 유물 정보(사진·재질·시대 등)를 가져온다.
   useEffect(() => {
     if (!artifactId) return undefined;
 
@@ -34,14 +107,69 @@ function VisualPage() {
     return () => controller.abort();
   }, [artifactId]);
 
+  const runInspection = async () => {
+    setRequestState({
+      artifactId,
+      status: "loading",
+    });
+    setErrorMessage("");
+
+    try {
+      // 워크스페이스가 사진을 data URL로 내려주므로, 다시 업로드 가능한
+      // 형태(Blob)로 복원해서 보낸다.
+      const blob = await fetch(artifactInfo.image).then((res) => {
+        if (!res.ok) {
+          throw new Error("유물 이미지를 불러오지 못했습니다.");
+        }
+        return res.blob();
+      });
+
+      const data = await inspectPottery(blob);
+      setVisualResult({ ...data, __artifactId: artifactId });
+
+      setRequestState({
+        artifactId,
+        status: "done",
+      });
+    } catch (err) {
+      setErrorMessage(
+        err.message || "분석 요청 중 오류가 발생했습니다. 다시 시도해주세요.",
+      );
+
+      setRequestState({
+        artifactId,
+        status: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
+    // 워크스페이스 조회가 끝나서 사진이 도착할 때까지 기다린다.
+    if (!artifactInfo?.image) return;
+
+    // 도자기가 아니면 자동 분석하지 않는다.
+    // unsupported 상태는 현재 재질에서 파생해 계산한다.
+    if (!isPottery) return;
+
+    // 현재 유물의 분석 결과가 이미 있으면 다시 호출하지 않는다.
+    if (resultIsCurrent) return;
+
+    // StrictMode 또는 재렌더링으로 같은 유물 요청이 중복되는 것을 막는다.
+    if (startedArtifactIdRef.current === artifactId) return;
+
+    startedArtifactIdRef.current = artifactId;
+    void runInspection();
+  }, [artifactId, artifactInfo?.image, isPottery, resultIsCurrent]);
+
+  const handleRetry = () => {
+    startedArtifactIdRef.current = "";
+    void runInspection();
+  };
+
   const handleComplete = async () => {
     if (artifactId) {
       try {
-        await markWorkspaceModule(
-          artifactId,
-          "visual",
-          MODULE_STATUS.DONE,
-        );
+        await markWorkspaceModule(artifactId, "visual", MODULE_STATUS.DONE);
       } catch (error) {
         window.alert(`육안 조사 상태 저장 실패: ${error.message}`);
         return;
@@ -50,6 +178,65 @@ function VisualPage() {
 
     navigate(getArtifactRoute(artifactId));
   };
+
+  const handleImageLoad = (e) => {
+    setImageSize({
+      width: e.target.naturalWidth,
+      height: e.target.naturalHeight,
+    });
+  };
+
+  const ZOOM_STEP = 0.5;
+  const ZOOM_MAX = 3;
+
+  const handleZoomIn = () => setZoom((z) => Math.min(z + ZOOM_STEP, ZOOM_MAX));
+  const handleZoomOut = () =>
+    setZoom((z) => {
+      const next = Math.max(z - ZOOM_STEP, 1);
+      if (next === 1) setPan({ x: 0, y: 0 });
+      return next;
+    });
+  const handleZoomReset = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  const handlePointerDown = (e) => {
+    if (zoom === 1) return;
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+  };
+  const handlePointerMove = (e) => {
+    if (!isDragging) return;
+    setPan({
+      x: e.clientX - dragStart.current.x,
+      y: e.clientY - dragStart.current.y,
+    });
+  };
+  const handlePointerUp = () => setIsDragging(false);
+
+  const patternInfo = resultIsCurrent
+    ? visualResult?.detail?.pattern_era_color
+    : null;
+  const minAgreement = patternInfo?.min_agreement_used ?? 2;
+  const visiblePatterns = (patternInfo?.patterns || []).filter(
+    (p) => (p.agreement_count ?? 0) >= minAgreement && p.decision !== "판정보류",
+  );
+
+  const eraComparison = resultIsCurrent
+    ? compareEra(artifactInfo.period, visualResult?.detail?.era?.prediction)
+    : null;
+
+  const sections = resultIsCurrent
+    ? parseInspectionSections(visualResult.inspection_text)
+    : [];
+
+  const statusLabel =
+    status === "loading"
+      ? "분석 중"
+      : status === "done"
+        ? "AI 분석 완료"
+        : "AI 분석 초안";
 
   return (
     <div className="visual-page">
@@ -66,9 +253,9 @@ function VisualPage() {
           <div>
             <span className="visual-eyebrow">INDEPENDENT VISUAL MODULE</span>
             <h1 className="visual-title">육안 상태 조사</h1>
-            <p>표면 손상과 오염 상태를 확인하고 전문가 검토를 완료합니다.</p>
+            <p>사진 한 장으로 형태·유약·시대·문양을 함께 분석합니다.</p>
           </div>
-          <span className="visual-status">AI 분석 초안</span>
+          <span className="visual-status">{statusLabel}</span>
         </header>
 
         <section className="visual-artifact-summary">
@@ -92,6 +279,145 @@ function VisualPage() {
           </div>
         </section>
 
+        {artifactInfo.image && (
+          <section className="photo-card">
+            <div className="photo-toolbar">
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                disabled={zoom === 1}
+                aria-label="축소"
+              >
+                −
+              </button>
+              <span className="photo-zoom-level">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                disabled={zoom === ZOOM_MAX}
+                aria-label="확대"
+              >
+                ＋
+              </button>
+              {zoom > 1 && (
+                <button
+                  type="button"
+                  className="photo-zoom-reset"
+                  onClick={handleZoomReset}
+                >
+                  원래 크기
+                </button>
+              )}
+            </div>
+            <div
+              className="photo-frame"
+              onMouseDown={handlePointerDown}
+              onMouseMove={handlePointerMove}
+              onMouseUp={handlePointerUp}
+              onMouseLeave={handlePointerUp}
+              style={{
+                cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default",
+              }}
+            >
+              <div
+                className="photo-zoom-layer"
+                style={{
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                  transition: isDragging ? "none" : "transform 0.15s ease",
+                }}
+              >
+                <img
+                  ref={imgRef}
+                  src={artifactInfo.image}
+                  alt="등록한 유물 사진"
+                  onLoad={handleImageLoad}
+                  draggable={false}
+                />
+                {status === "loading" && (
+                  <div className="photo-loading-overlay">
+                    <span className="spinner" aria-hidden="true" />
+                    <p>AI가 분석 중이에요…</p>
+                  </div>
+                )}
+                {imageSize && (
+                  <svg
+                    className="pattern-svg"
+                    viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    {(() => {
+                      const scale = Math.max(imageSize.width, imageSize.height);
+                      const strokeWidth = Math.max(scale / 350, 2);
+                      const fontSize = Math.max(scale / 45, 16);
+
+                      return visiblePatterns.map((pattern, idx) => {
+                        const box = pattern.bbox_percent;
+                        if (!box) return null;
+                        const x = (box.x1 / 100) * imageSize.width;
+                        const y = (box.y1 / 100) * imageSize.height;
+                        const w = ((box.x2 - box.x1) / 100) * imageSize.width;
+                        const h = ((box.y2 - box.y1) / 100) * imageSize.height;
+                        const label =
+                          pattern.display_name || pattern.pattern_name;
+                        const labelY = Math.max(y - fontSize * 0.4, fontSize);
+
+                        return (
+                          <g key={pattern.key || idx}>
+                            <rect
+                              x={x}
+                              y={y}
+                              width={w}
+                              height={h}
+                              className="pattern-rect"
+                              style={{ strokeWidth }}
+                            />
+                            <text
+                              x={x}
+                              y={labelY}
+                              className="pattern-label-bg"
+                              style={{ fontSize, strokeWidth: fontSize / 5 }}
+                            >
+                              {label}
+                            </text>
+                            <text
+                              x={x}
+                              y={labelY}
+                              className="pattern-label"
+                              style={{ fontSize }}
+                            >
+                              {label}
+                            </text>
+                          </g>
+                        );
+                      });
+                    })()}
+                  </svg>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {status === "unsupported" && (
+          <section className="visual-notice">
+            <p>
+              현재는 연질토기·경질토기(도자기류)만 AI 육안조사를 지원합니다.
+              다른 재질은 준비 중입니다.
+            </p>
+          </section>
+        )}
+
+        {status === "error" && (
+          <section className="visual-notice visual-notice--error">
+            <p>{errorMessage}</p>
+            <button className="retry-btn" onClick={handleRetry}>
+              다시 시도
+            </button>
+          </section>
+        )}
+
         <div className="visual-result-layout">
           <section className="result-card">
             <div className="visual-section-heading">
@@ -99,23 +425,136 @@ function VisualPage() {
                 <span>ANALYSIS 01</span>
                 <h2>AI 분석 결과</h2>
               </div>
-              <small>3개 항목</small>
+              {visualResult?.human_review_recommended && (
+                <small className="review-badge">⚠ 전문가 검토 권장</small>
+              )}
             </div>
 
-            <div className="result-item">
-              <span className="result-label">표면 균열</span>
-              <span className="result-value">경미</span>
-            </div>
+            {eraComparison && (
+              <div
+                className={`era-compare ${
+                  eraComparison.match ? "match" : "mismatch"
+                }`}
+              >
+                <span>등록 시대: {artifactInfo.period}</span>
+                <span>→</span>
+                <span>
+                  AI 재분석: {visualResult.detail.era.prediction}
+                  {typeof visualResult.detail.era.score === "number" &&
+                    ` (${Math.round(visualResult.detail.era.score * 100)}%)`}
+                </span>
+                <span className="era-compare-tag">
+                  {eraComparison.match ? "일치" : "불일치 · 검토 권장"}
+                </span>
+              </div>
+            )}
 
-            <div className="result-item">
-              <span className="result-label">오염도</span>
-              <span className="result-value">보통</span>
-            </div>
-
-            <div className="result-item">
-              <span className="result-label">결손 여부</span>
-              <span className="result-value">없음</span>
-            </div>
+            {resultIsCurrent ? (
+              <div className="inspection-sections">
+                {sections.map((section, idx) => (
+                  <div className="inspection-section" key={idx}>
+                    {section.title && (
+                      <h3 className="visual-result-heading">
+                        {section.title}
+                        {section.caveat && (
+                          <span
+                            className="caveat-icon"
+                            data-tooltip={section.caveat}
+                          >
+                            !
+                          </span>
+                        )}
+                      </h3>
+                    )}
+                    <p className="section-body">{section.body}</p>
+                  </div>
+                ))}
+              </div>
+            ) : status === "loading" ? (
+              <div className="pottery-loading">
+                <div className="pottery-track">
+                  <div className="pottery-runner">
+                    <div className="pottery-flip">
+                      <div className="pottery-bounce">
+                        <svg
+                          viewBox="0 0 60 60"
+                          className="pottery-figure"
+                          aria-hidden="true"
+                          focusable="false"
+                        >
+                          <rect x="23" y="6" width="14" height="5" rx="2" fill="#c2760f" />
+                          <rect x="25" y="10" width="10" height="9" rx="3" fill="#c2760f" />
+                          <ellipse cx="30" cy="30" rx="14" ry="16" fill="#c2760f" />
+                          <ellipse
+                            cx="24"
+                            cy="22"
+                            rx="3.5"
+                            ry="5"
+                            fill="#ffffff"
+                            opacity="0.35"
+                          />
+                          <circle cx="20" cy="32" r="2.6" fill="#f4a4a4" opacity="0.7" />
+                          <circle cx="40" cy="32" r="2.6" fill="#f4a4a4" opacity="0.7" />
+                          <circle cx="24" cy="27" r="2.6" fill="#2b1608" />
+                          <circle cx="36" cy="27" r="2.6" fill="#2b1608" />
+                          <circle cx="24.8" cy="26.2" r="0.8" fill="#ffffff" />
+                          <circle cx="36.8" cy="26.2" r="0.8" fill="#ffffff" />
+                          <path
+                            d="M27 33 Q30 35.5 33 33"
+                            stroke="#2b1608"
+                            strokeWidth="1.4"
+                            fill="none"
+                            strokeLinecap="round"
+                          />
+                          <rect
+                            className="pottery-arm pottery-arm-left"
+                            x="14"
+                            y="27"
+                            width="5"
+                            height="10"
+                            rx="2.5"
+                            fill="#c2760f"
+                          />
+                          <rect
+                            className="pottery-arm pottery-arm-right"
+                            x="41"
+                            y="27"
+                            width="5"
+                            height="10"
+                            rx="2.5"
+                            fill="#c2760f"
+                          />
+                          <rect
+                            className="pottery-leg pottery-leg-left"
+                            x="22"
+                            y="42"
+                            width="5"
+                            height="12"
+                            rx="2.5"
+                            fill="#92400e"
+                          />
+                          <rect
+                            className="pottery-leg pottery-leg-right"
+                            x="33"
+                            y="42"
+                            width="5"
+                            height="12"
+                            rx="2.5"
+                            fill="#92400e"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p className="status-note">
+                  AI가 형태·유약·시대·문양을 하나씩 살펴보고 있어요. 문양까지
+                  확인하는 경우 최대 1분 정도 걸릴 수 있어요.
+                </p>
+              </div>
+            ) : (
+              <p className="status-note">아직 분석 결과가 없습니다.</p>
+            )}
           </section>
 
           <aside className="visual-review-card">
@@ -126,16 +565,20 @@ function VisualPage() {
               확인한 뒤 조사 결과를 확정하세요.
             </p>
             <ul>
-              <li>균열의 위치와 진행 방향 확인</li>
-              <li>표면 이물질과 부식 생성물 구분</li>
-              <li>결손부 및 기존 보수 흔적 확인</li>
+              <li>문양명은 반복 분석 기준 후보이며 조사자 검토 필요</li>
+              <li>등록 시대와 AI 재분석이 다르면 재확인 권장</li>
+              <li>단일 사진 기준으로 뒷면·내부 결손은 확인 불가</li>
             </ul>
           </aside>
         </div>
 
         <footer className="complete-area">
           <p>완료하면 현재 유물의 육안 조사 상태가 저장됩니다.</p>
-          <button className="complete-btn" onClick={handleComplete}>
+          <button
+            className="complete-btn"
+            onClick={handleComplete}
+            disabled={status === "loading"}
+          >
             육안 조사 완료
           </button>
         </footer>
