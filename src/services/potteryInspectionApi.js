@@ -1,15 +1,22 @@
 /**
  * 도자기 육안조사 AI 서비스 호출.
  *
- * xrayApi.js와 같은 원칙을 따른다 - 브라우저는 같은 오리진(프록시)으로
- * 보내므로 CORS 설정이 필요 없고, 개발 중에는 vite.config.js의 프록시가
- * /pottery-inspection을 8080(Spring)으로 넘긴다.
+ * VITE_API_BASE_URL을 절대 주소로 사용한다 (api.js / xrayApi.js와 같은 규칙).
+ * 이전에는 dev 서버 proxy(vite.config.js)에 기대는 상대경로였는데, 배포된
+ * 백엔드 주소로 직접 요청을 보내려면 절대 주소가 필요하고, 그러려면
+ * 백엔드의 CORS 허용 목록에 프론트 origin이 등록되어 있어야 한다.
  *
  * axios 대신 fetch를 쓴 이유: 공용 api.js 인스턴스는 Content-Type:
  * application/json이 기본이라 파일 업로드(FormData)와 안 맞는다. fetch는
  * body가 FormData면 boundary를 포함한 올바른 Content-Type을 브라우저가
  * 알아서 붙여주므로 이 문제 자체가 생기지 않는다.
  */
+
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_BASE ||
+  "http://localhost:8080"
+).replace(/\/+$/, "");
 
 /**
  * Mock 모드 여부. 백엔드/AI 서버 없이 화면만 확인할 때 쓴다.
@@ -77,7 +84,7 @@ export async function inspectPottery(
     use_vlm_pattern: String(useVlmPattern),
   });
 
-  const response = await fetch(`/pottery-inspection?${params}`, {
+  const response = await fetch(`${API_BASE}/pottery-inspection?${params}`, {
     method: "POST",
     body: formData,
   });
