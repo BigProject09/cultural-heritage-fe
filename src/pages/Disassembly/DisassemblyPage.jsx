@@ -175,8 +175,11 @@ function DisassemblyPage() {
 
               {/* ② 해체 도구 선택 */}
               <div
-                className="task-card"
-                onClick={() => navigate("/disassembly-tool")}
+                className={`task-card${!completed.checklist ? " locked" : ""}`}
+                onClick={() => {
+                  if (!completed.checklist) return;
+                  navigate("/disassembly-tool");
+                }}
               >
                 <div className="task-icon">
                   {savingSteps.has("tool") ? (
@@ -199,8 +202,11 @@ function DisassemblyPage() {
 
               {/* ③ 해체 방법 선택 */}
               <div
-                className="task-card"
-                onClick={() => navigate("/disassembly-method")}
+                className={`task-card${!completed.tool ? " locked" : ""}`}
+                onClick={() => {
+                  if (!completed.tool) return;
+                  navigate("/disassembly-method");
+                }}
               >
                 <div className="task-icon">
                   {savingSteps.has("method") ? (

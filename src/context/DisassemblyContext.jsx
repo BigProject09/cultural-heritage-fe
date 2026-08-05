@@ -113,8 +113,12 @@ const [bondingTempAnalysis, setBondingTempAnalysis] =
 const [restorationMaterial, setRestorationMaterial] =
   useState(null);
 
-// 복원 단계별 안내
+// 복원 단계별 안내 (충전 시공)
 const [restorationGuide, setRestorationGuide] =
+  useState(null);
+
+// 복원 단계별 안내 (마감처리: 연마 → 채색 → 광택)
+const [restorationFinishingGuide, setRestorationFinishingGuide] =
   useState(null);
 
 // 복원 - 사용자가 실제로 선택한 복원제 (보고서용)
@@ -151,6 +155,7 @@ const [restorationChoice, setRestorationChoice] =
     // 복원
       restorationMethod: false,
       restorationMaterial: false,
+      restorationFinishing: false,
       restorationWork: false,
       restorationPost: false,
 
@@ -215,6 +220,7 @@ const [restorationChoice, setRestorationChoice] =
   setBondingTempAnalysis(null);
   setRestorationMaterial(null);
   setRestorationGuide(null);
+  setRestorationFinishingGuide(null);
   setRestorationChoice({ material: "" });
   setSavingSteps(new Set());
 
@@ -246,6 +252,7 @@ const [restorationChoice, setRestorationChoice] =
      // 복원
       restorationMaterial: false,
       restorationMethod: false,
+      restorationFinishing: false,
       restorationPost: false,
 
     });
@@ -331,6 +338,9 @@ const [restorationChoice, setRestorationChoice] =
 
       restorationGuide,
       setRestorationGuide,
+
+      restorationFinishingGuide,
+      setRestorationFinishingGuide,
 
       restorationChoice,
       setRestorationChoice,

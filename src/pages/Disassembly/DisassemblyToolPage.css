@@ -2,7 +2,7 @@
 
 @layer components {
 .tool-page {
-    @apply max-w-[1400px] box-border mx-auto my-0 pt-[50px] pb-20 px-[70px];
+    @apply max-w-[1400px] box-border mx-auto my-0 pt-[50px] pb-20 px-[48px];
 }
 
 /* =========================
@@ -35,21 +35,27 @@
    도구 목록
 ========================= */
 .tool-list {
-    @apply grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6;
+    @apply flex flex-col gap-5;
 }
 .tool-card {
-    @apply bg-white border transition-all duration-[0.2s] p-6 rounded-2xl border-2 border-solid hover:-translate-y-[3px] hover:border-guide-primary;
+    @apply flex flex-col gap-1 bg-vora-surface border transition-colors duration-200 py-3.5 px-6 rounded-2xl border-vora-line border-solid cursor-pointer hover:border-vora-bronze;
 }
 .tool-card.selected {
-    @apply [background:#f5f9ff] border-guide-primary;
+    @apply bg-vora-paper border-vora-bronze border-[1.5px];
+}
+.tool-card-header {
+    @apply flex items-center gap-3;
+}
+.tool-card-radio {
+    @apply w-[18px] h-[18px] rounded-full border-2 border-solid border-vora-line shrink-0 transition-colors duration-200;
+}
+.tool-card.selected .tool-card-radio {
+    @apply border-vora-bronze bg-vora-bronze;
 }
 .tool-card h2 {
-    @apply text-2xl text-gray-800 mt-0 mb-4 mx-0;
+    @apply text-lg font-semibold text-vora-ink m-0;
 }
 .tool-card p {
-    @apply text-gray-500 leading-[1.6] mb-6;
-}
-.select-btn {
-    @apply w-full h-[46px] bg-guide-primary text-white text-base font-semibold cursor-pointer transition-all duration-200 rounded-[10px] border-0 hover:[background:#2458c8];
+    @apply text-sm text-vora-muted leading-[1.5] m-0 pl-[30px] line-clamp-2;
 }
 }
