@@ -195,28 +195,36 @@ function FlowRecommendationPage() {
           ))}
         </div>
 
-        {/* 추천 Flow : 발표용 임시 하드코딩 (AI_RECOMMENDED_FLOW 참고) */}
-        <div className="flow-box">
-          <h2>추천 Flow</h2>
-
-          {aiFlow.map((step, index) => (
-            <div key={step.id} className="flow-step">
-              <div className="ai-step">{step.name}</div>
-
-              {index !== aiFlow.length - 1 && <div className="arrow">↓</div>}
-            </div>
-          ))}
-        </div>
       </div>
 
       {loading && (
         <div className="analyzing-overlay">
           <div className="analyzing-box">
-            <p>Flow 추천 중...</p>
+            <svg
+              className="pottery-loader"
+              viewBox="0 0 100 120"
+              role="img"
+              aria-label="복원 진행 중"
+            >
+              <path
+                className="pottery-loader-body"
+                d="M50 8 C36 8 31 22 33 32 C21 38 15 58 19 78 C23 99 38 112 50 112 C62 112 77 99 81 78 C85 58 79 38 67 32 C69 22 64 8 50 8 Z"
+              />
 
-            <div className="analyzing-bar-track">
-              <div className="analyzing-bar-fill" />
-            </div>
+              <path
+                className="pottery-loader-crack pottery-loader-crack-1"
+                d="M38 30 L46 55 L37 68 L47 90"
+                pathLength="1"
+              />
+
+              <path
+                className="pottery-loader-crack pottery-loader-crack-2"
+                d="M66 34 L58 52 L67 66 L56 86"
+                pathLength="1"
+              />
+            </svg>
+
+            <p>복원 시작</p>
           </div>
         </div>
       )}

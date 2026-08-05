@@ -51,7 +51,9 @@ function RestorationPage() {
 
   // 작업 후 기록은 사용자 선택 사항이라 완료 조건에서 제외
   const allCompleted =
-    completed.restorationMaterial && completed.restorationMethod;
+    completed.restorationMaterial &&
+    completed.restorationMethod &&
+    completed.restorationFinishing;
 
   const handleAddPhoto = () => {
     if (!photoUrl.trim()) return;
@@ -167,8 +169,13 @@ function RestorationPage() {
 
               {/* ② 단계별 복원 작업 */}
               <div
-                className="task-card"
-                onClick={() => navigate("/restoration-method")}
+                className={`task-card${
+                  !completed.restorationMaterial ? " locked" : ""
+                }`}
+                onClick={() => {
+                  if (!completed.restorationMaterial) return;
+                  navigate("/restoration-method");
+                }}
               >
                 <div className="task-icon">
                   {savingSteps.has("restorationMethod") ? (
@@ -184,6 +191,35 @@ function RestorationPage() {
                   <h2>복원</h2>
 
                   <p>AI가 추천한 복원 절차를 확인하고 단계별 작업을 수행합니다.</p>
+                </div>
+
+                <div className="task-arrow">→</div>
+              </div>
+
+              {/* ③ 마감처리 */}
+              <div
+                className={`task-card${
+                  !completed.restorationMethod ? " locked" : ""
+                }`}
+                onClick={() => {
+                  if (!completed.restorationMethod) return;
+                  navigate("/restoration-finishing");
+                }}
+              >
+                <div className="task-icon">
+                  {savingSteps.has("restorationFinishing") ? (
+                    <span className="task-icon-spinner" />
+                  ) : completed.restorationFinishing ? (
+                    "✔"
+                  ) : (
+                    "③"
+                  )}
+                </div>
+
+                <div className="task-content">
+                  <h2>마감처리</h2>
+
+                  <p>AI가 추천한 연마·채색·광택 절차를 확인하고 단계별 작업을 수행합니다.</p>
                 </div>
 
                 <div className="task-arrow">→</div>

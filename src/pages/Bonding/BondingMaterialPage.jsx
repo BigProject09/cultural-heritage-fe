@@ -7,13 +7,23 @@ import { applyInterrupt } from "../../utils/applyInterrupt";
 import "./BondingMaterialPage.css";
 
 const ADHESIVE_OPTIONS = [
-  "Paraloid B-72",
-  "Cemedine C",
-  "Araldite rapid",
-  "Cyaonacrylate",
-  "poly urethane",
-  "Loctite 401",
+  { name: "Paraloid B-72", image: "/images/adhesives/paraloid-b72.jpg" },
+  { name: "Cemedine C", image: "/images/adhesives/cemedine-c.jpg" },
+  { name: "Araldite rapid", image: "/images/adhesives/araldite-rapid.jpg" },
+  { name: "Cyanoacrylate", image: "/images/adhesives/cyanoacrylate.jpg" },
+  { name: "poly urethane", image: "/images/adhesives/poly-urethane.jpg" },
+  { name: "Loctite 401", image: "/images/adhesives/loctite-401.jpg" },
 ];
+
+function AdhesiveThumbnail({ src, alt }) {
+  const [errored, setErrored] = useState(false);
+
+  if (errored) {
+    return <div className="material-image-placeholder">사진 준비 중</div>;
+  }
+
+  return <img src={src} alt={alt} onError={() => setErrored(true)} />;
+}
 
 function BondingMaterialPage() {
   const navigate = useNavigate();
@@ -24,6 +34,10 @@ function BondingMaterialPage() {
   // AI 추천값을 드롭다운 초기값으로 사용 (사용자가 이후 자유롭게 변경 가능)
   const [adhesive, setAdhesive] = useState(
     () => bondingAdhesive?.recommended_adhesive || "",
+  );
+
+  const selectedOption = ADHESIVE_OPTIONS.find(
+    (option) => option.name === adhesive,
   );
 
   const handleComplete = () => {
@@ -84,42 +98,44 @@ function BondingMaterialPage() {
         </div>
 
         <div className="material-card">
-          <div className="material-title">
-            <span className="folder-icon">📁</span>
+          <div className="material-layout">
+            <div className="material-image-col">
+              <div className="material-image-box">
+                <AdhesiveThumbnail
+                  key={adhesive}
+                  src={selectedOption?.image}
+                  alt={adhesive}
+                />
+              </div>
 
-            <span>{bondingAdhesive.recommended_adhesive}</span>
+              <div className="material-select-item">
+                <label>접합제</label>
 
-            <span className="arrow">▶</span>
-          </div>
+                <select
+                  value={adhesive}
+                  onChange={(e) => setAdhesive(e.target.value)}
+                >
+                  {ADHESIVE_OPTIONS.map((option) => (
+                    <option key={option.name} value={option.name}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-          <hr />
+            <div className="material-info-col">
+              <p className="material-description">
+                {bondingAdhesive.reason}
+              </p>
 
-          <p className="material-description">
-            {bondingAdhesive.reason}
-          </p>
-
-          {bondingAdhesive.precautions?.length > 0 && (
-            <ul className="material-precautions">
-              {bondingAdhesive.precautions.map((precaution) => (
-                <li key={precaution}>⚠ {precaution}</li>
-              ))}
-            </ul>
-          )}
-
-          <div className="material-select-group">
-            <div className="material-select-item">
-              <label>접합제</label>
-
-              <select
-                value={adhesive}
-                onChange={(e) => setAdhesive(e.target.value)}
-              >
-                {ADHESIVE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              {bondingAdhesive.precautions?.length > 0 && (
+                <ul className="material-precautions">
+                  {bondingAdhesive.precautions.map((precaution) => (
+                    <li key={precaution}>⚠ {precaution}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>

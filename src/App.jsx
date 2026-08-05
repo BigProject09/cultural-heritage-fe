@@ -159,6 +159,17 @@ function App() {
               element={<RestorationMethodPage />}
             />
             <Route
+              path="guide/restoration/finishing"
+              element={
+                <RestorationMethodPage
+                  title="마감처리"
+                  guideField="restorationFinishingGuide"
+                  completedKey="restorationFinishing"
+                  backPath="/restoration"
+                />
+              }
+            />
+            <Route
               path="guide/restoration/material"
               element={<RestorationMaterialPage />}
             />
@@ -333,6 +344,13 @@ function App() {
             path="/restoration-material"
             element={
               <LegacyArtifactRedirect stepKey="restoration/material" />
+            }
+          />
+
+          <Route
+            path="/restoration-finishing"
+            element={
+              <LegacyArtifactRedirect stepKey="restoration/finishing" />
             }
           />
 

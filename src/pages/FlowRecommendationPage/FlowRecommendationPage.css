@@ -34,6 +34,39 @@
     @apply font-semibold mb-4;
 }
 
+/* 플로우 추천 로딩 전용 도자기 복원 애니메이션 */
+.pottery-loader {
+
+    display: block;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 16px;
+}
+
+.pottery-loader-body {
+
+    fill: var(--color-vora-paper);
+    stroke: var(--color-vora-bronze-dark);
+    stroke-width: 2.5;
+}
+
+.pottery-loader-crack {
+
+    fill: none;
+    stroke: var(--color-vora-surface);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    animation: pottery-mend 1.8s ease-in-out infinite;
+}
+
+.pottery-loader-crack-2 {
+
+    animation-delay: 0.15s;
+}
+
 .analyzing-bar-track {
 
     @apply w-full h-2 overflow-hidden rounded [background:#eef1f6];
@@ -157,6 +190,18 @@
   }
   100% {
     transform: translateX(250%);
+  }
+}
+
+@keyframes pottery-mend {
+  0%, 35% {
+    stroke-dashoffset: 0;
+  }
+  65%, 90% {
+    stroke-dashoffset: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
   }
 }
 }

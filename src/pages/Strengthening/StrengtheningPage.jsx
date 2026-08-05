@@ -205,8 +205,13 @@ function StrengtheningPage() {
               {/* 2. 습윤 테스트 */}
 
               <div
-                className="task-card"
-                onClick={() => navigate("/strengthening-wetting")}
+                className={`task-card${
+                  !completed.strengtheningMaterial ? " locked" : ""
+                }`}
+                onClick={() => {
+                  if (!completed.strengtheningMaterial) return;
+                  navigate("/strengthening-wetting");
+                }}
               >
 
                 <div className="task-icon">
@@ -246,8 +251,13 @@ function StrengtheningPage() {
               {/* 3. 단계별 강화 작업 */}
 
               <div
-                className="task-card"
-                onClick={() => navigate("/strengthening-method")}
+                className={`task-card${
+                  !completed.strengtheningWetting ? " locked" : ""
+                }`}
+                onClick={() => {
+                  if (!completed.strengtheningWetting) return;
+                  navigate("/strengthening-method");
+                }}
               >
 
                 <div className="task-icon">
