@@ -48,16 +48,19 @@ function VisualPage() {
   const [artifactInfo, setArtifactInfo] = useState(() => readStoredArtifactInfo());
 
   // idle | loading | done | error | unsupported
-  const [status, setStatus] = useState("idle");
+  const [requestState, setRequestState] = useState({
+    artifactId: "",
+    status: "idle",
+  });
   const [errorMessage, setErrorMessage] = useState("");
   const [imageSize, setImageSize] = useState(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
-  // React StrictMode(개발 모드)가 useEffect를 두 번 실행해도 실제 유료
-  // VLM 호출은 한 번만 나가게 막는 가드.
-  const hasStartedRef = useRef(false);
+  // React StrictMode(개발 모드) 또는 재렌더링으로 같은 유물의 분석 요청이
+  // 중복 실행되지 않도록, 마지막으로 요청을 시작한 유물 ID를 저장한다.
+  const startedArtifactIdRef = useRef("");
 
   const isPottery = isPotteryMaterial(artifactInfo.material);
   const imgRef = useRef(null);
@@ -68,6 +71,23 @@ function VisualPage() {
   // 알 수 있는 값이라서다.
   const resultIsCurrent =
     !!visualResult && visualResult.__artifactId === artifactId;
+
+  // 현재 유물과 관계없는 이전 요청 상태가 잠깐 노출되지 않도록,
+  // 요청 상태는 artifactId가 일치할 때만 사용한다.
+  const currentRequestStatus =
+    requestState.artifactId === artifactId
+      ? requestState.status
+      : "idle";
+
+  // unsupported / done은 별도의 state로 저장하지 않고 현재 데이터에서 계산한다.
+  // 실제 요청 과정에서만 loading / error 상태를 저장한다.
+  const status = !artifactInfo?.image
+    ? currentRequestStatus
+    : !isPottery
+      ? "unsupported"
+      : resultIsCurrent
+        ? "done"
+        : currentRequestStatus;
 
   // 워크스페이스에서 유물 정보(사진·재질·시대 등)를 가져온다.
   useEffect(() => {
@@ -87,48 +107,64 @@ function VisualPage() {
     return () => controller.abort();
   }, [artifactId]);
 
-  // artifactId가 바뀌면(같은 컴포넌트 인스턴스로 다른 유물 페이지로
-  // 넘어온 경우) 이전 유물 기준으로 이미 시작했다는 표시를 초기화한다.
-  useEffect(() => {
-    hasStartedRef.current = false;
-    setStatus("idle");
-  }, [artifactId]);
-
   const runInspection = async () => {
-    setStatus("loading");
+    setRequestState({
+      artifactId,
+      status: "loading",
+    });
     setErrorMessage("");
+
     try {
       // 워크스페이스가 사진을 data URL로 내려주므로, 다시 업로드 가능한
       // 형태(Blob)로 복원해서 보낸다.
-      const blob = await fetch(artifactInfo.image).then((res) => res.blob());
+      const blob = await fetch(artifactInfo.image).then((res) => {
+        if (!res.ok) {
+          throw new Error("유물 이미지를 불러오지 못했습니다.");
+        }
+        return res.blob();
+      });
+
       const data = await inspectPottery(blob);
       setVisualResult({ ...data, __artifactId: artifactId });
-      setStatus("done");
+
+      setRequestState({
+        artifactId,
+        status: "done",
+      });
     } catch (err) {
       setErrorMessage(
         err.message || "분석 요청 중 오류가 발생했습니다. 다시 시도해주세요.",
       );
-      setStatus("error");
+
+      setRequestState({
+        artifactId,
+        status: "error",
+      });
     }
   };
 
   useEffect(() => {
-    if (hasStartedRef.current) return;
     // 워크스페이스 조회가 끝나서 사진이 도착할 때까지 기다린다.
     if (!artifactInfo?.image) return;
-    hasStartedRef.current = true;
 
-    if (!isPottery) {
-      setStatus("unsupported");
-      return;
-    }
-    if (resultIsCurrent) {
-      setStatus("done");
-      return;
-    }
-    runInspection();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artifactInfo]);
+    // 도자기가 아니면 자동 분석하지 않는다.
+    // unsupported 상태는 현재 재질에서 파생해 계산한다.
+    if (!isPottery) return;
+
+    // 현재 유물의 분석 결과가 이미 있으면 다시 호출하지 않는다.
+    if (resultIsCurrent) return;
+
+    // StrictMode 또는 재렌더링으로 같은 유물 요청이 중복되는 것을 막는다.
+    if (startedArtifactIdRef.current === artifactId) return;
+
+    startedArtifactIdRef.current = artifactId;
+    void runInspection();
+  }, [artifactId, artifactInfo?.image, isPottery, resultIsCurrent]);
+
+  const handleRetry = () => {
+    startedArtifactIdRef.current = "";
+    void runInspection();
+  };
 
   const handleComplete = async () => {
     if (artifactId) {
@@ -376,7 +412,7 @@ function VisualPage() {
         {status === "error" && (
           <section className="visual-notice visual-notice--error">
             <p>{errorMessage}</p>
-            <button className="retry-btn" onClick={runInspection}>
+            <button className="retry-btn" onClick={handleRetry}>
               다시 시도
             </button>
           </section>
