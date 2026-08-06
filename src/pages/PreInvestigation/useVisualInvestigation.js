@@ -5,9 +5,11 @@ import {
   createVcaRun,
   deleteVcaImage,
   getVcaArtifact,
+  getVcaIntermediateResults,
   getVcaPdfJob,
   getVcaReport,
   isVcaMockMode,
+  runVcaPotteryInspection,
   uploadVcaImage,
 } from "../../services/vcaApi";
 
@@ -49,6 +51,7 @@ export function useVisualInvestigation(artifactId) {
   const [selectedRunId, setSelectedRunId] = useState("");
   const [report, setReport] = useState(null);
   const [reportRunId, setReportRunId] = useState("");
+  const [intermediateResults, setIntermediateResults] = useState(null);
   const [previewUrls, setPreviewUrls] = useState({});
   const [pdfJob, setPdfJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +62,7 @@ export function useVisualInvestigation(artifactId) {
     () => artifact?.runs?.find((run) => run.runId === selectedRunId) || null,
     [artifact, selectedRunId],
   );
+  const selectedRunStatus = selectedRun?.status;
   const uploadedImages = useMemo(
     () => (artifact?.uploadedImages || []).map((image) => {
       const previewUrl = previewUrls[image.imageId];
@@ -165,6 +169,7 @@ export function useVisualInvestigation(artifactId) {
       setArtifact(await getVcaArtifact(artifactId));
       setReport(null);
       setReportRunId("");
+      setIntermediateResults(null);
       setPdfJob(null);
       setNotice(`${uploaded.length}개 이미지를 등록했습니다.`);
     } catch (uploadError) {
@@ -180,6 +185,7 @@ export function useVisualInvestigation(artifactId) {
     try {
       await deleteVcaImage(artifactId, imageId);
       setArtifact((current) => ({ ...current, uploadedImages: current.uploadedImages.filter((image) => image.imageId !== imageId) }));
+      setIntermediateResults(null);
       setPreviewUrls((current) => {
         const next = { ...current };
         if (next[imageId]) URL.revokeObjectURL(next[imageId]);
@@ -198,11 +204,14 @@ export function useVisualInvestigation(artifactId) {
     setWorking("run");
     setNotice("");
     try {
-      const run = await createVcaRun(artifactId);
+      const run = await createVcaRun(artifactId, {
+        material: workspaceArtifact.material,
+      });
       setArtifact(await getVcaArtifact(artifactId));
       setSelectedRunId(run.runId);
       setReport(null);
       setReportRunId("");
+      setIntermediateResults(null);
       setPdfJob(null);
       setNotice("분석 작업을 접수했습니다. 진행 상태는 자동으로 갱신됩니다.");
     } catch (runError) {
@@ -269,6 +278,23 @@ export function useVisualInvestigation(artifactId) {
     return () => window.clearTimeout(timer);
   }, [loadReport, reportRunId, selectedRun]);
 
+  useEffect(() => {
+    if (selectedRunStatus !== "COMPLETED" || reportRunId !== selectedRunId) return undefined;
+
+    let isCurrent = true;
+    getVcaIntermediateResults(artifactId, selectedRunId)
+      .then((result) => {
+        if (isCurrent) setIntermediateResults(result);
+      })
+      .catch(() => {
+        if (isCurrent) setIntermediateResults(null);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [artifactId, reportRunId, selectedRunId, selectedRunStatus]);
+
   async function handlePdfJob() {
     if (!selectedRunId) return;
     setWorking("pdf");
@@ -286,10 +312,33 @@ export function useVisualInvestigation(artifactId) {
     }
   }
 
+  async function handlePotteryInspection() {
+    if (!selectedRunId) return;
+    setWorking("pottery");
+    setNotice("");
+    try {
+      const nextReport = await runVcaPotteryInspection(artifactId, selectedRunId, {
+        material: workspaceArtifact.material,
+      });
+      setReport(withPreviewReport(nextReport));
+      setReportRunId(selectedRunId);
+      setNotice(
+        nextReport.potteryInspectionStatus?.status === "FAILED"
+          ? "도자기 검사를 완료하지 못했습니다. 보고서는 유지되며 다시 시도할 수 있습니다."
+          : "도자기 검사 결과를 보고서에 반영했습니다.",
+      );
+    } catch (potteryError) {
+      setNotice(operationMessage(potteryError, "도자기 검사를 실행"));
+    } finally {
+      setWorking("");
+    }
+  }
+
   function selectRun(run) {
     setSelectedRunId(run.runId);
     setReport(null);
     setReportRunId("");
+    setIntermediateResults(null);
     setPdfJob(run.pdfJob || null);
   }
 
@@ -314,5 +363,7 @@ export function useVisualInvestigation(artifactId) {
     working,
     workspaceArtifact,
     handlePdfJob,
+    handlePotteryInspection,
+    intermediateResults,
   };
 }

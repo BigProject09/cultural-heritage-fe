@@ -66,6 +66,30 @@ function normalizeReport(report) {
   };
 }
 
+function normalizeIntermediateResults(results) {
+  return {
+    artifactId: results?.artifactId || "",
+    assessmentRunId: results?.assessmentRunId || results?.runId || "",
+    projectName: results?.projectName || "",
+    stages: (results?.stages || []).map((stage) => ({
+      stage: stage.stage || "",
+      displayName: stage.displayName || "",
+      items: (stage.items || []).map((item) => ({
+        relativePath: item.relativePath || "",
+        fileName: item.fileName || "",
+        contentType: item.contentType || "",
+        sizeBytes: item.sizeBytes,
+        preview: item.preview || "",
+      })),
+    })),
+  };
+}
+
+function isPotteryMaterial(material = "") {
+  const normalized = material.toLowerCase();
+  return normalized.includes("도자") || normalized.includes("pottery") || normalized.includes("ceramic");
+}
+
 function getMockArtifact(artifactId) {
   const key = String(artifactId || "artifact-demo-001");
   const existing = mockArtifacts.get(key);
@@ -235,6 +259,17 @@ export async function completeVcaImage(artifactId, imageId, sha256) {
 }
 
 export async function uploadVcaImage(artifactId, file) {
+  if (!USE_VCA_MOCK) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return normalizeImage(
+      await requestJson(`/${encodeURIComponent(artifactId)}/images`, {
+        method: "POST",
+        body: formData,
+      }),
+    );
+  }
+
   const sha256 = await calculateSha256(file);
   const presigned = await presignVcaImage(artifactId, file, sha256);
   const imageId = presigned.imageId || presigned.fileId;
@@ -260,7 +295,7 @@ export async function deleteVcaImage(artifactId, imageId) {
   return requestJson(`/${encodeURIComponent(artifactId)}/images/${encodeURIComponent(imageId)}`, { method: "DELETE" });
 }
 
-export async function createVcaRun(artifactId) {
+export async function createVcaRun(artifactId, { material = "" } = {}) {
   if (USE_VCA_MOCK) {
     await delay(250);
     const artifact = getMockArtifact(artifactId);
@@ -268,6 +303,7 @@ export async function createVcaRun(artifactId) {
       assessmentRunId: `run-mock-${Date.now()}`,
       artifactId,
       status: "QUEUED",
+      material,
       imageCount: artifact.uploadedImages.length,
       createdAt: new Date().toISOString(),
       completedAt: null,
@@ -278,7 +314,11 @@ export async function createVcaRun(artifactId) {
     artifact.status = "ANALYZING";
     return run;
   }
-  return normalizeRun(await requestJson(`/${encodeURIComponent(artifactId)}/runs`, { method: "POST" }));
+  const body = material ? JSON.stringify({ material }) : undefined;
+  return normalizeRun(await requestJson(`/${encodeURIComponent(artifactId)}/runs`, {
+    method: "POST",
+    ...(body ? { headers: { "Content-Type": "application/json" }, body } : {}),
+  }));
 }
 
 export async function getVcaReport(artifactId, assessmentRunId) {
@@ -301,11 +341,117 @@ export async function getVcaReport(artifactId, assessmentRunId) {
         findings: [{ title: "미세 균열 후보", category: "균열", severity: "관찰", description: "구연부에서 미세한 표면 균열 후보가 확인됩니다.", confidence: 0.82, imageId: artifact.uploadedImages[0]?.imageId }],
         recommendations: [{ title: "사광 재확인", priority: "보통", description: "균열 진행 방향을 사광 조명에서 재확인하세요." }],
         images: artifact.uploadedImages.slice(0, 2).map((image) => ({ ...image, downloadUrl: image.imageUrl })),
+        potteryInspectionStatus: isPotteryMaterial(run.material)
+          ? { applicable: true, status: "NOT_STARTED", retryable: true, failureMessage: null, lastAttemptedAt: null }
+          : null,
       }),
     };
   }
   const result = await requestJson(`/${encodeURIComponent(artifactId)}/runs/${encodeURIComponent(assessmentRunId)}/report`);
   return { ...result, run: result.run ? normalizeRun(result.run) : undefined, report: normalizeReport(result.report || result) };
+}
+
+export async function runVcaPotteryInspection(artifactId, assessmentRunId, { material = "" } = {}) {
+  if (USE_VCA_MOCK) {
+    await delay(350);
+    const artifact = getMockArtifact(artifactId);
+    const run = getMockRun(artifactId, assessmentRunId);
+    if (!run) throw new Error("Mock 분석 실행을 찾을 수 없습니다.");
+    if (run.status !== "COMPLETED") {
+      const error = new Error("분석 보고서가 준비된 뒤 도자기 검사를 실행할 수 있습니다.");
+      error.status = 409;
+      error.code = "NOT_READY";
+      throw error;
+    }
+    if (!isPotteryMaterial(material || run.material)) {
+      return normalizeReport({
+        reportId: `report-${assessmentRunId}`,
+        summary: { overallCondition: "안정", riskLevel: "낮음", headline: "국부 검토 필요", description: "표면 전반은 안정적입니다." },
+        findings: [],
+        recommendations: [],
+        images: artifact.uploadedImages.slice(0, 2).map((image) => ({ ...image, downloadUrl: image.imageUrl })),
+        potteryInspectionStatus: { applicable: false, status: "NOT_STARTED", retryable: false, failureMessage: null, lastAttemptedAt: null },
+      });
+    }
+    return normalizeReport({
+      reportId: `report-${assessmentRunId}`,
+      summary: { overallCondition: "안정", riskLevel: "낮음", headline: "국부 검토 필요", description: "표면 전반은 안정적이나 국부적인 오염과 미세 균열은 전문가 대조 검토가 필요합니다." },
+      findings: [{ title: "미세 균열 후보", category: "균열", severity: "관찰", description: "구연부에서 미세한 표면 균열 후보가 확인됩니다.", confidence: 0.82, imageId: artifact.uploadedImages[0]?.imageId }],
+      recommendations: [{ title: "사광 재확인", priority: "보통", description: "균열 진행 방향을 사광 조명에서 재확인하세요." }],
+      images: artifact.uploadedImages.slice(0, 2).map((image) => ({ ...image, downloadUrl: image.imageUrl })),
+      potteryInspection: {
+        moduleVersion: "pottery-mock-v1",
+        inspectionText: "도자기 표면과 문양 후보를 확인했습니다.",
+        summary: "도자기 보조 검사가 완료되었습니다.",
+        humanReviewRecommended: true,
+        detail: { pattern: "mock-pattern", confidence: 0.88 },
+      },
+      potteryInspectionStatus: { applicable: true, status: "COMPLETED", retryable: true, failureMessage: null, lastAttemptedAt: new Date().toISOString() },
+    });
+  }
+
+  const body = material ? JSON.stringify({ material }) : undefined;
+  const result = await requestJson(
+    `/${encodeURIComponent(artifactId)}/runs/${encodeURIComponent(assessmentRunId)}/pottery-inspection`,
+    {
+      method: "POST",
+      ...(body ? { headers: { "Content-Type": "application/json" }, body } : {}),
+    },
+  );
+  return normalizeReport(result.report || result);
+}
+
+export async function getVcaIntermediateResults(artifactId, assessmentRunId, { signal } = {}) {
+  if (USE_VCA_MOCK) {
+    const artifact = getMockArtifact(artifactId);
+    const run = getMockRun(artifactId, assessmentRunId);
+    if (!run) throw new Error("Mock 분석 실행을 찾을 수 없습니다.");
+    if (run.status !== "COMPLETED") {
+      const error = new Error("분석 중간 결과가 아직 준비되지 않았습니다.");
+      error.status = 409;
+      error.code = "NOT_READY";
+      throw error;
+    }
+    return normalizeIntermediateResults({
+      artifactId,
+      assessmentRunId,
+      projectName: artifact.displayName,
+      stages: [
+        {
+          stage: "INPUT_NORMALIZATION",
+          displayName: "입력 정규화",
+          items: [
+            {
+              relativePath: "01_input/manifest.json",
+              fileName: "manifest.json",
+              contentType: "application/json",
+              sizeBytes: 384,
+              preview: `{"artifactId":"${artifactId}","assessmentRunId":"${assessmentRunId}","imageCount":${run.imageCount}}`,
+            },
+          ],
+        },
+        {
+          stage: "SURFACE_ANALYSIS",
+          displayName: "표면 상태 분석",
+          items: [
+            {
+              relativePath: "02_surface-analysis/summary.txt",
+              fileName: "summary.txt",
+              contentType: "text/plain",
+              sizeBytes: 196,
+              preview: "표면 전반은 안정적입니다. 국부적인 오염과 미세 균열 후보는 전문가 대조 검토가 필요합니다.",
+            },
+          ],
+        },
+      ],
+    });
+  }
+  return normalizeIntermediateResults(
+    await requestJson(
+      `/${encodeURIComponent(artifactId)}/runs/${encodeURIComponent(assessmentRunId)}/intermediate-results`,
+      { signal },
+    ),
+  );
 }
 
 export async function createVcaPdfJob(artifactId, assessmentRunId) {
