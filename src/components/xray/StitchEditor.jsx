@@ -184,8 +184,13 @@ function buildPieces(fragments, canvasWidth, canvasHeight) {
     };
 
     return {
-      key: `${fragment.fileName ?? "unknown"}#${index}`,
+      key: `${fragment.fileName ?? "unknown"}#${fragment.index ?? index}`,
+      index: fragment.index ?? index,
       fileName: fragment.fileName,
+      originalSourceName: fragment.originalSourceName ?? fragment.fileName,
+      originalSourceIndex:
+        fragment.originalSourceIndex ?? fragment.sourceIndex ?? index,
+      subfragmentIndex: fragment.subfragmentIndex ?? 0,
       placementName: fragment.placementName,
       matched: Boolean(fragment.matched && props),
       unassignedReason: fragment.unassignedReason,
@@ -349,20 +354,32 @@ function StitchEditorCanvas({
 
     const corrected = pieces
       .filter((piece) => placements[piece.key])
-      .map((piece) => ({
-        fileName: piece.fileName,
-        placementName: piece.placementName,
-        cropBBoxXYWH: piece.cropRect
-          ? [
-              piece.cropRect.x,
-              piece.cropRect.y,
-              piece.cropRect.width,
-              piece.cropRect.height,
-            ]
-          : null,
-        transform: toTransformMatrix(placements[piece.key]),
-        adjusted: movedKeys.has(piece.key),
-      }));
+      .map((piece) => {
+        const placement = placements[piece.key];
+        const transform = toTransformMatrix(placement);
+        const width = piece.cropRect?.width ?? piece.size?.width ?? 1;
+        const height = piece.cropRect?.height ?? piece.size?.height ?? 1;
+        const localCenterX = (width - 1) / 2;
+        const localCenterY = (height - 1) / 2;
+        const centerX =
+          transform[0][0] * localCenterX +
+          transform[0][1] * localCenterY +
+          transform[0][2];
+        const centerY =
+          transform[1][0] * localCenterX +
+          transform[1][1] * localCenterY +
+          transform[1][2];
+
+        return {
+          index: piece.index,
+          originalSourceIndex: piece.originalSourceIndex,
+          originalSourceName: piece.originalSourceName,
+          subfragmentIndex: piece.subfragmentIndex,
+          centerX,
+          centerY,
+          rotationDeg: placement.rotation,
+        };
+      });
 
     onConfirm({ file, fragments: corrected, movedCount: movedKeys.size });
   }

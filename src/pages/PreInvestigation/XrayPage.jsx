@@ -18,9 +18,14 @@ import {
   createStitchJob,
   detectBatch,
   detectOne,
+  detectFinalAssembled,
+  detectFinalFragments,
+  downloadFinalStitchResult,
   downloadStitchResult,
   fetchStitchLayout,
   generateReport,
+  mapDefects,
+  saveFinalStitchLayout,
   waitForStitchJob,
 } from "../../services/xrayApi";
 
@@ -90,7 +95,7 @@ const WORKFLOW_STEPS = [
 const USE_MOCK = import.meta.env.VITE_USE_XRAY_MOCK === "true";
 
 /** 결합 작업이 진행 중인 상태들. 버튼 잠금과 진행 표시에 함께 쓴다. */
-const STITCH_BUSY = ["UPLOADING", "PENDING", "RUNNING"];
+const STITCH_BUSY = ["UPLOADING", "PENDING", "RUNNING", "FINALIZING"];
 
 /**
  * 결합 진행 단계.
@@ -102,8 +107,27 @@ const STITCH_STEPS = [
   { key: "UPLOADING", label: "업로드" },
   { key: "PENDING", label: "접수" },
   { key: "RUNNING", label: "결합" },
+  { key: "FINALIZING", label: "최종 확정" },
   { key: "COMPLETED", label: "완료" },
 ];
+
+const DEFECT_MAPPING_LABELS = {
+  CONFIRMED: "원본·결합본 모두 탐지",
+  ASSEMBLED_ONLY: "결합본에서만 탐지",
+  ASSEMBLY_ARTIFACT_SUSPECT: "결합 영향 의심",
+  SOURCE_ONLY_VISIBLE: "원본에서만 탐지 · 최종본에도 보임",
+  SOURCE_ONLY_PARTIALLY_VISIBLE: "원본에서만 탐지 · 최종본에 일부만 보임",
+  SOURCE_ONLY_NOT_VISIBLE: "원본에서만 탐지 · 최종본에서 보이지 않음",
+  MATCHED: "동일 결함으로 대응",
+  UNMATCHED: "대응 결함 없음",
+  AMBIGUOUS: "대응 불명확",
+  UNMAPPED_TO_LAYOUT: "최종 배치와 연결되지 않음",
+  UNMAPPED: "대응 정보 없음",
+};
+
+function defectMappingLabel(status) {
+  return DEFECT_MAPPING_LABELS[status] || status;
+}
 
 /**
  * 결함 분석 진행 단계.
@@ -114,6 +138,7 @@ const STITCH_STEPS = [
 const INSPECTION_STEPS = [
   { key: "ASSEMBLED", label: "결합본 분석" },
   { key: "FRAGMENTS", label: "조각 분석" },
+  { key: "MAPPING", label: "결함 대응" },
 ];
 
 function readStoredArtifactInfo() {
@@ -212,10 +237,60 @@ async function sourceToFile(source, index) {
  */
 function defaultNote(region) {
   if (region.analysisTarget === TARGET.ASSEMBLED) {
-    return `${region.position}에서 탐지된 검토 필요 영역. 결합 경계, 파손 간격, 보간 흔적 여부 확인 필요.`;
+    return `${region.position}에서 탐지된 검토 필요 영역. 결합 경계, 파손 간격, seam/겹침 영향 여부 확인 필요.`;
   }
 
   return `원본 조각의 ${region.position}에서 탐지된 검토 필요 영역. 결합 이전부터 존재한 특징인지 확인 필요.`;
+}
+
+function finalLayoutFragments(layout) {
+  return (layout?.fragments || []).map((fragment) => ({
+    index: fragment.index,
+    originalSourceIndex:
+      fragment.originalSourceIndex ?? fragment.sourceIndex ?? fragment.index,
+    originalSourceName:
+      fragment.originalSourceName ?? fragment.fileName ?? fragment.placementName,
+    subfragmentIndex: fragment.subfragmentIndex ?? 0,
+    centerX: fragment.centerX,
+    centerY: fragment.centerY,
+    rotationDeg: fragment.rotationDeg ?? 0,
+  }));
+}
+
+function mappingKey(sourceIndex, regionId) {
+  return `${sourceIndex}:${regionId}`;
+}
+
+// 백엔드/결합 엔진의 originalSourceIndex는 파일명 natural sort 순서다.
+// 프론트도 같은 순서로 원본 File을 정렬해 sourceIndex와 정확히 맞춘다.
+function compareNaturalFileNames(left, right) {
+  const parts = (value) => String(value || "").match(/\d+|\D+/g) || [];
+  const leftParts = parts(left);
+  const rightParts = parts(right);
+  const count = Math.min(leftParts.length, rightParts.length);
+
+  for (let index = 0; index < count; index += 1) {
+    const a = leftParts[index];
+    const b = rightParts[index];
+    const aNumber = /^\d+$/.test(a);
+    const bNumber = /^\d+$/.test(b);
+
+    if (aNumber && bNumber) {
+      const aValue = BigInt(a);
+      const bValue = BigInt(b);
+      if (aValue < bValue) return -1;
+      if (aValue > bValue) return 1;
+      if (a.length !== b.length) return a.length - b.length;
+      continue;
+    }
+
+    const aText = a.toLowerCase();
+    const bText = b.toLowerCase();
+    if (aText < bText) return -1;
+    if (aText > bText) return 1;
+  }
+
+  return leftParts.length - rightParts.length;
 }
 
 function UploadThumbnail({ file, index, disabled, onRemove }) {
@@ -343,7 +418,7 @@ export default function XrayPage() {
   // 결합 상태. STITCH_STEPS 의 key 와 FAILED, IDLE 을 갖는다.
   const [stitchStatus, setStitchStatus] = useState("IDLE");
   const [stitchMessage, setStitchMessage] = useState("");
-  const [, setStitchJobId] = useState("");
+  const [stitchJobId, setStitchJobId] = useState("");
 
   /**
    * 조각별 배치 정보.
@@ -368,8 +443,8 @@ export default function XrayPage() {
   const [health, setHealth] = useState(null);
   const [confidence, setConfidence] = useState(0.08);
   const [regions, setRegions] = useState([]);
+  const [, setDefectMapping] = useState(null);
   const [, setSummaries] = useState([]);
-  const [excludedRegions, setExcludedRegions] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [viewFile, setViewFile] = useState(null);
 
@@ -386,7 +461,6 @@ export default function XrayPage() {
   const [reportLoading, setReportLoading] = useState(false);
   const [reportStyle, setReportStyle] = useState("summary");
   const [isDragging, setIsDragging] = useState(false);
-  const [lastRemoved, setLastRemoved] = useState(null);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
 
   // AI 서비스 상태를 미리 확인해 두고 결함 분석 버튼 활성화에 쓴다
@@ -404,7 +478,7 @@ export default function XrayPage() {
   function resetInspectionResults() {
     setRegions([]);
     setSummaries([]);
-    setExcludedRegions([]);
+    setDefectMapping(null);
     setSelectedId(null);
     setViewFile(null);
     setInspectionLoading(false);
@@ -415,7 +489,6 @@ export default function XrayPage() {
     setReport("");
     setReportMeta(null);
     setReportLoading(false);
-    setLastRemoved(null);
     setShowCompleteConfirm(false);
   }
 
@@ -598,14 +671,55 @@ export default function XrayPage() {
    * 사람이 확인하고 넘기는 지점이다. AI 결합 결과를 그대로
    * 다음 단계로 흘리지 않는다.
    */
-  function confirmStitch() {
+  async function confirmStitch() {
     if (!assembledFile) return;
 
-    setWorkflow(WORKFLOW.INSPECTION);
-    setActiveStep(3);
-    setMaxReachedStep((current) => Math.max(current, 3));
-    setViewFile(assembledFile);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Mock은 서버 정본이 없으므로 현재 화면 결과를 그대로 확정한다.
+    if (USE_MOCK) {
+      setWorkflow(WORKFLOW.INSPECTION);
+      setActiveStep(3);
+      setMaxReachedStep((current) => Math.max(current, 3));
+      setViewFile(assembledFile);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (!stitchJobId) {
+      setStitchMessage("결합 작업 ID가 없습니다. 조각 결합을 다시 실행하세요.");
+      return;
+    }
+
+    const transforms = correctedFragments || finalLayoutFragments(stitchLayout);
+    if (!transforms.length) {
+      setStitchMessage("최종 배치 정보가 없습니다. 결합 결과를 다시 확인하세요.");
+      return;
+    }
+
+    try {
+      setStitchStatus("FINALIZING");
+      setStitchMessage("최종 배치를 저장하고 결합 이미지를 확정하고 있습니다.");
+
+      await saveFinalStitchLayout(stitchJobId, transforms);
+
+      // Konva 캔버스 export가 아니라 서버가 동일 transform으로 원본 X-ray를
+      // 다시 렌더링한 파일을 이후 결함분석의 유일한 결합본으로 사용한다.
+      const finalFile = await downloadFinalStitchResult(
+        stitchJobId,
+        `assembled-${artifactId}-final.png`,
+      );
+      setAssembledFile(finalFile);
+      setViewFile(finalFile);
+      setStitchStatus("COMPLETED");
+      setStitchMessage("최종 결합 결과가 확정되었습니다.");
+
+      setWorkflow(WORKFLOW.INSPECTION);
+      setActiveStep(3);
+      setMaxReachedStep((current) => Math.max(current, 3));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      setStitchStatus("COMPLETED");
+      setStitchMessage(`최종 결합 확정 실패: ${error.message}`);
+    }
   }
 
   /**
@@ -622,6 +736,10 @@ export default function XrayPage() {
       setInspectionMessage("확정된 결합 결과가 없습니다.");
       return;
     }
+    if (!USE_MOCK && !stitchJobId) {
+      setInspectionMessage("결합 작업 ID가 없습니다. 최종 결합을 다시 확정하세요.");
+      return;
+    }
 
     setActiveStep(3);
     setMaxReachedStep(3);
@@ -629,8 +747,8 @@ export default function XrayPage() {
     setInspectionDone(false);
     setInspectionMessage("");
     setRegions([]);
-    setExcludedRegions([]);
     setSummaries([]);
+    setDefectMapping(null);
     setElapsed(null);
     setReport("");
     setReportMeta(null);
@@ -639,29 +757,72 @@ export default function XrayPage() {
 
     try {
       setInspectionStep("ASSEMBLED");
-      const assembledResult = await detectOne(
-        assembledFile,
-        TARGET.ASSEMBLED,
-        confidence,
-      );
+      const assembledResult = USE_MOCK
+        ? await detectOne(assembledFile, TARGET.ASSEMBLED, confidence)
+        : await detectFinalAssembled(stitchJobId, confidence);
 
       setInspectionStep("FRAGMENTS");
-      const fragmentResult = await detectBatch(
-        fragmentFiles,
-        TARGET.FRAGMENT,
-        confidence,
-      );
+      const fragmentResult = USE_MOCK
+        ? await detectBatch(fragmentFiles, TARGET.FRAGMENT, confidence)
+        : await detectFinalFragments(stitchJobId, confidence);
 
-      // 검수표에서 다루기 쉽도록 일련번호와 소견 초안을 붙인다
-      const allRegions = [
-        ...(assembledResult.regions || []),
-        ...(fragmentResult.regions || []),
-      ].map((region, index) => ({
+      setInspectionStep("MAPPING");
+      const mappingResult = USE_MOCK
+        ? null
+        : await mapDefects(stitchJobId, fragmentResult, assembledResult);
+      setDefectMapping(mappingResult);
+
+      const assembledDecisionById = new Map(
+        (mappingResult?.assembledDecisions || []).map((decision) => [
+          decision.assembledRegionId,
+          decision,
+        ]),
+      );
+      const sourceMappingById = new Map(
+        (mappingResult?.mappings || []).map((mapping) => [
+          mappingKey(mapping.originalSourceIndex, mapping.sourceRegionId),
+          mapping,
+        ]),
+      );
+      const sourceOnlyById = new Map();
+      (mappingResult?.sourceOnlyGroups || []).forEach((group) => {
+        (group.observations || []).forEach((observation) => {
+          sourceOnlyById.set(
+            mappingKey(
+              observation.originalSourceIndex,
+              observation.sourceRegionId,
+            ),
+            group,
+          );
+        });
+      });
+
+      // AI가 만든 regionId는 defect-mapping의 키이므로 detectorRegionId로 보존한다.
+      // 화면 선택용 regionId만 전체 목록에서 유일하도록 새로 부여한다.
+      const detectedRegions = [
+        ...(assembledResult.regions || []).map((region) => ({
+          ...region,
+          detectorRegionId: region.regionId,
+          mappingStatus:
+            assembledDecisionById.get(region.regionId)?.status || "ASSEMBLED_ONLY",
+        })),
+        ...(fragmentResult.regions || []).map((region) => {
+          const key = mappingKey(region.sourceIndex, region.regionId);
+          const sourceMapping = sourceMappingById.get(key);
+          const sourceOnlyGroup = sourceOnlyById.get(key);
+          return {
+            ...region,
+            detectorRegionId: region.regionId,
+            mappingStatus:
+              sourceOnlyGroup?.status || sourceMapping?.status || "UNMAPPED",
+          };
+        }),
+      ];
+
+      const allRegions = detectedRegions.map((region, index) => ({
         ...region,
         regionId: `R-${String(index + 1).padStart(3, "0")}`,
         userNote: defaultNote(region),
-        // AI가 탐지한 영역은 우선 이상 영역으로 포함한다.
-        // 작업자는 정상으로 확인한 오탐만 제외하면 된다.
         reviewDecision: "damage",
       }));
 
@@ -674,9 +835,7 @@ export default function XrayPage() {
       setRegions(allRegions);
       setSummaries(allSummaries);
       const firstRegion = allRegions[0];
-      const firstFile = [assembledFile, ...fragmentFiles].find(
-        (file) => file?.name === firstRegion?.fileName,
-      );
+      const firstFile = inspectionFileForRegion(firstRegion);
       setSelectedId(firstRegion?.regionId || null);
       setViewFile(firstFile || assembledFile);
       setInspectionDone(true);
@@ -703,52 +862,26 @@ export default function XrayPage() {
     );
   }
 
-  /** 정상 영역 제외. 제외한 영역은 문안 생성 대상에서 빠진다. */
-  function removeRegion(id) {
-    setRegions((current) => {
-      const index = current.findIndex((region) => region.regionId === id);
-      const region = current[index];
-      if (region) {
-        const excludedRegion = {
-          ...region,
-          reviewDecision: "normal",
-          excludedAt: new Date().toISOString(),
-        };
-        setExcludedRegions((excluded) => [...excluded, excludedRegion]);
-        setLastRemoved({ region, index });
-      }
-
-      const next = current.filter((item) => item.regionId !== id);
-      if (selectedId === id) {
-        const fallback = next[Math.min(index, next.length - 1)];
-        setSelectedId(fallback?.regionId || null);
-        const file = [assembledFile, ...fragmentFiles].find(
-          (item) => item?.name === fallback?.fileName,
-        );
-        if (file) setViewFile(file);
-      }
-      return next;
-    });
-  }
-
-  function undoRemove() {
-    if (!lastRemoved) return;
-    setRegions((current) => {
-      const next = [...current];
-      next.splice(lastRemoved.index, 0, lastRemoved.region);
-      return next;
-    });
-    setSelectedId(lastRemoved.region.regionId);
-    const file = [assembledFile, ...fragmentFiles].find(
-      (item) => item?.name === lastRemoved.region.fileName,
-    );
-    if (file) setViewFile(file);
-    setExcludedRegions((current) =>
-      current.filter(
-        (region) => region.regionId !== lastRemoved.region.regionId,
+  /** 정상 영역으로 제외. 영역 자체는 목록에 남기고 결과 포함 여부만 바꾼다. */
+  function excludeRegion(id) {
+    setRegions((current) =>
+      current.map((region) =>
+        region.regionId === id
+          ? { ...region, reviewDecision: "normal" }
+          : region,
       ),
     );
-    setLastRemoved(null);
+  }
+
+  /** 정상으로 제외한 영역을 다시 이상 영역으로 포함한다. */
+  function restoreRegion(id) {
+    setRegions((current) =>
+      current.map((region) =>
+        region.regionId === id
+          ? { ...region, reviewDecision: "damage" }
+          : region,
+      ),
+    );
   }
 
   /**
@@ -777,7 +910,7 @@ export default function XrayPage() {
           );
 
       const result = await generateReport({
-        regions,
+        regions: includedRegions,
         assembled: assembledFile,
         fragments: fragmentFiles,
         rgbImages: rgbFiles,
@@ -898,13 +1031,47 @@ export default function XrayPage() {
 
   const stitchBusy = STITCH_BUSY.includes(stitchStatus);
 
-  // 결합본과 원본 조각을 한 목록으로 묶어 탭에 쓴다
-  const allInspectionFiles = [assembledFile, ...fragmentFiles].filter(Boolean);
+  // sourceIndex는 백엔드 natural sort 순서이므로 원본 탭도 같은 순서로 맞춘다.
+  const sourceOrderedFragmentFiles = useMemo(
+    () =>
+      [...fragmentFiles].sort((left, right) =>
+        compareNaturalFileNames(left?.name, right?.name),
+      ),
+    [fragmentFiles],
+  );
+
+  // 결합본과 원본 조각을 한 목록으로 묶어 탭에 쓴다.
+  const allInspectionFiles = [assembledFile, ...sourceOrderedFragmentFiles].filter(
+    Boolean,
+  );
+
+  // 탐지 응답의 fileName은 표시용 메타데이터다.
+  // 결합본은 analysisTarget, 원본 조각은 sourceIndex로 실제 화면 이미지를 식별한다.
+  function inspectionFileForRegion(region) {
+    if (!region) return null;
+
+    if (region.analysisTarget === TARGET.ASSEMBLED) {
+      return assembledFile;
+    }
+
+    if (region.analysisTarget === TARGET.FRAGMENT) {
+      if (region.sourceIndex == null) return null;
+      const sourceIndex = Number(region.sourceIndex);
+      if (Number.isInteger(sourceIndex) && sourceIndex >= 0) {
+        return sourceOrderedFragmentFiles[sourceIndex] || null;
+      }
+    }
+
+    return null;
+  }
+
+  function regionBelongsToFile(region, file) {
+    return Boolean(file) && inspectionFileForRegion(region) === file;
+  }
 
   // 지금 보고 있는 이미지의 영역만 화면에 그린다.
-  // 파일명이 영역과 이미지를 잇는 키다.
   const visibleRegions = viewFile
-    ? regions.filter((region) => region.fileName === viewFile.name)
+    ? regions.filter((region) => regionBelongsToFile(region, viewFile))
     : [];
 
   const selectedRegion =
@@ -912,7 +1079,11 @@ export default function XrayPage() {
   const selectedIndex = regions.findIndex(
     (region) => region.regionId === selectedRegion?.regionId,
   );
-  const excludedCount = excludedRegions.length;
+  const includedRegions = regions.filter(
+    (region) => region.reviewDecision !== "normal",
+  );
+  const includedCount = includedRegions.length;
+  const excludedCount = regions.length - includedCount;
   const artifactManager = String(
     valueFrom(
       artifactInfo,
@@ -933,9 +1104,7 @@ export default function XrayPage() {
   function selectRegion(id) {
     setSelectedId(id);
     const region = regions.find((item) => item.regionId === id);
-    const file = allInspectionFiles.find(
-      (item) => item.name === region?.fileName,
-    );
+    const file = inspectionFileForRegion(region);
     if (file) setViewFile(file);
   }
 
@@ -1369,7 +1538,7 @@ export default function XrayPage() {
               {inspectionDone && (
                 <div className="inspection-summary-bar">
                   <div>
-                    <strong>{regions.length}</strong>
+                    <strong>{includedCount}</strong>
                     <span>이상 영역 포함</span>
                   </div>
                   <div>
@@ -1405,8 +1574,8 @@ export default function XrayPage() {
                   </div>
                   <div className="image-tabs">
                     {allInspectionFiles.map((file, index) => {
-                      const count = regions.filter(
-                        (region) => region.fileName === file.name,
+                      const count = regions.filter((region) =>
+                        regionBelongsToFile(region, file),
                       ).length;
 
                       return (
@@ -1441,7 +1610,7 @@ export default function XrayPage() {
                         {selectedIndex + 1} / {regions.length}
                       </strong>
                     </div>
-                    <span>{regions.length}건 이상 영역으로 포함</span>
+                    <span>{includedCount}건 이상 영역으로 포함</span>
                   </div>
 
                   <div className="review-default-guide">
@@ -1464,7 +1633,11 @@ export default function XrayPage() {
                         }
                         onClick={() => selectRegion(region.regionId)}
                       >
-                        <span className="review-state damage" />
+                        <span
+                          className={`review-state ${
+                            region.reviewDecision === "normal" ? "normal" : "damage"
+                          }`}
+                        />
                         <strong>{region.regionId}</strong>
                         <span>{region.position}</span>
                         <small>{region.confidence.toFixed(2)}</small>
@@ -1472,13 +1645,22 @@ export default function XrayPage() {
                     ))}
                   </div>
 
+
                   {selectedRegion && (
                     <div className="review-detail">
                       <div className="review-detail-title">
                         <div>
                           <strong>{selectedRegion.regionId}</strong>
-                          <span className="decision-chip damage">
-                            이상 있음 · 결과 포함
+                          <span
+                            className={`decision-chip ${
+                              selectedRegion.reviewDecision === "normal"
+                                ? "normal"
+                                : "damage"
+                            }`}
+                          >
+                            {selectedRegion.reviewDecision === "normal"
+                              ? "정상 판단 · 결과 제외"
+                              : "이상 있음 · 결과 포함"}
                           </span>
                         </div>
                       </div>
@@ -1504,6 +1686,12 @@ export default function XrayPage() {
                           <dt>영역 비율</dt>
                           <dd>{selectedRegion.areaRatioPercent.toFixed(3)}%</dd>
                         </div>
+                        {selectedRegion.mappingStatus && (
+                          <div>
+                            <dt>결함 대응 결과</dt>
+                            <dd>{defectMappingLabel(selectedRegion.mappingStatus)}</dd>
+                          </div>
+                        )}
                       </dl>
 
                       <div className="ai-finding">
@@ -1551,9 +1739,15 @@ export default function XrayPage() {
                         <button
                           type="button"
                           className="normal-exclude-button"
-                          onClick={() => removeRegion(selectedRegion.regionId)}
+                          onClick={() =>
+                            selectedRegion.reviewDecision === "normal"
+                              ? restoreRegion(selectedRegion.regionId)
+                              : excludeRegion(selectedRegion.regionId)
+                          }
                         >
-                          정상으로 제외
+                          {selectedRegion.reviewDecision === "normal"
+                            ? "되돌리기"
+                            : "정상으로 제외"}
                         </button>
                         <button
                           type="button"
@@ -1597,7 +1791,7 @@ export default function XrayPage() {
                 <TaskProgress
                   active={reportLoading}
                   headline="AI 1차 상태조사 문안을 작성하고 있습니다"
-                  detail={`이상 포함 ${regions.length}건 · 정상 제외 ${excludedCount}건`}
+                  detail={`이상 포함 ${includedCount}건 · 정상 제외 ${excludedCount}건`}
                   note="30초에서 2분이 걸립니다."
                 />
               </section>
@@ -1607,7 +1801,7 @@ export default function XrayPage() {
               <div>
                 <strong>최종 검토 전 확인</strong>
                 <span>
-                  이상 포함 {regions.length}건 · 정상 제외 {excludedCount}건 ·
+                  이상 포함 {includedCount}건 · 정상 제외 {excludedCount}건 ·
                   문안 {report.trim() ? "작성 완료" : "작성 필요"}
                 </span>
               </div>
@@ -1716,7 +1910,7 @@ export default function XrayPage() {
                     {report.length.toLocaleString()}자
                   </span>
                   <span>
-                    이상 포함 {regions.length}건 · 정상 제외 {excludedCount}건
+                    이상 포함 {includedCount}건 · 정상 제외 {excludedCount}건
                   </span>
                 </footer>
               </article>
@@ -1751,23 +1945,6 @@ export default function XrayPage() {
           </main>
         )}
 
-        {lastRemoved && (
-          <div className="undo-toast" role="status">
-            <span>
-              {lastRemoved.region.regionId}을 정상 영역으로 제외했습니다.
-            </span>
-            <button type="button" onClick={undoRemove}>
-              되돌리기
-            </button>
-            <button
-              type="button"
-              aria-label="알림 닫기"
-              onClick={() => setLastRemoved(null)}
-            >
-              ×
-            </button>
-          </div>
-        )}
 
         {showCompleteConfirm && (
           <div
