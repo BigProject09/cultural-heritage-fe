@@ -53,6 +53,23 @@
     @apply text-gray-800 text-[15px] font-bold;
   }
 
+  .photo-upload-row {
+    @apply flex items-center justify-between gap-4 px-1 pb-3;
+  }
+  .photo-upload-title {
+    @apply text-gray-800 text-[15px] font-bold m-0;
+  }
+  .photo-upload-btn {
+    @apply inline-flex items-center px-4 py-2.5 rounded-lg text-white text-sm font-bold cursor-pointer whitespace-nowrap;
+    background: #2563eb;
+  }
+  .photo-upload-btn:hover {
+    background: #1d4ed8;
+  }
+  .photo-upload-warning {
+    @apply text-amber-600 text-[13px] mt-3 mb-0;
+  }
+
   .photo-card {
     @apply [background:white] border border-gray-200 rounded-2xl p-4 mb-6;
   }
