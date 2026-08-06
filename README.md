@@ -145,16 +145,19 @@ Flow 선택
 
 ### 2.4 육안 조사
 
-현재 화면과 완료 상태 변경만 구현되어 있습니다.
+육안 조사는 Spring VCA API를 통해 이미지 등록, 분석 실행, 보고서 조회,
+중간 처리 결과 확인, PDF 생성 상태 확인까지 수행합니다.
 
-- 유물 정보 조회
-- 고정된 예시 분석 결과 표시
-- 전문가 검수 안내 표시
-- `육안 조사 완료` 클릭 시 `VISUAL` 상태를 `DONE`으로 변경
+- `POST /api/vca/{artifactId}/images` multipart 업로드
+- `POST /api/vca/{artifactId}/runs` 분석 실행
+- `GET /api/vca/{artifactId}/runs/{assessmentRunId}/report` 보고서 조회
+- `POST /api/vca/{artifactId}/runs/{assessmentRunId}/pottery-inspection` 도자기 검사 실행·재시도
+- `GET /api/vca/{artifactId}/runs/{assessmentRunId}/intermediate-results` 단계별 중간 결과 조회
+- `POST /api/vca/{artifactId}/runs/{assessmentRunId}/report/pdf` PDF 생성
 
-실제 이미지 위 손상 위치 표시, 손상 유형 입력·수정, AI/API 연결, 조사 결과
-저장과 재조회는 아직 구현되지 않았습니다. 신규 FE 담당자가 독립적으로 맡기
-가장 적합한 영역입니다.
+새 분석 실행, 이미지 업로드, 이미지 삭제, 실행 선택 변경 시 화면의 이전
+중간 결과는 즉시 비우고, 완료된 실행에 중간 파일이 있으면 보고서 안에서
+단계 카드와 텍스트 preview로 자세히 확인합니다.
 
 ### 2.5 최종 통합 보고서
 
@@ -174,6 +177,8 @@ flowchart LR
     BE --> AI[FastAPI :8001]
     AI --> MODEL[결합·결함 모델]
     AI --> LLM[OpenAI API]
+    BE --> VCAAI[vca-ai internal]
+    VCAAI --> VCA[vca_v2 dry-run]
 ```
 
 브라우저는 Spring만 호출하고, Spring이 내부 AI 서비스인 FastAPI를
@@ -194,6 +199,10 @@ flowchart LR
 | 결합본 결함 분석 | `POST http://localhost:8080/api/xray/detect/assembled` |
 | 조각 결함 분석   | `POST http://localhost:8080/api/xray/detect/fragments` |
 | 상태조사 문안    | `POST http://localhost:8080/api/xray/report`           |
+| VCA 이미지 업로드 | `POST http://localhost:8080/api/vca/{artifactId}/images` |
+| VCA 분석 실행    | `POST http://localhost:8080/api/vca/{artifactId}/runs` |
+| VCA 도자기 검사  | `POST http://localhost:8080/api/vca/{artifactId}/runs/{assessmentRunId}/pottery-inspection` |
+| VCA 중간 결과    | `GET http://localhost:8080/api/vca/{artifactId}/runs/{assessmentRunId}/intermediate-results` |
 
 유물 CRUD와 Presigned URL의 예정 계약은
 [`docs/workspace-api-contract.md`](docs/workspace-api-contract.md)를 참고합니다.
@@ -233,6 +242,8 @@ VITE_API_BASE_URL=http://localhost:8080
 VITE_ARTIFACTS_API_PATH=/api/artifacts
 VITE_USE_XRAY_MOCK=false
 VITE_USE_GUIDE_MOCK=false
+VITE_USE_VCA_MOCK=false
+VITE_VCA_ACCESS_TOKEN=로컬-VCA-토큰
 VITE_XRAY_STITCH_API_BASE=http://localhost:8080/api/xray/stitch
 VITE_XRAY_INSPECTION_API_BASE=http://localhost:8001
 VITE_VIA_SPRING=true
@@ -248,6 +259,8 @@ VITE_XRAY_SPRING_INSPECTION_API_BASE=http://localhost:8080/api/xray
 | `VITE_ARTIFACTS_API_PATH`              | `/api/artifacts`                        | 미지정         | `VITE_ARTIFACT_STORAGE_MODE=api`일 때 사용할 유물 CRUD 경로입니다. 현재 기본값인 `local`에서는 호출하지 않습니다.                                              |
 | `VITE_USE_XRAY_MOCK`                   | `false`                                 | `true`         | X-RAY 결합, 결함 탐지, 문안 생성을 Mock 응답으로 실행할지 정합니다.                                                                                            |
 | `VITE_USE_GUIDE_MOCK`                  | `false`                                 | `true`         | 복원 가이드의 task start/resume와 사진 분석을 Mock 응답으로 실행할지 정합니다. `--mode mock`에서도 자동으로 Mock이 활성화됩니다.                               |
+| `VITE_USE_VCA_MOCK`                    | `false`                                 | `true`         | 육안 조사 VCA 업로드, 실행, 보고서, 중간 결과를 Mock 응답으로 실행할지 정합니다.                                                                                |
+| `VITE_VCA_ACCESS_TOKEN`                | 예시 토큰                               | 미지정         | Spring `/api/vca/**` 요청에 실을 로컬 VCA 토큰입니다. 브라우저 번들에 포함되므로 운영 비밀값으로 사용하지 않습니다.                                            |
 | `VITE_XRAY_STITCH_API_BASE`            | `http://localhost:8080/api/xray/stitch` | 미지정         | X-RAY 조각 결합 Job의 접수·상태·결과·배치 정보 API 주소입니다. 기본 구조에서는 Spring을 호출합니다.                                                            |
 | `VITE_XRAY_INSPECTION_API_BASE`        | `http://localhost:8001`                 | 미지정         | `VITE_VIA_SPRING=false`일 때만 사용하는 FastAPI 직접 호출 주소입니다. CORS와 서비스 단독 진단 목적의 예비 설정입니다.                                          |
 | `VITE_VIA_SPRING`                      | `true`                                  | 미지정         | 결함 탐지·문안 생성 요청의 경유 방식을 정합니다. `true`이면 React → Spring → FastAPI, `false`이면 React → FastAPI로 호출합니다. 팀 공통 기본값은 `true`입니다. |
