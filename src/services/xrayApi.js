@@ -296,15 +296,18 @@ function normalizeLayout(data) {
     const status = item.assignmentStatus;
 
     return {
+      index: item.index ?? null,
       fileName: item.originalSourceName ?? item.file ?? null,
+      originalSourceName: item.originalSourceName ?? item.file ?? null,
       placementName: item.file ?? null,
       transform,
       matched:
         typeof status === "string" ? status === "assigned" : transform != null,
       cropBBoxXYWH: item.originalCropBBoxXYWH ?? null,
-      subfragmentIndex: item.subfragmentIndex ?? null,
+      subfragmentIndex: item.subfragmentIndex ?? 0,
       sourceIndex: item.originalSourceIndex ?? item.index ?? null,
-      rotationDeg: item.rotationDeg ?? null,
+      originalSourceIndex: item.originalSourceIndex ?? item.index ?? null,
+      rotationDeg: item.rotationDeg ?? 0,
       centerX: item.centerX ?? null,
       centerY: item.centerY ?? null,
       unassignedReason: item.assignmentUnassignedReason ?? null,
@@ -323,6 +326,49 @@ function normalizeLayout(data) {
         : null,
     coordinateSystem: data?.coordinateSystem ?? null,
   };
+}
+
+/**
+ * Konva에서 확정한 모든 fragment transform을 서버에 저장한다.
+ * 저장 직후 서버는 원본 X-ray로 assembled_xray.final.png와 provenance를 재생성한다.
+ */
+export async function saveFinalStitchLayout(jobId, fragments) {
+  if (USE_MOCK) {
+    await delay(250);
+    return { layoutStage: "FINAL", fragments };
+  }
+
+  return requestJson(
+    `${STITCH_JOBS_BASE}/${encodeURIComponent(jobId)}/layout/final`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fragments }),
+    },
+  );
+}
+
+/** 서버가 final transform으로 다시 렌더링한 정본 결합 이미지를 받는다. */
+export async function downloadFinalStitchResult(jobId, fileName) {
+  if (USE_MOCK) {
+    if (!mockResultFile) throw new Error("Mock 결합 결과가 없습니다.");
+    return new File([mockResultFile], fileName, {
+      type: mockResultFile.type || "image/png",
+    });
+  }
+
+  const response = await fetch(
+    `${STITCH_JOBS_BASE}/${encodeURIComponent(jobId)}/result/final`,
+  );
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`최종 결합 결과 조회 실패: HTTP ${response.status} ${detail}`);
+  }
+  const blob = await response.blob();
+  if (!blob.type.startsWith("image/")) {
+    throw new Error("최종 결합 결과 응답이 이미지가 아닙니다.");
+  }
+  return new File([blob], fileName, { type: blob.type || "image/png" });
 }
 
 // ------------------------------------------------------------
@@ -407,6 +453,40 @@ export async function detectBatch(files, target, confidence) {
     method: "POST",
     body: form,
   });
+}
+
+/** 결합/Konva/final 렌더링이 끝난 job의 최종 결합본을 분석한다. */
+export async function detectFinalAssembled(jobId, confidence) {
+  const params = new URLSearchParams();
+  if (confidence != null) params.set("confidence", String(confidence));
+  const suffix = params.size ? `?${params.toString()}` : "";
+  return requestJson(
+    `${SPRING_INSPECTION_API_BASE}/detect/assembled/${encodeURIComponent(jobId)}${suffix}`,
+    { method: "POST" },
+  );
+}
+
+/** 결합이 확정된 job에 보관된 원본 X-ray들을 sourceIndex 순서로 분석한다. */
+export async function detectFinalFragments(jobId, confidence) {
+  const params = new URLSearchParams();
+  if (confidence != null) params.set("confidence", String(confidence));
+  const suffix = params.size ? `?${params.toString()}` : "";
+  return requestJson(
+    `${SPRING_INSPECTION_API_BASE}/detect/fragments/${encodeURIComponent(jobId)}${suffix}`,
+    { method: "POST" },
+  );
+}
+
+/** 두 탐지 결과를 layout.final.json 좌표계에서 대응시킨다. */
+export async function mapDefects(jobId, fragmentDetection, assembledDetection) {
+  return requestJson(
+    `${SPRING_INSPECTION_API_BASE}/defect-mapping/${encodeURIComponent(jobId)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fragmentDetection, assembledDetection }),
+    },
+  );
 }
 
 /**
