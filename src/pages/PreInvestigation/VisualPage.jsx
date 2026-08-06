@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./VisualPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import { inspectPottery } from "../../services/potteryInspectionApi";
+import { uploadPhoto } from "../../services/photoUploadApi";
 import { parseInspectionSections, compareEra } from "../../utils/inspectionText";
 import {
   MODULE_STATUS,
@@ -11,7 +12,6 @@ import {
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
 import { getArtifactRoute } from "../../utils/artifactRoutes";
-
 
 const POTTERY_MATERIAL_KEYWORDS = [
   "연질토기",
@@ -45,51 +45,31 @@ function VisualPage() {
 
   // 등록 직후 잠깐은 로컬 저장값으로 먼저 보여주고, 워크스페이스 조회가
   // 끝나면(아래 useEffect) 서버 최신값으로 갱신한다.
+  // 여기 image는 등록 시 첨부한 "예시 사진"일 뿐, 육안조사 분석 대상이
+  // 아니다 - 조사용 사진은 이 화면에서 사용자가 별도로 새로 올린다.
   const [artifactInfo, setArtifactInfo] = useState(() => readStoredArtifactInfo());
 
-  // idle | loading | done | error | unsupported
-  const [requestState, setRequestState] = useState({
-    artifactId: "",
-    status: "idle",
-  });
+  // idle | uploading | done | error | unsupported
+  const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [uploadWarning, setUploadWarning] = useState(false);
   const [imageSize, setImageSize] = useState(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
-  // React StrictMode(개발 모드) 또는 재렌더링으로 같은 유물의 분석 요청이
-  // 중복 실행되지 않도록, 마지막으로 요청을 시작한 유물 ID를 저장한다.
-  const startedArtifactIdRef = useRef("");
+  const imgRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  // 사용자가 이 화면에서 새로 고른 육안조사용 사진.
+  // inspectionPhotoUrl은 즉시 미리보기용(로컬 object URL), uploadedPhotoUrl은
+  // S3 업로드가 끝난 뒤의 실제 URL(추후 결과 저장 시 같이 보관할 값)이다.
+  const [inspectionPhotoUrl, setInspectionPhotoUrl] = useState(null);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState(null);
 
   const isPottery = isPotteryMaterial(artifactInfo.material);
-  const imgRef = useRef(null);
 
-  // 지금 화면에 뜬 유물이랑 context에 남아있는 visualResult가 정말 같은
-  // 건인지 판단하는 단일 기준. artifactInfo.artifactId 대신 URL의
-  // artifactId를 쓴다 - 워크스페이스 조회가 아직 안 끝난 시점에도 즉시
-  // 알 수 있는 값이라서다.
-  const resultIsCurrent =
-    !!visualResult && visualResult.__artifactId === artifactId;
-
-  // 현재 유물과 관계없는 이전 요청 상태가 잠깐 노출되지 않도록,
-  // 요청 상태는 artifactId가 일치할 때만 사용한다.
-  const currentRequestStatus =
-    requestState.artifactId === artifactId
-      ? requestState.status
-      : "idle";
-
-  // unsupported / done은 별도의 state로 저장하지 않고 현재 데이터에서 계산한다.
-  // 실제 요청 과정에서만 loading / error 상태를 저장한다.
-  const status = !artifactInfo?.image
-    ? currentRequestStatus
-    : !isPottery
-      ? "unsupported"
-      : resultIsCurrent
-        ? "done"
-        : currentRequestStatus;
-
-  // 워크스페이스에서 유물 정보(사진·재질·시대 등)를 가져온다.
+  // 워크스페이스에서 유물 정보(이름·재질·시대·예시 사진 등)를 가져온다.
   useEffect(() => {
     if (!artifactId) return undefined;
 
@@ -107,63 +87,74 @@ function VisualPage() {
     return () => controller.abort();
   }, [artifactId]);
 
-  const runInspection = async () => {
-    setRequestState({
-      artifactId,
-      status: "loading",
-    });
+  // 컴포넌트가 사라질 때 로컬 미리보기용 object URL을 정리한다(메모리 누수 방지).
+  useEffect(() => {
+    return () => {
+      if (inspectionPhotoUrl) URL.revokeObjectURL(inspectionPhotoUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const runInspection = async (file) => {
+    setStatus("loading");
     setErrorMessage("");
+    setUploadWarning(false);
 
-    try {
-      // 워크스페이스가 사진을 data URL로 내려주므로, 다시 업로드 가능한
-      // 형태(Blob)로 복원해서 보낸다.
-      const blob = await fetch(artifactInfo.image).then((res) => {
-        if (!res.ok) {
-          throw new Error("유물 이미지를 불러오지 못했습니다.");
-        }
-        return res.blob();
-      });
+    // S3 업로드와 AI 분석은 서로 의존하지 않으므로 동시에 진행한다.
+    // 업로드가 실패해도 분석 자체는 보여줄 수 있어야 하므로(반대도 마찬가지),
+    // Promise.all 대신 allSettled로 각각 따로 처리한다.
+    const [analysisSettled, uploadSettled] = await Promise.allSettled([
+      inspectPottery(file),
+      uploadPhoto(file),
+    ]);
 
-      const data = await inspectPottery(blob);
-      setVisualResult({ ...data, __artifactId: artifactId });
-
-      setRequestState({
-        artifactId,
-        status: "done",
-      });
-    } catch (err) {
+    if (analysisSettled.status === "rejected") {
       setErrorMessage(
-        err.message || "분석 요청 중 오류가 발생했습니다. 다시 시도해주세요.",
+        analysisSettled.reason?.message ||
+          "분석 요청 중 오류가 발생했습니다. 다시 시도해주세요.",
       );
-
-      setRequestState({
-        artifactId,
-        status: "error",
-      });
+      setStatus("error");
+      return;
     }
+
+    const uploadedUrl =
+      uploadSettled.status === "fulfilled" ? uploadSettled.value : null;
+    if (uploadSettled.status === "rejected") {
+      console.error("사진 S3 업로드 실패:", uploadSettled.reason);
+      setUploadWarning(true);
+    }
+
+    setUploadedPhotoUrl(uploadedUrl);
+    setVisualResult({
+      ...analysisSettled.value,
+      __artifactId: artifactId,
+      __photoUrl: uploadedUrl,
+    });
+    setStatus("done");
   };
 
-  useEffect(() => {
-    // 워크스페이스 조회가 끝나서 사진이 도착할 때까지 기다린다.
-    if (!artifactInfo?.image) return;
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    // 도자기가 아니면 자동 분석하지 않는다.
-    // unsupported 상태는 현재 재질에서 파생해 계산한다.
-    if (!isPottery) return;
+    if (inspectionPhotoUrl) URL.revokeObjectURL(inspectionPhotoUrl);
+    const previewUrl = URL.createObjectURL(file);
 
-    // 현재 유물의 분석 결과가 이미 있으면 다시 호출하지 않는다.
-    if (resultIsCurrent) return;
+    setInspectionPhotoUrl(previewUrl);
+    setUploadedPhotoUrl(null);
+    setImageSize(null);
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+    setVisualResult(null);
 
-    // StrictMode 또는 재렌더링으로 같은 유물 요청이 중복되는 것을 막는다.
-    if (startedArtifactIdRef.current === artifactId) return;
+    void runInspection(file);
 
-    startedArtifactIdRef.current = artifactId;
-    void runInspection();
-  }, [artifactId, artifactInfo?.image, isPottery, resultIsCurrent]);
+    // 같은 파일을 다시 선택해도 change 이벤트가 발생하도록 값을 비워둔다.
+    e.target.value = "";
+  };
 
   const handleRetry = () => {
-    startedArtifactIdRef.current = "";
-    void runInspection();
+    fileInputRef.current?.click();
   };
 
   const handleComplete = async () => {
@@ -215,6 +206,8 @@ function VisualPage() {
   };
   const handlePointerUp = () => setIsDragging(false);
 
+  const resultIsCurrent = !!visualResult && visualResult.__artifactId === artifactId;
+
   const patternInfo = resultIsCurrent
     ? visualResult?.detail?.pattern_era_color
     : null;
@@ -253,7 +246,7 @@ function VisualPage() {
           <div>
             <span className="visual-eyebrow">INDEPENDENT VISUAL MODULE</span>
             <h1 className="visual-title">육안 상태 조사</h1>
-            <p>사진 한 장으로 형태·유약·시대·문양을 함께 분석합니다.</p>
+            <p>육안조사용 사진을 새로 올리면 형태·유약·시대·문양을 함께 분석합니다.</p>
           </div>
           <span className="visual-status">{statusLabel}</span>
         </header>
@@ -279,133 +272,157 @@ function VisualPage() {
           </div>
         </section>
 
-        {artifactInfo.image && (
-          <section className="photo-card">
-            <div className="photo-toolbar">
-              <button
-                type="button"
-                onClick={handleZoomOut}
-                disabled={zoom === 1}
-                aria-label="축소"
-              >
-                −
-              </button>
-              <span className="photo-zoom-level">
-                {Math.round(zoom * 100)}%
-              </span>
-              <button
-                type="button"
-                onClick={handleZoomIn}
-                disabled={zoom === ZOOM_MAX}
-                aria-label="확대"
-              >
-                ＋
-              </button>
-              {zoom > 1 && (
-                <button
-                  type="button"
-                  className="photo-zoom-reset"
-                  onClick={handleZoomReset}
-                >
-                  원래 크기
-                </button>
-              )}
-            </div>
-            <div
-              className="photo-frame"
-              onMouseDown={handlePointerDown}
-              onMouseMove={handlePointerMove}
-              onMouseUp={handlePointerUp}
-              onMouseLeave={handlePointerUp}
-              style={{
-                cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default",
-              }}
-            >
-              <div
-                className="photo-zoom-layer"
-                style={{
-                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                  transition: isDragging ? "none" : "transform 0.15s ease",
-                }}
-              >
-                <img
-                  ref={imgRef}
-                  src={artifactInfo.image}
-                  alt="등록한 유물 사진"
-                  onLoad={handleImageLoad}
-                  draggable={false}
-                />
-                {status === "loading" && (
-                  <div className="photo-loading-overlay">
-                    <span className="spinner" aria-hidden="true" />
-                    <p>AI가 분석 중이에요…</p>
-                  </div>
-                )}
-                {imageSize && (
-                  <svg
-                    className="pattern-svg"
-                    viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
-                    preserveAspectRatio="xMidYMid meet"
-                  >
-                    {(() => {
-                      const scale = Math.max(imageSize.width, imageSize.height);
-                      const strokeWidth = Math.max(scale / 350, 2);
-                      const fontSize = Math.max(scale / 45, 16);
-
-                      return visiblePatterns.map((pattern, idx) => {
-                        const box = pattern.bbox_percent;
-                        if (!box) return null;
-                        const x = (box.x1 / 100) * imageSize.width;
-                        const y = (box.y1 / 100) * imageSize.height;
-                        const w = ((box.x2 - box.x1) / 100) * imageSize.width;
-                        const h = ((box.y2 - box.y1) / 100) * imageSize.height;
-                        const label =
-                          pattern.display_name || pattern.pattern_name;
-                        const labelY = Math.max(y - fontSize * 0.4, fontSize);
-
-                        return (
-                          <g key={pattern.key || idx}>
-                            <rect
-                              x={x}
-                              y={y}
-                              width={w}
-                              height={h}
-                              className="pattern-rect"
-                              style={{ strokeWidth }}
-                            />
-                            <text
-                              x={x}
-                              y={labelY}
-                              className="pattern-label-bg"
-                              style={{ fontSize, strokeWidth: fontSize / 5 }}
-                            >
-                              {label}
-                            </text>
-                            <text
-                              x={x}
-                              y={labelY}
-                              className="pattern-label"
-                              style={{ fontSize }}
-                            >
-                              {label}
-                            </text>
-                          </g>
-                        );
-                      });
-                    })()}
-                  </svg>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {status === "unsupported" && (
+        {!isPottery ? (
           <section className="visual-notice">
             <p>
               현재는 연질토기·경질토기(도자기류)만 AI 육안조사를 지원합니다.
               다른 재질은 준비 중입니다.
             </p>
+          </section>
+        ) : (
+          <section className="photo-card">
+            <div className="photo-upload-row">
+              <div>
+                <h3 className="photo-upload-title">육안조사용 사진</h3>
+              </div>
+              <label className="photo-upload-btn">
+                {inspectionPhotoUrl ? "다른 사진 선택" : "사진 선택"}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  hidden
+                />
+              </label>
+            </div>
+
+            {inspectionPhotoUrl && (
+              <>
+                <div className="photo-toolbar">
+                  <button
+                    type="button"
+                    onClick={handleZoomOut}
+                    disabled={zoom === 1}
+                    aria-label="축소"
+                  >
+                    −
+                  </button>
+                  <span className="photo-zoom-level">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleZoomIn}
+                    disabled={zoom === ZOOM_MAX}
+                    aria-label="확대"
+                  >
+                    ＋
+                  </button>
+                  {zoom > 1 && (
+                    <button
+                      type="button"
+                      className="photo-zoom-reset"
+                      onClick={handleZoomReset}
+                    >
+                      원래 크기
+                    </button>
+                  )}
+                </div>
+                <div
+                  className="photo-frame"
+                  onMouseDown={handlePointerDown}
+                  onMouseMove={handlePointerMove}
+                  onMouseUp={handlePointerUp}
+                  onMouseLeave={handlePointerUp}
+                  style={{
+                    cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default",
+                  }}
+                >
+                  <div
+                    className="photo-zoom-layer"
+                    style={{
+                      transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                      transition: isDragging ? "none" : "transform 0.15s ease",
+                    }}
+                  >
+                    <img
+                      ref={imgRef}
+                      src={inspectionPhotoUrl}
+                      alt="육안조사용으로 새로 올린 사진"
+                      onLoad={handleImageLoad}
+                      draggable={false}
+                    />
+                    {status === "loading" && (
+                      <div className="photo-loading-overlay">
+                        <span className="spinner" aria-hidden="true" />
+                        <p>AI가 분석 중이에요…</p>
+                      </div>
+                    )}
+                    {imageSize && (
+                      <svg
+                        className="pattern-svg"
+                        viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
+                        preserveAspectRatio="xMidYMid meet"
+                      >
+                        {(() => {
+                          const scale = Math.max(imageSize.width, imageSize.height);
+                          const strokeWidth = Math.max(scale / 350, 2);
+                          const fontSize = Math.max(scale / 45, 16);
+
+                          return visiblePatterns.map((pattern, idx) => {
+                            const box = pattern.bbox_percent;
+                            if (!box) return null;
+                            const x = (box.x1 / 100) * imageSize.width;
+                            const y = (box.y1 / 100) * imageSize.height;
+                            const w = ((box.x2 - box.x1) / 100) * imageSize.width;
+                            const h = ((box.y2 - box.y1) / 100) * imageSize.height;
+                            const label =
+                              pattern.display_name || pattern.pattern_name;
+                            const labelY = Math.max(y - fontSize * 0.4, fontSize);
+
+                            return (
+                              <g key={pattern.key || idx}>
+                                <rect
+                                  x={x}
+                                  y={y}
+                                  width={w}
+                                  height={h}
+                                  className="pattern-rect"
+                                  style={{ strokeWidth }}
+                                />
+                                <text
+                                  x={x}
+                                  y={labelY}
+                                  className="pattern-label-bg"
+                                  style={{ fontSize, strokeWidth: fontSize / 5 }}
+                                >
+                                  {label}
+                                </text>
+                                <text
+                                  x={x}
+                                  y={labelY}
+                                  className="pattern-label"
+                                  style={{ fontSize }}
+                                >
+                                  {label}
+                                </text>
+                              </g>
+                            );
+                          });
+                        })()}
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                {uploadWarning && (
+                  <p className="photo-upload-warning">
+                    ⚠ 분석은 완료됐지만, 사진을 S3에 저장하는 데는 실패했습니다.
+                    새로고침하면 이 사진을 다시 불러올 수 없으니 참고해주세요.
+                  </p>
+                )}
+              </>
+            )}
           </section>
         )}
 
@@ -553,7 +570,11 @@ function VisualPage() {
                 </p>
               </div>
             ) : (
-              <p className="status-note">아직 분석 결과가 없습니다.</p>
+              <p className="status-note">
+                {isPottery
+                  ? "육안조사용 사진을 올리면 분석이 시작됩니다."
+                  : "아직 분석 결과가 없습니다."}
+              </p>
             )}
           </section>
 
