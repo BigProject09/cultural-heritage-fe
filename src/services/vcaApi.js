@@ -11,6 +11,7 @@ const VCA_ACCESS_TOKEN = import.meta.env.VITE_VCA_ACCESS_TOKEN || "";
 const mockArtifacts = new Map();
 const mockPendingUploads = new Map();
 const mockPdfJobs = new Map();
+const mockCorpusPdfs = [];
 
 function delay(milliseconds) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
@@ -196,6 +197,41 @@ async function requestJson(path, options = {}) {
 
 export function isVcaMockMode() {
   return USE_VCA_MOCK;
+}
+
+export async function getVcaCorpusPdfs({ signal } = {}) {
+  if (USE_VCA_MOCK) return [...mockCorpusPdfs];
+  const payload = await requestJson("/corpus/pdfs", { signal });
+  return Array.isArray(payload) ? payload : payload.items || [];
+}
+
+export async function uploadVcaCorpusPdf(file) {
+  if (USE_VCA_MOCK) {
+    const updatedAt = new Date().toISOString();
+    const pdf = {
+      fileName: file.name,
+      sizeBytes: file.size,
+      updatedAt,
+    };
+    mockCorpusPdfs.push(pdf);
+    return pdf;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  return requestJson("/corpus/pdfs", {
+    method: "POST",
+    body: formData,
+  });
+}
+
+export async function deleteVcaCorpusPdf(fileName) {
+  if (USE_VCA_MOCK) {
+    const index = mockCorpusPdfs.findIndex((pdf) => pdf.fileName === fileName);
+    if (index >= 0) mockCorpusPdfs.splice(index, 1);
+    return null;
+  }
+  return requestJson(`/corpus/pdfs/${encodeURIComponent(fileName)}`, { method: "DELETE" });
 }
 
 export async function getVcaArtifacts({ signal } = {}) {
