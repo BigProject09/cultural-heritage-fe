@@ -269,7 +269,7 @@ export async function presignVcaImage(artifactId, file, sha256) {
 export async function completeVcaImage(artifactId, imageId, sha256) {
   if (USE_VCA_MOCK) {
     const pending = mockPendingUploads.get(imageId);
-    if (!pending || pending.sha256 !== sha256) throw new Error("완료할 Mock 이미지 업로드를 찾을 수 없습니다.");
+    if (!pending || pending.sha256 !== sha256) throw new Error("완료할 이미지 업로드 정보를 찾을 수 없습니다.");
     const image = {
       imageId,
       fileName: pending.file.name,
@@ -362,7 +362,7 @@ export async function getVcaReport(artifactId, assessmentRunId) {
     await delay(350);
     const artifact = getMockArtifact(artifactId);
     const run = getMockRun(artifactId, assessmentRunId);
-    if (!run) throw new Error("Mock 분석 실행을 찾을 수 없습니다.");
+    if (!run) throw new Error("분석 실행 정보를 찾을 수 없습니다.");
     if (run.status !== "COMPLETED") {
       const error = new Error("분석 보고서가 아직 준비되지 않았습니다.");
       error.status = 409;
@@ -392,7 +392,7 @@ export async function runVcaPotteryInspection(artifactId, assessmentRunId, { mat
     await delay(350);
     const artifact = getMockArtifact(artifactId);
     const run = getMockRun(artifactId, assessmentRunId);
-    if (!run) throw new Error("Mock 분석 실행을 찾을 수 없습니다.");
+    if (!run) throw new Error("분석 실행 정보를 찾을 수 없습니다.");
     if (run.status !== "COMPLETED") {
       const error = new Error("분석 보고서가 준비된 뒤 도자기 검사를 실행할 수 있습니다.");
       error.status = 409;
@@ -416,11 +416,11 @@ export async function runVcaPotteryInspection(artifactId, assessmentRunId, { mat
       recommendations: [{ title: "사광 재확인", priority: "보통", description: "균열 진행 방향을 사광 조명에서 재확인하세요." }],
       images: artifact.uploadedImages.slice(0, 2).map((image) => ({ ...image, downloadUrl: image.imageUrl })),
       potteryInspection: {
-        moduleVersion: "pottery-mock-v1",
+        moduleVersion: "VORA 도자기 검사",
         inspectionText: "도자기 표면과 문양 후보를 확인했습니다.",
         summary: "도자기 보조 검사가 완료되었습니다.",
         humanReviewRecommended: true,
-        detail: { pattern: "mock-pattern", confidence: 0.88 },
+        detail: { pattern: "문양 후보", confidence: 0.88 },
       },
       potteryInspectionStatus: { applicable: true, status: "COMPLETED", retryable: true, failureMessage: null, lastAttemptedAt: new Date().toISOString() },
     });
@@ -441,7 +441,7 @@ export async function getVcaIntermediateResults(artifactId, assessmentRunId, { s
   if (USE_VCA_MOCK) {
     const artifact = getMockArtifact(artifactId);
     const run = getMockRun(artifactId, assessmentRunId);
-    if (!run) throw new Error("Mock 분석 실행을 찾을 수 없습니다.");
+    if (!run) throw new Error("분석 실행 정보를 찾을 수 없습니다.");
     if (run.status !== "COMPLETED") {
       const error = new Error("분석 중간 결과가 아직 준비되지 않았습니다.");
       error.status = 409;
@@ -502,7 +502,7 @@ export async function createVcaPdfJob(artifactId, assessmentRunId) {
 export async function getVcaPdfJob(artifactId, jobId) {
   if (USE_VCA_MOCK) {
     const job = mockPdfJobs.get(jobId);
-    if (!job) throw new Error("Mock PDF 작업을 찾을 수 없습니다.");
+    if (!job) throw new Error("PDF 생성 작업을 찾을 수 없습니다.");
     if (Date.now() - job.createdAt > 900) job.status = "COMPLETED";
     return normalizePdfJob(job);
   }
@@ -511,6 +511,6 @@ export async function getVcaPdfJob(artifactId, jobId) {
 
 export function getVcaPdfDownloadUrl(job) {
   if (job?.downloadUrl) return job.downloadUrl;
-  if (USE_VCA_MOCK) return "data:application/pdf;charset=utf-8,VORA%20mock%20visual%20inspection%20report";
+  if (USE_VCA_MOCK) return "data:application/pdf;charset=utf-8,VORA%20%EC%9C%A1%EC%95%88%20%EC%A1%B0%EC%82%AC%20%EB%B3%B4%EA%B3%A0%EC%84%9C";
   return "";
 }

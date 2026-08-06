@@ -156,7 +156,7 @@ export default function VisualPage() {
             <p>등록 이미지를 바탕으로 AI 초안을 검토하고 조사 기록을 준비합니다.</p>
           </div>
           <span className="visual-vca-status">
-            {isMock ? "Mock 분석 환경" : statusLabel(artifact.status)}
+            {isMock ? "육안 조사" : statusLabel(artifact.status)}
           </span>
         </header>
 
