@@ -40,8 +40,15 @@ function ReportFindings({ findings }) {
         <p>등록된 관찰 항목이 없습니다.</p>
       ) : (
         <ul>
-          {findings.map((finding) => (
-            <li key={`${finding.imageId || "finding"}-${finding.title}`}>
+          {findings.map((finding, findingIndex) => (
+            <li key={[
+              finding.imageId || "finding",
+              finding.category || "uncategorized",
+              finding.severity || "unrated",
+              finding.title || "untitled",
+              finding.description || findingIndex,
+            ].join("-")}
+            >
               <strong>{finding.severity || "관찰"}</strong>
               <span>{finding.category || "분류 없음"}</span>
               <p>{finding.title || "관찰 항목"}</p>
@@ -78,10 +85,208 @@ function ReportRecommendations({ recommendations }) {
   );
 }
 
+function formatPotteryInspectionLabel(label) {
+  return label
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]/g, " ");
+}
+
+function formatPotteryInspectionValue(value) {
+  if (value == null) return "정보 없음";
+  if (typeof value === "boolean") return value ? "예" : "아니오";
+  if (Array.isArray(value)) {
+    return value.length === 0
+      ? "정보 없음"
+      : value.map(formatPotteryInspectionValue).join(", ");
+  }
+  if (typeof value === "object") {
+    const entries = Object.entries(value);
+    return entries.length === 0
+      ? "정보 없음"
+      : entries
+        .map(([key, detail]) => `${formatPotteryInspectionLabel(key)}: ${formatPotteryInspectionValue(detail)}`)
+        .join(" · ");
+  }
+  return String(value);
+}
+
+function isPotteryMaterial(material = "") {
+  const normalized = material.toLowerCase();
+  return normalized.includes("도자") || normalized.includes("pottery") || normalized.includes("ceramic");
+}
+
+function potteryActionLabel(status, working) {
+  if (working === "pottery") return "도자기 검사 실행 중";
+  if (status === "FAILED") return "도자기 검사 다시 실행";
+  if (status === "COMPLETED") return "도자기 검사 다시 실행";
+  return "도자기 검사 실행";
+}
+
+function ReportPotteryInspection({ artifactMaterial, onPotteryInspection, potteryInspection, potteryInspectionStatus, working }) {
+  const hasInspection = potteryInspection && typeof potteryInspection === "object" && !Array.isArray(potteryInspection);
+  const applicable = Boolean(potteryInspectionStatus?.applicable || isPotteryMaterial(artifactMaterial));
+  if (!applicable && !hasInspection) {
+    return null;
+  }
+
+  const detailEntries = Object.entries(potteryInspection || {})
+    .filter(([key]) => !["moduleVersion", "summary", "humanReviewRecommended", "inspectionText"].includes(key))
+    .flatMap(([key, value]) => {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        return Object.entries(value).map(([detailKey, detailValue]) => ({
+          label: `${formatPotteryInspectionLabel(key)} · ${formatPotteryInspectionLabel(detailKey)}`,
+          value: detailValue,
+        }));
+      }
+
+      return [{ label: formatPotteryInspectionLabel(key), value }];
+    });
+
+  return (
+    <section className="visual-vca-pottery-inspection" aria-labelledby="visual-pottery-inspection-title">
+      <header>
+        <span>VCA OBJECT RECORD</span>
+        <h3 id="visual-pottery-inspection-title">도자기 검사</h3>
+      </header>
+      <div className="visual-vca-pottery-inspection-actions">
+        <p>
+          {potteryInspectionStatus?.status === "FAILED"
+            ? potteryInspectionStatus.failureMessage || "도자기 검사를 완료하지 못했습니다."
+            : hasInspection
+              ? "도자기 보조 검사 결과가 VCA 보고서에 반영되었습니다."
+              : "이 유물은 도자기 보조 검사를 별도로 실행할 수 있습니다."}
+        </p>
+        {onPotteryInspection && (
+          <button
+            type="button"
+            className="visual-secondary-button"
+            onClick={onPotteryInspection}
+            disabled={Boolean(working)}
+          >
+            {potteryActionLabel(potteryInspectionStatus?.status, working)}
+          </button>
+        )}
+      </div>
+      {!hasInspection ? (
+        <div className="visual-vca-pottery-inspection-empty">
+          도자기 검사 결과가 아직 없습니다. 위 버튼으로 현재 VCA run에 결과를 추가하세요.
+        </div>
+      ) : (
+        <>
+      <dl className="visual-vca-pottery-inspection-meta">
+        <div>
+          <dt>모듈 버전</dt>
+          <dd>{formatPotteryInspectionValue(potteryInspection.moduleVersion)}</dd>
+        </div>
+        <div>
+          <dt>전문가 검토 권장</dt>
+          <dd>{formatPotteryInspectionValue(potteryInspection.humanReviewRecommended)}</dd>
+        </div>
+      </dl>
+      <div className="visual-vca-pottery-inspection-copy">
+        <h4>요약</h4>
+        <p>{formatPotteryInspectionValue(potteryInspection.summary)}</p>
+        <h4>검사 기록</h4>
+        <p>{formatPotteryInspectionValue(potteryInspection.inspectionText)}</p>
+      </div>
+      <div className="visual-vca-pottery-inspection-details">
+        <h4>대상 세부 정보</h4>
+        {detailEntries.length === 0 ? (
+          <p>제공된 세부 정보가 없습니다.</p>
+        ) : (
+          <dl>
+            {detailEntries.map((detail, detailIndex) => (
+              <div key={`${detail.label}-${detailIndex}`}>
+                <dt>{detail.label}</dt>
+                <dd>{formatPotteryInspectionValue(detail.value)}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function formatFileSize(sizeBytes) {
+  if (!Number.isFinite(sizeBytes)) return "크기 정보 없음";
+  if (sizeBytes < 1024) return `${sizeBytes} B`;
+  if (sizeBytes < 1024 * 1024) return `${(sizeBytes / 1024).toFixed(1)} KB`;
+  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function IntermediateResults({ intermediateResults }) {
+  const stages = intermediateResults?.stages || [];
+
+  return (
+    <section className="visual-vca-intermediate-results" aria-labelledby="visual-intermediate-results-title">
+      <h3 id="visual-intermediate-results-title">중간 처리 결과</h3>
+      <p>
+        {intermediateResults?.projectName
+          ? `${intermediateResults.projectName} 실행에서 생성된 단계별 파일입니다.`
+          : "완료된 실행에서 생성된 단계별 파일을 확인할 수 있습니다."}
+      </p>
+      {stages.length === 0 ? (
+        <div className="visual-vca-intermediate-empty">
+          중간 처리 결과가 제공되지 않았습니다.
+        </div>
+      ) : (
+        <div className="visual-vca-intermediate-stages">
+          {stages.map((stage, stageIndex) => (
+            <article className="visual-vca-intermediate-stage" key={`${stage.stage}-${stageIndex}`}>
+              <header>
+                <span>{stage.stage || "PROCESSING_STAGE"}</span>
+                <h4>{stage.displayName || stage.stage || "처리 단계"}</h4>
+              </header>
+              {stage.items.length === 0 ? (
+                <p className="visual-vca-intermediate-empty">이 단계에서 생성된 파일이 없습니다.</p>
+              ) : (
+                <ul>
+                  {stage.items.map((item, itemIndex) => (
+                    <li key={`${item.relativePath}-${item.fileName}-${itemIndex}`}>
+                      <div className="visual-vca-intermediate-file-heading">
+                        <strong>{item.fileName || "파일 이름 없음"}</strong>
+                        <span>{item.contentType || "형식 정보 없음"}</span>
+                      </div>
+                      <dl className="visual-vca-intermediate-file-meta">
+                        <div>
+                          <dt>상대 경로</dt>
+                          <dd>{item.relativePath || "경로 정보 없음"}</dd>
+                        </div>
+                        <div>
+                          <dt>파일 크기</dt>
+                          <dd>{formatFileSize(item.sizeBytes)}</dd>
+                        </div>
+                      </dl>
+                      {item.preview ? (
+                        <details>
+                          <summary>텍스트 미리보기</summary>
+                          <pre>{item.preview}</pre>
+                        </details>
+                      ) : (
+                        <p className="visual-vca-intermediate-preview-empty">텍스트 미리보기가 제공되지 않았습니다.</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function VisualReport({
+  artifactMaterial,
+  intermediateResults,
   pdfJob,
   report,
   working,
+  onPotteryInspection,
   onPdfJob,
 }) {
   return (
@@ -90,6 +295,13 @@ export default function VisualReport({
         <ReportSummary summary={report.summary} />
         <ReportFindings findings={report.findings || []} />
         <ReportRecommendations recommendations={report.recommendations || []} />
+        <ReportPotteryInspection
+          artifactMaterial={artifactMaterial}
+          onPotteryInspection={onPotteryInspection}
+          potteryInspection={report.potteryInspection}
+          potteryInspectionStatus={report.potteryInspectionStatus}
+          working={working}
+        />
         {report.images?.length > 0 && (
           <section>
             <h3>분석 참고 이미지</h3>
@@ -114,6 +326,7 @@ export default function VisualReport({
             </div>
           </section>
         )}
+        <IntermediateResults intermediateResults={intermediateResults} />
       </div>
       <footer className="visual-vca-pdf">
         <div>

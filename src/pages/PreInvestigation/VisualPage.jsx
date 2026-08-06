@@ -60,6 +60,8 @@ export default function VisualPage() {
     artifact,
     error,
     handlePdfJob,
+    handlePotteryInspection,
+    intermediateResults,
     isMock,
     loadArtifact,
     loading,
@@ -144,7 +146,7 @@ export default function VisualPage() {
         </header>
 
         <section className="visual-vca-summary" aria-label="조사 대상 요약">
-          <div><span>조사 대상</span><strong>{artifact.displayName || workspaceArtifact.name || "유물 정보 없음"}</strong></div>
+          <div><span>조사 대상</span><strong>{workspaceArtifact.name || artifact.displayName || "유물 정보 없음"}</strong></div>
           <div><span>관리번호</span><strong>{artifact.artifactId || artifactId}</strong></div>
           <div><span>재질</span><strong>{workspaceArtifact.material || "정보 없음"}</strong></div>
           <div><span>등록 이미지</span><strong>{uploadedImages.length}장</strong></div>
@@ -259,9 +261,12 @@ export default function VisualPage() {
           </div>
           {report ? (
             <VisualReport
+              intermediateResults={intermediateResults}
               report={report}
               pdfJob={pdfJob}
               working={working}
+              artifactMaterial={workspaceArtifact.material}
+              onPotteryInspection={handlePotteryInspection}
               onPdfJob={handlePdfJob}
             />
           ) : (

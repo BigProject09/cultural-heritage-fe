@@ -84,10 +84,45 @@
   .visual-vca-report-body li small { @apply block text-[color:var(--workflow-muted)] text-[11px] mt-1.5; }
   .visual-vca-summary-details { @apply grid grid-cols-2 gap-2 mt-4 mb-0; }
   .visual-vca-summary-details > div { @apply border border-[color:var(--workflow-line)] p-2.5 rounded-lg; }
-  .visual-vca-summary-details dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
-  .visual-vca-summary-details dd { @apply text-xs font-bold mt-1 m-0; }
-  .visual-vca-report-images { @apply grid grid-cols-2 gap-3 mt-3; }
+   .visual-vca-summary-details dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
+   .visual-vca-summary-details dd { @apply text-xs font-bold mt-1 m-0; }
+   .visual-vca-pottery-inspection { @apply col-span-full; }
+   .visual-vca-pottery-inspection > header { @apply border-b border-[color:var(--workflow-line-soft)] pb-3; }
+   .visual-vca-pottery-inspection > header span { @apply block text-[color:var(--workflow-bronze)] text-[10px] font-bold tracking-[0.14em]; }
+   .visual-vca-pottery-inspection > header h3 { @apply mt-1; }
+   .visual-vca-pottery-inspection-actions { @apply flex items-center justify-between gap-4 border-b border-[color:var(--workflow-line-soft)] py-4; }
+   .visual-vca-pottery-inspection-actions p { @apply text-xs leading-[1.7] mt-0; }
+   .visual-vca-pottery-inspection-empty { @apply border border-dashed border-[color:var(--workflow-line)] [background:var(--workflow-paper)] text-[color:var(--workflow-muted)] text-xs text-center mt-4 px-4 py-3 rounded-lg; }
+   .visual-vca-pottery-inspection-meta { @apply grid grid-cols-2 gap-2 mt-4 mb-0; }
+   .visual-vca-pottery-inspection-meta > div, .visual-vca-pottery-inspection-details dl > div { @apply min-w-0 border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] p-2.5 rounded-lg; }
+   .visual-vca-pottery-inspection-meta dt, .visual-vca-pottery-inspection-details dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
+   .visual-vca-pottery-inspection-meta dd, .visual-vca-pottery-inspection-details dd { @apply text-[color:var(--workflow-ink-soft)] text-xs leading-[1.65] mt-1 m-0; }
+   .visual-vca-pottery-inspection-copy, .visual-vca-pottery-inspection-details { @apply mt-4; }
+   .visual-vca-pottery-inspection h4 { @apply text-[color:var(--workflow-bronze-dark)] text-xs font-bold mt-4 mb-0 first:mt-0; }
+   .visual-vca-pottery-inspection-copy p, .visual-vca-pottery-inspection-details > p { @apply text-xs leading-[1.7] mt-1.5; }
+   .visual-vca-pottery-inspection-details dl { @apply grid grid-cols-2 gap-2 mt-3 mb-0; }
+   .visual-vca-report-images { @apply grid grid-cols-2 gap-3 mt-3; }
   .visual-vca-report-images img, .visual-vca-report-images .visual-vca-image-placeholder { @apply w-full h-44 object-contain border border-[color:var(--workflow-line-soft)] [background:var(--workflow-paper)] p-3 rounded-lg; }
+  .visual-vca-intermediate-results { @apply col-span-full; }
+  .visual-vca-intermediate-empty { @apply border border-dashed border-[color:var(--workflow-line)] [background:var(--workflow-paper)] text-[color:var(--workflow-muted)] text-xs text-center mt-4 px-4 py-3 rounded-lg; }
+  .visual-vca-intermediate-stages { @apply grid gap-3 mt-4; }
+  .visual-vca-intermediate-stage { @apply border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] p-4 rounded-lg; }
+  .visual-vca-intermediate-stage > header { @apply border-b border-[color:var(--workflow-line-soft)] pb-3; }
+  .visual-vca-intermediate-stage > header span { @apply block text-[color:var(--workflow-muted)] text-[10px] font-bold tracking-[0.14em]; }
+  .visual-vca-intermediate-stage h4 { @apply [font-family:var(--font-serif)] text-[color:var(--workflow-bronze-dark)] text-base font-semibold mt-1 mb-0; }
+  .visual-vca-intermediate-stage > ul { @apply grid gap-3 [list-style:none] mt-3 mb-0 p-0; }
+  .visual-vca-intermediate-stage > ul > li { @apply border border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface-soft)] p-3 rounded-lg; }
+  .visual-vca-intermediate-file-heading { @apply flex items-start justify-between gap-3; }
+  .visual-vca-intermediate-file-heading strong { @apply [background:transparent] text-[color:var(--workflow-ink)] text-xs leading-[1.6] mr-0 p-0 rounded-none; }
+  .visual-vca-intermediate-file-heading span { @apply flex-none text-[color:var(--workflow-muted)] text-[10px] font-bold; }
+  .visual-vca-intermediate-file-meta { @apply grid grid-cols-2 gap-2 mt-3 mb-0; }
+  .visual-vca-intermediate-file-meta > div { @apply min-w-0 border-t border-[color:var(--workflow-line-soft)] pt-2; }
+  .visual-vca-intermediate-file-meta dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
+  .visual-vca-intermediate-file-meta dd { @apply overflow-hidden text-[color:var(--workflow-ink-soft)] text-[11px] text-ellipsis whitespace-nowrap mt-1 m-0; }
+  .visual-vca-intermediate-stage details { @apply border-t border-[color:var(--workflow-line-soft)] mt-3 pt-3; }
+  .visual-vca-intermediate-stage summary { @apply w-fit cursor-pointer text-[color:var(--workflow-bronze-dark)] text-[11px] font-bold; }
+  .visual-vca-intermediate-stage pre { @apply max-h-48 overflow-auto [background:var(--workflow-paper)] text-[color:var(--workflow-ink-soft)] text-[11px] leading-[1.65] [overflow-wrap:anywhere] whitespace-pre-wrap mt-3 mb-0 p-3 rounded-md; }
+  .visual-vca-intermediate-preview-empty { @apply text-[color:var(--workflow-muted)] text-[11px] mt-3; }
   .visual-vca-pdf { @apply flex items-center justify-between gap-5 border-t border-[color:var(--workflow-line-soft)] mt-6 pt-5; }
   .visual-vca-pdf > div:first-child { @apply flex flex-col gap-1; }
   .visual-vca-pdf strong { @apply text-sm; }
@@ -97,13 +132,17 @@
   .visual-vca-complete p { @apply text-[color:var(--workflow-muted)] text-xs [word-break:keep-all] [overflow-wrap:break-word] m-0; }
   .visual-state { @apply grid place-items-center content-center text-center px-6; }
   .visual-state p { @apply max-w-lg text-[color:var(--workflow-muted)] text-sm leading-[1.7] mt-4 mb-6; }
-  .visual-vca-page button:focus-visible, .visual-vca-page a:focus-visible, .visual-vca-page input:focus-visible { @apply outline-2 outline-offset-2 outline-[color:var(--workflow-bronze)]; }
+  .visual-vca-page button:focus-visible, .visual-vca-page a:focus-visible, .visual-vca-page input:focus-visible, .visual-vca-page summary:focus-visible { @apply outline-2 outline-offset-2 outline-[color:var(--workflow-bronze)]; }
   @media (max-width: 760px) {
     .visual-page.visual-vca-page { @apply pt-8 px-4; }
     .visual-vca-header, .visual-vca-upload, .visual-vca-pdf, .visual-vca-complete { @apply items-stretch flex-col; }
     .visual-vca-summary, .visual-vca-layout, .visual-vca-report-body { @apply grid-cols-1; }
     .visual-vca-summary > div { @apply border-l-0 border-t border-[color:var(--workflow-line-soft)] first:border-t-0; }
-    .visual-vca-report-body section:first-child, .visual-vca-report-body section:last-child { @apply col-span-1; }
+     .visual-vca-report-body section:first-child, .visual-vca-report-body section:last-child { @apply col-span-1; }
+     .visual-vca-pottery-inspection-actions { @apply items-stretch flex-col; }
+     .visual-vca-pottery-inspection-meta, .visual-vca-pottery-inspection-details dl { @apply grid-cols-1; }
+     .visual-vca-intermediate-file-heading { @apply items-stretch flex-col; }
+    .visual-vca-intermediate-file-meta { @apply grid-cols-1; }
     .visual-vca-actions, .visual-vca-pdf > div:last-child { @apply items-stretch flex-col; }
     .visual-vca-status-actions { @apply grid-cols-1; }
     .visual-vca-image-grid { @apply grid-cols-1; }
