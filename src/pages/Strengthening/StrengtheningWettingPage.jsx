@@ -32,12 +32,7 @@ function StrengtheningWettingPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const {
-    taskId,
-    colorChangeAnalysis,
-    setCompleted,
-    setStepSaving,
-  } = ctx;
+  const { taskId, colorChangeAnalysis, setCompleted, setStepSaving } = ctx;
 
   const [beforePhoto, setBeforePhoto] = useState("");
   const [afterPhoto, setAfterPhoto] = useState("");
@@ -78,14 +73,11 @@ function StrengtheningWettingPage() {
     }
   };
 
-
   const handleAnalyze = async () => {
-
     if (!beforePhoto || !afterPhoto) {
       alert("습윤 테스트 전/후 사진을 입력해주세요.");
       return;
     }
-
 
     const request = {
       resume: {
@@ -94,37 +86,26 @@ function StrengtheningWettingPage() {
       },
     };
 
-
     setAnalyzing(true);
 
     try {
-
       const response = await resumeTask(taskId, request);
 
       applyInterrupt(response.interrupt, ctx);
-
     } catch (error) {
-
       console.error(error);
       alert("습윤 테스트 사진 저장 실패");
-
     } finally {
-
       setAnalyzing(false);
-
     }
-
   };
 
-
   const handleProceed = () => {
-
     setStepSaving("strengtheningWetting", true);
     navigate("/strengthening");
 
     (async () => {
       try {
-
         const response = await resumeTask(taskId, {
           resume: {
             action: "proceed",
@@ -137,42 +118,25 @@ function StrengtheningWettingPage() {
           ...prev,
           strengtheningWetting: true,
         }));
-
       } catch (error) {
-
         console.error(error);
         alert("습윤 테스트 결과 저장 실패");
-
       } finally {
-
         setStepSaving("strengtheningWetting", false);
-
       }
     })();
-
   };
-
 
   return (
     <div className="strengthening-wetting-page">
-
-
       <div className="detail-header">
-
-        <button
-          className="nav-btn"
-          onClick={() => navigate("/strengthening")}
-        >
+        <button className="nav-btn" onClick={() => navigate("/strengthening")}>
           ← 이전
         </button>
 
-
-        <h1 className="vora-logo">
-          VORA
-        </h1>
+        <h1 className="vora-logo">VORA</h1>
 
         <div className="nav-btn-group">
-
           {!colorChangeAnalysis && (
             <button
               className="nav-btn"
@@ -190,91 +154,81 @@ function StrengtheningWettingPage() {
           >
             다음 →
           </button>
-
         </div>
-
       </div>
 
-
-
       <div className="method-container">
-
-
         <div className="page-header">
-
-          <h1>
-            습윤 효과 테스트
-          </h1>
-
+          <h1>습윤 효과 테스트</h1>
         </div>
 
-
-
         <div className="photo-row">
-
-          <div className="info-card">
-
-
-            <h2>
-              처리 전
-            </h2>
-
+          <div
+            className={`info-card photo-upload-zone ${
+              colorChangeAnalysis || beforeUploading ? "is-disabled" : ""
+            }`}
+          >
+            <h2>처리 전</h2>
 
             <input
+              className="photo-file-input"
               type="file"
               accept="image/*"
+              aria-label="처리 전 사진 선택"
               disabled={!!colorChangeAnalysis || beforeUploading}
               onChange={handleBeforeFileChange}
             />
 
-            {beforeUploading && <p>업로드 중...</p>}
+            <p className="photo-upload-guide">
+              {beforeUploading
+                ? "사진을 업로드하고 있어요..."
+                : beforePhoto
+                  ? "다른 사진으로 바꾸려면 상자 안을 클릭하세요."
+                  : "상자 안을 클릭해 사진을 선택하세요."}
+            </p>
 
             {beforePhoto && (
               <div className="photo-preview">
                 <img src={beforePhoto} alt="처리 전" />
               </div>
             )}
-
-
           </div>
 
-
-
-          <div className="info-card">
-
-
-            <h2>
-              처리 후
-            </h2>
-
+          <div
+            className={`info-card photo-upload-zone ${
+              colorChangeAnalysis || afterUploading ? "is-disabled" : ""
+            }`}
+          >
+            <h2>처리 후</h2>
 
             <input
+              className="photo-file-input"
               type="file"
               accept="image/*"
+              aria-label="처리 후 사진 선택"
               disabled={!!colorChangeAnalysis || afterUploading}
               onChange={handleAfterFileChange}
             />
 
-            {afterUploading && <p>업로드 중...</p>}
+            <p className="photo-upload-guide">
+              {afterUploading
+                ? "사진을 업로드하고 있어요..."
+                : afterPhoto
+                  ? "다른 사진으로 바꾸려면 상자 안을 클릭하세요."
+                  : "상자 안을 클릭해 사진을 선택하세요."}
+            </p>
 
             {afterPhoto && (
               <div className="photo-preview">
                 <img src={afterPhoto} alt="처리 후" />
               </div>
             )}
-
-
           </div>
-
         </div>
 
-
         {colorChangeAnalysis && (
-
           <div className="info-card color-result-card">
-
             <div className="result-box">
-
               <div className="severity-legend">
                 {Object.entries(SEVERITY_LABELS).map(([key, label]) => (
                   <span key={key} className="severity-legend-item">
@@ -301,7 +255,9 @@ function StrengtheningWettingPage() {
                         aria-label={`${label} 설명 보기`}
                       >
                         {openMetric === key && (
-                          <span className="metric-tooltip">{metric.description}</span>
+                          <span className="metric-tooltip">
+                            {metric.description}
+                          </span>
                         )}
                       </button>
                     </li>
@@ -312,39 +268,24 @@ function StrengtheningWettingPage() {
               <p className="recommendation">
                 ✔ {colorChangeAnalysis.recommendation}
               </p>
-
             </div>
-
           </div>
-
         )}
-
-
       </div>
 
-
       {analyzing && (
-
         <div className="analyzing-overlay">
-
           <div className="analyzing-box">
-
             <p>색 변화를 분석하고 있어요...</p>
 
             <div className="analyzing-bar-track">
               <div className="analyzing-bar-fill" />
             </div>
-
           </div>
-
         </div>
-
       )}
-
-
     </div>
   );
 }
-
 
 export default StrengtheningWettingPage;
