@@ -42,18 +42,6 @@
    .visual-vca-upload strong { @apply text-sm; }
    .visual-vca-upload p { @apply text-[color:var(--workflow-muted)] text-xs [word-break:keep-all] [overflow-wrap:break-word] mt-1 mb-0; }
    .visual-vca-actions { @apply flex flex-none gap-2; }
-   .visual-vca-corpus { @apply mt-6 p-5; }
-   .visual-vca-corpus .visual-vca-heading { @apply mb-4; }
-   .visual-vca-corpus-list { @apply grid gap-2 [list-style:none] mt-4 mb-0 p-0; }
-   .visual-vca-corpus-list li { @apply flex items-center justify-between gap-4 border border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface-soft)] px-4 py-3 rounded-lg; }
-   .visual-vca-corpus-list li > div { @apply grid min-w-0 gap-1; }
-   .visual-vca-corpus-list strong { @apply overflow-hidden text-sm text-ellipsis whitespace-nowrap; }
-   .visual-vca-corpus-list span { @apply text-[color:var(--workflow-muted)] text-[11px]; }
-   .visual-vca-corpus-list button { @apply flex-none [background:transparent] text-[color:var(--workflow-danger)] text-xs font-bold cursor-pointer p-0 border-0; }
-   .visual-vca-corpus-list button:disabled { @apply cursor-not-allowed opacity-50; }
-   .visual-vca-corpus-error { @apply gap-3; }
-   .visual-vca-corpus-message { @apply flex items-center justify-between gap-3 border border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)] text-[color:var(--workflow-ink-soft)] text-xs leading-[1.6] mt-4 px-4 py-3 rounded-lg; }
-   .visual-vca-corpus-message p { @apply m-0; }
   .visual-primary-button, .visual-secondary-button { @apply inline-flex min-h-11 items-center justify-center cursor-pointer text-[13px] font-bold transition-[background,border-color,color,transform] duration-[160ms] rounded-lg px-5 py-0 border; }
   .visual-primary-button { @apply [background:var(--workflow-bronze)] border-[color:var(--workflow-bronze)] text-[color:var(--workflow-surface)] hover:[background:var(--workflow-bronze-dark)] hover:border-[color:var(--workflow-bronze-dark)] hover:-translate-y-px; }
   .visual-secondary-button { @apply [background:transparent] border-[color:var(--workflow-line)] text-[color:var(--workflow-ink)] hover:[background:var(--workflow-surface-soft)] hover:border-[color:var(--workflow-bronze)]; }
@@ -158,10 +146,6 @@
      .visual-vca-actions, .visual-vca-pdf > div:last-child { @apply items-stretch flex-col; }
      .visual-vca-status-actions { @apply grid-cols-1; }
      .visual-vca-image-grid { @apply grid-cols-1; }
-     .visual-vca-corpus-list li { @apply items-stretch flex-col; }
-     .visual-vca-corpus-list button { @apply self-end; }
-     .visual-vca-corpus-message { @apply items-stretch flex-col; }
-     .visual-vca-corpus-message .visual-secondary-button { @apply self-stretch; }
    }
   @media (prefers-reduced-motion: reduce) { .visual-vca-page * { @apply transition-none; } }
 }

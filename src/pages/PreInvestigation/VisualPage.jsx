@@ -43,13 +43,6 @@ function formatDate(value) {
   });
 }
 
-function formatFileSize(sizeBytes) {
-  if (!Number.isFinite(sizeBytes)) return "크기 정보 없음";
-  if (sizeBytes < 1024) return `${sizeBytes} B`;
-  if (sizeBytes < 1024 * 1024) return `${(sizeBytes / 1024).toFixed(1)} KB`;
-  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 function runProgress(run) {
   if (!run) return 0;
   if (Number.isFinite(run.progressPercent)) return run.progressPercent;
@@ -61,40 +54,34 @@ export default function VisualPage() {
   const { artifactId: routeArtifactId = "" } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
   const fileInputRef = useRef(null);
-  const corpusFileInputRef = useRef(null);
   const [completionError, setCompletionError] = useState("");
   const investigation = useVisualInvestigation(artifactId);
   const {
     artifact,
-    corpusError,
-    corpusLoading,
-    corpusPdfs,
-    corpusWorking,
     error,
     handlePdfJob,
     handlePotteryInspection,
     intermediateResults,
     isMock,
     loadArtifact,
-    loadCorpusPdfs,
     loading,
     notice,
     pdfJob,
     refreshStatus,
-    removeCorpusPdf,
     removeImage,
     report,
+    runRequestPending,
     runIsActive,
     selectFiles,
     selectedRun,
     startRun,
     uploadedImages,
-    uploadCorpusFiles,
     working,
     workspaceArtifact,
   } = investigation;
   const canComplete = Boolean(report) && selectedRun?.status === "COMPLETED";
-  const canStartRun = uploadedImages.length > 0 && !runIsActive && !working;
+  const pageBusy = Boolean(working) || runRequestPending;
+  const canStartRun = uploadedImages.length > 0 && !runIsActive && !pageBusy;
   const progressValue = runProgress(selectedRun);
 
   async function handleComplete() {
@@ -167,94 +154,6 @@ export default function VisualPage() {
           <div><span>등록 이미지</span><strong>{uploadedImages.length}장</strong></div>
         </section>
 
-        <section className="visual-vca-card visual-vca-corpus" aria-labelledby="visual-corpus-title">
-          <div className="visual-vca-heading">
-            <div>
-              <span className="visual-vca-kicker">SHARED RAG CONTEXT</span>
-              <h2 id="visual-corpus-title">RAG 문서 corpus</h2>
-              <p>공유 PDF 문서는 모든 VCA 분석의 참고 자료로 사용됩니다.</p>
-            </div>
-            <span className="visual-vca-count">{corpusPdfs.length}개 등록</span>
-          </div>
-          <input
-            ref={corpusFileInputRef}
-            className="visual-vca-hidden"
-            type="file"
-            accept=".pdf,application/pdf"
-            multiple
-            aria-label="RAG 문서 corpus PDF 파일 선택"
-            onChange={(event) => {
-              uploadCorpusFiles(event.target.files);
-              event.target.value = "";
-            }}
-            disabled={Boolean(corpusWorking)}
-          />
-          <div className="visual-vca-upload">
-            <div>
-              <strong>PDF 문서를 선택하면 공유 corpus에 등록됩니다</strong>
-              <p>모든 파일은 corpus 루트에 저장됩니다. 하위 폴더는 지원하지 않습니다.</p>
-            </div>
-            <div className="visual-vca-actions">
-              <button
-                type="button"
-                className="visual-secondary-button"
-                onClick={() => corpusFileInputRef.current?.click()}
-                disabled={Boolean(corpusWorking)}
-              >
-                {corpusWorking === "upload" ? "PDF 업로드 중" : "PDF 선택 및 업로드"}
-              </button>
-            </div>
-          </div>
-          {corpusLoading ? (
-            <p className="visual-vca-empty" role="status" aria-live="polite">RAG 문서 corpus를 불러오는 중입니다.</p>
-          ) : corpusPdfs.length === 0 ? (
-            corpusError ? (
-            <div className="visual-vca-empty visual-vca-corpus-error" role="alert">
-              <p>{corpusError.message}</p>
-              <button type="button" className="visual-secondary-button" onClick={loadCorpusPdfs} disabled={Boolean(corpusWorking)}>
-                다시 시도
-              </button>
-            </div>
-            ) : (
-              <p className="visual-vca-empty">등록된 RAG 문서가 없습니다. 분석에 사용할 PDF를 업로드하세요.</p>
-            )
-          ) : (
-            <>
-              {corpusError && (
-                <div className="visual-vca-corpus-message" role="alert">
-                  <p>{corpusError.message}</p>
-                  <button
-                    type="button"
-                    className="visual-secondary-button"
-                    onClick={loadCorpusPdfs}
-                    disabled={Boolean(corpusWorking)}
-                  >
-                    다시 시도
-                  </button>
-                </div>
-              )}
-              <ul className="visual-vca-corpus-list" aria-label="등록된 RAG 문서 목록">
-                {corpusPdfs.map((pdf) => (
-                  <li key={`${pdf.fileName}-${pdf.updatedAt}`}>
-                    <div>
-                      <strong title={pdf.fileName}>{pdf.fileName}</strong>
-                      <span>{formatFileSize(pdf.sizeBytes)} · {formatDate(pdf.updatedAt)}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeCorpusPdf(pdf.fileName)}
-                      disabled={Boolean(corpusWorking)}
-                      aria-label={`${pdf.fileName} 삭제`}
-                    >
-                      {corpusWorking === `delete-${pdf.fileName}` ? "삭제 중" : "삭제"}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
-
         <div className="visual-vca-layout">
           <section className="visual-vca-card" aria-labelledby="visual-images-title">
             <div className="visual-vca-heading">
@@ -273,7 +172,7 @@ export default function VisualPage() {
               multiple
               aria-label="조사 이미지 파일 선택"
               onChange={selectFiles}
-              disabled={Boolean(working)}
+              disabled={pageBusy}
             />
             <div className="visual-vca-upload">
               <div>
@@ -285,7 +184,7 @@ export default function VisualPage() {
                   type="button"
                   className="visual-secondary-button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={Boolean(working)}
+                  disabled={pageBusy}
                 >
                   {working === "upload" ? "업로드 중" : "파일 선택 및 업로드"}
                 </button>
@@ -344,8 +243,8 @@ export default function VisualPage() {
               </dl>
             </div>
             <div className="visual-vca-status-actions">
-              <button type="button" className="visual-primary-button" onClick={startRun} disabled={!canStartRun}>{working === "run" ? "분석 접수 중" : "분석 시작"}</button>
-              <button type="button" className="visual-secondary-button" onClick={refreshStatus} disabled={Boolean(working)}>{working === "refresh" ? "갱신 중" : "상태 새로고침"}</button>
+              <button type="button" className="visual-primary-button" onClick={startRun} disabled={!canStartRun}>{runRequestPending ? "분석 접수 중" : "분석 시작"}</button>
+              <button type="button" className="visual-secondary-button" onClick={refreshStatus} disabled={working === "refresh"}>{working === "refresh" ? "갱신 중" : "상태 새로고침"}</button>
             </div>
           </aside>
         </div>

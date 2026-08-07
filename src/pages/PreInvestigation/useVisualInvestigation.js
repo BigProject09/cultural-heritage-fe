@@ -3,16 +3,13 @@ import { getWorkspaceProject, selectWorkspaceProject } from "../../data/workspac
 import {
   createVcaPdfJob,
   createVcaRun,
-  deleteVcaCorpusPdf,
   deleteVcaImage,
   getVcaArtifact,
-  getVcaCorpusPdfs,
   getVcaIntermediateResults,
   getVcaPdfJob,
   getVcaReport,
   isVcaMockMode,
   runVcaPotteryInspection,
-  uploadVcaCorpusPdf,
   uploadVcaImage,
 } from "../../services/vcaApi";
 
@@ -51,10 +48,6 @@ function isVcaGatewayUrl(url = "") {
 export function useVisualInvestigation(artifactId) {
   const [workspaceArtifact, setWorkspaceArtifact] = useState({});
   const [artifact, setArtifact] = useState(null);
-  const [corpusPdfs, setCorpusPdfs] = useState([]);
-  const [corpusLoading, setCorpusLoading] = useState(true);
-  const [corpusWorking, setCorpusWorking] = useState("");
-  const [corpusError, setCorpusError] = useState(null);
   const [selectedRunId, setSelectedRunId] = useState("");
   const [report, setReport] = useState(null);
   const [reportRunId, setReportRunId] = useState("");
@@ -63,6 +56,7 @@ export function useVisualInvestigation(artifactId) {
   const [pdfJob, setPdfJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState("");
+  const [runRequestPending, setRunRequestPending] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState(null);
   const selectedRun = useMemo(
@@ -130,21 +124,6 @@ export function useVisualInvestigation(artifactId) {
     if (!silent) setLoading(false);
   }, [artifactId]);
 
-  const loadCorpusPdfs = useCallback(async ({ signal } = {}) => {
-    setCorpusLoading(true);
-    setCorpusError(null);
-    try {
-      const pdfs = await getVcaCorpusPdfs({ signal });
-      setCorpusPdfs(pdfs);
-      return pdfs;
-    } catch (corpusLoadError) {
-      if (corpusLoadError?.name !== "AbortError") setCorpusError(corpusLoadError);
-      throw corpusLoadError;
-    } finally {
-      setCorpusLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     const timer = window.setTimeout(() => {
       loadArtifact().catch((loadError) => {
@@ -155,17 +134,6 @@ export function useVisualInvestigation(artifactId) {
     return () => window.clearTimeout(timer);
   }, [loadArtifact]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => {
-      loadCorpusPdfs({ signal: controller.signal }).catch(() => {});
-    }, 0);
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [loadCorpusPdfs]);
-
   const refreshStatus = useCallback(async () => {
     setWorking("refresh");
     try {
@@ -174,7 +142,7 @@ export function useVisualInvestigation(artifactId) {
     } catch (refreshError) {
       setNotice(operationMessage(refreshError, "분석 상태를 갱신"));
     } finally {
-      setWorking("");
+      setWorking((current) => current === "refresh" ? "" : current);
     }
   }, [loadArtifact]);
 
@@ -233,49 +201,8 @@ export function useVisualInvestigation(artifactId) {
     }
   }
 
-  async function uploadCorpusFiles(files) {
-    const pdfFiles = Array.from(files || []).filter(
-      (file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"),
-    );
-    if (pdfFiles.length === 0) {
-      setCorpusError(new Error("PDF 파일을 선택하세요."));
-      return;
-    }
-
-    setCorpusWorking("upload");
-    setCorpusError(null);
-    setNotice("");
-    try {
-      for (const file of pdfFiles) {
-        const uploadedPdf = await uploadVcaCorpusPdf(file);
-        setCorpusPdfs((current) => [uploadedPdf, ...current]);
-      }
-      setNotice(`${pdfFiles.length}개 PDF를 RAG 문서 corpus에 등록했습니다.`);
-    } catch (uploadError) {
-      setCorpusError(uploadError);
-      setNotice(operationMessage(uploadError, "RAG 문서 corpus에 PDF를 업로드"));
-    } finally {
-      setCorpusWorking("");
-    }
-  }
-
-  async function removeCorpusPdf(fileName) {
-    setCorpusWorking(`delete-${fileName}`);
-    setCorpusError(null);
-    setNotice("");
-    try {
-      await deleteVcaCorpusPdf(fileName);
-      setCorpusPdfs((current) => current.filter((pdf) => pdf.fileName !== fileName));
-      setNotice("RAG 문서 corpus에서 PDF를 삭제했습니다.");
-    } catch (deleteError) {
-      setCorpusError(deleteError);
-      setNotice(operationMessage(deleteError, "RAG 문서 corpus에서 PDF를 삭제"));
-    } finally {
-      setCorpusWorking("");
-    }
-  }
-
   async function startRun() {
+    setRunRequestPending(true);
     setWorking("run");
     setNotice("");
     try {
@@ -292,7 +219,8 @@ export function useVisualInvestigation(artifactId) {
     } catch (runError) {
       setNotice(operationMessage(runError, "분석을 시작"));
     } finally {
-      setWorking("");
+      setRunRequestPending(false);
+      setWorking((current) => current === "run" ? "" : current);
     }
   }
 
@@ -419,29 +347,23 @@ export function useVisualInvestigation(artifactId) {
 
   return {
     artifact,
-    corpusError,
-    corpusLoading,
-    corpusPdfs,
-    corpusWorking,
     error,
     isMock: isVcaMockMode(),
     loadArtifact,
-    loadCorpusPdfs,
     loadReport,
     loading,
     notice,
     pdfJob,
     refreshStatus,
-    removeCorpusPdf,
     removeImage,
     report,
+    runRequestPending,
     runIsActive,
     selectFiles,
     selectedRun,
     selectRun,
     startRun,
     uploadedImages,
-    uploadCorpusFiles,
     working,
     workspaceArtifact,
     handlePdfJob,
