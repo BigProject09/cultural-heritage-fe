@@ -1,46 +1,66 @@
 @reference "tailwindcss";
 
 @layer components {
-.nav-btn-group {
+  .nav-btn-group {
     @apply flex items-center gap-3;
-}
-.photo-row {
+  }
+  .photo-row {
     @apply flex gap-4;
-}
-.photo-row .info-card {
+  }
+  .photo-row .info-card {
     @apply flex-1;
-}
-.photo-preview img {
+  }
+  .bonding-work-page .photo-upload-zone {
+    @apply relative min-h-[220px] overflow-hidden cursor-pointer transition-[border-color,box-shadow,transform] duration-200;
+  }
+  .bonding-work-page .photo-upload-zone:hover:not(.is-disabled),
+  .bonding-work-page .photo-upload-zone:focus-within:not(.is-disabled) {
+    border-color: #4b6753;
+    @apply shadow-[0_8px_24px_rgba(75,103,83,0.16)] -translate-y-0.5;
+  }
+  .bonding-work-page .photo-upload-zone.is-disabled {
+    @apply cursor-not-allowed opacity-70;
+  }
+  .bonding-work-page .photo-file-input {
+    @apply absolute z-[2] w-full h-full opacity-0 cursor-pointer inset-0;
+  }
+  .bonding-work-page .photo-file-input:disabled {
+    @apply cursor-not-allowed;
+  }
+  .bonding-work-page .photo-upload-guide {
+    @apply text-sm text-[#6b7280] mt-2 mb-3;
+  }
+  .photo-preview img {
     @apply max-w-[200px] max-h-[200px] object-cover mt-2 rounded-lg;
-}
-.temp-analysis-card {
+  }
+  .temp-analysis-card {
     @apply mt-5;
-}
-.temp-analysis-card .metric-list {
+  }
+  .temp-analysis-card .metric-list {
     @apply grid-cols-1 max-w-[280px];
-}
-.severity-dot.status-good {
+  }
+  .severity-dot.status-good {
     @apply [background:#34c759];
-}
-.severity-dot.status-minor_issue {
+  }
+  .severity-dot.status-minor_issue {
     @apply [background:#f4c430];
-}
-.severity-dot.status-major_issue {
+  }
+  .severity-dot.status-major_issue {
     @apply [background:#e0392b];
-}
-.severity-dot.status-unclear {
+  }
+  .severity-dot.status-unclear {
     @apply [background:#999];
-}
-.temp-analysis-severity {
+  }
+  .temp-analysis-severity {
     @apply text-sm font-semibold text-[#555];
-}
-.temp-analysis-warning {
+  }
+  .temp-analysis-warning {
     @apply text-[#e0392b] font-semibold mb-3;
-}
-.temp-analysis-description {
+  }
+  .temp-analysis-description {
     @apply text-[15px] leading-[1.7] text-[#444] mb-2.5;
-}
-.recommendation {
+  }
+  .recommendation {
     @apply font-semibold;
-}
+  }
 }
