@@ -20,7 +20,7 @@
   .strengthening-wetting-page .photo-upload-zone:hover:not(.is-disabled),
   .strengthening-wetting-page
     .photo-upload-zone:focus-within:not(.is-disabled) {
-    @apply border-guide-primary shadow-[0_8px_24px_rgba(75,103,83,0.16)] -translate-y-0.5;
+    @apply border-guide-primary shadow-[0_8px_24px_rgba(47,111,237,0.16)] -translate-y-0.5;
   }
 
   .strengthening-wetting-page .photo-upload-zone.is-disabled {
