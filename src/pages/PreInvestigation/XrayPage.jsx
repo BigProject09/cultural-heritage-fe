@@ -15,17 +15,19 @@ import useObjectUrl from "../../hooks/useObjectUrl";
 import {
   TARGET,
   checkInspectionHealth,
+  completeWorkflow,
   createStitchJob,
   detectBatch,
   detectOne,
-  detectFinalAssembled,
-  detectFinalFragments,
+  detectWorkflow,
   downloadFinalStitchResult,
   downloadStitchResult,
   fetchStitchLayout,
   generateReport,
-  mapDefects,
+  generateWorkflowReportText,
   saveFinalStitchLayout,
+  saveWorkflowReportText,
+  updateWorkflowDefects,
   waitForStitchJob,
 } from "../../services/xrayApi";
 
@@ -95,7 +97,7 @@ const WORKFLOW_STEPS = [
 const USE_MOCK = import.meta.env.VITE_USE_XRAY_MOCK === "true";
 
 /** 결합 작업이 진행 중인 상태들. 버튼 잠금과 진행 표시에 함께 쓴다. */
-const STITCH_BUSY = ["UPLOADING", "PENDING", "RUNNING", "FINALIZING"];
+const STITCH_BUSY = ["UPLOADING", "PREPARED", "STITCHING", "FINALIZING"];
 
 /**
  * 결합 진행 단계.
@@ -105,10 +107,10 @@ const STITCH_BUSY = ["UPLOADING", "PENDING", "RUNNING", "FINALIZING"];
  */
 const STITCH_STEPS = [
   { key: "UPLOADING", label: "업로드" },
-  { key: "PENDING", label: "접수" },
-  { key: "RUNNING", label: "결합" },
+  { key: "PREPARED", label: "접수" },
+  { key: "STITCHING", label: "결합" },
   { key: "FINALIZING", label: "최종 확정" },
-  { key: "COMPLETED", label: "완료" },
+  { key: "STITCHED", label: "결합 완료" },
 ];
 
 const DEFECT_MAPPING_LABELS = {
@@ -257,8 +259,39 @@ function finalLayoutFragments(layout) {
   }));
 }
 
-function mappingKey(sourceIndex, regionId) {
-  return `${sourceIndex}:${regionId}`;
+
+function workflowDefectToRegion(defect, index) {
+  const geometry = defect?.geometry || {};
+  const bbox = {
+    x1: Number(geometry.x1 ?? 0),
+    y1: Number(geometry.y1 ?? 0),
+    x2: Number(geometry.x2 ?? 0),
+    y2: Number(geometry.y2 ?? 0),
+  };
+  const originType = defect?.originType || "ASSEMBLED_ONLY";
+  const originLabel = {
+    MATCHED: "원본·결합본 모두 탐지",
+    SOURCE_ONLY: "원본에서 탐지 후 최종 좌표로 매핑",
+    ASSEMBLED_ONLY: "최종 결합본에서만 탐지",
+  }[originType] || originType;
+
+  return {
+    defectId: defect.id,
+    regionId: `D-${String(defect.id ?? index + 1).padStart(3, "0")}`,
+    analysisTarget: TARGET.ASSEMBLED,
+    fileName: "assembled_xray.final.png",
+    bbox,
+    position: originLabel,
+    confidence: null,
+    areaRatioPercent: null,
+    mappingStatus: originType,
+    originType,
+    userNote: `${originLabel}. 최종 결합본의 표시 영역을 확인하세요.`,
+    reviewDecision:
+      String(defect?.reviewDecision || "DAMAGE").toLowerCase() === "normal"
+        ? "normal"
+        : "damage",
+  };
 }
 
 // 백엔드/결합 엔진의 originalSourceIndex는 파일명 natural sort 순서다.
@@ -596,16 +629,16 @@ export default function XrayPage() {
       });
 
       setStitchJobId(created.jobId);
-      setStitchStatus(created.status || "PENDING");
+      setStitchStatus(created.status || "STITCHING");
 
       // 완료될 때까지 상태를 확인한다. 진행 상황은 콜백으로 받는다.
       const completed = await waitForStitchJob(created.jobId, (status) => {
         setStitchStatus(status.status);
         setStitchMessage(
           {
-            PENDING: "결합 작업을 접수했습니다.",
-            RUNNING: "X-RAY 조각을 결합하고 있습니다.",
-            COMPLETED: "결합이 완료되었습니다.",
+            PREPARED: "결합 작업을 접수했습니다.",
+            STITCHING: "X-RAY 조각을 결합하고 있습니다.",
+            STITCHED: "결합이 완료되었습니다.",
           }[status.status] ||
             status.errorMessage ||
             "결합 작업을 기다리고 있습니다.",
@@ -627,7 +660,7 @@ export default function XrayPage() {
       const layout = await fetchStitchLayout(completed.jobId);
       setStitchLayout(layout);
       setCorrectedFragments(null);
-      setStitchStatus("COMPLETED");
+      setStitchStatus("STITCHED");
       setStitchView("RESULT");
       setActiveStep(2);
       setMaxReachedStep(2);
@@ -709,7 +742,7 @@ export default function XrayPage() {
       );
       setAssembledFile(finalFile);
       setViewFile(finalFile);
-      setStitchStatus("COMPLETED");
+      setStitchStatus("STITCHED");
       setStitchMessage("최종 결합 결과가 확정되었습니다.");
 
       setWorkflow(WORKFLOW.INSPECTION);
@@ -717,7 +750,7 @@ export default function XrayPage() {
       setMaxReachedStep((current) => Math.max(current, 3));
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
-      setStitchStatus("COMPLETED");
+      setStitchStatus("STITCHED");
       setStitchMessage(`최종 결합 확정 실패: ${error.message}`);
     }
   }
@@ -756,81 +789,48 @@ export default function XrayPage() {
     const startedAt = performance.now();
 
     try {
-      setInspectionStep("ASSEMBLED");
-      const assembledResult = USE_MOCK
-        ? await detectOne(assembledFile, TARGET.ASSEMBLED, confidence)
-        : await detectFinalAssembled(stitchJobId, confidence);
+      let allRegions;
+      let allSummaries;
 
-      setInspectionStep("FRAGMENTS");
-      const fragmentResult = USE_MOCK
-        ? await detectBatch(fragmentFiles, TARGET.FRAGMENT, confidence)
-        : await detectFinalFragments(stitchJobId, confidence);
+      if (USE_MOCK) {
+        setInspectionStep("ASSEMBLED");
+        const assembledResult = await detectOne(
+          assembledFile,
+          TARGET.ASSEMBLED,
+          confidence,
+        );
 
-      setInspectionStep("MAPPING");
-      const mappingResult = USE_MOCK
-        ? null
-        : await mapDefects(stitchJobId, fragmentResult, assembledResult);
-      setDefectMapping(mappingResult);
+        setInspectionStep("FRAGMENTS");
+        const fragmentResult = await detectBatch(
+          fragmentFiles,
+          TARGET.FRAGMENT,
+          confidence,
+        );
 
-      const assembledDecisionById = new Map(
-        (mappingResult?.assembledDecisions || []).map((decision) => [
-          decision.assembledRegionId,
-          decision,
-        ]),
-      );
-      const sourceMappingById = new Map(
-        (mappingResult?.mappings || []).map((mapping) => [
-          mappingKey(mapping.originalSourceIndex, mapping.sourceRegionId),
-          mapping,
-        ]),
-      );
-      const sourceOnlyById = new Map();
-      (mappingResult?.sourceOnlyGroups || []).forEach((group) => {
-        (group.observations || []).forEach((observation) => {
-          sourceOnlyById.set(
-            mappingKey(
-              observation.originalSourceIndex,
-              observation.sourceRegionId,
-            ),
-            group,
-          );
-        });
-      });
-
-      // AI가 만든 regionId는 defect-mapping의 키이므로 detectorRegionId로 보존한다.
-      // 화면 선택용 regionId만 전체 목록에서 유일하도록 새로 부여한다.
-      const detectedRegions = [
-        ...(assembledResult.regions || []).map((region) => ({
+        const detectedRegions = [
+          ...(assembledResult.regions || []),
+          ...(fragmentResult.regions || []),
+        ];
+        allRegions = detectedRegions.map((region, index) => ({
           ...region,
-          detectorRegionId: region.regionId,
-          mappingStatus:
-            assembledDecisionById.get(region.regionId)?.status || "ASSEMBLED_ONLY",
-        })),
-        ...(fragmentResult.regions || []).map((region) => {
-          const key = mappingKey(region.sourceIndex, region.regionId);
-          const sourceMapping = sourceMappingById.get(key);
-          const sourceOnlyGroup = sourceOnlyById.get(key);
-          return {
-            ...region,
-            detectorRegionId: region.regionId,
-            mappingStatus:
-              sourceOnlyGroup?.status || sourceMapping?.status || "UNMAPPED",
-          };
-        }),
-      ];
-
-      const allRegions = detectedRegions.map((region, index) => ({
-        ...region,
-        regionId: `R-${String(index + 1).padStart(3, "0")}`,
-        userNote: defaultNote(region),
-        reviewDecision: "damage",
-      }));
-
-      const allSummaries = [
-        ...(assembledResult.summary ? [assembledResult.summary] : []),
-        ...(fragmentResult.summaries || []),
-        ...(fragmentResult.summary ? [fragmentResult.summary] : []),
-      ];
+          regionId: `R-${String(index + 1).padStart(3, "0")}`,
+          userNote: defaultNote(region),
+          reviewDecision: "damage",
+        }));
+        allSummaries = [
+          ...(assembledResult.summary ? [assembledResult.summary] : []),
+          ...(fragmentResult.summaries || []),
+          ...(fragmentResult.summary ? [fragmentResult.summary] : []),
+        ];
+      } else {
+        setInspectionStep("MAPPING");
+        const workflowResult = await detectWorkflow(stitchJobId, confidence);
+        allRegions = (workflowResult.defects || []).map(workflowDefectToRegion);
+        allSummaries = [
+          `통합 결함 탐지 완료 · ${allRegions.length}건 · ${workflowResult.status || "REVIEW_READY"}`,
+        ];
+        setDefectMapping({ unified: true, status: workflowResult.status });
+      }
 
       setRegions(allRegions);
       setSummaries(allSummaries);
@@ -862,26 +862,46 @@ export default function XrayPage() {
     );
   }
 
-  /** 정상 영역으로 제외. 영역 자체는 목록에 남기고 결과 포함 여부만 바꾼다. */
-  function excludeRegion(id) {
+  async function persistReviewDecision(id, reviewDecision) {
+    const selected = regions.find((region) => region.regionId === id);
+    if (!selected) return;
+
+    if (!USE_MOCK) {
+      if (!stitchJobId || selected.defectId == null) {
+        setInspectionMessage("서버 결함 ID가 없어 판정을 저장할 수 없습니다.");
+        return;
+      }
+
+      try {
+        await updateWorkflowDefects(stitchJobId, [
+          {
+            id: selected.defectId,
+            reviewDecision: reviewDecision.toUpperCase(),
+          },
+        ]);
+      } catch (error) {
+        setInspectionMessage(`판정 저장 실패: ${error.message}`);
+        return;
+      }
+    }
+
     setRegions((current) =>
       current.map((region) =>
-        region.regionId === id
-          ? { ...region, reviewDecision: "normal" }
-          : region,
+        region.regionId === id ? { ...region, reviewDecision } : region,
       ),
     );
+    setReport("");
+    setReportMeta(null);
   }
 
-  /** 정상으로 제외한 영역을 다시 이상 영역으로 포함한다. */
+  /** 정상 영역으로 제외. 서버 XRAY_DEFECT에도 즉시 반영한다. */
+  function excludeRegion(id) {
+    void persistReviewDecision(id, "normal");
+  }
+
+  /** 정상으로 제외한 영역을 다시 DAMAGE로 포함한다. */
   function restoreRegion(id) {
-    setRegions((current) =>
-      current.map((region) =>
-        region.regionId === id
-          ? { ...region, reviewDecision: "damage" }
-          : region,
-      ),
-    );
+    void persistReviewDecision(id, "damage");
   }
 
   /**
@@ -903,30 +923,40 @@ export default function XrayPage() {
     setInspectionMessage("");
 
     try {
-      const rgbFiles = USE_MOCK
-        ? []
-        : await Promise.all(
-            colorSources.map((source, index) => sourceToFile(source, index)),
-          );
-
-      const result = await generateReport({
-        regions: includedRegions,
-        assembled: assembledFile,
-        fragments: fragmentFiles,
-        rgbImages: rgbFiles,
-        artifactType,
-        material,
-        reportStyle,
-      });
-
-      setReport(result.report || "");
-      setReportMeta({
-        style: result.style,
-        charCount: result.charCount,
-        detailCount: result.detailCount,
-        totalRegionCount: result.totalRegionCount,
-        model: result.model,
-      });
+      if (USE_MOCK) {
+        const result = await generateReport({
+          regions: includedRegions,
+          assembled: assembledFile,
+          fragments: fragmentFiles,
+          rgbImages: [],
+          artifactType,
+          material,
+          reportStyle,
+        });
+        setReport(result.report || "");
+        setReportMeta({
+          style: result.style,
+          charCount: result.charCount,
+          detailCount: result.detailCount,
+          totalRegionCount: result.totalRegionCount,
+          model: result.model,
+        });
+      } else {
+        const result = await generateWorkflowReportText(stitchJobId, {
+          artifactType,
+          material,
+          reportStyle,
+        });
+        const text = result.reportText || "";
+        setReport(text);
+        setReportMeta({
+          style: reportStyle,
+          charCount: text.length,
+          detailCount: includedCount,
+          totalRegionCount: regions.length,
+          model: "server-workflow",
+        });
+      }
     } catch (error) {
       setInspectionMessage(`문안 생성 실패: ${error.message}`);
     } finally {
@@ -943,9 +973,20 @@ export default function XrayPage() {
     if (!inspectionDone || !report.trim()) return;
 
     try {
+      if (!USE_MOCK) {
+        if (!stitchJobId) {
+          throw new Error("결합 작업 ID가 없습니다.");
+        }
+        await saveWorkflowReportText(stitchJobId, report.trim());
+        const completed = await completeWorkflow(stitchJobId);
+        if (completed.status !== "COMPLETED") {
+          throw new Error(`완료 상태가 아닙니다: ${completed.status || "UNKNOWN"}`);
+        }
+      }
+
       await markWorkspaceModule(artifactId, "xray", MODULE_STATUS.DONE);
     } catch (error) {
-      setInspectionMessage(`X-RAY 완료 상태 저장 실패: ${error.message}`);
+      setInspectionMessage(`X-RAY 완료 처리 실패: ${error.message}`);
       return;
     }
 
@@ -1640,7 +1681,7 @@ export default function XrayPage() {
                         />
                         <strong>{region.regionId}</strong>
                         <span>{region.position}</span>
-                        <small>{region.confidence.toFixed(2)}</small>
+                        <small>{region.confidence != null ? region.confidence.toFixed(2) : "—"}</small>
                       </button>
                     ))}
                   </div>
@@ -1676,7 +1717,7 @@ export default function XrayPage() {
                         </div>
                         <div>
                           <dt>탐지 신뢰도</dt>
-                          <dd>{selectedRegion.confidence.toFixed(3)}</dd>
+                          <dd>{selectedRegion.confidence != null ? selectedRegion.confidence.toFixed(3) : "—"}</dd>
                         </div>
                         <div>
                           <dt>위치</dt>
@@ -1684,7 +1725,7 @@ export default function XrayPage() {
                         </div>
                         <div>
                           <dt>영역 비율</dt>
-                          <dd>{selectedRegion.areaRatioPercent.toFixed(3)}%</dd>
+                          <dd>{selectedRegion.areaRatioPercent != null ? `${selectedRegion.areaRatioPercent.toFixed(3)}%` : "—"}</dd>
                         </div>
                         {selectedRegion.mappingStatus && (
                           <div>
