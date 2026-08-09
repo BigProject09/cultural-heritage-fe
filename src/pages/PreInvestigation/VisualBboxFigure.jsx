@@ -31,18 +31,26 @@ export function BboxFigure({ image, size, onImageLoad, children }) {
   );
 }
 
-// polygon(마스크 윤곽선을 벡터화한 좌표 배열, [{x,y}, ...])이 있으면 실제
-// 세그멘테이션 모양을, 없으면(예전 리포트 등) bbox 사각형을 그린다. 배지
-// 위치는 항상 bbox 기준으로 유지한다 - placeMarkerBadges의 겹침 회피 계산이
-// 사각형을 전제로 하고 있어, 임의의 폴리곤 점보다 안정적이다.
-function ShapeOutline({ bbox, polygon, color, fillAlpha }) {
-  if (polygon && polygon.length >= 3) {
+// polygons(마스크 윤곽선을 벡터화한 좌표 배열의 배열, [[{x,y}, ...], ...] -
+// 마스크가 여러 조각으로 흩어진 경우 조각마다 폴리곤 하나씩)가 있으면 실제
+// 세그멘테이션 모양을, 없으면(예전 리포트나 조각이 너무 작아 벡터화가 안 된
+// 경우) bbox 사각형을 그린다. 배지 위치는 항상 bbox 기준으로 유지한다 -
+// placeMarkerBadges의 겹침 회피 계산이 사각형을 전제로 하고 있어, 임의의
+// 폴리곤 점보다 안정적이다.
+function ShapeOutline({ bbox, polygons, color, fillAlpha }) {
+  const validPolygons = (polygons || []).filter((polygon) => polygon.length >= 3);
+  if (validPolygons.length > 0) {
     return (
-      <polygon
-        points={polygon.map((point) => `${point.x},${point.y}`).join(" ")}
-        className="visual-vca-overlay-box"
-        style={{ stroke: color, fill: hexWithAlpha(color, fillAlpha) }}
-      />
+      <>
+        {validPolygons.map((polygon, index) => (
+          <polygon
+            key={index}
+            points={polygon.map((point) => `${point.x},${point.y}`).join(" ")}
+            className="visual-vca-overlay-box"
+            style={{ stroke: color, fill: hexWithAlpha(color, fillAlpha) }}
+          />
+        ))}
+      </>
     );
   }
   const { xMin, yMin, xMax, yMax } = bbox;
@@ -62,7 +70,7 @@ function ShapeOutline({ bbox, polygon, color, fillAlpha }) {
 // 번호 배지가 달린 모양만 그린다.
 export function BboxMarker({
   bbox,
-  polygon,
+  polygons,
   number,
   color,
   badgeRadius,
@@ -86,7 +94,7 @@ export function BboxMarker({
       onMouseMove={interactive ? onMouseMove : undefined}
       onMouseLeave={interactive ? onMouseLeave : undefined}
     >
-      <ShapeOutline bbox={bbox} polygon={polygon} color={color} fillAlpha={fillAlpha} />
+      <ShapeOutline bbox={bbox} polygons={polygons} color={color} fillAlpha={fillAlpha} />
       {isBadgeOffset && (
         <line
           x1={xMin}

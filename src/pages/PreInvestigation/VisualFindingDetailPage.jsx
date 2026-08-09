@@ -190,7 +190,7 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
                 {bbox && (
                   <BboxMarker
                     bbox={bbox}
-                    polygon={finding.polygon}
+                    polygons={finding.polygons}
                     number={number}
                     color={markerColorForNumber(number)}
                     badgeRadius={badgeRadiusFor(imageSize)}

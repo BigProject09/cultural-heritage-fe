@@ -42,7 +42,7 @@ function ImageOverlay({ image, findings, findingNumbers, onSelectFinding }) {
             <BboxMarker
               key={finding.findingId || index}
               bbox={finding.bbox}
-              polygon={finding.polygon}
+              polygons={finding.polygons}
               number={number}
               color={markerColorForNumber(number)}
               badgeRadius={badgeRadius}
