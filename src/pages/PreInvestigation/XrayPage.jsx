@@ -116,6 +116,8 @@ const INSPECTION_STEPS = [
   { key: "FRAGMENTS", label: "조각 분석" },
 ];
 
+// 유물 등록 단계에서 저장한 정보를 새로고침/직접 접근 시 복원한다.
+// artifactInfo memo가 location.state가 없을 때 이 값으로 대체한다.
 function readStoredArtifactInfo() {
   try {
     return JSON.parse(localStorage.getItem("artifactInfo")) || {};
@@ -218,6 +220,8 @@ function defaultNote(region) {
   return `원본 조각의 ${region.position}에서 탐지된 검토 필요 영역. 결합 이전부터 존재한 특징인지 확인 필요.`;
 }
 
+// STEP 1 업로드 그리드에서 조각 이미지 한 장의 미리보기 + 삭제 버튼.
+// XrayPage의 fragmentFiles 목록마다 하나씩 렌더링된다.
 function UploadThumbnail({ file, index, disabled, onRemove }) {
   const url = useObjectUrl(file);
 
@@ -244,6 +248,9 @@ function UploadThumbnail({ file, index, disabled, onRemove }) {
   );
 }
 
+// colorSources 항목은 File/Blob/문자열 URL/{file|url|imageUrl|src} 객체 등
+// 형태가 제각각이라, useObjectUrl에 넘길 수 있는 원시 값 하나로 추려낸다.
+// ResultPreviewImage 전용.
 function sourceValue(source) {
   if (!source || typeof source !== "object") return source;
   if (source instanceof Blob) return source;
@@ -251,6 +258,8 @@ function sourceValue(source) {
   return source.file || source.url || source.imageUrl || source.src || "";
 }
 
+// STEP 5 최종 검토의 컬러 기준 이미지 / 결합 결과 카드에 쓰는 미리보기.
+// 소스가 없으면 빈 상태 placeholder를 보여준다.
 function ResultPreviewImage({ source, alt }) {
   const previewUrl = useObjectUrl(sourceValue(source));
 
@@ -419,6 +428,9 @@ export default function XrayPage() {
     setShowCompleteConfirm(false);
   }
 
+  // 결합 입력(조각 파일)이 바뀔 때 STEP 1로 완전히 되돌린다 - 결합 상태와
+  // 하위 검수/문안 결과(resetInspectionResults)까지 함께 지운다.
+  // handleFragmentChange/acceptFragmentFiles/removeFragment가 공용으로 쓴다.
   function resetToImageRegistration() {
     setAssembledFile(null);
     setStitchStatus("IDLE");
@@ -731,6 +743,8 @@ export default function XrayPage() {
     });
   }
 
+  // removeRegion으로 정상 제외한 마지막 영역을 원래 위치로 되돌린다.
+  // undo-toast의 "되돌리기" 버튼에서 호출한다.
   function undoRemove() {
     if (!lastRemoved) return;
     setRegions((current) => {
@@ -819,6 +833,8 @@ export default function XrayPage() {
     navigate(getArtifactRoute(artifactId));
   }
 
+  // STEP 4 → STEP 5(최종 검토) 전환. "최종 검토로 이동" 버튼에서 호출하며,
+  // 검수와 문안 작성이 끝나지 않았으면 아무 것도 하지 않는다.
   function openFinalReview() {
     if (!inspectionDone || !report.trim()) return;
     setWorkflow(WORKFLOW.REVIEW);
@@ -827,6 +843,8 @@ export default function XrayPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // STEP 5에서 STEP 4(문안 작성)로 되돌아간다. "이전 단계로"/"문안
+  // 수정하기" 버튼에서 호출한다.
   function returnToReport() {
     setWorkflow(WORKFLOW.INSPECTION);
     setActiveStep(4);
@@ -930,6 +948,8 @@ export default function XrayPage() {
     [],
   );
 
+  // 영역을 선택하고, 그 영역이 속한 이미지로 뷰어 탭도 함께 전환한다.
+  // 영역 목록/이미지 뷰어 클릭, 이전·다음 버튼 모두 이 함수를 거친다.
   function selectRegion(id) {
     setSelectedId(id);
     const region = regions.find((item) => item.regionId === id);
@@ -939,6 +959,7 @@ export default function XrayPage() {
     if (file) setViewFile(file);
   }
 
+  // "다음" 버튼 - 마지막 영역 다음엔 처음으로 순환한다.
   function selectNextRegion() {
     if (selectedIndex < 0 || regions.length === 0) return;
     const next = regions[(selectedIndex + 1) % regions.length];

@@ -65,6 +65,16 @@
   .visual-vca-status-state.failed { @apply text-[color:var(--workflow-danger)]; }
   .visual-vca-progress { @apply h-2 overflow-hidden [background:var(--workflow-paper)] rounded-full; }
   .visual-vca-progress > span { @apply block h-full [background:var(--workflow-bronze)] transition-[width] duration-200 rounded-full; }
+  .visual-vca-stage-list { @apply grid gap-1.5 m-0 p-0 list-none; }
+  .visual-vca-stage-item { @apply flex items-center justify-between gap-3 border-b border-[color:var(--workflow-line-soft)] pb-1.5 text-xs; }
+  .visual-vca-stage-item:last-child { @apply border-b-0 pb-0; }
+  .visual-vca-stage-name { @apply text-[color:var(--workflow-ink-soft)]; }
+  .visual-vca-stage-status { @apply text-[color:var(--workflow-muted)] font-bold; }
+  .visual-vca-stage-item.running .visual-vca-stage-status { @apply text-[color:var(--workflow-bronze-dark)]; }
+  .visual-vca-stage-item.completed .visual-vca-stage-status,
+  .visual-vca-stage-item.skipped .visual-vca-stage-status { @apply text-[color:var(--workflow-green-dark)]; }
+  .visual-vca-stage-item.failed .visual-vca-stage-status { @apply text-[color:var(--workflow-danger)]; }
+  .visual-vca-stage-failure { @apply text-[color:var(--workflow-danger)] text-xs leading-[1.6] [word-break:keep-all] [overflow-wrap:break-word] m-0; }
   .visual-vca-status-meta { @apply grid grid-cols-1 gap-2 m-0; }
   .visual-vca-status-meta > div { @apply flex items-center justify-between gap-3 border-t border-[color:var(--workflow-line-soft)] pt-2; }
   .visual-vca-status-meta dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
@@ -82,10 +92,45 @@
   .visual-vca-report-body li span { @apply text-[color:var(--workflow-muted)] text-xs font-bold; }
   .visual-vca-report-body li p { @apply text-xs mt-1.5; }
   .visual-vca-report-body li small { @apply block text-[color:var(--workflow-muted)] text-[11px] mt-1.5; }
-  .visual-vca-summary-details { @apply grid grid-cols-2 gap-2 mt-4 mb-0; }
-  .visual-vca-summary-details > div { @apply border border-[color:var(--workflow-line)] p-2.5 rounded-lg; }
-   .visual-vca-summary-details dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
-   .visual-vca-summary-details dd { @apply text-xs font-bold mt-1 m-0; }
+  .visual-vca-finding-citations { @apply mt-1.5 text-[color:var(--workflow-muted)] text-[11px]; }
+  .visual-vca-finding-citations summary { @apply w-fit cursor-pointer text-[color:var(--workflow-bronze-dark)] font-bold; }
+  .visual-vca-finding-citations ul { @apply grid gap-1 mt-1.5 mb-0 pl-4; }
+  .visual-vca-recommendations-note strong { @apply block text-[color:var(--workflow-bronze-dark)] text-xs font-bold; }
+  .visual-vca-recommendations-note ul { @apply grid gap-1.5 mt-2 mb-0 pl-4 list-disc; }
+  .visual-vca-recommendations-note li em { @apply not-italic text-[color:var(--workflow-muted)] font-bold; }
+  .visual-vca-original-hint { @apply cursor-help [border-bottom:1px_dotted_currentColor]; }
+  .visual-vca-findings-report { @apply col-span-full; }
+  .visual-vca-findings-overview { @apply flex flex-wrap items-center gap-2; }
+  .visual-vca-severity-chip { @apply inline-flex items-center [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[11px] font-bold px-2 py-0.5 rounded-full; }
+  .visual-vca-finding-number { @apply inline-flex flex-none items-center justify-center w-5 h-5 [background:var(--workflow-danger)] text-white text-[10px] font-bold rounded-full mr-2 align-middle; }
+  .visual-vca-findings-brief .visual-vca-finding-number { @apply text-white text-[10px] font-bold; }
+  .visual-vca-finding-number-lg { @apply w-7 h-7 text-sm mr-2.5; }
+  .visual-vca-finding-row { @apply flex items-center w-full text-left [background:transparent] border-0 p-0 m-0 cursor-pointer [font:inherit] [color:inherit] transition-opacity; }
+  .visual-vca-finding-row:hover { @apply opacity-70; }
+  .visual-vca-findings-hint { @apply text-[color:var(--workflow-muted)] text-[11px]; }
+  .visual-vca-findings-evidence { @apply border-t border-[color:var(--workflow-line-soft)] mt-4 pt-4; }
+   .visual-vca-rag-group { @apply mt-4; }
+   .visual-vca-rag-group h4 { @apply text-[color:var(--workflow-bronze-dark)] text-xs font-bold m-0; }
+   .visual-vca-rag-queries { @apply grid gap-2 mt-2 mb-0 pl-5; }
+    .visual-vca-rag-queries li { @apply text-[13px] leading-[1.65] [word-break:keep-all] [overflow-wrap:break-word] pl-0; }
+   .visual-vca-rag-evidence-rows, .visual-vca-rag-retrievals { @apply grid gap-2 [list-style:none] mt-2 mb-0 p-0; }
+   .visual-vca-rag-evidence-rows > li, .visual-vca-rag-retrievals > li, .visual-vca-rag-concepts article { @apply border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] p-3 rounded-lg; }
+    .visual-vca-rag-evidence-rows > li > strong, .visual-vca-rag-retrievals strong { @apply [background:transparent] text-[color:var(--workflow-ink)] text-[13px] leading-[1.6] [word-break:keep-all] [overflow-wrap:break-word] mr-0 p-0 rounded-none; }
+   .visual-vca-rag-details { @apply grid gap-2 mt-2 mb-0; }
+   .visual-vca-rag-details > div { @apply grid grid-cols-[80px_minmax(0,1fr)] gap-2 border-t border-[color:var(--workflow-line-soft)] pt-2; }
+    .visual-vca-rag-details dd { @apply text-[color:var(--workflow-ink-soft)] text-xs leading-[1.65] [overflow-wrap:anywhere] m-0; }
+    .visual-vca-rag-meta { @apply border-t border-[color:var(--workflow-line-soft)] mt-3 pt-3; }
+    .visual-vca-rag-meta summary { @apply w-fit cursor-pointer text-[color:var(--workflow-bronze-dark)] text-xs font-bold; }
+    .visual-vca-rag-meta .visual-vca-rag-details { @apply mt-3; }
+   .visual-vca-rag-retrievals > li > div { @apply flex items-start justify-between gap-3; }
+    .visual-vca-rag-retrievals span { @apply flex-none text-[color:var(--workflow-muted)] text-xs font-bold; }
+    .visual-vca-rag-retrievals p { @apply text-[13px] leading-[1.7] [word-break:keep-all] [overflow-wrap:break-word] mt-1.5; }
+    .visual-vca-rag-concepts { @apply grid grid-cols-2 gap-2 mt-2; }
+    .visual-vca-rag-concepts > article:only-child { @apply col-span-full; }
+    .visual-vca-rag-concepts h5 { @apply text-[color:var(--workflow-ink)] text-[13px] font-bold m-0; }
+    .visual-vca-rag-concepts p { @apply text-[13px] leading-[1.7] [word-break:keep-all] [overflow-wrap:break-word] mt-1.5; }
+   .visual-vca-rag-concepts article > ul { @apply flex flex-wrap gap-1.5 [list-style:none] mt-3 mb-0 p-0; }
+   .visual-vca-rag-concepts article > ul > li { @apply [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[10px] font-bold px-2 py-0.5 rounded-full; }
    .visual-vca-pottery-inspection { @apply col-span-full; }
    .visual-vca-pottery-inspection > header { @apply border-b border-[color:var(--workflow-line-soft)] pb-3; }
    .visual-vca-pottery-inspection > header span { @apply block text-[color:var(--workflow-bronze)] text-[10px] font-bold tracking-[0.14em]; }
@@ -98,31 +143,32 @@
    .visual-vca-pottery-inspection-meta dt, .visual-vca-pottery-inspection-details dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
    .visual-vca-pottery-inspection-meta dd, .visual-vca-pottery-inspection-details dd { @apply text-[color:var(--workflow-ink-soft)] text-xs leading-[1.65] mt-1 m-0; }
    .visual-vca-pottery-inspection-copy, .visual-vca-pottery-inspection-details { @apply mt-4; }
+   .visual-vca-pottery-inspection-details summary { @apply w-fit cursor-pointer text-[color:var(--workflow-bronze-dark)] text-xs font-bold; }
    .visual-vca-pottery-inspection h4 { @apply text-[color:var(--workflow-bronze-dark)] text-xs font-bold mt-4 mb-0 first:mt-0; }
    .visual-vca-pottery-inspection-copy p, .visual-vca-pottery-inspection-details > p { @apply text-xs leading-[1.7] mt-1.5; }
    .visual-vca-pottery-inspection-details dl { @apply grid grid-cols-2 gap-2 mt-3 mb-0; }
-   .visual-vca-report-images { @apply grid grid-cols-2 gap-3 mt-3; }
-  .visual-vca-report-images img, .visual-vca-report-images .visual-vca-image-placeholder { @apply w-full h-44 object-contain border border-[color:var(--workflow-line-soft)] [background:var(--workflow-paper)] p-3 rounded-lg; }
-  .visual-vca-intermediate-results { @apply col-span-full; }
-  .visual-vca-intermediate-empty { @apply border border-dashed border-[color:var(--workflow-line)] [background:var(--workflow-paper)] text-[color:var(--workflow-muted)] text-xs text-center mt-4 px-4 py-3 rounded-lg; }
-  .visual-vca-intermediate-stages { @apply grid gap-3 mt-4; }
-  .visual-vca-intermediate-stage { @apply border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] p-4 rounded-lg; }
-  .visual-vca-intermediate-stage > header { @apply border-b border-[color:var(--workflow-line-soft)] pb-3; }
-  .visual-vca-intermediate-stage > header span { @apply block text-[color:var(--workflow-muted)] text-[10px] font-bold tracking-[0.14em]; }
-  .visual-vca-intermediate-stage h4 { @apply [font-family:var(--font-serif)] text-[color:var(--workflow-bronze-dark)] text-base font-semibold mt-1 mb-0; }
-  .visual-vca-intermediate-stage > ul { @apply grid gap-3 [list-style:none] mt-3 mb-0 p-0; }
-  .visual-vca-intermediate-stage > ul > li { @apply border border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface-soft)] p-3 rounded-lg; }
-  .visual-vca-intermediate-file-heading { @apply flex items-start justify-between gap-3; }
-  .visual-vca-intermediate-file-heading strong { @apply [background:transparent] text-[color:var(--workflow-ink)] text-xs leading-[1.6] mr-0 p-0 rounded-none; }
-  .visual-vca-intermediate-file-heading span { @apply flex-none text-[color:var(--workflow-muted)] text-[10px] font-bold; }
-  .visual-vca-intermediate-file-meta { @apply grid grid-cols-2 gap-2 mt-3 mb-0; }
-  .visual-vca-intermediate-file-meta > div { @apply min-w-0 border-t border-[color:var(--workflow-line-soft)] pt-2; }
-  .visual-vca-intermediate-file-meta dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
-  .visual-vca-intermediate-file-meta dd { @apply overflow-hidden text-[color:var(--workflow-ink-soft)] text-[11px] text-ellipsis whitespace-nowrap mt-1 m-0; }
-  .visual-vca-intermediate-stage details { @apply border-t border-[color:var(--workflow-line-soft)] mt-3 pt-3; }
-  .visual-vca-intermediate-stage summary { @apply w-fit cursor-pointer text-[color:var(--workflow-bronze-dark)] text-[11px] font-bold; }
-  .visual-vca-intermediate-stage pre { @apply max-h-48 overflow-auto [background:var(--workflow-paper)] text-[color:var(--workflow-ink-soft)] text-[11px] leading-[1.65] [overflow-wrap:anywhere] whitespace-pre-wrap mt-3 mb-0 p-3 rounded-md; }
-  .visual-vca-intermediate-preview-empty { @apply text-[color:var(--workflow-muted)] text-[11px] mt-3; }
+   .visual-vca-overlay { @apply col-span-full; }
+   .visual-vca-overlay-grid { @apply grid grid-cols-2 max-[1024px]:grid-cols-1 gap-4 mt-4; }
+   .visual-vca-overlay-grid-single { @apply grid-cols-1; }
+   .visual-vca-overlay-grid .visual-vca-image-placeholder { @apply w-full aspect-[4/3] object-contain border border-[color:var(--workflow-line-soft)] [background:var(--workflow-paper)] p-3 rounded-lg; }
+   .visual-vca-overlay-figure { @apply m-0; }
+   .visual-vca-overlay-frame { @apply relative block w-full overflow-hidden border border-[color:var(--workflow-line-soft)] [background:var(--workflow-paper)] leading-[0] rounded-lg; }
+   .visual-vca-overlay-frame img { @apply block w-full h-auto; }
+   .visual-vca-overlay-svg { @apply absolute inset-0 w-full h-full; }
+   /* 박스/배지 색상(stroke·fill)은 특이점 번호별로 겹치지 않게 JS에서
+      순환 팔레트로 계산해 inline style로 준다 (visualMarkerColors.js) -
+      CSS에서는 굵기·도형·타이포만 담당한다. */
+   .visual-vca-overlay-box { @apply cursor-pointer [stroke-width:2px] transition-[fill]; }
+   .visual-vca-overlay-marker { @apply cursor-pointer; }
+   .visual-vca-overlay-leader { @apply [stroke-width:1.5px] [stroke-dasharray:3,3] opacity-70; }
+   .visual-vca-overlay-badge { @apply [stroke:white] [stroke-width:1.5px]; }
+   .visual-vca-overlay-badge-text { @apply [fill:white] font-bold [text-anchor:middle] [dominant-baseline:central] pointer-events-none select-none; }
+   .visual-vca-overlay-figure figcaption { @apply text-[color:var(--workflow-muted)] text-[11px] mt-1.5; }
+   .visual-vca-finding-popup { @apply fixed z-50 w-64 max-w-[80vw] [pointer-events:none] border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] shadow-[var(--workflow-shadow)] text-[13px] leading-[1.6] [word-break:keep-all] [overflow-wrap:break-word] p-3 rounded-lg; }
+   .visual-vca-finding-popup strong { @apply inline-block [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[11px] mr-2 px-2 py-0.5 rounded-full; }
+   .visual-vca-finding-popup .visual-vca-finding-popup-number { @apply inline-flex items-center justify-center w-5 h-5 text-white p-0 rounded-full; }
+   .visual-vca-finding-popup span { @apply text-[color:var(--workflow-muted)] text-xs font-bold; }
+   .visual-vca-finding-popup p { @apply text-xs mt-1.5 mb-0; }
   .visual-vca-pdf { @apply flex items-center justify-between gap-5 border-t border-[color:var(--workflow-line-soft)] mt-6 pt-5; }
   .visual-vca-pdf > div:first-child { @apply flex flex-col gap-1; }
   .visual-vca-pdf strong { @apply text-sm; }
@@ -139,10 +185,10 @@
     .visual-vca-summary, .visual-vca-layout, .visual-vca-report-body { @apply grid-cols-1; }
     .visual-vca-summary > div { @apply border-l-0 border-t border-[color:var(--workflow-line-soft)] first:border-t-0; }
      .visual-vca-report-body section:first-child, .visual-vca-report-body section:last-child { @apply col-span-1; }
-     .visual-vca-pottery-inspection-actions { @apply items-stretch flex-col; }
-     .visual-vca-pottery-inspection-meta, .visual-vca-pottery-inspection-details dl { @apply grid-cols-1; }
-     .visual-vca-intermediate-file-heading { @apply items-stretch flex-col; }
-    .visual-vca-intermediate-file-meta { @apply grid-cols-1; }
+      .visual-vca-pottery-inspection-actions { @apply items-stretch flex-col; }
+      .visual-vca-rag-concepts { @apply grid-cols-1; }
+      .visual-vca-rag-details > div { @apply grid-cols-1 gap-1; }
+      .visual-vca-pottery-inspection-meta, .visual-vca-pottery-inspection-details dl { @apply grid-cols-1; }
      .visual-vca-actions, .visual-vca-pdf > div:last-child { @apply items-stretch flex-col; }
      .visual-vca-status-actions { @apply grid-cols-1; }
      .visual-vca-image-grid { @apply grid-cols-1; }

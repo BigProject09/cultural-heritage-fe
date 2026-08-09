@@ -50,9 +50,9 @@ export const WORKSPACE_MODULES = [
     eyebrow: "VISUAL INSPECTION",
     title: "육안 조사",
     shortTitle: "육안 조사",
-    subtitle: "손상 부위 기록 · 판정",
+    subtitle: "특이점 부위 기록 · 판정",
     description:
-      "2D 컬러 이미지에서 손상 위치와 유형을 기록하고 판정합니다.",
+      "2D 컬러 이미지에서 특이점 위치와 유형을 기록하고 판정합니다.",
   },
 ];
 

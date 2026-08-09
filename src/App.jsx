@@ -28,6 +28,7 @@ import XrayPage from "./pages/PreInvestigation/XrayPage";
 
 // 해체
 import VisualPage from "./pages/PreInvestigation/VisualPage";
+import VisualFindingDetailPage from "./pages/PreInvestigation/VisualFindingDetailPage";
 import DisassemblyPage from "./pages/Disassembly/DisassemblyPage";
 import DisassemblyChecklistPage from "./pages/Disassembly/DisassemblyChecklistPage";
 import DisassemblyToolPage from "./pages/Disassembly/DisassemblyToolPage";
@@ -95,6 +96,7 @@ function App() {
             <Route path="guide" element={<FlowRecommendationPage />} />
             <Route path="xray" element={<XrayPage />} />
             <Route path="visual" element={<VisualPage />} />
+            <Route path="visual/findings/:runId/:findingId" element={<VisualFindingDetailPage />} />
             <Route path="final-report" element={<FinalReportPage />} />
 
             {/* 복원 가이드 세부 공정 */}

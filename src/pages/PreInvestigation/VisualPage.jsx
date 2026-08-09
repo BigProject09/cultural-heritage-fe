@@ -18,7 +18,7 @@ const RUN_STATUS_LABELS = {
 };
 const RUN_STATUS_HELP = {
   QUEUED: "분석 작업이 접수되어 순서를 기다리고 있습니다.",
-  RUNNING: "등록 이미지를 바탕으로 손상 후보와 권고 초안을 생성하고 있습니다.",
+  RUNNING: "등록 이미지를 바탕으로 특이점 후보와 권고 초안을 생성하고 있습니다.",
   COMPLETED: "분석이 완료되어 보고서를 불러오는 중이거나 표시할 수 있습니다.",
   FAILED: "분석 작업이 실패했습니다. 이미지를 확인한 뒤 다시 시작하세요.",
 };
@@ -28,9 +28,49 @@ const RUN_STATUS_PROGRESS = {
   COMPLETED: 100,
   FAILED: 100,
 };
+const STAGE_ORDER = [
+  "preprocessing",
+  "rough_masking",
+  "visual_cue_generation",
+  "rag",
+  "prompt_generating",
+  "mask_refining",
+  "anomaly_grouping",
+  "report_generating",
+];
+const STAGE_LABELS = {
+  preprocessing: "이미지 전처리",
+  rough_masking: "특이점 후보 탐지",
+  visual_cue_generation: "시각 단서 분석",
+  rag: "문헌 근거 검색",
+  prompt_generating: "정밀 분석 준비",
+  mask_refining: "특이점 영역 정밀화",
+  anomaly_grouping: "특이점 후보 취합",
+  report_generating: "보고서 생성",
+};
+const STAGE_STATUS_LABELS = {
+  pending: "대기",
+  running: "진행 중",
+  completed: "완료",
+  failed: "실패",
+  skipped: "건너뜀",
+};
 
 function statusLabel(status) {
   return RUN_STATUS_LABELS[status] || status || "상태 확인 필요";
+}
+
+// run.stages는 서버가 이미 거쳐 간 단계만 채워 보내므로, 아직 보고되지
+// 않은 단계는 STAGE_ORDER를 기준으로 직접 채워 넣는다. currentStage와
+// 이름이 같은 단계만 "진행 중"으로 보고, 나머지는 "대기"로 둔다.
+function stageChecklist(run) {
+  const known = new Map((run?.stages || []).map((stage) => [stage.name, stage]));
+  return STAGE_ORDER.map((name) => {
+    const found = known.get(name);
+    if (found) return found;
+    if (name === run?.currentStage) return { name, status: "running" };
+    return { name, status: "pending" };
+  });
 }
 
 function formatDate(value) {
@@ -43,12 +83,23 @@ function formatDate(value) {
   });
 }
 
+// progressPercent가 없는 run도 있어, stages 배열의 완료 비율로 대신
+// 추정하고, 그마저 없으면 상태값만으로 대략적인 값을 쓴다.
 function runProgress(run) {
   if (!run) return 0;
   if (Number.isFinite(run.progressPercent)) return run.progressPercent;
+  if (Array.isArray(run.stages) && run.stages.length > 0) {
+    const finished = run.stages.filter(
+      (stage) => stage.status === "completed" || stage.status === "skipped",
+    ).length;
+    return Math.round((finished / STAGE_ORDER.length) * 100);
+  }
   return RUN_STATUS_PROGRESS[run.status] || 0;
 }
 
+// 육안 상태 조사(VCA) 메인 페이지 - 라우트 /artifacts/:artifactId/visual.
+// PreInvestigationPage의 "육안 상태 조사" 버튼으로 진입한다. 상태/액션은
+// 대부분 useVisualInvestigation 훅에 있고, 이 컴포넌트는 화면 조립만 한다.
 export default function VisualPage() {
   const navigate = useNavigate();
   const { artifactId: routeArtifactId = "" } = useParams();
@@ -58,18 +109,18 @@ export default function VisualPage() {
   const investigation = useVisualInvestigation(artifactId);
   const {
     artifact,
+    cancelRun,
     error,
     handlePdfJob,
     handlePotteryInspection,
-    intermediateResults,
     isMock,
     loadArtifact,
     loading,
     notice,
     pdfJob,
-    refreshStatus,
     removeImage,
     report,
+    reportRunId,
     runRequestPending,
     runIsActive,
     selectFiles,
@@ -84,6 +135,9 @@ export default function VisualPage() {
   const canStartRun = uploadedImages.length > 0 && !runIsActive && !pageBusy;
   const progressValue = runProgress(selectedRun);
 
+  // "육안 조사 완료" 버튼 핸들러. 워크스페이스에 완료 상태를 기록하고
+  // 유물 워크스페이스로 돌아간다. 보고서를 아직 못 열었으면(canComplete
+  // false) 저장을 시도하지 않고 안내만 띄운다.
   async function handleComplete() {
     if (!canComplete) {
       setCompletionError("완료된 분석 보고서를 먼저 열어 확인하세요.");
@@ -218,7 +272,7 @@ export default function VisualPage() {
           <aside className="visual-vca-review" aria-labelledby="visual-run-title">
             <span className="visual-vca-kicker">STEP 02</span>
             <h2 id="visual-run-title">AI 분석 실행</h2>
-            <p>분석 상태는 실제 VCA API에서 주기적으로 갱신합니다. 필요한 경우 수동으로 다시 확인할 수 있습니다.</p>
+            <p>분석 상태는 실제 VCA API에서 주기적으로 갱신합니다. 진행 중인 분석은 언제든 중지할 수 있습니다.</p>
             <div className="visual-vca-status-panel" role="status" aria-live="polite">
               <span className={`visual-vca-status-state ${selectedRun?.status?.toLowerCase() || "idle"}`}>
                 {selectedRun ? statusLabel(selectedRun.status) : "분석 전"}
@@ -227,6 +281,17 @@ export default function VisualPage() {
               <div className="visual-vca-progress" aria-label="분석 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow={progressValue} role="progressbar">
                 <span style={{ width: `${progressValue}%` }} />
               </div>
+              <ol className="visual-vca-stage-list">
+                {stageChecklist(selectedRun).map((stage) => (
+                  <li key={stage.name} className={`visual-vca-stage-item ${stage.status}`}>
+                    <span className="visual-vca-stage-name">{STAGE_LABELS[stage.name] || stage.name}</span>
+                    <span className="visual-vca-stage-status">{STAGE_STATUS_LABELS[stage.status] || stage.status}</span>
+                  </li>
+                ))}
+              </ol>
+              {selectedRun?.status === "FAILED" && selectedRun?.failureReason && (
+                <p className="visual-vca-stage-failure">{selectedRun.failureReason}</p>
+              )}
               <dl className="visual-vca-status-meta">
                 <div>
                   <dt>접수 시간</dt>
@@ -243,8 +308,15 @@ export default function VisualPage() {
               </dl>
             </div>
             <div className="visual-vca-status-actions">
-              <button type="button" className="visual-primary-button" onClick={startRun} disabled={!canStartRun}>{runRequestPending ? "분석 접수 중" : "분석 시작"}</button>
-              <button type="button" className="visual-secondary-button" onClick={refreshStatus} disabled={working === "refresh"}>{working === "refresh" ? "갱신 중" : "상태 새로고침"}</button>
+              {runIsActive ? (
+                <button type="button" className="visual-primary-button" onClick={cancelRun} disabled={working === "cancel"}>
+                  {working === "cancel" ? "중지 중" : "분석 중지"}
+                </button>
+              ) : (
+                <button type="button" className="visual-primary-button" onClick={startRun} disabled={!canStartRun}>
+                  {runRequestPending ? "분석 접수 중" : "분석 시작"}
+                </button>
+              )}
             </div>
           </aside>
         </div>
@@ -263,7 +335,8 @@ export default function VisualPage() {
           </div>
           {report ? (
             <VisualReport
-              intermediateResults={intermediateResults}
+              artifactId={artifactId}
+              runId={reportRunId}
               report={report}
               pdfJob={pdfJob}
               working={working}

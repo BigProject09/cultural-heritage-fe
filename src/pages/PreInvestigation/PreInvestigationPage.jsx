@@ -4,6 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import { useDisassembly } from "../../context/useDisassembly";
 import { moveToNextStep } from "../../utils/flowNavigation";
+// X-RAY 분석/육안 상태 조사 단계로 들어가는 허브 페이지. 두 조사로
+// 갈라지는 진입점 역할만 하고(XrayPage, VisualPage로 각각 이동), 완료
+// 여부는 DisassemblyContext의 preInvestigation 플래그로 판단한다.
 function PreInvestigationPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -177,7 +180,7 @@ function PreInvestigationPage() {
                 <p>
                   {preInvestigation.visual
                     ? "AI 분석을 완료했습니다."
-                    : "표면 손상 및 오염 조사"}
+                    : "표면 특이점 및 오염 조사"}
                 </p>
               </button>
             </section>
