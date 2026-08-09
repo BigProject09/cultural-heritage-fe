@@ -148,6 +148,11 @@ export function useVisualInvestigation(artifactId) {
   // 반영한다.
   const cancelRun = useCallback(async () => {
     if (!selectedRunId) return;
+    // 클릭 시점에 실제로 중지할 진행 중 run이었는지 미리 기억해둔다 - 서버는
+    // 이미 끝난 run의 취소 요청을 에러가 아니라 현재 상태 그대로 돌려주는
+    // no-op으로 처리하므로, 응답만 보고는 "중지 요청이 실제로 뭔가를
+    // 멈췄는지" 구분할 수 없다.
+    const wasActive = runIsActive;
     setWorking("cancel");
     setNotice("");
     try {
@@ -158,13 +163,17 @@ export function useVisualInvestigation(artifactId) {
           run.runId === cancelledRun.runId ? { ...run, ...cancelledRun } : run,
         ),
       }));
-      setNotice("분석 중지를 요청했습니다.");
+      setNotice(
+        wasActive
+          ? "분석 중지를 요청했습니다."
+          : "분석이 이미 종료되어 중지할 항목이 없습니다.",
+      );
     } catch (cancelError) {
       setNotice(operationMessage(cancelError, "분석을 중지"));
     } finally {
       setWorking((current) => current === "cancel" ? "" : current);
     }
-  }, [artifactId, selectedRunId]);
+  }, [artifactId, selectedRunId, runIsActive]);
 
   // 파일 input의 onChange 핸들러. 선택한 이미지를 하나씩 업로드하고, 기존
   // report/PDF 상태를 초기화한다(새 이미지가 등록됐으니 이전 분석 결과는
