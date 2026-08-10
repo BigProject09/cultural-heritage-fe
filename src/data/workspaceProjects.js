@@ -64,7 +64,7 @@ export const STATUS_LABEL = {
 };
 
 const API_BASE = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+  import.meta.env.VITE_API_BASE_URL || "https://api.vora-heritage.click"
 ).replace(/\/+$/, "");
 const ARTIFACTS_PATH =
   import.meta.env.VITE_ARTIFACTS_API_PATH || "/api/artifacts";

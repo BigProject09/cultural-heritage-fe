@@ -3,7 +3,7 @@ const USE_GUIDE_MOCK =
   import.meta.env.VITE_USE_GUIDE_MOCK === "true";
 
 const API_BASE = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+  import.meta.env.VITE_API_BASE_URL || "https://api.vora-heritage.click"
 ).replace(/\/+$/, "");
 
 export async function uploadPhoto(file) {
