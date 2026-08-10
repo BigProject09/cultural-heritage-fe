@@ -1,38 +1,51 @@
 /**
  * 도자기 육안조사 AI 서비스 호출.
  *
- * xrayApi.js와 같은 원칙을 따른다 - 브라우저는 같은 오리진(프록시)으로
- * 보내므로 CORS 설정이 필요 없고, 개발 중에는 vite.config.js의 프록시가
- * /pottery-inspection을 8080(Spring)으로 넘긴다.
+ * xrayApi.js와 같은 원칙을 따른다.
+ * 운영 환경에서는 Spring Backend API를 통해 요청하고,
+ * 개발 환경에서도 VITE_API_BASE_URL 값을 기준으로 요청한다.
  *
- * axios 대신 fetch를 쓴 이유: 공용 api.js 인스턴스는 Content-Type:
- * application/json이 기본이라 파일 업로드(FormData)와 안 맞는다. fetch는
- * body가 FormData면 boundary를 포함한 올바른 Content-Type을 브라우저가
- * 알아서 붙여주므로 이 문제 자체가 생기지 않는다.
+ * axios 대신 fetch를 사용하는 이유:
+ * 파일 업로드(FormData) 요청에서는 브라우저가 multipart/form-data의
+ * boundary를 포함한 Content-Type을 자동으로 생성하도록 두는 것이 안전하다.
  */
 
 /**
- * Mock 모드 여부. 백엔드/AI 서버 없이 화면만 확인할 때 쓴다.
- * .env에 VITE_USE_POTTERY_MOCK=true로 켠다 - xrayApi.js의
- * VITE_USE_XRAY_MOCK과 같은 규칙이다.
+ * Mock 모드 여부.
+ * 백엔드/AI 서버 없이 화면만 확인할 때 사용한다.
+ *
+ * .env:
+ * VITE_USE_POTTERY_MOCK=true
  */
 const USE_MOCK = import.meta.env.VITE_USE_POTTERY_MOCK === "true";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://api.vora-heritage.click";
 
 const MOCK_DELAY_MS = 900;
 
 const MOCK_RESULT = {
   module_version: "mock",
   inspection_text:
-    "[유물 외형]\n(Mock) 사진상 외형은 완전한 것으로 추정된다. 표면 광택 수준은 " +
-    "높음으로 관찰된다. 시대는 형태·양식 기반 참고 결과로 고려 후보로 추정된다 " +
-    "(모델 점수 92%).\n\n[주요 문양]\n(Mock) 표면에서 매화문, 학문(두루미)이(가) " +
-    "확인된다.\n\n[종합 의견]\n(Mock) 뚜렷한 이상 소견은 확인되지 않았다.",
-  summary: "(Mock) 형태: 완전 추정 / 시대 후보: 고려 / 문양: 매화문, 학문(두루미)",
+    "[유물 현황]\n(Mock) 사진의 형태는 완전한 것으로 추정됩니다. 표면 광택 수준은 " +
+    "낮음으로 관찰되며, 시대 및 형식 판정은 참고 결과로 고려됩니다 (모델 점수 92%).\n\n" +
+    "[주요 문양]\n(Mock) 표면에서 매화문 계열의 문양이 확인됩니다.\n\n" +
+    "[종합 의견]\n(Mock) 특별한 이상 소견은 확인되지 않았습니다.",
+  summary: "(Mock) 형태: 완전 추정 / 시대 후보: 고려 / 문양: 매화문 계열",
   human_review_recommended: false,
   detail: {
-    completeness: { prediction: "완전", score: 0.99 },
-    glaze: { prediction: "높음", score: 0.8 },
-    era: { prediction: "고려", score: 0.92 },
+    completeness: {
+      prediction: "완전",
+      score: 0.99,
+    },
+    glaze: {
+      prediction: "낮음",
+      score: 0.8,
+    },
+    era: {
+      prediction: "고려",
+      score: 0.92,
+    },
     pattern_era_color: {
       min_agreement_used: 2,
       patterns: [
@@ -42,16 +55,24 @@ const MOCK_RESULT = {
           pattern_name: "매화문",
           decision: "확정",
           agreement_count: 3,
-          bbox_percent: { x1: 20, y1: 25, x2: 55, y2: 55 },
+          bbox_percent: {
+            x1: 20,
+            y1: 25,
+            x2: 55,
+            y2: 55,
+          },
         },
       ],
     },
   },
 };
 
-/** 오류 응답에서 사람이 읽을 메시지를 뽑는다 (xrayApi.js의 readError와 동일 패턴). */
+/**
+ * 오류 응답에서 사용자에게 표시할 메시지를 추출한다.
+ */
 async function readError(response) {
   const copy = response.clone();
+
   try {
     const data = await response.json();
     return data.message || data.detail || JSON.stringify(data);
@@ -60,16 +81,21 @@ async function readError(response) {
   }
 }
 
+/**
+ * 도자기 육안 상태조사 AI 분석 요청.
+ */
 export async function inspectPottery(
   imageBlob,
   { nCalls = 3, useVlmPattern = true } = {},
 ) {
   if (USE_MOCK) {
     await new Promise((resolve) => window.setTimeout(resolve, MOCK_DELAY_MS));
+
     return MOCK_RESULT;
   }
 
   const formData = new FormData();
+
   formData.append("image", imageBlob, "artifact.jpg");
 
   const params = new URLSearchParams({
@@ -77,13 +103,17 @@ export async function inspectPottery(
     use_vlm_pattern: String(useVlmPattern),
   });
 
-  const response = await fetch(`/pottery-inspection?${params}`, {
-    method: "POST",
-    body: formData,
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/pottery-inspection?${params.toString()}`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
 
   if (!response.ok) {
     const detail = await readError(response);
+
     throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
   }
 
