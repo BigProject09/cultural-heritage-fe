@@ -188,8 +188,13 @@ function CleaningPage() {
 
               {/* ② 세척 단계별 작업 */}
               <div
-                className="task-card"
-                onClick={() => navigate("/cleaning-step")}
+                className={`task-card${
+                  !completed.cleaningMethod ? " locked" : ""
+                }`}
+                onClick={() => {
+                  if (!completed.cleaningMethod) return;
+                  navigate("/cleaning-step");
+                }}
               >
                 <div className="task-icon">
                   {savingSteps.has("cleaningStep") ? (
@@ -215,8 +220,13 @@ function CleaningPage() {
 
               {/* ③ 건조 단계별 작업 */}
               <div
-                className="task-card"
-                onClick={() => navigate("/cleaning-drying-step")}
+                className={`task-card${
+                  !completed.cleaningStep ? " locked" : ""
+                }`}
+                onClick={() => {
+                  if (!completed.cleaningStep) return;
+                  navigate("/cleaning-drying-step");
+                }}
               >
                 <div className="task-icon">
                   {savingSteps.has("cleaningDryingStep") ? (

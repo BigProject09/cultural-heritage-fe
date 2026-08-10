@@ -1,57 +1,214 @@
 @reference "../../index.css";
 
 @layer components {
-.heritage-signup-main {
-  @apply items-center flex flex-1 justify-center px-6 py-[58px];
-}
-.heritage-signup-card {
-  @apply [background:rgba(251,248,241,0.92)] border shadow-[0_24px_58px_rgba(58,46,31,0.12)] max-w-[720px] w-full px-[46px] py-[42px] rounded-[18px] border-solid border-[rgba(150,104,61,0.24)];
-}
-.heritage-signup-heading {
-  @apply items-center border-b-[color:var(--heritage-line)] flex justify-between mb-[30px] pb-[25px] border-b border-solid;
-}
-.heritage-signup-heading h1 {
-  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-4xl font-medium mt-2.5 mb-[7px] mx-0;
-}
-.heritage-signup-heading span {
-  @apply text-[color:var(--heritage-muted)] text-xs;
-}
-.heritage-signup-heading b {
-  @apply items-center border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)] flex text-[28px] font-normal h-[58px] justify-center w-[58px] rounded-full border-solid;
-}
-.heritage-signup-grid {
-  @apply grid gap-[18px] grid-cols-[1fr_1fr];
-}
-.heritage-signup-grid label {
-  @apply flex flex-col;
-}
-.heritage-signup-grid label.wide {
-  @apply col-span-full;
-}
-.heritage-signup-grid label > span {
-  @apply text-[#5d625d] text-[11px] font-bold mb-[7px];
-}
-.heritage-signup-grid input {
-  @apply [background:#fffdf8] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] text-sm h-12 px-3.5 py-0 rounded-lg border-solid focus:border-[color:var(--heritage-bronze)] focus:shadow-[0_0_0_3px_rgba(150,104,61,0.12)] focus:outline-none;
-}
-.heritage-signup-card .heritage-auth-error {
-  @apply mt-[18px] mb-0 mx-0;
-}
-.heritage-signup-card .heritage-auth-submit {
-  @apply w-full mt-6;
-}
-@media (max-width: 620px) {
+  .heritage-signup-main {
+    @apply items-center flex flex-1 justify-center px-6 py-[58px];
+  }
+
   .heritage-signup-card {
-    @apply px-6 py-[30px];
+    @apply [background:rgba(251,248,241,0.92)] border shadow-[0_24px_58px_rgba(58,46,31,0.12)] max-w-[720px] w-full px-[46px] py-[42px] rounded-[18px] border-solid border-[rgba(150,104,61,0.24)];
   }
+
+  .heritage-signup-heading {
+    @apply items-center border-b-[color:var(--heritage-line)] flex justify-between mb-[30px] pb-[25px] border-b border-solid;
+  }
+
+  .heritage-signup-heading h1 {
+    @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-4xl font-medium mt-2.5 mb-[7px] mx-0;
+  }
+
+  .heritage-signup-heading span {
+    @apply text-[color:var(--heritage-muted)] text-xs;
+  }
+
   .heritage-signup-heading b {
-    @apply hidden;
+    @apply items-center border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)] flex text-[28px] font-normal h-[58px] justify-center w-[58px] rounded-full border-solid;
   }
+
   .heritage-signup-grid {
-    @apply grid-cols-[1fr];
+    @apply grid gap-[18px] grid-cols-[1fr_1fr];
   }
+
+  .heritage-signup-grid label {
+    @apply flex flex-col;
+  }
+
   .heritage-signup-grid label.wide {
-    @apply col-auto;
+    @apply col-span-full;
   }
-}
+
+  .heritage-signup-grid label > span {
+    @apply text-[#5d625d] text-[11px] font-bold mb-[7px];
+  }
+
+  .heritage-signup-grid input {
+    @apply [background:#fffdf8] border border-[color:var(--heritage-line)] text-[color:var(--heritage-ink)] text-sm h-12 px-3.5 py-0 rounded-lg border-solid focus:border-[color:var(--heritage-bronze)] focus:shadow-[0_0_0_3px_rgba(150,104,61,0.12)] focus:outline-none;
+  }
+
+  .heritage-signup-card .heritage-auth-error {
+    @apply mt-[18px] mb-0 mx-0;
+  }
+
+  .heritage-signup-card .heritage-auth-submit {
+    @apply w-full mt-6;
+  }
+
+  .heritage-terms-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(26, 23, 19, 0.65);
+    backdrop-filter: blur(4px);
+  }
+
+  .heritage-terms-modal {
+    width: min(520px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 32px;
+    overflow-y: auto;
+    border: 1px solid rgba(150, 104, 61, 0.24);
+    border-radius: 14px;
+    background: #fffdf9;
+    box-shadow: 0 24px 70px rgba(20, 17, 13, 0.3);
+  }
+
+  .heritage-terms-modal-heading h2 {
+    margin: 6px 0 8px;
+    color: var(--heritage-ink);
+    font-family: Georgia, "Noto Serif KR", serif;
+    font-size: 26px;
+    font-weight: 500;
+  }
+
+  .heritage-terms-modal-heading span {
+    color: var(--heritage-muted);
+    font-size: 14px;
+  }
+
+  .heritage-terms-content {
+    max-height: 200px;
+    margin-top: 24px;
+    padding: 18px;
+    overflow-y: auto;
+    border: 1px solid var(--heritage-line);
+    border-radius: 8px;
+    background: #faf8f4;
+    color: #5f5a52;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .heritage-terms-content h3 {
+    margin: 0 0 12px;
+    color: var(--heritage-ink);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .heritage-terms-content h3:not(:first-child) {
+    margin-top: 22px;
+  }
+
+  .heritage-terms-content p {
+    margin: 0 0 12px;
+  }
+
+  .heritage-terms-checks {
+    margin-top: 22px;
+  }
+
+  .heritage-terms-checks label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    color: #514c45;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .heritage-terms-checks input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    flex-shrink: 0;
+    accent-color: var(--heritage-bronze);
+  }
+
+  .heritage-terms-all {
+    font-weight: 700;
+  }
+
+  .heritage-terms-divider {
+    height: 1px;
+    margin: 16px 0;
+    background: var(--heritage-line);
+  }
+
+  .heritage-terms-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 28px;
+  }
+
+  .heritage-terms-actions button {
+    flex: 1;
+    min-height: 48px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .heritage-terms-cancel {
+    border: 1px solid var(--heritage-line);
+    background: #ffffff;
+    color: var(--heritage-muted);
+  }
+
+  .heritage-terms-confirm {
+    border: 1px solid var(--heritage-bronze);
+    background: var(--heritage-bronze);
+    color: #ffffff;
+  }
+
+  .heritage-terms-confirm:disabled {
+    border-color: #c9c3ba;
+    background: #c9c3ba;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 620px) {
+    .heritage-signup-card {
+      @apply px-6 py-[30px];
+    }
+
+    .heritage-signup-heading b {
+      @apply hidden;
+    }
+
+    .heritage-signup-grid {
+      @apply grid-cols-[1fr];
+    }
+
+    .heritage-signup-grid label.wide {
+      @apply col-auto;
+    }
+
+    .heritage-terms-overlay {
+      padding: 16px;
+    }
+
+    .heritage-terms-modal {
+      padding: 24px 20px;
+    }
+
+    .heritage-terms-actions {
+      flex-direction: column-reverse;
+    }
+  }
 }

@@ -77,6 +77,7 @@ export default function ImageViewer({ file, regions, selectedId, onSelect }) {
  * 색상은 AI 탐지 점수이며 손상 심각도가 아니다.
  */
 function colorOf(confidence) {
+  if (confidence == null) return "#ff2d2d";
   if (confidence < 0.2) return "#ffd400";
   if (confidence < 0.4) return "#ff9500";
   return "#ff2d2d";
@@ -123,7 +124,7 @@ function BoxShape({ region, imageWidth, selected, onSelect }) {
         fontSize={fontSize}
         fontFamily="monospace"
       >
-        {region.regionId} {region.confidence.toFixed(2)}
+        {region.regionId} {region.confidence != null ? region.confidence.toFixed(2) : ""}
       </text>
     </g>
   );

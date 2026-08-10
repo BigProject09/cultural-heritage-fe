@@ -2,6 +2,10 @@ const USE_GUIDE_MOCK =
   import.meta.env.MODE === "mock" ||
   import.meta.env.VITE_USE_GUIDE_MOCK === "true";
 
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+).replace(/\/+$/, "");
+
 export async function uploadPhoto(file) {
   if (USE_GUIDE_MOCK) {
     return URL.createObjectURL(file);
@@ -10,7 +14,7 @@ export async function uploadPhoto(file) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch("http://localhost:8080/photos/upload", {
+  const response = await fetch(`${API_BASE}/photos/upload`, {
     method: "POST",
     body: formData,
   });

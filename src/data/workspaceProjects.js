@@ -40,8 +40,7 @@ export const WORKSPACE_MODULES = [
     title: "X-RAY 복원",
     shortTitle: "X-RAY",
     subtitle: "파편 결합 · 결함 분석",
-    description:
-      "X-RAY 파편을 결합하고 내부 결함 후보를 검토·확정합니다.",
+    description: "X-RAY 파편을 결합하고 내부 결함 후보를 검토·확정합니다.",
   },
   {
     key: "visual",
@@ -65,8 +64,9 @@ export const STATUS_LABEL = {
   FAILED: "실패",
 };
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080")
-  .replace(/\/+$/, "");
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+).replace(/\/+$/, "");
 const ARTIFACTS_PATH =
   import.meta.env.VITE_ARTIFACTS_API_PATH || "/api/artifacts";
 const ARTIFACT_STORAGE_MODE =
@@ -99,7 +99,8 @@ function ensureNotAborted(signal) {
 }
 
 function inferTone(material = "") {
-  if (material.includes("백자") || material.includes("도자")) return "porcelain";
+  if (material.includes("백자") || material.includes("도자"))
+    return "porcelain";
   if (material.includes("철")) return "iron";
   if (material.includes("청동") || material.includes("금속")) return "bronze";
   return "new";
@@ -117,30 +118,24 @@ function normalizeStatus(status) {
 
 function normalizeModules(modules) {
   if (Array.isArray(modules)) {
-    return modules.reduce(
-      (result, module) => {
-        const key = String(module.moduleType || module.type || "").toLowerCase();
-        if (key in result) result[key] = normalizeStatus(module.status);
-        return result;
-      },
-      emptyModules(),
-    );
+    return modules.reduce((result, module) => {
+      const key = String(module.moduleType || module.type || "").toLowerCase();
+      if (key in result) result[key] = normalizeStatus(module.status);
+      return result;
+    }, emptyModules());
   }
 
   const source = modules || {};
-  return WORKSPACE_MODULES.reduce(
-    (result, module) => {
-      const value =
-        source[module.key] ??
-        source[module.apiKey] ??
-        source[module.apiKey.toLowerCase()];
-      result[module.key] = normalizeStatus(
-        typeof value === "object" ? value.status : value,
-      );
-      return result;
-    },
-    emptyModules(),
-  );
+  return WORKSPACE_MODULES.reduce((result, module) => {
+    const value =
+      source[module.key] ??
+      source[module.apiKey] ??
+      source[module.apiKey.toLowerCase()];
+    result[module.key] = normalizeStatus(
+      typeof value === "object" ? value.status : value,
+    );
+    return result;
+  }, emptyModules());
 }
 
 export function normalizeWorkspaceProject(project = {}) {
@@ -212,7 +207,9 @@ function writeLocalProjects(projects) {
       const normalized = normalizeWorkspaceProject(project);
       return {
         ...normalized,
-        image: normalized.image?.startsWith?.("blob:") ? null : normalized.image,
+        image: normalized.image?.startsWith?.("blob:")
+          ? null
+          : normalized.image,
       };
     });
 
@@ -246,7 +243,10 @@ function imageFileToThumbnail(file) {
         reject(new Error("대표 이미지 형식을 확인해주세요."));
       image.onload = () => {
         const maxLength = 1600;
-        const scale = Math.min(1, maxLength / Math.max(image.width, image.height));
+        const scale = Math.min(
+          1,
+          maxLength / Math.max(image.width, image.height),
+        );
         const canvas = document.createElement("canvas");
         canvas.width = Math.max(1, Math.round(image.width * scale));
         canvas.height = Math.max(1, Math.round(image.height * scale));
@@ -360,9 +360,7 @@ async function saveLocalProject(project, currentProjects = null) {
 }
 
 function getLocalProject(projects, artifactId) {
-  return projects.find(
-    (project) => project.artifactId === String(artifactId),
-  );
+  return projects.find((project) => project.artifactId === String(artifactId));
 }
 
 function getAccessToken() {
@@ -451,7 +449,9 @@ export async function getWorkspaceProjects({ signal } = {}) {
     ensureNotAborted(signal);
     const projects = await prepareLocalProjects();
     ensureNotAborted(signal);
-    const hydratedProjects = await Promise.all(projects.map(hydrateLocalProject));
+    const hydratedProjects = await Promise.all(
+      projects.map(hydrateLocalProject),
+    );
     ensureNotAborted(signal);
     return hydratedProjects.sort(
       (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
@@ -508,7 +508,9 @@ async function uploadArtifactImage(artifactId, file, entryModule) {
   });
 
   if (!uploadResponse.ok) {
-    throw new Error(`대표 이미지 업로드에 실패했습니다. (HTTP ${uploadResponse.status})`);
+    throw new Error(
+      `대표 이미지 업로드에 실패했습니다. (HTTP ${uploadResponse.status})`,
+    );
   }
 
   return request(
@@ -536,7 +538,7 @@ export async function upsertWorkspaceProject(
     const artifactId =
       editMode && existing?.artifactId
         ? existing.artifactId
-        : `artifact-${Date.now()}`;
+        : crypto.randomUUID();
     const modules = {
       ...(existing?.modules || emptyModules()),
     };
@@ -608,9 +610,7 @@ export async function upsertWorkspaceProject(
     project = await getWorkspaceProject(project.artifactId);
   }
 
-  if (
-    project.modules[entryModule] === MODULE_STATUS.NOT_STARTED
-  ) {
+  if (project.modules[entryModule] === MODULE_STATUS.NOT_STARTED) {
     project = await markWorkspaceModule(
       project.artifactId,
       entryModule,
@@ -720,7 +720,9 @@ export function selectWorkspaceProject(project) {
 
 export function getActiveArtifactId() {
   const artifactInfo = safeParse(localStorage.getItem("artifactInfo"), {});
-  return localStorage.getItem(ACTIVE_ARTIFACT_KEY) || artifactInfo.artifactId || "";
+  return (
+    localStorage.getItem(ACTIVE_ARTIFACT_KEY) || artifactInfo.artifactId || ""
+  );
 }
 
 export function getArtifactStorageMode() {

@@ -14,6 +14,7 @@ export function DisassemblyProvider({
   // taskId처럼 context에 저장해 페이지 이동과 무관하게 유지한다.
   const [approvedFlow, setApprovedFlow] =
     useState(null);
+  const [visualResult, setVisualResult] = useState(null);
 
   // X-RAY 분석/육안 상태 조사
   const [preInvestigation, setPreInvestigation] =
@@ -113,8 +114,12 @@ const [bondingTempAnalysis, setBondingTempAnalysis] =
 const [restorationMaterial, setRestorationMaterial] =
   useState(null);
 
-// 복원 단계별 안내
+// 복원 단계별 안내 (충전 시공)
 const [restorationGuide, setRestorationGuide] =
+  useState(null);
+
+// 복원 단계별 안내 (마감처리: 연마 → 채색 → 광택)
+const [restorationFinishingGuide, setRestorationFinishingGuide] =
   useState(null);
 
 // 복원 - 사용자가 실제로 선택한 복원제 (보고서용)
@@ -151,6 +156,7 @@ const [restorationChoice, setRestorationChoice] =
     // 복원
       restorationMethod: false,
       restorationMaterial: false,
+      restorationFinishing: false,
       restorationWork: false,
       restorationPost: false,
 
@@ -202,6 +208,7 @@ const [restorationChoice, setRestorationChoice] =
     });
 
   setCleaningAnalysis(null);
+  setVisualResult(null);
   setCleaningGuide(null);
   setDryingGuide(null);
   setCleaningSelection({ usePhysical: false, useChemical: false });
@@ -215,6 +222,7 @@ const [restorationChoice, setRestorationChoice] =
   setBondingTempAnalysis(null);
   setRestorationMaterial(null);
   setRestorationGuide(null);
+  setRestorationFinishingGuide(null);
   setRestorationChoice({ material: "" });
   setSavingSteps(new Set());
 
@@ -246,6 +254,7 @@ const [restorationChoice, setRestorationChoice] =
      // 복원
       restorationMaterial: false,
       restorationMethod: false,
+      restorationFinishing: false,
       restorationPost: false,
 
     });
@@ -257,6 +266,9 @@ const [restorationChoice, setRestorationChoice] =
         taskId,
         setTaskId,
 
+        visualResult,
+        setVisualResult,
+        
         approvedFlow,
         setApprovedFlow,
 
@@ -331,6 +343,9 @@ const [restorationChoice, setRestorationChoice] =
 
       restorationGuide,
       setRestorationGuide,
+
+      restorationFinishingGuide,
+      setRestorationFinishingGuide,
 
       restorationChoice,
       setRestorationChoice,

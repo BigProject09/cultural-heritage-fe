@@ -30,7 +30,13 @@ function BondingWorkPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, bondingTempAnalysis, setBondingTempAnalysis, setCompleted, setStepSaving } = ctx;
+  const {
+    taskId,
+    bondingTempAnalysis,
+    setBondingTempAnalysis,
+    setCompleted,
+    setStepSaving,
+  } = ctx;
 
   const [beforePhoto, setBeforePhoto] = useState("");
   const [afterPhoto, setAfterPhoto] = useState("");
@@ -160,7 +166,11 @@ function BondingWorkPage() {
 
         <div className="nav-btn-group">
           {!bondingTempAnalysis && (
-            <button className="nav-btn" disabled={analyzing} onClick={handleAnalyze}>
+            <button
+              className="nav-btn"
+              disabled={analyzing}
+              onClick={handleAnalyze}
+            >
               {analyzing ? "분석 중..." : "분석"}
             </button>
           )}
@@ -191,17 +201,29 @@ function BondingWorkPage() {
         </div>
 
         <div className="photo-row">
-          <div className="info-card">
+          <div
+            className={`info-card photo-upload-zone ${
+              bondingTempAnalysis || beforeUploading ? "is-disabled" : ""
+            }`}
+          >
             <h2>임시접합 전</h2>
 
             <input
+              className="photo-file-input"
               type="file"
               accept="image/*"
+              aria-label="임시접합 전 사진 선택"
               disabled={!!bondingTempAnalysis || beforeUploading}
               onChange={handleBeforeFileChange}
             />
 
-            {beforeUploading && <p>업로드 중...</p>}
+            <p className="photo-upload-guide">
+              {beforeUploading
+                ? "사진을 업로드하고 있어요..."
+                : beforePhoto
+                  ? "다른 사진으로 바꾸려면 상자 안을 클릭하세요."
+                  : "상자 안을 클릭해 사진을 선택하세요."}
+            </p>
 
             {beforePhoto && (
               <div className="photo-preview">
@@ -210,17 +232,29 @@ function BondingWorkPage() {
             )}
           </div>
 
-          <div className="info-card">
+          <div
+            className={`info-card photo-upload-zone ${
+              bondingTempAnalysis || afterUploading ? "is-disabled" : ""
+            }`}
+          >
             <h2>임시접합 후</h2>
 
             <input
+              className="photo-file-input"
               type="file"
               accept="image/*"
+              aria-label="임시접합 후 사진 선택"
               disabled={!!bondingTempAnalysis || afterUploading}
               onChange={handleAfterFileChange}
             />
 
-            {afterUploading && <p>업로드 중...</p>}
+            <p className="photo-upload-guide">
+              {afterUploading
+                ? "사진을 업로드하고 있어요..."
+                : afterPhoto
+                  ? "다른 사진으로 바꾸려면 상자 안을 클릭하세요."
+                  : "상자 안을 클릭해 사진을 선택하세요."}
+            </p>
 
             {afterPhoto && (
               <div className="photo-preview">
@@ -233,7 +267,9 @@ function BondingWorkPage() {
         {bondingTempAnalysis && (
           <div className="info-card temp-analysis-card">
             {!bondingTempAnalysis.is_analyzable && (
-              <p className="temp-analysis-warning">사진으로 판단이 어렵습니다. 다시 촬영해주세요.</p>
+              <p className="temp-analysis-warning">
+                사진으로 판단이 어렵습니다. 다시 촬영해주세요.
+              </p>
             )}
 
             <div className="severity-legend">
@@ -261,13 +297,18 @@ function BondingWorkPage() {
               <li className="metric-row">
                 <span className="metric-label">종합 심각도</span>
                 <span className="temp-analysis-severity">
-                  {SEVERITY_LABELS[bondingTempAnalysis.overall_severity] || bondingTempAnalysis.overall_severity}
+                  {SEVERITY_LABELS[bondingTempAnalysis.overall_severity] ||
+                    bondingTempAnalysis.overall_severity}
                 </span>
               </li>
             </ul>
 
-            <p className="temp-analysis-description">{bondingTempAnalysis.description}</p>
-            <p className="recommendation">✔ {bondingTempAnalysis.recommendation}</p>
+            <p className="temp-analysis-description">
+              {bondingTempAnalysis.description}
+            </p>
+            <p className="recommendation">
+              ✔ {bondingTempAnalysis.recommendation}
+            </p>
           </div>
         )}
       </div>
