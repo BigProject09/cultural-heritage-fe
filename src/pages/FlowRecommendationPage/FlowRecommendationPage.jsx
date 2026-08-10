@@ -29,7 +29,7 @@ function FlowRecommendationPage() {
   const [loading, setLoading] = useState(false);
 
   const ctx = useDisassembly();
-  const { setTaskId, setApprovedFlow } = ctx;
+  const { setTaskId, setApprovedFlow, resetCompleted } = ctx;
 
   const toggleStep = (id) => {
     setSteps((prev) =>
@@ -70,8 +70,6 @@ function FlowRecommendationPage() {
       return;
     }
 
-    setApprovedFlow(approvedFlow);
-
     const artifactInfo = JSON.parse(localStorage.getItem("artifactInfo"));
 
     if (!artifactInfo || !artifactId) {
@@ -80,6 +78,12 @@ function FlowRecommendationPage() {
       });
       return;
     }
+
+    // 새 보존가이드를 시작할 때 이전 Guide 세션 상태를 모두 초기화한다.
+    // X-RAY/육안조사 등 어떤 경로에서 진입했는지와 관계없이
+    // 동일한 초기 상태에서 시작하도록 한다.
+    resetCompleted();
+    setApprovedFlow(approvedFlow);
 
     const taskId = `task-${Date.now()}`;
 
@@ -168,9 +172,7 @@ function FlowRecommendationPage() {
             <div key={step.id} className="flow-step">
               <div className="ai-step">{step.name}</div>
 
-              {index !== aiFlow.length - 1 && (
-                <div className="arrow">↓</div>
-              )}
+              {index !== aiFlow.length - 1 && <div className="arrow">↓</div>}
             </div>
           ))}
         </div>
@@ -194,7 +196,6 @@ function FlowRecommendationPage() {
             </div>
           ))}
         </div>
-
       </div>
 
       {loading && (
