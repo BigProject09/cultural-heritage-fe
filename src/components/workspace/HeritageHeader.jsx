@@ -73,7 +73,11 @@ function HeritageHeader({ active = "dashboard" }) {
         onClick={() => navigate("/")}
         aria-label="VORA 홈로 이동"
       >
-        <span className="heritage-brand-mark">✣</span>
+        <img
+          src="/vora-logo.png"
+          alt="VORA Heritage"
+          className="heritage-brand-mark"
+        />
         <span>
           VORA
           <small>AI CONSERVATION WORKSPACE</small>
