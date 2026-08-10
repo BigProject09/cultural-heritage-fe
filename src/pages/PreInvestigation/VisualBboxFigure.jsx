@@ -37,7 +37,10 @@ export function BboxFigure({ image, size, onImageLoad, children }) {
 // 경우) bbox 사각형을 그린다. 배지 위치는 항상 bbox 기준으로 유지한다 -
 // placeMarkerBadges의 겹침 회피 계산이 사각형을 전제로 하고 있어, 임의의
 // 폴리곤 점보다 안정적이다.
-function ShapeOutline({ bbox, polygons, color, fillAlpha }) {
+function ShapeOutline({ bbox, polygons, color, fillAlpha, isHovered }) {
+  const className = isHovered
+    ? "visual-vca-overlay-box visual-vca-overlay-box--hovered"
+    : "visual-vca-overlay-box";
   const validPolygons = (polygons || []).filter((polygon) => polygon.length >= 3);
   if (validPolygons.length > 0) {
     return (
@@ -46,7 +49,7 @@ function ShapeOutline({ bbox, polygons, color, fillAlpha }) {
           <polygon
             key={index}
             points={polygon.map((point) => `${point.x},${point.y}`).join(" ")}
-            className="visual-vca-overlay-box"
+            className={className}
             style={{ stroke: color, fill: hexWithAlpha(color, fillAlpha) }}
           />
         ))}
@@ -60,7 +63,7 @@ function ShapeOutline({ bbox, polygons, color, fillAlpha }) {
       y={yMin}
       width={xMax - xMin}
       height={yMax - yMin}
-      className="visual-vca-overlay-box"
+      className={className}
       style={{ stroke: color, fill: hexWithAlpha(color, fillAlpha) }}
     />
   );
@@ -75,7 +78,8 @@ export function BboxMarker({
   color,
   badgeRadius,
   badge,
-  fillAlpha = 0.14,
+  fillAlpha = 0.32,
+  isHovered = false,
   interactive = false,
   onClick,
   onMouseEnter,
@@ -83,7 +87,10 @@ export function BboxMarker({
   onMouseLeave,
 }) {
   const { xMin, yMin } = bbox;
-  const badgeSpot = badge || { x: xMin, y: yMin };
+  // badge가 안 주어지면(특이점 상세 페이지의 단일 정적 마커) bbox 모서리를
+  // 그대로 쓰지 않고 대각선 바깥쪽으로 밀어서 마스킹 위를 덮지 않게 한다 -
+  // placeMarkerBadges의 기본 위치 계산과 동일한 여백을 쓴다.
+  const badgeSpot = badge || { x: xMin - badgeRadius * 1.6, y: yMin - badgeRadius * 1.6 };
   const isBadgeOffset = badgeSpot.x !== xMin || badgeSpot.y !== yMin;
 
   return (
@@ -94,7 +101,7 @@ export function BboxMarker({
       onMouseMove={interactive ? onMouseMove : undefined}
       onMouseLeave={interactive ? onMouseLeave : undefined}
     >
-      <ShapeOutline bbox={bbox} polygons={polygons} color={color} fillAlpha={fillAlpha} />
+      <ShapeOutline bbox={bbox} polygons={polygons} color={color} fillAlpha={fillAlpha} isHovered={isHovered} />
       {isBadgeOffset && (
         <line
           x1={xMin}

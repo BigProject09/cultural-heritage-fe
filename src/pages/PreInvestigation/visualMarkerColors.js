@@ -33,27 +33,41 @@ export function hexWithAlpha(hex, alpha) {
 }
 
 // 여러 특이점의 bbox 모서리가 같은 사진 안에서 가까이 붙어 있으면 번호
-// 배지가 서로 겹쳐서 읽을 수 없게 된다. bbox 좌상단을 기본 위치로 시도하고,
-// 이미 배치된 배지와 반지름*2 이상 떨어지지 않으면 주변 8방향 후보를
-// 순서대로 시도해 겹치지 않는 자리를 고른다.
-export function placeMarkerBadges(boxes, badgeRadius) {
+// 배지가 서로 겹쳐서 읽을 수 없게 된다. bbox 좌상단을 그대로 기본 위치로
+// 쓰면 마스킹 채색 영역과 겹치는 경우가 많아서, 모서리에서 대각선
+// 바깥쪽(margin)으로 밀어낸 지점을 기본 위치로 삼는다 - BboxMarker가
+// 배지와 원래 모서리 사이에 점선 리더 라인을 그려주므로 어디를 가리키는지는
+// 여전히 명확하다. 그 지점부터 주변 8방향 후보를 순서대로 시도해 이미
+// 배치된 다른 배지와 겹치지 않는 자리를 고르고, size가 있으면 사진 밖으로
+// 나가지 않게 좌표를 안쪽으로 접어 넣는다.
+export function placeMarkerBadges(boxes, badgeRadius, size) {
   const placed = [];
   const step = badgeRadius * 2.2;
+  const margin = badgeRadius * 1.6;
   const offsets = [
-    [0, 0],
-    [step, 0], [0, step], [step, step],
-    [-step, 0], [0, -step], [-step, -step],
-    [step * 2, 0], [0, step * 2],
+    [-margin, -margin],
+    [-margin + step, -margin], [-margin, -margin + step], [-margin + step, -margin + step],
+    [-margin - step, -margin], [-margin, -margin - step], [-margin - step, -margin - step],
+    [-margin + step * 2, -margin], [-margin, -margin + step * 2],
   ];
   const minDistance = badgeRadius * 2.1;
+
+  function clampToImage(point) {
+    if (!size) return point;
+    return {
+      x: Math.min(Math.max(point.x, badgeRadius), size.width - badgeRadius),
+      y: Math.min(Math.max(point.y, badgeRadius), size.height - badgeRadius),
+    };
+  }
 
   return boxes.map(({ xMin, yMin }) => {
     const spot = offsets
       .map(([dx, dy]) => ({ x: xMin + dx, y: yMin + dy }))
       .find((candidate) => placed.every((other) =>
         Math.hypot(other.x - candidate.x, other.y - candidate.y) >= minDistance))
-      || { x: xMin, y: yMin };
-    placed.push(spot);
-    return spot;
+      || { x: xMin - margin, y: yMin - margin };
+    const clamped = clampToImage(spot);
+    placed.push(clamped);
+    return clamped;
   });
 }

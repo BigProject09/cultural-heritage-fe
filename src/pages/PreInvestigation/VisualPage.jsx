@@ -83,17 +83,15 @@ function formatDate(value) {
   });
 }
 
-// progressPercent가 없는 run도 있어, stages 배열의 완료 비율로 대신
-// 추정하고, 그마저 없으면 상태값만으로 대략적인 값을 쓴다.
+// progressPercent는 "전체 진행률"이 아니라 "지금 실행 중인 스테이지 자체의
+// 0~100%"다 - 스테이지가 바뀌면 서버가 이 값을 다시 채워서, 스테이지 전환마다
+// 프로그레스 바가 자동으로 0%부터 다시 시작한다. rough_masking/mask_refining
+// 처럼 계측되는 스테이지가 아니면 서버가 null을 보내는데, 그 경우 8단계 전체
+// 비율로 대신 계산하면 "이번 스테이지 진행률"이라는 의미와 어긋나므로 상태값
+// 기반 대략값으로만 폴백한다.
 function runProgress(run) {
   if (!run) return 0;
   if (Number.isFinite(run.progressPercent)) return run.progressPercent;
-  if (Array.isArray(run.stages) && run.stages.length > 0) {
-    const finished = run.stages.filter(
-      (stage) => stage.status === "completed" || stage.status === "skipped",
-    ).length;
-    return Math.round((finished / STAGE_ORDER.length) * 100);
-  }
   return RUN_STATUS_PROGRESS[run.status] || 0;
 }
 
@@ -183,7 +181,7 @@ export default function VisualPage() {
     <main className="visual-page visual-vca-page">
       <div className="visual-container visual-vca-container">
         <nav className="visual-vca-breadcrumb" aria-label="현재 위치">
-          <button type="button" onClick={() => navigate(-1)}>
+          <button type="button" onClick={() => navigate("/")}>
             유물 워크스페이스
           </button>
           <span aria-hidden="true">/</span>
@@ -289,9 +287,6 @@ export default function VisualPage() {
                   </li>
                 ))}
               </ol>
-              {selectedRun?.status === "FAILED" && selectedRun?.failureReason && (
-                <p className="visual-vca-stage-failure">{selectedRun.failureReason}</p>
-              )}
               <dl className="visual-vca-status-meta">
                 <div>
                   <dt>접수 시간</dt>
@@ -312,8 +307,27 @@ export default function VisualPage() {
                 <button type="button" className="visual-primary-button" onClick={cancelRun} disabled={working === "cancel"}>
                   {working === "cancel" ? "중지 중" : "분석 중지"}
                 </button>
+              ) : artifact.resumableRunId ? (
+                <>
+                  <button
+                    type="button"
+                    className="visual-primary-button"
+                    onClick={() => startRun({ resume: true })}
+                    disabled={!canStartRun}
+                  >
+                    {runRequestPending ? "분석 접수 중" : "이어서 분석 시작"}
+                  </button>
+                  <button
+                    type="button"
+                    className="visual-secondary-button"
+                    onClick={() => startRun({ resume: false })}
+                    disabled={!canStartRun}
+                  >
+                    {runRequestPending ? "분석 접수 중" : "새로 분석 시작"}
+                  </button>
+                </>
               ) : (
-                <button type="button" className="visual-primary-button" onClick={startRun} disabled={!canStartRun}>
+                <button type="button" className="visual-primary-button" onClick={() => startRun()} disabled={!canStartRun}>
                   {runRequestPending ? "분석 접수 중" : "분석 시작"}
                 </button>
               )}

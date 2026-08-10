@@ -1,7 +1,6 @@
-import { useNavigate } from "react-router-dom";
 import { getVcaPdfDownloadUrl } from "../../services/vcaApi";
 import VisualCandidateOverlay from "./VisualCandidateOverlay";
-import { CONCEPT_FAMILY_LABELS, SEVERITY_LABELS } from "./visualVcaLabels";
+import { CONCEPT_FAMILY_LABELS, SEVERITY_LABELS, translateDescriptor } from "./visualVcaLabels";
 import KoreanLabel from "./KoreanLabel";
 
 const PDF_STATUS_LABELS = {
@@ -35,91 +34,114 @@ function severityCounts(findings) {
 function conceptFamilyCounts(findings) {
   const counts = new Map();
   findings.forEach((finding) => {
-    const key = finding.conceptFamily || "visual anomaly";
+    const key = finding.conceptFamily || "unknown_visual_anomaly";
     counts.set(key, (counts.get(key) || 0) + 1);
   });
   return [...counts.entries()].map(([conceptFamily, count]) => ({ conceptFamily, count }));
 }
 
+// 특이점들을 관찰 유형(conceptFamily)별로 묶어, 몇 건이고 어떤 양상인지를
+// 문장으로 요약한다("표면오염 5건(백색 분상 피각 등)" 형태) - 규칙 기반이라
+// 새 AI 호출 없이 findings에 이미 있는 conceptFamily/descriptor/severity만
+// 쓴다. ReportFindingsBrief가 개별 항목을 나열하기 전에 먼저 보여준다.
+function summarizeFindings(findings) {
+  if (findings.length === 0) return "";
+  const groups = new Map();
+  findings.forEach((finding) => {
+    const key = finding.conceptFamily || "unknown";
+    if (!groups.has(key)) {
+      groups.set(key, { count: 0, descriptors: new Set(), highSeverityCount: 0 });
+    }
+    const group = groups.get(key);
+    group.count += 1;
+    // descriptor가 "unknown"이면 RAG 근거를 못 찾아 아무 서술어도 못 붙인
+    // passthrough 후보라는 뜻이라, 괄호 안에 원문 그대로("unknown") 새는
+    // 것을 막는다 - 이 경우는 그냥 건수만 보여준다.
+    if (finding.descriptor && finding.descriptor !== "unknown") {
+      const translated = translateDescriptor(finding.descriptor);
+      if (translated) {
+        group.descriptors.add(translated);
+      }
+    }
+    if (finding.severity === "HIGH" || finding.severity === "CRITICAL") {
+      group.highSeverityCount += 1;
+    }
+  });
+
+  const sortedGroups = [...groups.entries()].sort((a, b) => b[1].count - a[1].count);
+  const parts = sortedGroups.map(([conceptFamily, group]) => {
+    const label = CONCEPT_FAMILY_LABELS[conceptFamily] || conceptFamily;
+    const descriptorSample = [...group.descriptors].slice(0, 2);
+    const descriptorText = descriptorSample.length > 0 ? `(${descriptorSample.join(", ")} 등)` : "";
+    return `${label} ${group.count}건${descriptorText}`;
+  });
+
+  const highSeverityTotal = [...groups.values()]
+    .reduce((sum, group) => sum + group.highSeverityCount, 0);
+  const severityNote = highSeverityTotal > 0
+    ? ` 이 중 ${highSeverityTotal}건은 심각도가 '높음' 이상으로 평가되어 주의가 필요합니다.`
+    : "";
+
+  return `총 ${findings.length}건의 특이점이 확인되었으며, ${parts.join(", ")}입니다.${severityNote}`;
+}
+
+// 심각도별/유형별 건수를 표로 보여준다("정보 3, 균열 2, 결손 1, 변색 2" 같은
+// 칩 나열 대신) - ReportFindingsBrief가 pane 맨 위, 설명 문구보다도 앞에
+// 배치한다.
+function FindingsStatsTable({ findings }) {
+  const severities = severityCounts(findings);
+  const families = conceptFamilyCounts(findings);
+  if (severities.length === 0 && families.length === 0) return null;
+  const columns = [
+    ...severities.map(({ severity, count }) => ({
+      key: `severity-${severity}`,
+      count,
+      label: <KoreanLabel original={severity} labelMap={SEVERITY_LABELS} fallback={severity} />,
+    })),
+    ...families.map(({ conceptFamily, count }) => ({
+      key: `family-${conceptFamily}`,
+      count,
+      label: <KoreanLabel original={conceptFamily} labelMap={CONCEPT_FAMILY_LABELS} fallback={conceptFamily} />,
+    })),
+  ];
+
+  return (
+    <div className="visual-vca-stats-table-scroll">
+      <table className="visual-vca-stats-table">
+        <thead>
+          <tr>
+            {columns.map((column) => (
+              <th key={column.key} scope="col">{column.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {columns.map((column) => (
+              <td key={column.key}>{column.count}</td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // summary.headline은 백엔드가 항상 "VCA 육안 조사 결과"라는 고정 문구를
 // 내려주는 죽은 필드라 별도로 표시하지 않는다 (report_generating이 만드는
-// 실제 내용은 summary.description뿐). 상세 설명·인용 근거·검색 근거는 각
-// 특이점 상세 페이지로 전부 옮기고, 이 카드는 요약(설명·건수·유형·심각도)만 남긴다.
-function ReportFindingsBrief({ summary, findings, artifactId, runId }) {
-  const navigate = useNavigate();
-
-  function goToFinding(findingId) {
-    if (!findingId || !artifactId || !runId) return;
-    navigate(
-      `/artifacts/${encodeURIComponent(artifactId)}/visual/findings/${encodeURIComponent(runId)}/${encodeURIComponent(findingId)}`,
-    );
-  }
-
+// 실제 내용은 summary.description뿐). 개별 특이점 나열은 없앴다 - 통계 표와
+// 요약 문장으로 충분하고, 개별 항목은 사진 위 마커(VisualCandidateOverlay)를
+// 클릭해서 상세 페이지로 갈 수 있다.
+function ReportFindingsBrief({ summary, findings }) {
   return (
     <section className="visual-vca-findings-report">
       <h3>육안 조사 결과</h3>
+      <FindingsStatsTable findings={findings} />
       <p>{summary?.description || "설명 정보가 없습니다."}</p>
       {findings.length === 0 ? (
         <p>등록된 특이점이 없습니다.</p>
       ) : (
-        <>
-          <p className="visual-vca-findings-overview">
-            총 {findings.length}건의 특이점이 확인되었습니다.
-            {severityCounts(findings).map(({ severity, count }) => (
-              <span key={severity} className="visual-vca-severity-chip">
-                <KoreanLabel original={severity} labelMap={SEVERITY_LABELS} fallback={severity} /> {count}
-              </span>
-            ))}
-          </p>
-          <p className="visual-vca-findings-overview">
-            {conceptFamilyCounts(findings).map(({ conceptFamily, count }) => (
-              <span key={conceptFamily} className="visual-vca-severity-chip">
-                <KoreanLabel original={conceptFamily} labelMap={CONCEPT_FAMILY_LABELS} fallback={conceptFamily} /> {count}
-              </span>
-            ))}
-          </p>
-          <ul className="visual-vca-findings-brief">
-            {findings.map((finding, findingIndex) => {
-              const fallbackKey = [
-                finding.imageId || "finding",
-                finding.category || "uncategorized",
-                finding.conceptFamily || "untitled",
-                findingIndex,
-              ].join("-");
-              const content = (
-                <>
-                  <span className="visual-vca-finding-number">{findingIndex + 1}</span>
-                  <strong>
-                    <KoreanLabel original={finding.severity} labelMap={SEVERITY_LABELS} fallback="관찰" />
-                  </strong>
-                  <span>
-                    <KoreanLabel
-                      original={finding.conceptFamily}
-                      labelMap={CONCEPT_FAMILY_LABELS}
-                      fallback="관찰 항목"
-                    />
-                  </span>
-                </>
-              );
-              return (
-                <li key={finding.findingId || fallbackKey}>
-                  {finding.findingId && artifactId && runId ? (
-                    <button
-                      type="button"
-                      className="visual-vca-finding-row"
-                      onClick={() => goToFinding(finding.findingId)}
-                    >
-                      {content}
-                    </button>
-                  ) : (
-                    content
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          <p className="visual-vca-findings-hint">각 항목을 클릭하면 상세 설명과 근거를 확인할 수 있습니다.</p>
-        </>
+        <p className="visual-vca-findings-summary">{summarizeFindings(findings)}</p>
       )}
     </section>
   );
@@ -305,12 +327,7 @@ export default function VisualReport({
           artifactId={artifactId}
           runId={runId}
         />
-        <ReportFindingsBrief
-          summary={report.summary}
-          findings={report.findings || []}
-          artifactId={artifactId}
-          runId={runId}
-        />
+        <ReportFindingsBrief summary={report.summary} findings={report.findings || []} />
         <ReportPotteryInspection
           artifactMaterial={artifactMaterial}
           onPotteryInspection={onPotteryInspection}

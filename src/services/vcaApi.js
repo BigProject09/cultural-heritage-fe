@@ -365,7 +365,9 @@ export async function deleteVcaImage(artifactId, imageId) {
 }
 
 // 새 분석 run 접수. useVisualInvestigation의 startRun이 호출한다.
-export async function createVcaRun(artifactId, { material = "" } = {}) {
+// resume: true면 직전 실패한 run에서 이어서 시작한다("이어서 분석 시작" 버튼) -
+// 이미지 구성이 그 run과 정확히 같을 때만 서버에서 실제로 적용된다.
+export async function createVcaRun(artifactId, { material = "", resume = false } = {}) {
   if (USE_VCA_MOCK) {
     await delay(250);
     const artifact = getMockArtifact(artifactId);
@@ -384,7 +386,8 @@ export async function createVcaRun(artifactId, { material = "" } = {}) {
     artifact.status = "ANALYZING";
     return run;
   }
-  const body = material ? JSON.stringify({ material }) : undefined;
+  const payload = { ...(material ? { material } : {}), ...(resume ? { resume: true } : {}) };
+  const body = Object.keys(payload).length > 0 ? JSON.stringify(payload) : undefined;
   return normalizeRun(await requestJson(`/${encodeURIComponent(artifactId)}/runs`, {
     method: "POST",
     ...(body ? { headers: { "Content-Type": "application/json" }, body } : {}),
@@ -527,6 +530,24 @@ export async function getVcaReport(artifactId, assessmentRunId) {
   }
   const result = await requestJson(`/${encodeURIComponent(artifactId)}/runs/${encodeURIComponent(assessmentRunId)}/report`);
   return { ...result, run: result.run ? normalizeRun(result.run) : undefined, report: normalizeReport(result.report || result) };
+}
+
+// 리포트 하단 "시스템 환경 정보" 조회 - 특정 run이 아니라 vca-ai 엔진이
+// 지금 도는 환경 자체(OS/CPU·GPU/라이브러리·모델 버전)를 설명하는 전역
+// 정보라 artifactId 없이 한 번만 불러오면 된다. VisualReport가 마운트
+// 시점에 한 번 호출해서 푸터에 작게 표시한다.
+export async function getVcaSystemInfo({ signal } = {}) {
+  if (USE_VCA_MOCK) {
+    await delay(80);
+    return {
+      os: "Mock OS",
+      pythonVersion: "3.13",
+      device: "cpu",
+      libraries: { torch: "mock", transformers: "mock" },
+      models: [],
+    };
+  }
+  return requestJson("/system-info", { signal });
 }
 
 // 도자기 보조 검사 실행 - useVisualInvestigation의 handlePotteryInspection이

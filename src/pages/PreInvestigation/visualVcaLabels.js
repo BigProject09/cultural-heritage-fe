@@ -26,14 +26,18 @@ export const CONCEPT_FAMILY_LABELS = {
   crack: "균열",
   deposit: "침전물",
   corrosion: "부식",
-  "biological growth": "생물학적 오염",
-  "surface loss": "결손",
+  biological_growth: "생물학적 오염",
+  surface_loss: "결손",
   flaking: "박리",
-  "stain discoloration": "변색",
-  "hole or pit": "구멍·천공",
+  stain_discoloration: "변색",
+  hole_pit: "구멍·천공",
   deformation: "변형",
-  "adhesive residue": "접착제 잔류물",
-  "visual anomaly": "시각적 이상",
+  adhesive_residue: "접착제 잔류물",
+  unknown_visual_anomaly: "시각적 이상",
+  // RAG 근거(citations)가 전혀 없는 후보의 백엔드 기본값. 참고 문헌과
+  // 매칭이 안 됐을 뿐 AI가 실제로 위치를 탐지한 항목이라, "미분류"로
+  // 표시해 근거 문헌이 없는 관찰임을 알린다.
+  unknown: "미분류",
 };
 
 const DESCRIPTOR_TERM_LABELS = {
@@ -58,6 +62,36 @@ const DESCRIPTOR_TERM_LABELS = {
   smooth: "매끄러운",
   micro: "미세",
   local: "국부적",
+  // vca_v2의 허용 서술어(ALLOWED_DESCRIPTOR_TERMS)가 21->32단어로 늘었을 때
+  // 여기 매핑을 같이 안 늘려서, 아래 11개는 늘어난 뒤로 계속 원문 영어
+  // 그대로 노출되고 있었다.
+  irregular: "불규칙한",
+  texture: "질감",
+  shape: "형태",
+  shapes: "형태",
+  patch: "반점",
+  patchy: "반점형",
+  patches: "반점",
+  dark: "어두운",
+  horizontal: "수평",
+  linear: "선형",
+  streak: "줄무늬",
+  // descriptor 필드는 descriptor_terms뿐 아니라 material_terms/context_terms도
+  // 합쳐 담고 있어서(anomaly_grouping의 _candidate_evidence 참고), 이 둘도
+  // 같이 매핑해야 한다 - 지금까지 아예 빠져 있었다.
+  stone: "석재",
+  metal: "금속",
+  ceramic: "도자기",
+  paint: "채색",
+  wood: "목재",
+  plaster: "회반죽",
+  textile: "직물",
+  glass: "유리",
+  surface: "표면",
+  artifact: "유물",
+  area: "부위",
+  region: "영역",
+  localized: "국부적",
 };
 
 // descriptor는 공백으로 구분된 영문 단어 나열이라 단어 단위로
@@ -77,4 +111,17 @@ export function findingImageLabel(imageId, images) {
   if (!imageId) return null;
   const image = images.find((candidate) => candidate.imageId === imageId);
   return image?.fileName || imageId;
+}
+
+// conceptFamily가 "unknown"이고 인용 근거도 없으면, mask_refining의
+// passthrough 경로를 탄 후보다 - AI가 이상 부위 자체는 탐지했지만 참고
+// 문헌에서 일치하는 근거를 찾지 못했다는 뜻이다. 원문 그대로 내려오는
+// "unknown: unknown"을 그대로 보여주면 오류처럼 보이므로 이 경우만
+// 안내 문구로 바꾼다. VisualCandidateOverlay, VisualFindingDetailPage에서 쓴다.
+export function findingDescription(finding) {
+  const hasEvidence = (finding.citations?.length || 0) > 0;
+  if (finding.conceptFamily === "unknown" && !hasEvidence) {
+    return "AI가 이상 부위로 탐지했지만, 참고 문헌에서 일치하는 근거를 찾지 못했습니다.";
+  }
+  return finding.description || "세부 설명이 없습니다.";
 }

@@ -74,7 +74,6 @@
   .visual-vca-stage-item.completed .visual-vca-stage-status,
   .visual-vca-stage-item.skipped .visual-vca-stage-status { @apply text-[color:var(--workflow-green-dark)]; }
   .visual-vca-stage-item.failed .visual-vca-stage-status { @apply text-[color:var(--workflow-danger)]; }
-  .visual-vca-stage-failure { @apply text-[color:var(--workflow-danger)] text-xs leading-[1.6] [word-break:keep-all] [overflow-wrap:break-word] m-0; }
   .visual-vca-status-meta { @apply grid grid-cols-1 gap-2 m-0; }
   .visual-vca-status-meta > div { @apply flex items-center justify-between gap-3 border-t border-[color:var(--workflow-line-soft)] pt-2; }
   .visual-vca-status-meta dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
@@ -100,14 +99,14 @@
   .visual-vca-recommendations-note li em { @apply not-italic text-[color:var(--workflow-muted)] font-bold; }
   .visual-vca-original-hint { @apply cursor-help [border-bottom:1px_dotted_currentColor]; }
   .visual-vca-findings-report { @apply col-span-full; }
-  .visual-vca-findings-overview { @apply flex flex-wrap items-center gap-2; }
-  .visual-vca-severity-chip { @apply inline-flex items-center [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[11px] font-bold px-2 py-0.5 rounded-full; }
+  .visual-vca-findings-summary { @apply text-[14px] leading-[1.7] font-semibold text-[color:var(--workflow-ink)] [word-break:keep-all] mb-3; }
+  .visual-vca-stats-table-scroll { @apply w-full overflow-x-auto mb-4; }
+  .visual-vca-stats-table { @apply w-auto border-collapse text-[13px]; }
+  .visual-vca-stats-table th, .visual-vca-stats-table td { @apply border border-[color:var(--workflow-line-soft)] px-3 py-1.5 text-center whitespace-nowrap; }
+  .visual-vca-stats-table thead th { @apply [background:var(--workflow-surface-soft)] text-[color:var(--workflow-ink)] font-bold; }
+  .visual-vca-stats-table td { @apply [font-variant-numeric:tabular-nums] text-[color:var(--workflow-bronze-dark)] font-bold text-[15px]; }
   .visual-vca-finding-number { @apply inline-flex flex-none items-center justify-center w-5 h-5 [background:var(--workflow-danger)] text-white text-[10px] font-bold rounded-full mr-2 align-middle; }
-  .visual-vca-findings-brief .visual-vca-finding-number { @apply text-white text-[10px] font-bold; }
   .visual-vca-finding-number-lg { @apply w-7 h-7 text-sm mr-2.5; }
-  .visual-vca-finding-row { @apply flex items-center w-full text-left [background:transparent] border-0 p-0 m-0 cursor-pointer [font:inherit] [color:inherit] transition-opacity; }
-  .visual-vca-finding-row:hover { @apply opacity-70; }
-  .visual-vca-findings-hint { @apply text-[color:var(--workflow-muted)] text-[11px]; }
   .visual-vca-findings-evidence { @apply border-t border-[color:var(--workflow-line-soft)] mt-4 pt-4; }
    .visual-vca-rag-group { @apply mt-4; }
    .visual-vca-rag-group h4 { @apply text-[color:var(--workflow-bronze-dark)] text-xs font-bold m-0; }
@@ -148,7 +147,9 @@
    .visual-vca-pottery-inspection-copy p, .visual-vca-pottery-inspection-details > p { @apply text-xs leading-[1.7] mt-1.5; }
    .visual-vca-pottery-inspection-details dl { @apply grid grid-cols-2 gap-2 mt-3 mb-0; }
    .visual-vca-overlay { @apply col-span-full; }
-   .visual-vca-overlay-grid { @apply grid grid-cols-2 max-[1024px]:grid-cols-1 gap-4 mt-4; }
+   .visual-vca-overlay-toggle { @apply flex justify-end; }
+   .visual-vca-overlay-toggle button { @apply inline-flex min-h-8 items-center cursor-pointer text-[12px] font-bold px-3 py-0 rounded-md border border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)] text-[color:var(--workflow-ink)] hover:[background:var(--workflow-surface)] hover:border-[color:var(--workflow-bronze)]; }
+   .visual-vca-overlay-grid { @apply grid grid-cols-2 max-[1024px]:grid-cols-1 gap-4 mt-2; }
    .visual-vca-overlay-grid-single { @apply grid-cols-1; }
    .visual-vca-overlay-grid .visual-vca-image-placeholder { @apply w-full aspect-[4/3] object-contain border border-[color:var(--workflow-line-soft)] [background:var(--workflow-paper)] p-3 rounded-lg; }
    .visual-vca-overlay-figure { @apply m-0; }
@@ -158,13 +159,20 @@
    /* 박스/배지 색상(stroke·fill)은 특이점 번호별로 겹치지 않게 JS에서
       순환 팔레트로 계산해 inline style로 준다 (visualMarkerColors.js) -
       CSS에서는 굵기·도형·타이포만 담당한다. */
-   .visual-vca-overlay-box { @apply cursor-pointer [stroke-width:2px] transition-[fill]; }
+   .visual-vca-overlay-box { @apply cursor-pointer [stroke-width:2.5px] opacity-90; }
+   .visual-vca-overlay-box--hovered { @apply [stroke-width:4px] opacity-100 [filter:drop-shadow(0_0_4px_rgba(0,0,0,0.5))]; }
    .visual-vca-overlay-marker { @apply cursor-pointer; }
    .visual-vca-overlay-leader { @apply [stroke-width:1.5px] [stroke-dasharray:3,3] opacity-70; }
    .visual-vca-overlay-badge { @apply [stroke:white] [stroke-width:1.5px]; }
    .visual-vca-overlay-badge-text { @apply [fill:white] font-bold [text-anchor:middle] [dominant-baseline:central] pointer-events-none select-none; }
    .visual-vca-overlay-figure figcaption { @apply text-[color:var(--workflow-muted)] text-[11px] mt-1.5; }
-   .visual-vca-finding-popup { @apply fixed z-50 w-64 max-w-[80vw] [pointer-events:none] border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] shadow-[var(--workflow-shadow)] text-[13px] leading-[1.6] [word-break:keep-all] [overflow-wrap:break-word] p-3 rounded-lg; }
+   /* 예전엔 마우스 좌표를 따라다니는 fixed 팝업이었는데, 오프셋을 줘도
+      결국 커서가 있는 마스킹 위를 가리는 경우가 많았다. 대신 사진 아래
+      고정된 자리에 패널을 두고, 아무것도 안 가리키는 동안은
+      invisible로 숨기되 자리(min-height)는 그대로 남겨서 마우스를 올릴
+      때 그리드가 들썩이지 않게 한다. */
+   .visual-vca-finding-popup { @apply mt-2 min-h-[92px] border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] shadow-[var(--workflow-shadow)] text-[13px] leading-[1.6] [word-break:keep-all] [overflow-wrap:break-word] p-3 rounded-lg; }
+   .visual-vca-finding-popup--empty { @apply invisible; }
    .visual-vca-finding-popup strong { @apply inline-block [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[11px] mr-2 px-2 py-0.5 rounded-full; }
    .visual-vca-finding-popup .visual-vca-finding-popup-number { @apply inline-flex items-center justify-center w-5 h-5 text-white p-0 rounded-full; }
    .visual-vca-finding-popup span { @apply text-[color:var(--workflow-muted)] text-xs font-bold; }

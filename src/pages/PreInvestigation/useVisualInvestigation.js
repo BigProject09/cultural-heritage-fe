@@ -16,10 +16,16 @@ import {
 const IMAGE_TYPES = "image/png,image/jpeg,image/webp";
 const ACTIVE_RUN_STATUSES = new Set(["QUEUED", "RUNNING"]);
 
-// API 에러를 사용자용 안내 문구로 바꾼다. 409(다른 작업 진행 중)는
-// 별도 문구로 안내하고, 그 외는 서버 메시지를 붙여 보여준다. 이 훅의
-// 모든 액션 핸들러가 catch 블록에서 공용으로 쓴다.
+// API 에러를 사용자용 안내 문구로 바꾼다. 409는 원인이 서로 다른 두 가지를
+// 구분해야 한다 - "다른 분석이 지금 돌고 있어 기다려야 함"(ACTIVE_RUN_EXISTS)과
+// "이 이미지가 예전 분석 run에 참조돼 있어 영구히 삭제 불가"(IMAGE_REFERENCED_BY_RUN,
+// 기다려도 안 풀림)는 같은 상태 코드지만 안내가 완전히 달라야 한다. 그 외는
+// 서버 메시지를 붙여 보여준다. 이 훅의 모든 액션 핸들러가 catch 블록에서
+// 공용으로 쓴다.
 function operationMessage(error, action) {
+  if (error?.code === "IMAGE_REFERENCED_BY_RUN") {
+    return "이 이미지는 이미 예전 분석 실행에 사용돼 삭제할 수 없습니다.";
+  }
   if (error?.status === 409) {
     return `${action}할 수 없습니다. 이전 작업이 아직 완료되지 않았습니다.`;
   }
@@ -234,22 +240,28 @@ export function useVisualInvestigation(artifactId) {
     }
   }
 
-  // 새 분석 run을 접수한다. VisualPage의 "분석 시작" 버튼에서 호출하며,
-  // 기존 report/PDF 상태를 비워 이전 run의 결과가 남아있지 않게 한다.
-  async function startRun() {
+  // 새 분석 run을 접수한다. VisualPage의 "분석 시작"(resume=false) 또는
+  // "이어서 분석 시작"(resume=true) 버튼에서 호출하며, 기존 report/PDF
+  // 상태를 비워 이전 run의 결과가 남아있지 않게 한다.
+  async function startRun({ resume = false } = {}) {
     setRunRequestPending(true);
     setWorking("run");
     setNotice("");
     try {
       const run = await createVcaRun(artifactId, {
         material: workspaceArtifact.material,
+        resume,
       });
       setArtifact(await getVcaArtifact(artifactId));
       setSelectedRunId(run.runId);
       setReport(null);
       setReportRunId("");
       setPdfJob(null);
-      setNotice("분석 작업을 접수했습니다. 진행 상태는 자동으로 갱신됩니다.");
+      setNotice(
+        resume
+          ? "이전 실패 지점부터 이어서 분석을 시작했습니다. 진행 상태는 자동으로 갱신됩니다."
+          : "분석 작업을 접수했습니다. 진행 상태는 자동으로 갱신됩니다.",
+      );
     } catch (runError) {
       setNotice(operationMessage(runError, "분석을 시작"));
     } finally {
@@ -318,6 +330,18 @@ export function useVisualInvestigation(artifactId) {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [loadReport, reportRunId, selectedRun]);
+
+  // run이 실패하면 실패 사유를 시스템 메시지 영역(notice)에 한 번만
+  // 띄운다 - run당 한 번만 알리도록 추적하지 않으면, 실패 이후 다른
+  // 작업(업로드 등)이 artifact를 다시 불러올 때마다 selectedRun 참조가
+  // 바뀌어 방금 뜬 다른 알림을 실패 메시지가 덮어써 버린다.
+  const notifiedFailedRunIds = useRef(new Set());
+  useEffect(() => {
+    if (!selectedRun || selectedRun.status !== "FAILED" || !selectedRun.failureReason) return;
+    if (notifiedFailedRunIds.current.has(selectedRun.runId)) return;
+    notifiedFailedRunIds.current.add(selectedRun.runId);
+    setNotice(selectedRun.failureReason);
+  }, [selectedRun]);
 
   // PDF 생성/상태확인 버튼 핸들러 - pdfJob이 없으면 새로 만들고, 있으면
   // 같은 jobId로 상태만 다시 확인한다(재생성하지 않음). VisualReport

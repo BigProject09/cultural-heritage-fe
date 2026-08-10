@@ -8,6 +8,7 @@ import {
   CATEGORY_LABELS,
   CONCEPT_FAMILY_LABELS,
   SEVERITY_LABELS,
+  findingDescription,
   findingImageLabel,
   translateDescriptor,
 } from "./visualVcaLabels";
@@ -64,6 +65,14 @@ export default function VisualFindingDetailPage() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // 보고서 목록에서 스크롤을 한참 내린 채로 특이점을 클릭하면, 라우터가
+  // 페이지를 바꿔도 스크롤 위치는 그대로 유지돼 상세 페이지가 화면 중간부터
+  // 보이는 문제가 있었다 - 진입 시(또는 다른 특이점으로 이동 시) 맨 위로
+  // 되돌린다.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [findingId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -156,6 +165,7 @@ export default function VisualFindingDetailPage() {
 // 문제(rules of hooks)가 생기지 않는다.
 function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox, images, evidence }) {
   const [imageSize, setImageSize] = useState(null);
+  const [showOverlay, setShowOverlay] = useState(true);
 
   function handleImageLoad(event) {
     setImageSize({ width: event.target.naturalWidth, height: event.target.naturalHeight });
@@ -185,19 +195,30 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
 
         <section className="visual-vca-card visual-vca-overlay" aria-labelledby="visual-finding-detail-title">
           {image?.downloadUrl ? (
-            <div className="visual-vca-overlay-grid visual-vca-overlay-grid-single">
-              <BboxFigure image={image} size={imageSize} onImageLoad={handleImageLoad}>
-                {bbox && (
-                  <BboxMarker
-                    bbox={bbox}
-                    polygons={finding.polygons}
-                    number={number}
-                    color={markerColorForNumber(number)}
-                    badgeRadius={badgeRadiusFor(imageSize)}
-                  />
-                )}
-              </BboxFigure>
-            </div>
+            <>
+              {bbox && (
+                <div className="visual-vca-overlay-toggle">
+                  <button type="button" onClick={() => setShowOverlay((current) => !current)}>
+                    {showOverlay ? "오버레이 끄기" : "오버레이 켜기"}
+                  </button>
+                </div>
+              )}
+              <div className="visual-vca-overlay-grid visual-vca-overlay-grid-single">
+                <BboxFigure image={image} size={imageSize} onImageLoad={handleImageLoad}>
+                  {bbox && showOverlay && (
+                    <BboxMarker
+                      bbox={bbox}
+                      polygons={finding.polygons}
+                      number={number}
+                      color={markerColorForNumber(number)}
+                      badgeRadius={badgeRadiusFor(imageSize)}
+                      fillAlpha={0.42}
+                      isHovered
+                    />
+                  )}
+                </BboxFigure>
+              </div>
+            </>
           ) : (
             <p>대상 이미지를 불러올 수 없습니다.</p>
           )}
@@ -214,7 +235,7 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
               </h2>
               <p>
                 <KoreanLabel original={finding.conceptFamily} labelMap={CONCEPT_FAMILY_LABELS} fallback="관찰 항목" />
-                {finding.descriptor && (
+                {finding.descriptor && finding.descriptor !== "unknown" && (
                   <span className="visual-vca-original-hint" title={`원문: ${finding.descriptor}`}>
                     {" "}
                     · {translateDescriptor(finding.descriptor)}
@@ -223,7 +244,7 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
               </p>
             </div>
           </div>
-          <p>{finding.description || "세부 설명이 없습니다."}</p>
+          <p>{findingDescription(finding)}</p>
           {findingImageLabel(finding.imageId, images) && (
             <small>대상 이미지: {findingImageLabel(finding.imageId, images)}</small>
           )}

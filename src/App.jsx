@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { DisassemblyProvider } from "./context/DisassemblyContext";
+import SystemInfoFooter from "./components/common/SystemInfoFooter";
 //첫 화면
 import HomePage from "./pages/Home/HomePage";
 import NoticePage from "./pages/Notice/NoticePage";
@@ -63,299 +64,305 @@ import "./styles/HeritageWorkflow.css";
 
 function App() {
   return (
-    <BrowserRouter>
-      <DisassemblyProvider>
-        <Routes>
-          {/* 홈페이지 */}
-          <Route path="/" element={<HomePage />} />
-
-          {/* 공지사항 */}
-          <Route path="/notice" element={<NoticePage />} />
-
-          {/* 로그인 */}
-          <Route path="/login" element={<LoginPage />} />
-
-          {/* 회원가입 */}
-          <Route path="/signup" element={<SignUpPage />} />
-
-          {/* 마이페이지 */}
-          <Route path="/mypage" element={<MyPage />} />
-          <Route path="/mypage/profile" element={<ProfilePage />} />
-          <Route path="/mypage/activity" element={<ActivityPage />} />
-          <Route path="/mypage/projects" element={<ProjectPage />} />
-          <Route path="/mypage/reports" element={<MyReportPage />} />
-          <Route path="/mypage/reports/:id" element={<MyReportDetailPage />} />
-
-          {/* 작업 리스트 */}
-          <Route path="/worklist" element={<WorkListPage />} />
-
-          {/* artifactId 중심 유물 워크스페이스 */}
-          <Route path="/artifacts/new" element={<ArtifactRegisterPage />} />
-          <Route path="/artifacts/:artifactId" element={<ArtifactRouteSync />}>
-            <Route index element={<ProjectDetailPage />} />
-            <Route path="guide" element={<FlowRecommendationPage />} />
-            <Route path="xray" element={<XrayPage />} />
-            <Route path="visual" element={<VisualPage />} />
-            <Route path="visual/findings/:runId/:findingId" element={<VisualFindingDetailPage />} />
-            <Route path="final-report" element={<FinalReportPage />} />
-
-            {/* 복원 가이드 세부 공정 */}
-            <Route path="guide/disassembly" element={<DisassemblyPage />} />
+    <>
+      <BrowserRouter>
+        <DisassemblyProvider>
+          <Routes>
+            {/* 홈페이지 */}
+            <Route path="/" element={<HomePage />} />
+  
+            {/* 공지사항 */}
+            <Route path="/notice" element={<NoticePage />} />
+  
+            {/* 로그인 */}
+            <Route path="/login" element={<LoginPage />} />
+  
+            {/* 회원가입 */}
+            <Route path="/signup" element={<SignUpPage />} />
+  
+            {/* 마이페이지 */}
+            <Route path="/mypage" element={<MyPage />} />
+            <Route path="/mypage/profile" element={<ProfilePage />} />
+            <Route path="/mypage/activity" element={<ActivityPage />} />
+            <Route path="/mypage/projects" element={<ProjectPage />} />
+            <Route path="/mypage/reports" element={<MyReportPage />} />
+            <Route path="/mypage/reports/:id" element={<MyReportDetailPage />} />
+  
+            {/* 작업 리스트 */}
+            <Route path="/worklist" element={<WorkListPage />} />
+  
+            {/* artifactId 중심 유물 워크스페이스 */}
+            <Route path="/artifacts/new" element={<ArtifactRegisterPage />} />
+            <Route path="/artifacts/:artifactId" element={<ArtifactRouteSync />}>
+              <Route index element={<ProjectDetailPage />} />
+              <Route path="guide" element={<FlowRecommendationPage />} />
+              <Route path="xray" element={<XrayPage />} />
+              <Route path="visual" element={<VisualPage />} />
+              <Route path="visual/findings/:runId/:findingId" element={<VisualFindingDetailPage />} />
+              <Route path="final-report" element={<FinalReportPage />} />
+  
+              {/* 복원 가이드 세부 공정 */}
+              <Route path="guide/disassembly" element={<DisassemblyPage />} />
+              <Route
+                path="guide/disassembly/checklist"
+                element={<DisassemblyChecklistPage />}
+              />
+              <Route
+                path="guide/disassembly/tool"
+                element={<DisassemblyToolPage />}
+              />
+              <Route
+                path="guide/disassembly/method"
+                element={<DisassemblyMethodPage />}
+              />
+              <Route path="guide/cleaning" element={<CleaningPage />} />
+              <Route
+                path="guide/cleaning/method-select"
+                element={<CleaningMethodSelectPage />}
+              />
+              <Route
+                path="guide/cleaning/step"
+                element={<CleaningStepPage />}
+              />
+              <Route
+                path="guide/cleaning/drying"
+                element={<CleaningDryingStepPage />}
+              />
+              <Route
+                path="guide/strengthening"
+                element={<StrengtheningPage />}
+              />
+              <Route
+                path="guide/strengthening/material"
+                element={<StrengtheningMaterialPage />}
+              />
+              <Route
+                path="guide/strengthening/method"
+                element={<StrengtheningMethodPage />}
+              />
+              <Route
+                path="guide/strengthening/wetting"
+                element={<StrengtheningWettingPage />}
+              />
+              <Route path="guide/bonding" element={<BondingPage />} />
+              <Route
+                path="guide/bonding/method"
+                element={<BondingMethodPage />}
+              />
+              <Route
+                path="guide/bonding/material"
+                element={<BondingMaterialPage />}
+              />
+              <Route
+                path="guide/bonding/work"
+                element={<BondingWorkPage />}
+              />
+              <Route path="guide/restoration" element={<RestorationPage />} />
+              <Route
+                path="guide/restoration/method"
+                element={<RestorationMethodPage />}
+              />
+              <Route
+                path="guide/restoration/material"
+                element={<RestorationMaterialPage />}
+              />
+              {/* 구 복원 가이드 보고서 URL은 유물 워크스페이스로 복귀 */}
+              <Route
+                path="guide/post-record"
+                element={<LegacyArtifactRedirect target="workspace" />}
+              />
+              <Route
+                path="guide/report"
+                element={<LegacyArtifactRedirect target="workspace" />}
+              />
+              <Route
+                path="guide/complete"
+                element={<LegacyArtifactRedirect target="workspace" />}
+              />
+            </Route>
+  
+            {/* 구 URL은 현재 선택된 artifactId의 새 URL로 이동 */}
             <Route
-              path="guide/disassembly/checklist"
-              element={<DisassemblyChecklistPage />}
-            />
-            <Route
-              path="guide/disassembly/tool"
-              element={<DisassemblyToolPage />}
-            />
-            <Route
-              path="guide/disassembly/method"
-              element={<DisassemblyMethodPage />}
-            />
-            <Route path="guide/cleaning" element={<CleaningPage />} />
-            <Route
-              path="guide/cleaning/method-select"
-              element={<CleaningMethodSelectPage />}
-            />
-            <Route
-              path="guide/cleaning/step"
-              element={<CleaningStepPage />}
-            />
-            <Route
-              path="guide/cleaning/drying"
-              element={<CleaningDryingStepPage />}
-            />
-            <Route
-              path="guide/strengthening"
-              element={<StrengtheningPage />}
-            />
-            <Route
-              path="guide/strengthening/material"
-              element={<StrengtheningMaterialPage />}
-            />
-            <Route
-              path="guide/strengthening/method"
-              element={<StrengtheningMethodPage />}
-            />
-            <Route
-              path="guide/strengthening/wetting"
-              element={<StrengtheningWettingPage />}
-            />
-            <Route path="guide/bonding" element={<BondingPage />} />
-            <Route
-              path="guide/bonding/method"
-              element={<BondingMethodPage />}
-            />
-            <Route
-              path="guide/bonding/material"
-              element={<BondingMaterialPage />}
-            />
-            <Route
-              path="guide/bonding/work"
-              element={<BondingWorkPage />}
-            />
-            <Route path="guide/restoration" element={<RestorationPage />} />
-            <Route
-              path="guide/restoration/method"
-              element={<RestorationMethodPage />}
-            />
-            <Route
-              path="guide/restoration/material"
-              element={<RestorationMaterialPage />}
-            />
-            {/* 구 복원 가이드 보고서 URL은 유물 워크스페이스로 복귀 */}
-            <Route
-              path="guide/post-record"
+              path="/worklist/:id"
               element={<LegacyArtifactRedirect target="workspace" />}
             />
             <Route
-              path="guide/report"
+              path="/workspace/:id"
               element={<LegacyArtifactRedirect target="workspace" />}
             />
+  
+            {/* 게시판 */}
+            <Route path="/board" element={<BoardPage />} />
+  
+            <Route path="/board/:id" element={<BoardDetailPage />} />
+  
+            {/* 유물 등록 */}
+            <Route path="/artifact-register" element={<ArtifactRegisterPage />} />
+  
+            {/* AI Flow 추천 */}
             <Route
-              path="guide/complete"
+              path="/flow-recommendation"
+              element={<LegacyArtifactRedirect moduleKey="guide" />}
+            />
+  
+            {/* 처리 전 조사 */}
+            <Route
+              path="/pre-investigation"
               element={<LegacyArtifactRedirect target="workspace" />}
             />
-          </Route>
-
-          {/* 구 URL은 현재 선택된 artifactId의 새 URL로 이동 */}
-          <Route
-            path="/worklist/:id"
-            element={<LegacyArtifactRedirect target="workspace" />}
-          />
-          <Route
-            path="/workspace/:id"
-            element={<LegacyArtifactRedirect target="workspace" />}
-          />
-
-          {/* 게시판 */}
-          <Route path="/board" element={<BoardPage />} />
-
-          <Route path="/board/:id" element={<BoardDetailPage />} />
-
-          {/* 유물 등록 */}
-          <Route path="/artifact-register" element={<ArtifactRegisterPage />} />
-
-          {/* AI Flow 추천 */}
-          <Route
-            path="/flow-recommendation"
-            element={<LegacyArtifactRedirect moduleKey="guide" />}
-          />
-
-          {/* 처리 전 조사 */}
-          <Route
-            path="/pre-investigation"
-            element={<LegacyArtifactRedirect target="workspace" />}
-          />
-
-          <Route
-            path="/pre-investigation/xray"
-            element={<LegacyArtifactRedirect moduleKey="xray" />}
-          />
-
-          <Route
-            path="/pre-investigation/visual"
-            element={<LegacyArtifactRedirect moduleKey="visual" />}
-          />
-
-          {/* 해체 */}
-          <Route
-            path="/disassembly"
-            element={<LegacyArtifactRedirect stepKey="disassembly" />}
-          />
-
-          <Route
-            path="/disassembly-checklist"
-            element={
-              <LegacyArtifactRedirect stepKey="disassembly/checklist" />
-            }
-          />
-
-          <Route
-            path="/disassembly-tool"
-            element={<LegacyArtifactRedirect stepKey="disassembly/tool" />}
-          />
-
-          <Route
-            path="/disassembly-method"
-            element={<LegacyArtifactRedirect stepKey="disassembly/method" />}
-          />
-
-          {/* 세척 */}
-          <Route
-            path="/cleaning"
-            element={<LegacyArtifactRedirect stepKey="cleaning" />}
-          />
-
-          <Route
-            path="/cleaning-method-select"
-            element={
-              <LegacyArtifactRedirect stepKey="cleaning/method-select" />
-            }
-          />
-
-          <Route
-            path="/cleaning-step"
-            element={<LegacyArtifactRedirect stepKey="cleaning/step" />}
-          />
-
-          <Route
-            path="/cleaning-drying-step"
-            element={<LegacyArtifactRedirect stepKey="cleaning/drying" />}
-          />
-
-          {/* 강화 처리 */}
-          <Route
-            path="/strengthening"
-            element={<LegacyArtifactRedirect stepKey="strengthening" />}
-          />
-
-          <Route
-            path="/strengthening-material"
-            element={
-              <LegacyArtifactRedirect stepKey="strengthening/material" />
-            }
-          />
-
-          <Route
-            path="/strengthening-method"
-            element={
-              <LegacyArtifactRedirect stepKey="strengthening/method" />
-            }
-          />
-
-          <Route
-            path="/strengthening-wetting"
-            element={
-              <LegacyArtifactRedirect stepKey="strengthening/wetting" />
-            }
-          />
-
-          {/* 접합 */}
-          <Route
-            path="/bonding"
-            element={<LegacyArtifactRedirect stepKey="bonding" />}
-          />
-
-          <Route
-            path="/joining"
-            element={<LegacyArtifactRedirect stepKey="bonding" />}
-          />
-
-          <Route
-            path="/bonding-method"
-            element={<LegacyArtifactRedirect stepKey="bonding/method" />}
-          />
-
-          <Route
-            path="/bonding-material"
-            element={<LegacyArtifactRedirect stepKey="bonding/material" />}
-          />
-
-          <Route
-            path="/bonding-work"
-            element={<LegacyArtifactRedirect stepKey="bonding/work" />}
-          />
-
-          {/* 복원 */}
-          <Route
-            path="/restoration"
-            element={<LegacyArtifactRedirect stepKey="restoration" />}
-          />
-
-          <Route
-            path="/restoration-method"
-            element={
-              <LegacyArtifactRedirect stepKey="restoration/method" />
-            }
-          />
-
-          <Route
-            path="/restoration-material"
-            element={
-              <LegacyArtifactRedirect stepKey="restoration/material" />
-            }
-          />
-
-          {/* 구 복원 가이드 보고서 URL */}
-          <Route
-            path="/post-record"
-            element={<LegacyArtifactRedirect target="workspace" />}
-          />
-
-          <Route
-            path="/report"
-            element={<LegacyArtifactRedirect target="workspace" />}
-          />
-
-          <Route
-            path="/report-complete"
-            element={<LegacyArtifactRedirect target="workspace" />}
-          />
-        </Routes>
-      </DisassemblyProvider>
-    </BrowserRouter>
+  
+            <Route
+              path="/pre-investigation/xray"
+              element={<LegacyArtifactRedirect moduleKey="xray" />}
+            />
+  
+            <Route
+              path="/pre-investigation/visual"
+              element={<LegacyArtifactRedirect moduleKey="visual" />}
+            />
+  
+            {/* 해체 */}
+            <Route
+              path="/disassembly"
+              element={<LegacyArtifactRedirect stepKey="disassembly" />}
+            />
+  
+            <Route
+              path="/disassembly-checklist"
+              element={
+                <LegacyArtifactRedirect stepKey="disassembly/checklist" />
+              }
+            />
+  
+            <Route
+              path="/disassembly-tool"
+              element={<LegacyArtifactRedirect stepKey="disassembly/tool" />}
+            />
+  
+            <Route
+              path="/disassembly-method"
+              element={<LegacyArtifactRedirect stepKey="disassembly/method" />}
+            />
+  
+            {/* 세척 */}
+            <Route
+              path="/cleaning"
+              element={<LegacyArtifactRedirect stepKey="cleaning" />}
+            />
+  
+            <Route
+              path="/cleaning-method-select"
+              element={
+                <LegacyArtifactRedirect stepKey="cleaning/method-select" />
+              }
+            />
+  
+            <Route
+              path="/cleaning-step"
+              element={<LegacyArtifactRedirect stepKey="cleaning/step" />}
+            />
+  
+            <Route
+              path="/cleaning-drying-step"
+              element={<LegacyArtifactRedirect stepKey="cleaning/drying" />}
+            />
+  
+            {/* 강화 처리 */}
+            <Route
+              path="/strengthening"
+              element={<LegacyArtifactRedirect stepKey="strengthening" />}
+            />
+  
+            <Route
+              path="/strengthening-material"
+              element={
+                <LegacyArtifactRedirect stepKey="strengthening/material" />
+              }
+            />
+  
+            <Route
+              path="/strengthening-method"
+              element={
+                <LegacyArtifactRedirect stepKey="strengthening/method" />
+              }
+            />
+  
+            <Route
+              path="/strengthening-wetting"
+              element={
+                <LegacyArtifactRedirect stepKey="strengthening/wetting" />
+              }
+            />
+  
+            {/* 접합 */}
+            <Route
+              path="/bonding"
+              element={<LegacyArtifactRedirect stepKey="bonding" />}
+            />
+  
+            <Route
+              path="/joining"
+              element={<LegacyArtifactRedirect stepKey="bonding" />}
+            />
+  
+            <Route
+              path="/bonding-method"
+              element={<LegacyArtifactRedirect stepKey="bonding/method" />}
+            />
+  
+            <Route
+              path="/bonding-material"
+              element={<LegacyArtifactRedirect stepKey="bonding/material" />}
+            />
+  
+            <Route
+              path="/bonding-work"
+              element={<LegacyArtifactRedirect stepKey="bonding/work" />}
+            />
+  
+            {/* 복원 */}
+            <Route
+              path="/restoration"
+              element={<LegacyArtifactRedirect stepKey="restoration" />}
+            />
+  
+            <Route
+              path="/restoration-method"
+              element={
+                <LegacyArtifactRedirect stepKey="restoration/method" />
+              }
+            />
+  
+            <Route
+              path="/restoration-material"
+              element={
+                <LegacyArtifactRedirect stepKey="restoration/material" />
+              }
+            />
+  
+            {/* 구 복원 가이드 보고서 URL */}
+            <Route
+              path="/post-record"
+              element={<LegacyArtifactRedirect target="workspace" />}
+            />
+  
+            <Route
+              path="/report"
+              element={<LegacyArtifactRedirect target="workspace" />}
+            />
+  
+            <Route
+              path="/report-complete"
+              element={<LegacyArtifactRedirect target="workspace" />}
+            />
+          </Routes>
+        </DisassemblyProvider>
+      </BrowserRouter>
+      {/* 어느 페이지에 있든 최하단에 고정으로 보이는 시스템 환경 정보
+          - 라우트 안이 아니라 앱 최상위(라우터 밖)에 둬서 어떤 페이지를
+          보고 있어도 항상 같은 자리에 한 번만 렌더링된다. */}
+      <SystemInfoFooter />
+    </>
   );
 }
 
