@@ -7,6 +7,7 @@ import {
 import { getArtifactRoute } from "../../utils/artifactRoutes";
 import VisualReport from "./VisualReport";
 import { useVisualInvestigation } from "./useVisualInvestigation";
+import SystemInfoFooter from "../../components/common/SystemInfoFooter";
 import "./VisualPage.css";
 
 const IMAGE_TYPES = "image/png,image/jpeg,image/webp";
@@ -378,6 +379,7 @@ export default function VisualPage() {
           </button>
         </footer>
       </div>
+      <SystemInfoFooter />
     </main>
   );
 }

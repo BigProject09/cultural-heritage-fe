@@ -12,7 +12,6 @@ import BoardDetailPage from "./pages/Board/BoardDetailPage";
 import ProjectDetailPage from "./pages/ProjectDetail/ProjectDetailPage";
 import LegacyArtifactRedirect from "./components/routing/LegacyArtifactRedirect";
 import ArtifactRouteSync from "./components/routing/ArtifactRouteSync";
-import SystemInfoFooter from "./components/common/SystemInfoFooter";
 
 //마이페이지
 import MyPage from "./pages/MyPage/MyPage";
@@ -64,7 +63,6 @@ import "./styles/HeritageWorkflow.css";
 
 function App() {
   return (
-    <>
     <BrowserRouter>
       <DisassemblyProvider>
         <Routes>
@@ -376,11 +374,6 @@ function App() {
         </Routes>
       </DisassemblyProvider>
     </BrowserRouter>
-      {/* 어느 페이지에 있든 최하단에 고정으로 보이는 시스템 환경 정보
-          - 라우트 안이 아니라 앱 최상위(라우터 밖)에 둬서 어떤 페이지를
-          보고 있어도 항상 같은 자리에 한 번만 렌더링된다. */}
-      <SystemInfoFooter />
-    </>
   );
 }
 

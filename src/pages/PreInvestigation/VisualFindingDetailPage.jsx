@@ -13,6 +13,7 @@ import {
   translateDescriptor,
 } from "./visualVcaLabels";
 import KoreanLabel from "./KoreanLabel";
+import SystemInfoFooter from "../../components/common/SystemInfoFooter";
 import "./VisualPage.css";
 
 // 검색 질의/검색 결과/근거 행은 run 전체에 대해 한 번만 생성되므로, 이
@@ -277,6 +278,7 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
           </button>
         </footer>
       </div>
+      <SystemInfoFooter />
     </main>
   );
 }
