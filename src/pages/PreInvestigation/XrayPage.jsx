@@ -23,6 +23,7 @@ import {
   downloadFinalStitchResult,
   downloadStitchResult,
   fetchStitchLayout,
+  fetchStitchSources,
   generateReport,
   generateWorkflowReportText,
   getRememberedXrayJob,
@@ -468,6 +469,7 @@ export default function XrayPage() {
    * 보정 버튼을 내보내지 않는다.
    */
   const [stitchLayout, setStitchLayout] = useState(null);
+  const [stitchSources, setStitchSources] = useState([]);
 
   /** 보정 화면 표시 여부 */
   const [editingPlacement, setEditingPlacement] = useState(false);
@@ -724,7 +726,20 @@ export default function XrayPage() {
       // 실패해도 결합 결과 자체는 쓸 수 있어야 하므로
       // 예외를 밖으로 던지지 않는다.
       const layout = await fetchStitchLayout(completed.jobId);
+
+      let sources = [];
+
+      try {
+        sources = await fetchStitchSources(completed.jobId);
+      } catch (error) {
+        console.warn(
+          "원본 X-RAY 이미지 URL을 불러오지 못했습니다. 업로드 원본을 대신 사용합니다.",
+          error,
+        );
+      }
+
       setStitchLayout(layout);
+      setStitchSources(sources);
       setCorrectedFragments(null);
       setStitchStatus("STITCHED");
       setStitchView("RESULT");
@@ -773,11 +788,8 @@ export default function XrayPage() {
   async function confirmStitch() {
     if (!assembledFile) return;
 
-    // 수동 위치 보정을 하지 않았다면 현재 AI 결합본이 이미 분석 대상 정본이다.
-    // 이 경우 finalization API를 다시 호출하지 않고 즉시 STEP 3으로 이동한다.
-    // 기존 구현은 final 이미지 생성 직후 조회 타이밍에 따라 첫 클릭이 STEP 2에
-    // 남고 두 번째 클릭에서야 넘어가는 현상이 발생할 수 있었다.
-    if (USE_MOCK || !correctedFragments) {
+    // Mock 환경은 실제 finalization API가 없으므로 바로 다음 단계로 이동한다.
+    if (USE_MOCK) {
       setWorkflow(WORKFLOW.INSPECTION);
       setActiveStep(3);
       setMaxReachedStep((current) => Math.max(current, 3));
@@ -791,28 +803,36 @@ export default function XrayPage() {
       return;
     }
 
-    if (!correctedFragments.length) {
+    // 사용자가 수동 위치 보정을 했다면 보정 결과를 사용하고,
+    // 보정하지 않았다면 AI가 생성한 현재 layout을 그대로 FINAL로 확정한다.
+    const finalFragments =
+      correctedFragments?.length > 0
+        ? correctedFragments
+        : finalLayoutFragments(stitchLayout);
+
+    if (!finalFragments.length) {
       setStitchMessage(
-        "보정된 최종 배치 정보가 없습니다. 조각 위치 보정을 다시 확인하세요.",
+        "최종 배치 정보가 없습니다. 조각 결합 결과를 다시 확인해주세요.",
       );
       return;
     }
 
     try {
       setStitchStatus("FINALIZING");
-      setStitchMessage("보정한 최종 배치를 저장하고 있습니다.");
 
-      try {
-        await saveFinalStitchLayout(stitchJobId, correctedFragments);
-      } catch (error) {
-        console.warn(
-          "최종 결합 결과 생성 요청이 지연되고 있습니다. 결과 생성을 계속 확인합니다.",
-          error,
-        );
-      }
+      setStitchMessage(
+        correctedFragments?.length > 0
+          ? "보정한 최종 배치를 저장하고 있습니다."
+          : "현재 결합 결과를 최종 배치로 확정하고 있습니다.",
+      );
+
+      // 수동보정 여부와 관계없이 반드시 FINAL layout을 저장한다.
+      await saveFinalStitchLayout(stitchJobId, finalFragments);
 
       let finalFile = null;
 
+      // Finalizer가 S3에 assembled_xray.final.png를 생성할 때까지
+      // 최대 3회, 3초 간격으로 조회한다.
       for (let attempt = 1; attempt <= 3; attempt += 1) {
         try {
           finalFile = await downloadFinalStitchResult(
@@ -823,13 +843,14 @@ export default function XrayPage() {
         } catch (error) {
           if (attempt === 3) {
             throw new Error(
-              "보정 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+              "최종 결합 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
             );
           }
 
           await new Promise((resolve) => setTimeout(resolve, 3000));
         }
       }
+
       setAssembledFile(finalFile);
       setViewFile(finalFile);
       setStitchStatus("STITCHED");
@@ -1517,11 +1538,16 @@ export default function XrayPage() {
                     assembledFile={assembledFile}
                     referenceSource={colorSources[0] || null}
                     fragmentFiles={fragmentFiles}
+                    sources={stitchSources}
                     fragments={stitchLayout?.fragments ?? []}
                     canvas={stitchLayout?.canvas ?? null}
                     artifactId={artifactId}
                     onConfirm={applyCorrection}
                     onCancel={() => setEditingPlacement(false)}
+                    onError={(message) => {
+                      setStitchStatus("STITCHED");
+                      setStitchMessage(message);
+                    }}
                   />
                 </section>
               )}

@@ -28,14 +28,14 @@ const USE_MOCK = import.meta.env.VITE_USE_XRAY_MOCK === "true";
 const SPRING_BASE = (
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_BASE ||
-  "http://localhost:8080"
+  "https://api.vora-heritage.click"
 ).replace(/\/+$/, "");
 const VIA_SPRING = import.meta.env.VITE_VIA_SPRING === "true";
 const STITCH_API_BASE = (
   import.meta.env.VITE_XRAY_STITCH_API_BASE || `${SPRING_BASE}/api/xray/stitch`
 ).replace(/\/+$/, "");
 const DIRECT_INSPECTION_API_BASE = (
-  import.meta.env.VITE_XRAY_INSPECTION_API_BASE || "http://localhost:8001"
+  import.meta.env.VITE_XRAY_INSPECTION_API_BASE || `${SPRING_BASE}/api/xray`
 ).replace(/\/+$/, "");
 const SPRING_INSPECTION_API_BASE = (
   import.meta.env.VITE_XRAY_SPRING_INSPECTION_API_BASE ||
@@ -384,6 +384,42 @@ export async function fetchStitchLayout(jobId) {
     console.warn("결합 배치 정보를 가져오지 못했습니다:", error.message);
     return { fragments: [], canvas: null, unavailable: true };
   }
+}
+
+/**
+ * 수동 위치 보정에 사용할 원본 X-RAY 이미지 목록을 가져온다.
+ *
+ * 서버가 S3 원본 객체에 대한 Presigned GET URL을 반환하며,
+ * layout.fragments[].originalSourceIndex 와 매칭해서 사용한다.
+ */
+export async function fetchStitchSources(jobId) {
+  if (USE_MOCK) {
+    await delay(200);
+    return [];
+  }
+
+  const data = await requestJson(
+    `${STITCH_JOBS_BASE}/${encodeURIComponent(jobId)}/sources`,
+  );
+
+  const rawSources = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.sources)
+      ? data.sources
+      : [];
+
+  return rawSources
+    .map((source, index) => ({
+      originalSourceIndex:
+        source.originalSourceIndex ?? source.sourceIndex ?? index,
+      fileName:
+        source.fileName ??
+        source.originalSourceName ??
+        source.originalName ??
+        null,
+      url: source.url ?? source.downloadUrl ?? source.presignedUrl ?? null,
+    }))
+    .filter((source) => source.url);
 }
 
 /**

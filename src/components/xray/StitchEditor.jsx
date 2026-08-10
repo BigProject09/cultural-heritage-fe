@@ -104,6 +104,69 @@ function useFragmentImages(files) {
   return loadedState.signature === signature ? loadedState.images : {};
 }
 
+function useSourceImages(sources) {
+  const signature = (sources || [])
+    .map(
+      (source) =>
+        `${source.originalSourceIndex}:${source.fileName ?? ""}:${source.url ?? ""}`,
+    )
+    .join("|");
+
+  const [loadedState, setLoadedState] = useState({
+    signature: "",
+    images: {},
+  });
+
+  useEffect(() => {
+    const validSources = (sources || []).filter((source) => source?.url);
+
+    if (validSources.length === 0) {
+      setLoadedState({ signature, images: {} });
+      return undefined;
+    }
+
+    let cancelled = false;
+    const loaded = {};
+    let remaining = validSources.length;
+
+    validSources.forEach((source) => {
+      const image = new Image();
+
+      // Presigned S3 원본을 canvas에 그린 뒤 내보낼 수 있도록
+      // CORS 이미지로 요청한다. 실제 편집 중에는 아래 local File을
+      // 우선 사용하고, S3 URL은 재진입/보조 경로로만 사용한다.
+      image.crossOrigin = "anonymous";
+
+      const finish = () => {
+        remaining -= 1;
+
+        if (remaining === 0 && !cancelled) {
+          setLoadedState({ signature, images: loaded });
+        }
+      };
+
+      image.onload = () => {
+        loaded[source.originalSourceIndex] = image;
+
+        if (source.fileName) {
+          loaded[source.fileName] = image;
+        }
+
+        finish();
+      };
+
+      image.onerror = finish;
+      image.src = source.url;
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sources, signature]);
+
+  return loadedState.signature === signature ? loadedState.images : {};
+}
+
 /** 결합본 이미지와 그 크기를 읽는다. 캔버스 크기의 기준이 된다. */
 function useAssembledImage(file) {
   const [state, setState] = useState(null);
@@ -208,7 +271,9 @@ function buildPieces(fragments, canvasWidth, canvasHeight) {
 export default function StitchEditor(props) {
   const assembled = useAssembledImage(props.assembledFile);
   const referencePreview = useReferencePreview(props.referenceSource);
-  const images = useFragmentImages(props.fragmentFiles);
+
+  const sourceImages = useSourceImages(props.sources);
+  const fallbackImages = useFragmentImages(props.fragmentFiles);
 
   if (!assembled) {
     return (
@@ -221,7 +286,8 @@ export default function StitchEditor(props) {
       {...props}
       assembled={assembled}
       referencePreview={referencePreview}
-      images={images}
+      sourceImages={sourceImages}
+      fallbackImages={fallbackImages}
     />
   );
 }
@@ -232,9 +298,11 @@ function StitchEditorCanvas({
   artifactId,
   onConfirm,
   onCancel,
+  onError,
   assembled,
   referencePreview,
-  images,
+  sourceImages,
+  fallbackImages,
 }) {
   const stageRef = useRef(null);
   const layerRef = useRef(null);
@@ -336,52 +404,64 @@ function StitchEditorCanvas({
     const transformer = transformerRef.current;
     const overlay = overlayRef.current;
 
-    transformer?.hide();
-    overlay?.hide();
-    stage.draw();
+    try {
+      transformer?.hide();
+      overlay?.hide();
+      stage.draw();
 
-    // 화면에서는 축소해 보여주지만 내보낼 때는 원본 해상도로 되돌린다
-    const dataUrl = stage.toDataURL({ pixelRatio: 1 / scale });
+      // 화면에서는 축소해 보여주지만 내보낼 때는 원본 해상도로 되돌린다.
+      // local File 이미지를 우선 사용하므로 S3 CORS 설정과 무관하게
+      // 현재 편집 세션의 보정 결과를 안정적으로 생성할 수 있다.
+      const dataUrl = stage.toDataURL({ pixelRatio: 1 / scale });
+      const blob = await (await fetch(dataUrl)).blob();
 
-    transformer?.show();
-    if (showOverlay) overlay?.show();
-    stage.draw();
-
-    const blob = await (await fetch(dataUrl)).blob();
-    const file = new File([blob], `assembled-${artifactId}-corrected.png`, {
-      type: "image/png",
-    });
-
-    const corrected = pieces
-      .filter((piece) => placements[piece.key])
-      .map((piece) => {
-        const placement = placements[piece.key];
-        const transform = toTransformMatrix(placement);
-        const width = piece.cropRect?.width ?? piece.size?.width ?? 1;
-        const height = piece.cropRect?.height ?? piece.size?.height ?? 1;
-        const localCenterX = (width - 1) / 2;
-        const localCenterY = (height - 1) / 2;
-        const centerX =
-          transform[0][0] * localCenterX +
-          transform[0][1] * localCenterY +
-          transform[0][2];
-        const centerY =
-          transform[1][0] * localCenterX +
-          transform[1][1] * localCenterY +
-          transform[1][2];
-
-        return {
-          index: piece.index,
-          originalSourceIndex: piece.originalSourceIndex,
-          originalSourceName: piece.originalSourceName,
-          subfragmentIndex: piece.subfragmentIndex,
-          centerX,
-          centerY,
-          rotationDeg: placement.rotation,
-        };
+      const file = new File([blob], `assembled-${artifactId}-corrected.png`, {
+        type: "image/png",
       });
 
-    onConfirm({ file, fragments: corrected, movedCount: movedKeys.size });
+      const corrected = pieces
+        .filter((piece) => placements[piece.key])
+        .map((piece) => {
+          const placement = placements[piece.key];
+          const transform = toTransformMatrix(placement);
+          const width = piece.cropRect?.width ?? piece.size?.width ?? 1;
+          const height = piece.cropRect?.height ?? piece.size?.height ?? 1;
+          const localCenterX = (width - 1) / 2;
+          const localCenterY = (height - 1) / 2;
+          const centerX =
+            transform[0][0] * localCenterX +
+            transform[0][1] * localCenterY +
+            transform[0][2];
+          const centerY =
+            transform[1][0] * localCenterX +
+            transform[1][1] * localCenterY +
+            transform[1][2];
+
+          return {
+            index: piece.index,
+            originalSourceIndex: piece.originalSourceIndex,
+            originalSourceName: piece.originalSourceName,
+            subfragmentIndex: piece.subfragmentIndex,
+            centerX,
+            centerY,
+            rotationDeg: placement.rotation,
+          };
+        });
+
+      onConfirm({ file, fragments: corrected, movedCount: movedKeys.size });
+    } catch (error) {
+      console.error("X-RAY 보정 결과 생성 실패:", error);
+
+      onError?.(
+        error?.name === "SecurityError"
+          ? "보정 결과 이미지를 생성하지 못했습니다. 원본 이미지 접근 권한을 확인한 뒤 다시 시도해주세요."
+          : `보정 결과 생성 실패: ${error?.message || "알 수 없는 오류"}`,
+      );
+    } finally {
+      transformer?.show();
+      if (showOverlay) overlay?.show();
+      stage.draw();
+    }
   }
 
   const unmatched = pieces.filter((piece) => !piece.matched);
@@ -469,7 +549,12 @@ function StitchEditorCanvas({
                   />
 
                   {pieces.map((piece) => {
-                    const image = images[piece.fileName];
+                    const image =
+                      fallbackImages[piece.fileName] ||
+                      fallbackImages[piece.originalSourceName] ||
+                      sourceImages[piece.originalSourceIndex] ||
+                      sourceImages[piece.fileName] ||
+                      sourceImages[piece.originalSourceName];
                     const placement = placements[piece.key];
 
                     if (!image || !placement) return null;
@@ -582,7 +667,8 @@ function StitchEditorCanvas({
               </dl>
             ) : (
               <p className="stitch-editor-hint">
-                왼쪽 X-RAY 캔버스에서 조각을 선택하면 위치와 회전을 확인할 수 있습니다.
+                왼쪽 X-RAY 캔버스에서 조각을 선택하면 위치와 회전을 확인할 수
+                있습니다.
               </p>
             )}
           </section>
