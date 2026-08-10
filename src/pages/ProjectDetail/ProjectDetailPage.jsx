@@ -104,6 +104,11 @@ function ProjectDetailPage() {
           artifactInfo,
           workspaceEntry: true,
           workspaceModule: moduleKey,
+          viewMode:
+            moduleKey === "xray" &&
+            nextProject.modules[moduleKey] === MODULE_STATUS.DONE
+              ? "result"
+              : "work",
         },
       });
     } catch (requestError) {
@@ -173,9 +178,7 @@ function ProjectDetailPage() {
               {completedCount} / {WORKSPACE_MODULES.length}
             </strong>
             <div>
-              <i
-                className={PROGRESS_WIDTH_CLASSES[completedCount] || "w-0"}
-              />
+              <i className={PROGRESS_WIDTH_CLASSES[completedCount] || "w-0"} />
             </div>
           </div>
         </section>

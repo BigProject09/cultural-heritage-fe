@@ -32,8 +32,7 @@ const SPRING_BASE = (
 ).replace(/\/+$/, "");
 const VIA_SPRING = import.meta.env.VITE_VIA_SPRING === "true";
 const STITCH_API_BASE = (
-  import.meta.env.VITE_XRAY_STITCH_API_BASE ||
-  `${SPRING_BASE}/api/xray/stitch`
+  import.meta.env.VITE_XRAY_STITCH_API_BASE || `${SPRING_BASE}/api/xray/stitch`
 ).replace(/\/+$/, "");
 const DIRECT_INSPECTION_API_BASE = (
   import.meta.env.VITE_XRAY_INSPECTION_API_BASE || "http://localhost:8001"
@@ -49,6 +48,33 @@ const INSPECTION_HEALTH_URL = VIA_SPRING
   ? `${SPRING_BASE}/api/xray/health`
   : `${DIRECT_INSPECTION_API_BASE}/health`;
 const STITCH_JOBS_BASE = `${STITCH_API_BASE}/jobs`;
+const WORKFLOW_JOBS_BASE = `${SPRING_BASE}/api/xray/jobs`;
+
+const XRAY_JOB_STORAGE_KEY = "voraXrayJobsV1";
+
+function readStoredXrayJobs() {
+  try {
+    return JSON.parse(localStorage.getItem(XRAY_JOB_STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+export function rememberXrayJob(artifactId, jobId, xrayCount = 0) {
+  if (!artifactId || !jobId) return;
+  const jobs = readStoredXrayJobs();
+  jobs[artifactId] = {
+    jobId,
+    xrayCount: Number(xrayCount) || 0,
+    updatedAt: new Date().toISOString(),
+  };
+  localStorage.setItem(XRAY_JOB_STORAGE_KEY, JSON.stringify(jobs));
+}
+
+export function getRememberedXrayJob(artifactId) {
+  if (!artifactId) return null;
+  return readStoredXrayJobs()[artifactId] || null;
+}
 
 export const TARGET = {
   ASSEMBLED: "결합 완료본",
@@ -156,15 +182,100 @@ export async function createStitchJob({ artifactId, colorFiles, xrayFiles }) {
     };
   }
 
-  const form = new FormData();
-  form.append("artifactId", artifactId);
-  colorFiles.forEach((file) => form.append("colorFiles", file));
-  xrayFiles.forEach((file) => form.append("xrayFiles", file));
+  if (!artifactId) {
+    throw new Error("artifactId가 없습니다.");
+  }
 
-  return requestJson(STITCH_JOBS_BASE, {
+  if (!Array.isArray(colorFiles) || colorFiles.length !== 1) {
+    throw new Error("컬러 기준 이미지는 정확히 1장이 필요합니다.");
+  }
+
+  if (!Array.isArray(xrayFiles) || xrayFiles.length < 2) {
+    throw new Error("X-RAY 조각 이미지는 최소 2장이 필요합니다.");
+  }
+
+  const colorFile = colorFiles[0];
+  const xrayFileNames = xrayFiles.map((file) => file.name);
+
+  // 1. Spring에서 Presigned PUT URL 발급
+  const prepared = await requestJson(`${STITCH_JOBS_BASE}/prepare`, {
     method: "POST",
-    body: form,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      artifactId,
+      colorFileName: colorFile.name,
+      xrayFileNames,
+    }),
   });
+
+  /**
+   * prepare 응답의 Presigned URL로 S3 직접 업로드.
+   *
+   * 백엔드 버전에 따라 헤더 필드명이
+   * uploadHeaders 또는 requiredHeaders일 수 있으므로 둘 다 처리한다.
+   */
+  async function uploadToS3(file, target) {
+    if (!target?.uploadUrl) {
+      throw new Error(`S3 업로드 URL이 없습니다: ${file.name}`);
+    }
+
+    const signedHeaders = target.uploadHeaders || target.requiredHeaders || {};
+
+    const response = await fetch(target.uploadUrl, {
+      method: "PUT",
+      headers: signedHeaders,
+      body: file,
+    });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+
+      throw new Error(
+        `S3 업로드 실패 (${file.name}): HTTP ${response.status}${
+          detail ? ` ${detail.slice(0, 300)}` : ""
+        }`,
+      );
+    }
+  }
+
+  // 2. 컬러 기준 이미지 S3 PUT
+  await uploadToS3(colorFile, prepared.color);
+
+  // 3. X-RAY 조각 S3 PUT
+  if (!Array.isArray(prepared.xrays)) {
+    throw new Error("prepare 응답에 X-RAY 업로드 정보가 없습니다.");
+  }
+
+  if (prepared.xrays.length !== xrayFiles.length) {
+    throw new Error(
+      `X-RAY 업로드 대상 수가 맞지 않습니다. expected=${xrayFiles.length}, actual=${prepared.xrays.length}`,
+    );
+  }
+
+  await Promise.all(
+    xrayFiles.map((file, index) => uploadToS3(file, prepared.xrays[index])),
+  );
+
+  // 4. 업로드 완료 후 Spring에 자동 결합 시작 요청
+  const started = await requestJson(
+    `${STITCH_JOBS_BASE}/${encodeURIComponent(prepared.jobId)}/start`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        colorFileName: prepared.color?.fileName || colorFile.name,
+        xrayFileNames: prepared.xrays.map(
+          (target, index) => target?.fileName || xrayFiles[index].name,
+        ),
+      }),
+    },
+  );
+
+  return started;
 }
 
 export function getStitchJob(jobId) {
@@ -201,7 +312,8 @@ export async function waitForStitchJob(
     const status = await getStitchJob(jobId);
     onUpdate?.(status);
 
-    if (status.status === "COMPLETED") return status;
+    if (status.status === "STITCHED" || status.status === "COMPLETED")
+      return status;
 
     if (status.status === "FAILED") {
       throw new Error(status.errorMessage || "AI 결합 작업이 실패했습니다.");
@@ -362,7 +474,9 @@ export async function downloadFinalStitchResult(jobId, fileName) {
   );
   if (!response.ok) {
     const detail = await readError(response);
-    throw new Error(`최종 결합 결과 조회 실패: HTTP ${response.status} ${detail}`);
+    throw new Error(
+      `최종 결합 결과 조회 실패: HTTP ${response.status} ${detail}`,
+    );
   }
   const blob = await response.blob();
   if (!blob.type.startsWith("image/")) {
@@ -508,7 +622,7 @@ export async function generateReport({
     await delay(800);
 
     const details = regions
-      .slice(0, reportStyle === "detailed" ? 12 : 5)
+      .slice(0, 5)
       .map(
         (region) =>
           `- ${region.regionId} (${region.fileName}, ${region.position}): ${region.userNote}`,
@@ -516,7 +630,7 @@ export async function generateReport({
       .join("\n");
 
     const report = [
-      `[Mock 상태조사 문안 - ${reportStyle === "detailed" ? "상세본" : "요약본"}]`,
+      `[Mock 상태조사 문안 - 요약본]`,
       `유물 유형: ${artifactType || "미입력"}`,
       `재질: ${material || "미입력"}`,
       `검토 영역: 총 ${regions.length}건`,
@@ -530,10 +644,7 @@ export async function generateReport({
       report,
       style: reportStyle,
       charCount: report.length,
-      detailCount: Math.min(
-        regions.length,
-        reportStyle === "detailed" ? 12 : 5,
-      ),
+      detailCount: Math.min(regions.length, 5),
       totalRegionCount: regions.length,
       model: "frontend-mock",
     };
@@ -554,4 +665,84 @@ export async function generateReport({
     method: "POST",
     body: form,
   });
+}
+
+// ------------------------------------------------------------
+// X-RAY 통합 업무 API (결함 탐지 → 검수 → 문안 → 완료)
+// ------------------------------------------------------------
+
+/** 원본 조각 + 최종 결합본 탐지/매핑을 한 번에 실행하고 XRAY_DEFECT를 생성한다. */
+export async function detectWorkflow(jobId, confidence) {
+  if (USE_MOCK) {
+    throw new Error("통합 결함 탐지 API는 Mock 모드에서 사용하지 않습니다.");
+  }
+
+  return requestJson(
+    `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/detect`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confidence }),
+    },
+  );
+}
+
+/** 서버에 저장된 최종 결함 목록을 조회한다. */
+export function getWorkflowDefects(jobId) {
+  return requestJson(
+    `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/defects`,
+  );
+}
+
+/** 전문가 DAMAGE/NORMAL 판정을 서버 XRAY_DEFECT에 반영한다. */
+export async function updateWorkflowDefects(jobId, defects) {
+  return requestJson(
+    `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/defects`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ defects }),
+    },
+  );
+}
+
+/** 현재 DAMAGE 결함만 사용해 AI 상태조사 초안을 생성한다. */
+export async function generateWorkflowReportText(
+  jobId,
+  { artifactType = "", material = "", reportStyle = "summary" } = {},
+) {
+  return requestJson(
+    `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/report-text/generate`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ artifactType, material, reportStyle }),
+    },
+  );
+}
+
+/** 전문가가 수정·확정한 문안을 XRAY_JOB.report_text에 저장한다. */
+export function getWorkflowReportText(jobId) {
+  return requestJson(
+    `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/report-text`,
+  );
+}
+
+export async function saveWorkflowReportText(jobId, reportText) {
+  return requestJson(
+    `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/report-text`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ reportText }),
+    },
+  );
+}
+
+/** defect_result.png 생성 및 X-RAY 업무를 COMPLETED로 전환한다. */
+export async function completeWorkflow(jobId) {
+  return requestJson(
+    `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/complete`,
+    { method: "POST" },
+  );
 }
