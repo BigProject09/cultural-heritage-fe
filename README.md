@@ -437,3 +437,134 @@ const colorClasses = {
 | react-router-dom    | 7.18        |
 | konva / react-konva | 10.3 / 19.2 |
 | axios               | 1.18        |
+
+
+프론트엔드는 GitHub `main` 브랜치의 변경 사항을 기준으로 AWS CodePipeline을 통해 자동 빌드·배포합니다.
+
+전체 배포 흐름은 다음과 같습니다.
+
+```mermaid
+flowchart LR
+    A[GitHub main] --> B[AWS CodePipeline]
+    B --> C[AWS CodeBuild]
+    C --> D[npm ci]
+    D --> E[npm run build]
+    E --> F[dist BuildArtifact]
+    F --> G[Amazon S3]
+    G --> H[CloudFront Invalidation]
+    H --> I[CloudFront FE 서비스]
+```
+
+파이프라인 구성은 다음과 같습니다.
+
+| 단계       | AWS 서비스                | 역할                           |
+| ---------- | ------------------------- | ------------------------------ |
+| Source     | CodePipeline + GitHub App | `main` 브랜치 변경 감지        |
+| Build      | AWS CodeBuild             | `npm ci`, `npm run build` 실행 |
+| Deploy     | Amazon S3                 | 빌드된 `dist` 파일 자동 배포   |
+| Invalidate | CodePipeline Commands     | CloudFront 캐시 무효화         |
+
+사용 중인 주요 AWS 리소스:
+
+| 항목                       | 이름                            |
+| -------------------------- | ------------------------------- |
+| CodePipeline               | `cultural-heritage-fe-pipeline` |
+| CodeBuild                  | `cultural-heritage-fe-build`    |
+| FE S3 Bucket               | `cultural-heritage-fe-prod`     |
+| CloudFront Distribution ID | `E22GFEVVS53HIE`                |
+
+CodeBuild는 저장소 루트의 `buildspec.yml`을 사용합니다.
+
+```yaml
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - npm ci
+
+  build:
+    commands:
+      - npm run build
+
+artifacts:
+  base-directory: dist
+  files:
+    - "**/*"
+```
+
+빌드가 성공하면 `dist` 디렉터리의 결과물을 `BuildArtifact`로 전달하고,
+CodePipeline의 Amazon S3 Deploy 단계에서 `cultural-heritage-fe-prod`
+버킷 루트에 압축을 해제하여 배포합니다.
+
+배포가 완료되면 마지막 단계에서 아래 명령으로 CloudFront 캐시를 무효화합니다.
+
+```bash
+aws cloudfront create-invalidation --distribution-id E22GFEVVS53HIE --paths "/*"
+```
+
+따라서 `main` 브랜치에 변경 사항이 반영되면 별도의 수동 빌드나 S3 업로드 없이
+최신 프론트엔드가 자동으로 빌드·배포되고 CloudFront 캐시까지 갱신됩니다.
+
+정상 배포 시 CodePipeline의 네 단계가 모두 성공해야 합니다.
+
+```text
+Source                ✅
+Build                 ✅
+Deploy                ✅
+InvalidateCloudFront  ✅
+```
+
+## 11. CloudFront 배포
+
+프론트엔드 Production 빌드 결과는 Private S3 Bucket에 저장하고 CloudFront를 통해 외부에 제공합니다.
+
+```text
+사용자
+  ↓ HTTPS
+CloudFront
+  ↓ Private Origin Access
+Amazon S3
+  ├── index.html
+  └── assets/
+```
+
+배포 주소:
+
+```text
+https://dd0zy0s95ck2q.cloudfront.net
+```
+
+배포 구성:
+
+| 항목                       | 설정                                  |
+| -------------------------- | ------------------------------------- |
+| Origin                     | `cultural-heritage-fe-prod` S3 Bucket |
+| S3 Public Access           | 차단                                  |
+| CloudFront → S3            | Private Origin Access                 |
+| Default Root Object        | `index.html`                          |
+| SPA 403 처리               | `/index.html` → HTTP 200              |
+| SPA 404 처리               | `/index.html` → HTTP 200              |
+| Cache 갱신                 | CodePipeline에서 자동 Invalidation    |
+| CloudFront Distribution ID | `E22GFEVVS53HIE`                      |
+
+React Router 기반 SPA이므로 `/artifacts/:artifactId/xray` 등의 경로에서
+직접 접속하거나 새로고침하더라도 `index.html`로 연결되도록 CloudFront
+Custom Error Response를 설정했습니다.
+
+현재 CloudFront 기본 도메인을 사용하며, 추후 별도 도메인이 필요한 경우
+Route 53 또는 외부 DNS와 인증서를 연결하여 Custom Domain을 추가할 수 있습니다.
+
+### 11.1 배포 확인
+
+GitHub `main` 브랜치에 변경 사항을 반영한 뒤 다음 순서로 확인합니다.
+
+1. AWS CodePipeline의 `cultural-heritage-fe-pipeline`이 자동 실행되는지 확인합니다.
+2. `Source`, `Build`, `Deploy`, `InvalidateCloudFront` 단계가 모두 성공하는지 확인합니다.
+3. CloudFront 배포 주소에 접속합니다.
+4. 최신 프론트엔드 변경 사항이 반영되었는지 확인합니다.
+
+CloudFront 캐시 무효화까지 파이프라인에 포함되어 있으므로 정상 배포 시
+별도의 수동 S3 업로드나 CloudFront Invalidation 작업은 필요하지 않습니다.
