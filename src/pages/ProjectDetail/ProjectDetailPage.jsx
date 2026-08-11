@@ -287,7 +287,7 @@ function ProjectDetailPage() {
         <section
           className={`heritage-final-report ${reportReady ? "ready" : ""}`}
         >
-          <div className="heritage-report-icon">PPT</div>
+          <div className="heritage-report-icon">Docx</div>
           <div>
             <span className="heritage-project-kicker">FINAL DELIVERABLE</span>
             <h2>최종 복원 결과 보고서</h2>

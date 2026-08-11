@@ -6,7 +6,7 @@
 서로 독립적으로 실행하는 구조입니다.
 
 - 유물 복원 가이드: 해체·세척·강화·접합·복원 공정 안내 및 작업 기록
-- X-RAY 복원: 파편 결합, 배치 보정, 결함 후보 검수, 상태조사 문안 작성
+- X-RAY 사진 분석: 파편 결합, 배치 보정, 결함 후보 검수, 상태조사 문안 작성
 - 육안 조사: 컬러 이미지 기반 손상 조사와 전문가 판정
 
 세 기능은 원하는 순서로 진행할 수 있습니다. 세 기능이 모두 `DONE`일 때만
@@ -22,7 +22,7 @@ flowchart TD
     C --> E[artifactId 워크스페이스]
     D --> E
     E --> F[복원 가이드]
-    E --> G[X-RAY 복원]
+    E --> G[X-RAY 사진 분석]
     E --> H[육안 조사]
     F --> I{세 기능 모두 DONE?}
     G --> I
@@ -31,7 +31,7 @@ flowchart TD
     I -->|예| J[최종 통합 보고서]
 ```
 
-1\. 홈에서 `유물 복원 가이드`, `X-RAY 복원`, `육안 조사` 중 하나를
+1\. 홈에서 `유물 복원 가이드`, `X-RAY 사진 분석`, `육안 조사` 중 하나를
    선택합니다.
 2\. 기존 프로젝트를 선택하거나 신규 유물을 등록합니다.
 3\. 신규 등록 시 대표 컬러 이미지와 유물명·재질·시대 등을 입력합니다.
@@ -49,7 +49,7 @@ flowchart TD
 | 신규 유물 등록    | `/artifacts/new`                      |
 | 유물 워크스페이스 | `/artifacts/:artifactId`              |
 | 복원 가이드       | `/artifacts/:artifactId/guide`        |
-| X-RAY 복원        | `/artifacts/:artifactId/xray`         |
+| X-RAY 사진 분석        | `/artifacts/:artifactId/xray`         |
 | 육안 조사         | `/artifacts/:artifactId/visual`       |
 | 최종 통합 보고서  | `/artifacts/:artifactId/final-report` |
 

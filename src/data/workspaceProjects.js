@@ -37,7 +37,7 @@ export const WORKSPACE_MODULES = [
     apiKey: "XRAY",
     number: "02",
     eyebrow: "X-RAY IMAGING",
-    title: "X-RAY 복원",
+    title: "X-RAY 사진 분석",
     shortTitle: "X-RAY",
     subtitle: "파편 결합 · 결함 분석",
     description: "X-RAY 파편을 결합하고 내부 결함 후보를 검토·확정합니다.",
