@@ -4,92 +4,142 @@
   간격 체계: 큰 간격은 24px(mb-6/p-6/gap-6), 카드 안쪽 작은 요소 사이는
   16px(mb-4/gap-4)로 두 단계만 쓴다. 예전엔 카드마다 12/20/24/28/35px가
   섞여있어서 전체적으로 여백이 들쭉날쭉해 보였다.
+
+  색/폰트 체계: X-RAY 분석 화면(XrayPage.css)과 같은 디자인 토큰(--xray-*)을
+  그대로 재사용한다 — 두 "독립 모듈" 화면의 UI를 통일하기 위함.
 */
 
 @layer components {
   .visual-page {
-    @apply min-h-screen bg-guide-canvas flex justify-center px-5 py-[60px];
+    @apply [--xray-bg:#f7f8fa] [--xray-surface:#ffffff] [--xray-surface-subtle:#f2f4f6] [--xray-text:#191f28] [--xray-text-secondary:#6b7684] [--xray-text-muted:#8b95a1] [--xray-border:#e5e8eb] [--xray-primary:#3182f6] [--xray-primary-hover:#1b64da] [--xray-primary-soft:#e8f3ff] [--xray-success:#20a464] [--xray-warning:#f59f00] [--xray-danger:#e5484d];
+    @apply min-h-screen [background:var(--xray-bg)] text-[color:var(--xray-text)] [font-family:Pretendard,"Noto_Sans_KR",-apple-system,BlinkMacSystemFont,"Segoe_UI",sans-serif] tracking-[-0.015em] pt-9 pb-[108px] px-6;
+  }
+  .visual-page *,
+  .visual-page *::before,
+  .visual-page *::after {
+    @apply box-border;
+  }
+  .visual-page button,
+  .visual-page input,
+  .visual-page textarea {
+    @apply [font:inherit];
+  }
+  .visual-page button:focus-visible,
+  .visual-page input:focus-visible,
+  .visual-page textarea:focus-visible {
+    @apply [outline:3px_solid_rgba(49,130,246,0.22)] outline-offset-2;
   }
   .visual-container {
-    @apply w-full max-w-[900px];
+    @apply w-[min(1380px,100%)] mx-auto my-0;
   }
 
   .visual-breadcrumb {
-    @apply flex items-center gap-2 mb-4 text-gray-500 text-[13px];
+    @apply flex items-center gap-2 mb-4 text-[13px];
+    color: var(--xray-text-muted);
   }
   .visual-breadcrumb button {
-    @apply border-0 [background:transparent] text-gray-500 cursor-pointer p-0;
+    @apply border-0 [background:transparent] cursor-pointer p-0 font-medium;
+    color: var(--xray-text-secondary);
+  }
+  .visual-breadcrumb button:hover {
+    color: var(--xray-primary);
   }
   .visual-breadcrumb strong {
-    @apply text-gray-800;
+    color: var(--xray-text);
+    @apply font-semibold;
   }
 
   .visual-header {
     @apply flex items-start justify-between gap-4 mb-6;
   }
   .visual-eyebrow {
-    @apply block mb-2 text-blue-600 text-[11px] font-extrabold tracking-widest;
+    @apply block mb-2 text-[11px] font-extrabold tracking-widest;
+    color: var(--xray-primary);
   }
   .visual-title {
-    @apply text-[38px] font-bold text-gray-800 mb-2 leading-tight;
+    @apply text-[38px] font-bold mb-2 leading-tight;
+    color: var(--xray-text);
   }
   .visual-header p {
-    @apply text-gray-500 text-[15px] m-0;
+    @apply text-[15px] m-0;
+    color: var(--xray-text-secondary);
   }
   .visual-status {
-    @apply text-xs font-bold text-blue-600 [background:#eef4ff] px-3 py-1.5 rounded-full whitespace-nowrap;
+    @apply text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap;
+    color: var(--xray-primary);
+    background: var(--xray-primary-soft);
   }
 
   .visual-artifact-summary {
-    @apply grid grid-cols-4 [background:white] border border-gray-200 rounded-2xl overflow-hidden mb-6;
+    @apply grid grid-cols-4 rounded-2xl overflow-hidden mb-6 border;
+    background: var(--xray-surface);
+    border-color: var(--xray-border);
   }
   .visual-artifact-summary > div {
-    @apply flex flex-col justify-center gap-1 p-5 border-r border-gray-200 last:border-r-0;
+    @apply flex flex-col justify-center gap-1 p-5 border-r last:border-r-0;
+    border-color: var(--xray-border);
   }
   .visual-artifact-summary span {
-    @apply text-gray-400 text-xs;
+    @apply text-xs;
+    color: var(--xray-text-muted);
   }
   .visual-artifact-summary strong {
-    @apply text-gray-800 text-[15px] font-bold;
+    @apply text-[15px] font-bold;
+    color: var(--xray-text);
   }
 
   .photo-upload-row {
     @apply flex items-center justify-between gap-4 px-1 pb-3;
   }
   .photo-upload-title {
-    @apply text-gray-800 text-[15px] font-bold m-0;
+    @apply text-[15px] font-bold m-0;
+    color: var(--xray-text);
   }
   .photo-upload-btn {
     @apply inline-flex items-center px-4 py-2.5 rounded-lg text-white text-sm font-bold cursor-pointer whitespace-nowrap;
-    background: #2563eb;
+    background: var(--xray-primary);
   }
   .photo-upload-btn:hover {
-    background: #1d4ed8;
+    background: var(--xray-primary-hover);
   }
   .photo-upload-warning {
-    @apply text-amber-600 text-[13px] mt-3 mb-0;
+    @apply text-[13px] mt-3 mb-0;
+    color: var(--xray-warning);
   }
 
   .photo-card {
-    @apply [background:white] border border-gray-200 rounded-2xl p-4 mb-6;
+    @apply rounded-2xl p-4 mb-6 border;
+    background: var(--xray-surface);
+    border-color: var(--xray-border);
   }
   .photo-toolbar {
     @apply flex items-center gap-2 px-1 pb-3;
   }
   .photo-toolbar button {
-    @apply w-[30px] h-[30px] border border-gray-200 rounded-lg [background:white] text-gray-800 text-base font-bold cursor-pointer;
-    @apply disabled:text-gray-300 disabled:cursor-not-allowed;
-    @apply hover:enabled:border-blue-600 hover:enabled:text-blue-600;
+    @apply w-[30px] h-[30px] rounded-lg text-base font-bold cursor-pointer border;
+    background: var(--xray-surface);
+    border-color: var(--xray-border);
+    color: var(--xray-text);
+  }
+  .photo-toolbar button:disabled {
+    @apply cursor-not-allowed;
+    color: var(--xray-text-muted);
+  }
+  .photo-toolbar button:hover:enabled {
+    border-color: var(--xray-primary);
+    color: var(--xray-primary);
   }
   .photo-zoom-level {
-    @apply min-w-[44px] text-center text-gray-500 text-[13px] font-semibold;
+    @apply min-w-[44px] text-center text-[13px] font-semibold;
+    color: var(--xray-text-secondary);
   }
   .photo-zoom-reset {
     @apply !w-auto px-2.5 ml-1 !text-xs !font-semibold;
   }
 
   .photo-frame {
-    @apply relative w-full max-h-[460px] flex items-center justify-center rounded-[10px] overflow-hidden [background:#eef0f2] select-none;
+    @apply relative w-full max-h-[460px] flex items-center justify-center rounded-[10px] overflow-hidden select-none;
+    background: var(--xray-surface-subtle);
   }
   .photo-zoom-layer {
     @apply relative w-full h-full flex items-center justify-center;
@@ -133,13 +183,20 @@
   }
 
   .visual-notice {
-    @apply [background:white] border border-gray-200 rounded-2xl p-6 mb-6 text-gray-500 text-[15px];
+    @apply rounded-2xl p-6 mb-6 text-[15px] border;
+    background: var(--xray-surface);
+    border-color: var(--xray-border);
+    color: var(--xray-text-secondary);
   }
   .visual-notice--error {
-    @apply border-red-200 text-red-600;
+    border-color: rgba(229, 72, 77, 0.32);
+    color: var(--xray-danger);
   }
   .retry-btn {
-    @apply mt-3 px-4 py-2.5 border border-red-500 rounded-lg [background:white] text-red-500 font-semibold cursor-pointer;
+    @apply mt-3 px-4 py-2.5 rounded-lg font-semibold cursor-pointer border;
+    background: var(--xray-surface);
+    border-color: var(--xray-danger);
+    color: var(--xray-danger);
   }
 
   .visual-result-layout {
@@ -147,23 +204,27 @@
   }
 
   .result-card {
-    @apply [background:white] border border-gray-200 rounded-2xl p-6;
+    @apply rounded-2xl p-6 border;
+    background: var(--xray-surface);
+    border-color: var(--xray-border);
   }
 
   .visual-section-heading {
     @apply flex items-start justify-between gap-3 mb-4;
   }
   .visual-section-heading span {
-    @apply block text-blue-600 text-xs font-extrabold tracking-widest mb-1;
+    @apply block text-xs font-extrabold tracking-widest mb-1;
+    color: var(--xray-primary);
   }
   .visual-section-heading h2 {
-    @apply text-2xl font-bold text-gray-800 m-0;
+    @apply text-2xl font-bold m-0;
+    color: var(--xray-text);
   }
   .review-badge {
-    @apply px-3 py-1.5 border rounded-full text-[13px] font-bold whitespace-nowrap;
-    border-color: #fde68a;
-    background: #fffbeb;
-    color: #b45309;
+    @apply px-3 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap border;
+    border-color: rgba(245, 159, 0, 0.32);
+    background: rgba(245, 159, 0, 0.1);
+    color: #92600a;
   }
 
   .era-compare {
@@ -171,15 +232,15 @@
   }
   .era-compare.match {
     @apply border;
-    border-color: #bbf7d0;
-    background: #f0fdf4;
-    color: #15803d;
+    border-color: rgba(32, 164, 100, 0.32);
+    background: rgba(32, 164, 100, 0.08);
+    color: var(--xray-success);
   }
   .era-compare.mismatch {
     @apply border;
-    border-color: #fde68a;
-    background: #fffbeb;
-    color: #b45309;
+    border-color: rgba(245, 159, 0, 0.32);
+    background: rgba(245, 159, 0, 0.08);
+    color: #92600a;
   }
   .era-compare-tag {
     @apply ml-auto px-2.5 py-1 rounded-full text-xs;
@@ -190,15 +251,17 @@
     @apply flex flex-col gap-4;
   }
   .visual-result-heading {
-    @apply flex items-center mb-2 text-gray-800 text-[17px] font-bold;
+    @apply flex items-center mb-2 text-[17px] font-bold;
+    color: var(--xray-text);
   }
   .section-body {
-    @apply m-0 text-gray-500 [line-height:1.7] text-[15px];
+    @apply m-0 [line-height:1.7] text-[15px];
+    color: var(--xray-text-secondary);
   }
 
   .caveat-icon {
     @apply inline-flex items-center justify-center w-[18px] h-[18px] ml-2 rounded-full text-white text-xs font-bold cursor-help relative;
-    background: #f59f00;
+    background: var(--xray-warning);
   }
   .caveat-icon::after {
     content: attr(data-tooltip);
@@ -227,7 +290,8 @@
   }
 
   .status-note {
-    @apply text-gray-500 text-[15px];
+    @apply text-[15px];
+    color: var(--xray-text-secondary);
   }
 
   .pottery-loading {
@@ -278,38 +342,46 @@
   }
 
   .visual-review-card {
-    @apply [background:white] border border-gray-200 rounded-2xl p-6;
+    @apply rounded-2xl p-6 border;
+    background: var(--xray-surface);
+    border-color: var(--xray-border);
   }
   .visual-review-index {
     @apply block text-xs font-extrabold tracking-widest mb-2;
-    color: #b45309;
+    color: #92600a;
   }
   .visual-review-card h2 {
-    @apply text-lg font-bold text-gray-800 mb-3;
+    @apply text-lg font-bold mb-3;
+    color: var(--xray-text);
   }
   .visual-review-card p {
-    @apply text-gray-500 text-sm [line-height:1.6] mb-4;
+    @apply text-sm [line-height:1.6] mb-4;
+    color: var(--xray-text-secondary);
   }
   .visual-review-card ul {
-    @apply list-disc pl-5 text-gray-600 text-sm space-y-2;
+    @apply list-disc pl-5 text-sm space-y-2;
+    color: var(--xray-text-secondary);
   }
 
   .complete-area {
-    @apply flex items-center justify-between [background:white] border border-gray-200 rounded-2xl p-6;
+    @apply flex items-center justify-between rounded-2xl p-6 border;
+    background: var(--xray-surface);
+    border-color: var(--xray-border);
   }
   .complete-area p {
-    @apply m-0 text-gray-500 text-sm;
+    @apply m-0 text-sm;
+    color: var(--xray-text-secondary);
   }
   .complete-btn {
     @apply w-[220px] h-[58px] text-white text-xl font-bold cursor-pointer transition-[0.2s] rounded-[14px] border-[none];
-    background: #2563eb;
+    background: var(--xray-primary);
   }
   .complete-btn:hover:enabled {
-    background: #1d4ed8;
+    background: var(--xray-primary-hover);
     transform: translateY(-2px);
   }
   .complete-btn:disabled {
-    background: #93c5fd;
+    background: #a9c8fb;
     cursor: not-allowed;
   }
 }

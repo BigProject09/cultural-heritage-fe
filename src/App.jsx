@@ -4,14 +4,18 @@ import { DisassemblyProvider } from "./context/DisassemblyContext";
 //첫 화면
 import HomePage from "./pages/Home/HomePage";
 import NoticePage from "./pages/Notice/NoticePage";
+import NoticeDetailPage from "./pages/Notice/NoticeDetailPage";
+import NoticeWritePage from "./pages/Notice/NoticeWritePage";
 import LoginPage from "./pages/Auth/LoginPage";
 import SignUpPage from "./pages/Auth/SignUpPage";
 import WorkListPage from "./pages/WorkList/WorkListPage";
 import BoardPage from "./pages/Board/BoardPage";
 import BoardDetailPage from "./pages/Board/BoardDetailPage";
+import BoardWritePage from "./pages/Board/BoardWritePage";
 import ProjectDetailPage from "./pages/ProjectDetail/ProjectDetailPage";
 import LegacyArtifactRedirect from "./components/routing/LegacyArtifactRedirect";
 import ArtifactRouteSync from "./components/routing/ArtifactRouteSync";
+import Footer from "./components/common/Footer";
 
 //마이페이지
 import MyPage from "./pages/MyPage/MyPage";
@@ -24,6 +28,7 @@ import MyReportDetailPage from "./pages/MyPage/MyReportDetailPage";
 // X-RAY 분석/육안 상태 조사
 import ArtifactRegisterPage from "./pages/ArtifactRegister/ArtifactRegisterPage";
 import FlowRecommendationPage from "./pages/FlowRecommendationPage/FlowRecommendationPage";
+import GuideResultPage from "./pages/FlowRecommendationPage/GuideResultPage";
 import XrayPage from "./pages/PreInvestigation/XrayPage";
 
 // 해체
@@ -70,6 +75,8 @@ function App() {
 
           {/* 공지사항 */}
           <Route path="/notice" element={<NoticePage />} />
+          <Route path="/notice/write" element={<NoticeWritePage />} />
+          <Route path="/notice/:id" element={<NoticeDetailPage />} />
 
           {/* 로그인 */}
           <Route path="/login" element={<LoginPage />} />
@@ -93,6 +100,7 @@ function App() {
           <Route path="/artifacts/:artifactId" element={<ArtifactRouteSync />}>
             <Route index element={<ProjectDetailPage />} />
             <Route path="guide" element={<FlowRecommendationPage />} />
+            <Route path="guide/result" element={<GuideResultPage />} />
             <Route path="xray" element={<XrayPage />} />
             <Route path="visual" element={<VisualPage />} />
             <Route path="final-report" element={<FinalReportPage />} />
@@ -200,6 +208,8 @@ function App() {
 
           {/* 게시판 */}
           <Route path="/board" element={<BoardPage />} />
+
+          <Route path="/board/write" element={<BoardWritePage />} />
 
           <Route path="/board/:id" element={<BoardDetailPage />} />
 
@@ -370,6 +380,8 @@ function App() {
             element={<LegacyArtifactRedirect target="workspace" />}
           />
         </Routes>
+
+        <Footer />
       </DisassemblyProvider>
     </BrowserRouter>
   );

@@ -1,0 +1,13 @@
+@reference "../../index.css";
+
+@layer components {
+.app-footer {
+  @apply items-center border-t-[color:var(--heritage-line)] text-[color:var(--heritage-muted)] flex flex-col gap-1.5 py-[26px] px-[52px] border-t border-solid text-center;
+}
+.app-footer strong {
+  @apply text-[color:var(--heritage-bronze-dark)] [font-family:"Noto_Serif_KR",Georgia,serif] text-sm tracking-[0.08em];
+}
+.app-footer span {
+  @apply text-[10px];
+}
+}

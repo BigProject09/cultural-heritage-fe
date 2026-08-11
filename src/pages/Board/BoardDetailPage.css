@@ -4,6 +4,9 @@
 .board-detail-card {
   @apply min-h-[390px] px-[42px] py-[38px];
 }
+.board-detail-owner-actions {
+  @apply flex gap-2;
+}
 .board-detail-meta {
   @apply justify-end;
 }

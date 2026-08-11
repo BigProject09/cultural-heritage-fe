@@ -13,8 +13,11 @@ function StrengtheningMethodPage() {
   const ctx = useDisassembly();
   const { taskId, strengtheningGuide, setCompleted, setStepSaving } = ctx;
 
-  const { steps: strengtheningSteps = [], method_type: methodType } =
-    strengtheningGuide || {};
+  const {
+    steps: strengtheningSteps = [],
+    method_type: methodType,
+    overall_caution: overallCaution,
+  } = strengtheningGuide || {};
 
   const [steps, setSteps] = useState(
     strengtheningSteps.map((step) => ({
@@ -137,10 +140,7 @@ function StrengtheningMethodPage() {
       {/* 상단 */}
 
       <div className="detail-header">
-        <button
-          className="nav-btn"
-          onClick={() => navigate("/strengthening")}
-        >
+        <button className="nav-btn" onClick={() => navigate("/strengthening")}>
           ← 이전
         </button>
 
@@ -163,10 +163,17 @@ function StrengtheningMethodPage() {
         <h1>강화</h1>
       </div>
 
+      {/* 주의사항 */}
+      {overallCaution && (
+        <div className="overall-caution">
+          <strong>주의사항</strong>
+          <p>{overallCaution}</p>
+        </div>
+      )}
+
       <div className="method-card">
         <div className="step-title">
           <span>
-            추천 강화 방법
             {methodType && (
               <span
                 className={`method-badge ${
@@ -211,7 +218,7 @@ function StrengtheningMethodPage() {
                   );
                 }}
               >
-                {step.approved ? "✔ 완료됨" : "완료"}
+                {step.approved ? "✔ 완료" : "완료"}
               </button>
 
               <button className="edit-btn" onClick={() => handleEdit(step.id)}>

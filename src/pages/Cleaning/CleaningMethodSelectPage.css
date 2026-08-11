@@ -38,31 +38,51 @@
    카드
 ========================== */
 .info-card {
-    @apply bg-white shadow-[0_4px_15px_rgba(0,0,0,0.06)] max-w-[900px] mb-7 mx-auto p-[30px] rounded-[18px];
+    @apply bg-vora-surface shadow-[0_4px_15px_rgba(63,52,38,0.06)] border border-vora-line border-solid max-w-[900px] mb-7 mx-auto px-9 py-8 rounded-[18px];
 }
-.method-select {
-    @apply flex gap-5 mx-0 my-[30px];
-}
-.method-box {
-    @apply flex-1 text-center [background:#f8faff] p-6 rounded-[14px] border-2 border-solid border-[#dbe6ff] cursor-pointer;
-}
-.method-box strong {
-    @apply block text-xl text-gray-800;
-}
-.method-box input[type="checkbox"] {
-    @apply w-8 h-8 accent-[#2f64f5] cursor-pointer mt-5;
+.info-card--relic {
+    @apply mb-5;
 }
 .info-card h2 {
-    @apply text-[25px] text-[#2f64f5] mb-[22px];
+    @apply text-[25px] font-bold text-vora-bronze-dark mb-[22px];
 }
-.info-item {
-    @apply mb-7;
+
+/* 유물 상태 카드 - 섹션 구분 */
+.info-block {
+    @apply pt-6 pb-6;
 }
-.info-item strong {
-    @apply block text-gray-900 text-lg mb-2;
+.info-block:first-child {
+    @apply pt-0;
 }
-.info-item span,
-.info-item p {
-    @apply text-[#555] leading-[1.8];
+.info-block:last-child {
+    @apply pb-0;
+}
+.info-block:not(:first-child) {
+    @apply border-t border-vora-line border-solid;
+}
+.info-block h3 {
+    @apply text-lg font-bold text-vora-bronze-dark mb-2.5;
+}
+.info-block p {
+    @apply text-base text-vora-muted leading-[1.8] m-0;
+}
+
+/* ==========================
+   추천 세척법 카드
+========================== */
+.method-select {
+    @apply flex gap-7 mx-0 my-[30px];
+}
+.method-box {
+    @apply flex-1 flex items-center justify-between gap-4 [background:var(--color-vora-surface)] p-6 rounded-[14px] border-2 border-solid border-vora-bronze/25 cursor-pointer transition-all duration-200 hover:border-vora-bronze/60 hover:shadow-[0_4px_14px_rgba(63,52,38,0.08)];
+}
+.method-box.selected {
+    @apply [background:var(--color-vora-paper)] border-vora-bronze shadow-[0_6px_18px_rgba(150,104,61,0.14)];
+}
+.method-box strong {
+    @apply text-xl text-vora-ink;
+}
+.method-box input[type="checkbox"] {
+    @apply w-6 h-6 accent-[#96683d] cursor-pointer shrink-0;
 }
 }

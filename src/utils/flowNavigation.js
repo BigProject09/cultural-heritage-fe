@@ -28,6 +28,23 @@ export const getNextStep = (approvedFlow, currentStep) => {
   return guideFlow[currentIndex + 1];
 };
 
+const STAGE_COMPLETE_KEY = {
+  해체: "post",
+  세척: "cleaningPost",
+  강화: "strengtheningPost",
+  접합: "bondingPost",
+  복원: "restorationPost",
+};
+
+// approvedFlow 중 아직 끝나지 않은 첫 단계. 전부 끝났으면 null.
+export const getCurrentStep = (approvedFlow, completed = {}) => {
+  const guideFlow = sanitizeGuideFlow(approvedFlow);
+  return (
+    guideFlow.find((step) => !completed[STAGE_COMPLETE_KEY[step.name]]) ||
+    null
+  );
+};
+
 export const getPreviousStep = (approvedFlow, currentStep) => {
   const guideFlow = sanitizeGuideFlow(approvedFlow);
   const currentIndex = guideFlow.findIndex(

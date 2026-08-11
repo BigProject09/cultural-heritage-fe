@@ -35,8 +35,20 @@ export function DisassemblyProvider({
   const [checklist, setChecklist] =
     useState([]);
 
+  // 해체 체크리스트 - 전체 항목 중 가장 중요한 주의사항 한 줄
+  const [checklistCaution, setChecklistCaution] =
+    useState("");
+
   // 해체 도구
   const [tools, setTools] =
+    useState([]);
+
+  // 해체 도구 - AI가 이 도구들을 추천하는 이유 (도구 개별이 아닌 3개 공통 한 줄)
+  const [toolsReason, setToolsReason] =
+    useState("");
+
+  // 해체 도구 - 사용 시 주의사항 (도구 개별이 아닌 3개 공통 목록)
+  const [toolsPrecautions, setToolsPrecautions] =
     useState([]);
 
   // 해체 방법
@@ -179,6 +191,20 @@ const [restorationChoice, setRestorationChoice] =
     });
   };
 
+  // 각 공정 허브 페이지("작업 후 기록")에서 입력한 메모/사진 URL. 페이지를 벗어나면
+  // 사라지는 로컬 state였던 걸 결과 화면에서도 볼 수 있게 여기로 옮겨 보관한다.
+  const [postRecords, setPostRecords] = useState({
+    disassembly: null,
+    cleaning: null,
+    strengthening: null,
+    bonding: null,
+    restoration: null,
+  });
+
+  const setPostRecord = (stageKey, record) => {
+    setPostRecords((prev) => ({ ...prev, [stageKey]: record }));
+  };
+
   const resetCompleted = () => {
     setTaskId(null);
     setApprovedFlow(null);
@@ -195,7 +221,10 @@ const [restorationChoice, setRestorationChoice] =
     });
 
     setChecklist([]);
+    setChecklistCaution("");
     setTools([]);
+    setToolsReason("");
+    setToolsPrecautions([]);
     setDisassemblyMethod([]);
     setSelectedTools([]);
     setChecklistSelection([]);
@@ -225,6 +254,13 @@ const [restorationChoice, setRestorationChoice] =
   setRestorationFinishingGuide(null);
   setRestorationChoice({ material: "" });
   setSavingSteps(new Set());
+  setPostRecords({
+    disassembly: null,
+    cleaning: null,
+    strengthening: null,
+    bonding: null,
+    restoration: null,
+  });
 
     setCompleted({
       // 해체
@@ -281,8 +317,17 @@ const [restorationChoice, setRestorationChoice] =
         checklist,
         setChecklist,
 
+        checklistCaution,
+        setChecklistCaution,
+
         tools,
         setTools,
+
+      toolsReason,
+      setToolsReason,
+
+      toolsPrecautions,
+      setToolsPrecautions,
 
       disassemblyMethod,
       setDisassemblyMethod,
@@ -355,6 +400,9 @@ const [restorationChoice, setRestorationChoice] =
 
       savingSteps,
       setStepSaving,
+
+      postRecords,
+      setPostRecord,
 
         resetCompleted,
       }}

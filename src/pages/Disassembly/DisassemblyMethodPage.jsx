@@ -12,6 +12,7 @@ function DisassemblyMethodPage() {
     taskId,
     setCompleted,
     setStepSaving,
+    disassemblyMethod,
     methodWorkingSteps: steps,
     setMethodWorkingSteps: setSteps,
   } = ctx;
@@ -148,6 +149,14 @@ function DisassemblyMethodPage() {
         <h1>해체</h1>
       </div>
 
+      {/* 주의사항 */}
+      {disassemblyMethod?.overall_caution && (
+        <div className="overall-caution">
+          <strong>주의사항</strong>
+          <p>{disassemblyMethod.overall_caution}</p>
+        </div>
+      )}
+
       {/* 메인 카드 */}
       <div className="method-card">
         {/* 단계 목록 */}
@@ -186,7 +195,7 @@ function DisassemblyMethodPage() {
                   );
                 }}
               >
-                {step.approved ? "✔ 완료됨" : "완료"}
+                {step.approved ? "✔ 완료" : "완료"}
               </button>
 
               <button className="edit-btn" onClick={() => handleEdit(step.id)}>

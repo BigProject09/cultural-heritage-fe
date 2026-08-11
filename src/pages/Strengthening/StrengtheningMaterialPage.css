@@ -2,7 +2,7 @@
 
 @layer components {
 .strengthening-material-page {
-    @apply min-h-screen bg-guide-canvas;
+    @apply min-h-screen bg-vora-paper;
 }
 
 /* ================= 상단 ================= */
@@ -10,25 +10,17 @@
     @apply flex justify-between items-center bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] px-[70px] py-5;
 }
 .vora-logo {
-    @apply text-5xl font-extrabold text-[#2f64f5] tracking-[1px];
+    @apply text-5xl font-extrabold text-vora-bronze tracking-[1px];
 }
 
 /* ================= 버튼 ================= */
 .nav-btn {
-    @apply bg-guide-primary text-white text-base font-semibold cursor-pointer transition-all duration-200 px-7 py-3.5 rounded-[10px] border-0 hover:[background:#1f56c7];
+    @apply bg-vora-bronze text-white text-base font-semibold cursor-pointer transition-all duration-200 px-7 py-3.5 rounded-[10px] border-0 hover:[background:var(--color-vora-bronze-dark)];
 }
 
 /* ================= 컨테이너 ================= */
 .material-container {
     @apply max-w-[1000px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] mx-auto my-[60px] p-[45px] rounded-[20px];
-}
-
-/* ================= 제목 ================= */
-.page-header {
-    @apply mb-[35px];
-}
-.page-header h1 {
-    @apply text-4xl font-bold text-gray-800;
 }
 
 /* ================= 카드 ================= */
@@ -46,36 +38,73 @@
     @apply text-[17px] leading-loose text-[#444] text-justify;
 }
 
-/* ================= 좌우 2단 레이아웃 ================= */
+/* ================= 좌우 2단 레이아웃 (목록 30% / 상세 70%) ================= */
 .material-layout {
-    @apply flex gap-9 items-start;
-}
-.material-image-col {
-    @apply w-[200px] shrink-0 flex flex-col gap-3;
-}
-.material-info-col {
-    @apply flex-1 flex flex-col gap-5 min-w-0;
+    @apply flex items-start gap-8;
 }
 
-/* ================= 선택 ================= */
-.material-select-item {
-    @apply flex flex-col gap-2.5;
+/* ================= 왼쪽: 강화제/용제 목록 ================= */
+.material-list-panel {
+    @apply w-[30%] shrink-0 bg-vora-surface border border-solid border-vora-line shadow-[0_10px_30px_rgba(63,52,38,0.06)] p-6 rounded-2xl;
 }
-.material-select-item label {
-    @apply text-[15px] font-semibold text-gray-700;
+.material-list-panel-header {
+    @apply mb-5;
 }
-.material-select-item select {
-    @apply border text-[15px] cursor-pointer px-[15px] py-[13px] rounded-[10px] border-solid border-[#d7dde6] focus:outline-none focus:shadow-[0_0_0_3px_rgba(47,111,237,0.15)] focus:border-guide-primary;
+.material-list-panel-header--secondary {
+    @apply mt-7 pt-6 border-t border-solid border-vora-line;
+}
+.material-list-title {
+    @apply text-lg font-bold text-vora-ink m-0;
+}
+.material-list-items {
+    @apply flex flex-col;
+}
+.material-list-row {
+    @apply flex items-center justify-between gap-2 px-4 py-3.5 text-[15px] font-medium text-vora-bronze-dark leading-[1.4] cursor-pointer transition-colors duration-200 border-b border-solid border-vora-line/50 last:border-b-0 hover:[background:var(--color-vora-paper)];
+}
+.material-list-row.active {
+    @apply [background:var(--color-vora-bronze)] text-white border-transparent hover:[background:var(--color-vora-bronze)];
+}
+.material-list-row-badge {
+    @apply text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/25;
+}
+.material-list-empty {
+    @apply text-sm text-gray-400 py-2;
 }
 
-/* ================= 강화제 미리보기 이미지 ================= */
+/* ================= 오른쪽: 상세 ================= */
+.material-detail-panel {
+    @apply w-[70%] min-w-0 bg-vora-surface border border-solid border-vora-line shadow-[0_10px_30px_rgba(63,52,38,0.06)] p-10 rounded-2xl;
+}
+.material-detail-name {
+    @apply text-[28px] font-bold text-vora-ink mt-5 mb-3 mx-0;
+}
+.material-detail-block {
+    @apply mb-7;
+}
+.material-detail-block h3 {
+    @apply text-sm font-bold text-vora-bronze-dark tracking-[0.04em] mb-3 mt-0 mx-0;
+}
+.material-detail-actions {
+    @apply flex justify-end gap-3 border-t border-solid border-vora-line pt-6;
+}
+.material-detail-empty {
+    @apply text-gray-400 text-base;
+}
+
+/* ================= 강화제/용제 미리보기 이미지 ================= */
 .material-image-box {
-    @apply w-full h-[180px] flex items-center justify-center overflow-hidden rounded-xl bg-[#f0f2f5];
+    @apply w-full max-w-[220px] h-[180px] flex items-center justify-center overflow-hidden rounded-xl bg-[#f0f2f5] mb-6;
 }
 .material-image-box img {
     @apply w-full h-full object-contain;
 }
 .material-image-placeholder {
     @apply text-[13px] text-gray-400;
+}
+
+/* ================= 버튼 ================= */
+.nav-btn.secondary {
+    @apply bg-vora-paper text-vora-bronze-dark hover:[background:var(--color-vora-line)];
 }
 }

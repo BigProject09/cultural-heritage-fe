@@ -66,7 +66,7 @@ function FlowRecommendationPage() {
   // 다음 버튼 : 사용자가 확정한 Flow로만 AI 작업을 시작
   const handleNext = async () => {
     if (approvedFlow.length === 0) {
-      alert("진행할 복원 공정을 하나 이상 선택해주세요.");
+      alert("진행할 보존처리 단계를 하나 이상 선택해주세요.");
       return;
     }
 
@@ -145,28 +145,39 @@ function FlowRecommendationPage() {
 
   return (
     <div className="flow-page">
-      {/* Header */}
-      <div className="top-bar">
-        <button
-          className="nav-btn"
-          onClick={() => navigate(getArtifactRoute(artifactId))}
-        >
-          ← 이전
-        </button>
+      <div className="guide-container">
+        <nav className="guide-breadcrumb" aria-label="현재 위치">
+          <button
+            type="button"
+            onClick={() => navigate(getArtifactRoute(artifactId))}
+          >
+            유물 워크스페이스
+          </button>
+          <span>/</span>
+          <strong>복원 가이드</strong>
+        </nav>
 
-        <div className="logo" onClick={() => navigate("/")}>
-          VORA
-        </div>
+        <header className="guide-header">
+          <div className="guide-heading">
+            <span className="guide-eyebrow">INDEPENDENT GUIDE MODULE</span>
+            <h1 className="guide-title">복원 가이드</h1>
+            <p>진행할 보존처리 단계를 선택하고 AI 작업을 시작합니다.</p>
+          </div>
 
-        <button className="nav-btn" disabled={loading} onClick={handleNext}>
-          시작하기 →
-        </button>
+          <button
+            className="guide-start-btn"
+            disabled={loading}
+            onClick={handleNext}
+          >
+            시작하기 →
+          </button>
+        </header>
       </div>
 
       <div className="flow-container">
         {/* Flow 수정 */}
         <div className="flow-box">
-          <h2>추천 공정</h2>
+          <h2>추천</h2>
 
           {aiFlow.map((step, index) => (
             <div key={step.id} className="flow-step">
@@ -178,7 +189,7 @@ function FlowRecommendationPage() {
         </div>
 
         <div className="flow-box">
-          <h2>최종 공정</h2>
+          <h2>보존처리 단계</h2>
 
           {steps.map((step, index) => (
             <div key={step.id} className="flow-step">
