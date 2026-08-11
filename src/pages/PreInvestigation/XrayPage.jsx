@@ -27,6 +27,7 @@ import {
   generateReport,
   generateWorkflowReportText,
   getRememberedXrayJob,
+  getStitchJob,
   getWorkflowDefects,
   getWorkflowReportText,
   rememberXrayJob,
@@ -139,14 +140,21 @@ function defectMappingLabel(status) {
 /**
  * 결함 분석 진행 단계.
  *
- * 결합과 달리 서버가 상태를 알려주지 않는다. 결합본 분석과
- * 조각 분석을 순서대로 호출하므로 이 화면에서 직접 추적한다.
+ * 실서버에서는 작업 상태를 폴링하고, Mock에서는 호출 순서에 맞춰
+ * 현재 단계를 갱신한다.
  */
 const INSPECTION_STEPS = [
-  { key: "ASSEMBLED", label: "결합본 분석" },
   { key: "FRAGMENTS", label: "조각 분석" },
+  { key: "ASSEMBLED", label: "결합본 분석" },
   { key: "MAPPING", label: "결함 대응" },
 ];
+
+const INSPECTION_STATUS_TO_STEP = {
+  DETECTING: "FRAGMENTS",
+  DETECTING_FRAGMENTS: "FRAGMENTS",
+  DETECTING_ASSEMBLED: "ASSEMBLED",
+  MAPPING: "MAPPING",
+};
 
 function readStoredArtifactInfo() {
   try {
@@ -873,7 +881,7 @@ export default function XrayPage() {
    * 결합본에서만 나타난 영역이 실제 손상인지 조각을 이어 붙인
    * 자리인지 대조해야 하기 때문이다.
    *
-   * 서버가 진행 상태를 알려주지 않으므로 단계를 직접 표시한다.
+   * 실서버에서는 작업 상태 API를 폴링해 실제 단계를 표시한다.
    */
   async function runInspection() {
     if (!assembledFile) {
@@ -906,17 +914,17 @@ export default function XrayPage() {
       let allSummaries;
 
       if (USE_MOCK) {
-        setInspectionStep("ASSEMBLED");
-        const assembledResult = await detectOne(
-          assembledFile,
-          TARGET.ASSEMBLED,
-          confidence,
-        );
-
         setInspectionStep("FRAGMENTS");
         const fragmentResult = await detectBatch(
           fragmentFiles,
           TARGET.FRAGMENT,
+          confidence,
+        );
+
+        setInspectionStep("ASSEMBLED");
+        const assembledResult = await detectOne(
+          assembledFile,
+          TARGET.ASSEMBLED,
           confidence,
         );
 
@@ -936,8 +944,32 @@ export default function XrayPage() {
           ...(fragmentResult.summary ? [fragmentResult.summary] : []),
         ];
       } else {
-        setInspectionStep("MAPPING");
-        const workflowResult = await detectWorkflow(stitchJobId, confidence);
+        setInspectionStep("FRAGMENTS");
+
+        let statusRequestRunning = false;
+        const pollInspectionStatus = async () => {
+          if (statusRequestRunning) return;
+
+          statusRequestRunning = true;
+          try {
+            const job = await getStitchJob(stitchJobId);
+            const step = INSPECTION_STATUS_TO_STEP[job?.status];
+            if (step) setInspectionStep(step);
+          } catch {
+            // 탐지 본 요청의 성공/실패가 최종 판단 기준이다.
+          } finally {
+            statusRequestRunning = false;
+          }
+        };
+
+        const statusPollTimer = window.setInterval(pollInspectionStatus, 500);
+        let workflowResult;
+        try {
+          workflowResult = await detectWorkflow(stitchJobId, confidence);
+        } finally {
+          window.clearInterval(statusPollTimer);
+        }
+
         allRegions = (workflowResult.defects || []).map(workflowDefectToRegion);
         allSummaries = [
           `통합 결함 탐지 완료 · ${allRegions.length}건 · ${workflowResult.status || "REVIEW_READY"}`,
