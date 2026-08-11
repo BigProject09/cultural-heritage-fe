@@ -118,6 +118,14 @@ function CleaningDryingStepPage() {
         <h1>건조</h1>
       </div>
 
+      {/* 주의사항 */}
+      {dryingGuide?.overall_caution && (
+        <div className="overall-caution">
+          <strong>주의사항</strong>
+          <p>{dryingGuide.overall_caution}</p>
+        </div>
+      )}
+
       {/* 메인 카드 */}
       <div className="method-card">
         {/* 단계 목록 */}

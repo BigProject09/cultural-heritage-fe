@@ -424,6 +424,22 @@
 ) {
   @apply pt-7 pb-[90px] px-8;
 }
+/* 이 페이지군의 상단바(.detail-header)는 "공통 작업 상단 바" 규칙에서 1240px로
+   잡히지만, 아래 .page-header/.method-card 등 본문은 1120px라 VORA 로고와
+   제목·박스의 왼쪽 정렬이 서로 어긋난다. 상단바만 본문 폭에 맞춘다. */
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) > .detail-header {
+  @apply w-[min(1120px,100%)];
+}
 :is(
   .checklist-page,
   .tool-page,
@@ -603,8 +619,29 @@
 .flow-page {
   @apply pt-7 pb-[90px] px-8;
 }
+.flow-page .guide-breadcrumb {
+  @apply border-b-[color:var(--workflow-line)] text-[#827767] mb-7 pb-[15px] border-b border-solid;
+}
+.flow-page .guide-breadcrumb button {
+  @apply text-[color:var(--workflow-muted)] hover:text-[color:var(--workflow-bronze-dark)];
+}
+.flow-page .guide-breadcrumb strong {
+  @apply text-[color:var(--workflow-ink)];
+}
+.flow-page .guide-eyebrow {
+  @apply text-[color:var(--workflow-bronze)];
+}
+.flow-page .guide-title {
+  @apply text-[color:var(--workflow-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] tracking-[-0.045em];
+}
+.flow-page .guide-heading p {
+  @apply text-[color:var(--workflow-muted)];
+}
+.flow-page .guide-start-btn {
+  @apply border border-[color:var(--workflow-bronze)] [background:var(--workflow-bronze)] shadow-none border-solid hover:[background:var(--workflow-bronze-dark)];
+}
 .flow-page .flow-container {
-  @apply w-[min(960px,100%)] gap-[22px];
+  @apply w-[min(1380px,100%)] gap-[22px];
 }
 .flow-page .flow-box {
   @apply border border-[color:var(--workflow-line-soft)] [background:rgba(255,253,248,0.9)] shadow-[var(--workflow-shadow)] p-8 rounded-2xl border-solid;
@@ -633,7 +670,7 @@
   @apply block pt-[54px] pb-[92px] px-8;
 }
 .visual-page .visual-container {
-  @apply w-[min(1040px,100%)] max-w-none mx-auto my-0;
+  @apply w-[min(1380px,100%)] max-w-none mx-auto my-0;
 }
 .visual-page .visual-breadcrumb {
   @apply flex items-center gap-2 border-b-[color:var(--workflow-line)] text-[#827767] text-[13px] mb-7 pb-[15px] border-b border-solid;

@@ -9,6 +9,7 @@ import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 import {
   getNextStep,
+  getPreviousStep,
   moveToNextStep,
   moveToPreviousStep,
 } from "../../utils/flowNavigation";
@@ -90,6 +91,7 @@ function StrengtheningPage() {
         ...prev,
         strengtheningPost: true,
       }));
+      ctx.setPostRecord("strengthening", { memo, photos });
 
       return true;
     } catch (error) {
@@ -124,7 +126,9 @@ function StrengtheningPage() {
 
 
         <button
-          className="nav-btn"
+          className={`nav-btn${
+            getPreviousStep(approvedFlow, "강화") ? "" : " invisible"
+          }`}
           onClick={() =>
             moveToPreviousStep(
               navigate,

@@ -2,7 +2,7 @@
 
 @layer components {
 .bonding-material-page {
-    @apply min-h-screen [background:#f5f5f5] p-[30px];
+    @apply min-h-screen bg-vora-paper p-[30px];
 }
 
 
@@ -11,7 +11,7 @@
     @apply flex justify-between items-center mb-[30px];
 }
 .vora-logo {
-    @apply text-[28px] font-bold text-guide-primary;
+    @apply text-[28px] font-bold text-vora-bronze;
 }
 
 
@@ -22,17 +22,6 @@
 }
 
 
-
-/* ================= 제목 ================= */
-.page-header {
-    @apply mb-[30px];
-}
-.page-header h1 {
-    @apply text-[32px] text-gray-800 mt-0 mb-2.5 mx-0;
-}
-.page-header p {
-    @apply text-gray-500 text-[17px];
-}
 
 
 
@@ -50,22 +39,57 @@
 
 
 
-/* ================= 좌우 2단 레이아웃 ================= */
+/* ================= 좌우 2단 레이아웃 (목록 30% / 상세 70%) ================= */
 .material-layout {
-    @apply flex gap-9 items-start;
-}
-.material-image-col {
-    @apply w-[200px] shrink-0 flex flex-col items-stretch gap-3;
-}
-.material-info-col {
-    @apply flex-1 flex flex-col gap-5 min-w-0;
+    @apply flex items-start gap-8;
 }
 
+/* ================= 왼쪽: 접합제 목록 ================= */
+.material-list-panel {
+    @apply w-[30%] shrink-0 bg-vora-surface border border-solid border-vora-line shadow-[0_10px_30px_rgba(63,52,38,0.06)] p-6 rounded-2xl;
+}
+.material-list-panel-header {
+    @apply mb-5;
+}
+.material-list-title {
+    @apply text-lg font-bold text-vora-ink m-0;
+}
+.material-list-items {
+    @apply flex flex-col;
+}
+.material-list-row {
+    @apply flex items-center justify-between gap-2 px-4 py-3.5 text-[15px] font-medium text-vora-bronze-dark leading-[1.4] cursor-pointer transition-colors duration-200 border-b border-solid border-vora-line/50 last:border-b-0 hover:[background:var(--color-vora-paper)];
+}
+.material-list-row.active {
+    @apply [background:var(--color-vora-bronze)] text-white border-transparent hover:[background:var(--color-vora-bronze)];
+}
+.material-list-row-badge {
+    @apply text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/25;
+}
 
+/* ================= 오른쪽: 선택된 접합제 상세 ================= */
+.material-detail-panel {
+    @apply w-[70%] min-w-0 bg-vora-surface border border-solid border-vora-line shadow-[0_10px_30px_rgba(63,52,38,0.06)] p-10 rounded-2xl;
+}
+.material-detail-name {
+    @apply text-[28px] font-bold text-vora-ink mt-5 mb-3 mx-0;
+}
+.material-detail-block {
+    @apply mb-7;
+}
+.material-detail-block h3 {
+    @apply text-sm font-bold text-vora-bronze-dark tracking-[0.04em] mb-3 mt-0 mx-0;
+}
+.material-detail-actions {
+    @apply flex justify-end gap-3 border-t border-solid border-vora-line pt-6;
+}
+.material-detail-empty {
+    @apply text-gray-400 text-base;
+}
 
 /* ================= 접합제 미리보기 이미지 ================= */
 .material-image-box {
-    @apply w-full h-[180px] flex items-center justify-center overflow-hidden rounded-xl bg-[#f0f2f5];
+    @apply w-full max-w-[220px] h-[180px] flex items-center justify-center overflow-hidden rounded-xl bg-[#f0f2f5] mb-6;
 }
 .material-image-box img {
     @apply w-full h-full object-contain;
@@ -85,26 +109,16 @@
 
 /* ================= 주의사항 ================= */
 .material-precautions {
-    @apply flex flex-col gap-1.5 text-[15px] text-guide-primary bg-guide-primary-soft px-4 py-3 rounded-[10px] list-none;
-}
-
-
-
-/* ================= 선택 ================= */
-.material-select-item {
-    @apply flex flex-col gap-2.5;
-}
-.material-select-item label {
-    @apply text-[15px] font-semibold text-gray-700;
-}
-.material-select-item select {
-    @apply border text-[15px] cursor-pointer px-[15px] py-[13px] rounded-[10px] border-solid border-[#d7dde6] focus:outline-none focus:shadow-[0_0_0_3px_rgba(47,111,237,0.15)] focus:border-guide-primary;
+    @apply flex flex-col gap-1.5 text-[15px] text-vora-bronze-dark bg-vora-paper px-4 py-3 rounded-[10px] list-none;
 }
 
 
 
 /* ================= 버튼 ================= */
 .nav-btn {
-    @apply cursor-pointer text-[15px] font-semibold [background:#2563eb] text-white px-[18px] py-2.5 rounded-lg border-0 hover:[background:#1d4ed8];
+    @apply cursor-pointer text-[15px] font-semibold bg-vora-bronze text-white px-[18px] py-2.5 rounded-lg border-0 hover:[background:var(--color-vora-bronze-dark)];
+}
+.nav-btn.secondary {
+    @apply bg-vora-paper text-vora-bronze-dark hover:[background:var(--color-vora-line)];
 }
 }

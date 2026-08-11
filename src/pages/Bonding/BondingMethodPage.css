@@ -33,6 +33,17 @@
     @apply text-lg text-gray-500;
 }
 
+/* ================= 주의사항 ================= */
+.overall-caution {
+    @apply w-[min(1120px,100%)] max-w-none [background:#fff8ec] border border-solid border-[#f0dfb8] mx-auto mb-8 p-6 rounded-[18px];
+}
+.overall-caution strong {
+    @apply block text-base text-[#8a6d2f] mb-1.5;
+}
+.overall-caution p {
+    @apply text-base text-[#5c4a20] leading-[1.6] m-0;
+}
+
 /* ================= 메인 카드 ================= */
 .method-card {
     @apply max-w-[1200px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] mx-auto my-0 p-9 rounded-[26px];

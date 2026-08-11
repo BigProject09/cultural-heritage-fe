@@ -8,7 +8,6 @@ import {
   WORKSPACE_MODULES,
   formatWorkspaceDate,
   getModuleRoute,
-  getNextModule,
   getWorkspaceProjects,
   markWorkspaceModule,
   selectWorkspaceProject,
@@ -128,8 +127,7 @@ function HomePage() {
     navigate(getArtifactRoute(project.artifactId));
   };
 
-  const continueProject = (project) =>
-    enterProjectModule(project, getNextModule(project));
+  const continueProject = (project) => openProjectHub(project);
 
   const retryProjects = () => {
     setProjectsLoading(true);
@@ -234,15 +232,12 @@ function HomePage() {
                     const status = project.modules[module.key];
                     return (
                       <div className="heritage-track-item" key={module.key}>
-                        <button
+                        <div
                           className={`heritage-status-node ${status.toLowerCase()}`}
-                          onClick={() =>
-                            enterProjectModule(project, module.key)
-                          }
                           aria-label={`${module.title} ${STATUS_LABEL[status]}`}
                         >
                           {status === MODULE_STATUS.DONE ? "✓" : index + 1}
-                        </button>
+                        </div>
                         <span>{module.shortTitle}</span>
                         <em className={status.toLowerCase()}>
                           {STATUS_LABEL[status]}

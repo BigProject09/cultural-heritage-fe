@@ -2,39 +2,46 @@ import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import HeritageHeader from "../../components/workspace/HeritageHeader";
+import PrivacyPolicyModal from "../../components/common/PrivacyPolicyModal";
+import TermsOfServiceModal from "../../components/common/TermsOfServiceModal";
+import { login } from "../../services/userApi";
+import { decodeJwtPayload } from "../../utils/jwt";
+import { recallNickname } from "../../utils/nicknameCache";
 
 function LoginPage() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    setError("");
+    setSubmitting(true);
 
-    const user = users.find(
-      (user) =>
-        user.email === email &&
-        user.password === password
-    );
+    try {
+      const { token } = await login({ email: userId, password });
+      const payload = decodeJwtPayload(token);
+      const resolvedId = payload?.sub || userId;
 
-    if (user) {
-      const updatedUser = { ...user, lastLoginAt: new Date().toISOString() };
-      const updatedUsers = users.map((existing) =>
-        existing.email === updatedUser.email ? updatedUser : existing
-      );
+      const loginUser = {
+        email: resolvedId,
+        name: recallNickname(resolvedId) || resolvedId,
+        role: payload?.role || "USER",
+        accessToken: token,
+      };
 
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-      localStorage.setItem("loginUser", JSON.stringify(updatedUser));
+      localStorage.setItem("loginUser", JSON.stringify(loginUser));
 
-      setError("");
-      alert(`${user.name}님 환영합니다!`);
+      alert(`${loginUser.name}님 환영합니다!`);
       navigate("/");
-    } else {
-      setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -68,14 +75,14 @@ function LoginPage() {
           </p>
 
           <form onSubmit={handleLogin}>
-            <label htmlFor="login-email">이메일</label>
+            <label htmlFor="login-email">아이디</label>
             <input
               id="login-email"
-              type="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+              type="text"
+              placeholder="아이디를 입력하세요"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              autoComplete="username"
             />
 
             <label htmlFor="login-password">비밀번호</label>
@@ -90,8 +97,8 @@ function LoginPage() {
 
             {error && <p className="heritage-auth-error">{error}</p>}
 
-            <button type="submit" className="heritage-auth-submit">
-              로그인
+            <button type="submit" className="heritage-auth-submit" disabled={submitting}>
+              {submitting ? "로그인 중..." : "로그인"}
             </button>
           </form>
 
@@ -114,7 +121,9 @@ function LoginPage() {
       </main>
 
       <footer className="heritage-auth-footer">
-        © 2026 VORA. All rights reserved.
+        <TermsOfServiceModal />
+        <span> · </span>
+        <PrivacyPolicyModal />
       </footer>
     </div>
   );

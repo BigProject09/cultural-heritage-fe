@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./WorkspaceChrome.css";
+import { logout } from "../../services/userApi";
 
 function HeritageHeader({ active = "dashboard" }) {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ function HeritageHeader({ active = "dashboard" }) {
 
   const handleLogout = () => {
     setAccountOpen(false);
+    logout().catch(() => {});
     localStorage.removeItem("loginUser");
     navigate("/");
   };

@@ -3,13 +3,16 @@ import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import HeritageHeader from "../../components/workspace/HeritageHeader";
+import PrivacyPolicyModal from "../../components/common/PrivacyPolicyModal";
+import TermsOfServiceModal from "../../components/common/TermsOfServiceModal";
+import { signup } from "../../services/userApi";
+import { rememberNickname } from "../../utils/nicknameCache";
 
 function SignUpPage() {
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -22,26 +25,9 @@ function SignUpPage() {
   });
 
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const allTermsChecked =
-    agreements.service && agreements.privacy;
-
-  const formatPhone = (value) => {
-    const numbers = value.replace(/\D/g, "");
-
-    if (numbers.length < 4) {
-      return numbers;
-    }
-
-    if (numbers.length < 8) {
-      return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
-    }
-
-    return `${numbers.slice(0, 3)}-${numbers.slice(
-      3,
-      7
-    )}-${numbers.slice(7, 11)}`;
-  };
+  const allTermsChecked = agreements.service && agreements.privacy;
 
   const handleAllTerms = (event) => {
     const checked = event.target.checked;
@@ -75,7 +61,7 @@ function SignUpPage() {
     navigate("/login");
   };
 
-  const handleSignUp = (event) => {
+  const handleSignUp = async (event) => {
     event.preventDefault();
 
     setError("");
@@ -86,57 +72,48 @@ function SignUpPage() {
       return;
     }
 
-    if (!name || !email || !phone || !password || !confirmPassword) {
+    if (!name || !userId || !password || !confirmPassword) {
       setError("모든 항목을 입력해주세요.");
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      setError("올바른 이메일 형식을 입력해주세요.");
+    if (!name.trim()) {
+      setError("실명을 입력해주세요.");
       return;
     }
 
-    if (password.length < 8) {
-      setError("비밀번호는 8자 이상 입력해주세요.");
+    const idRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9]{4,20}$/;
+
+    if (!idRegex.test(userId)) {
+      setError("아이디는 영문, 숫자를 포함해 4~20자로 입력해주세요.");
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,20}$/;
+
+    if (!passwordRegex.test(password)) {
+      setError("비밀번호는 영문, 숫자, 특수문자를 포함해 8~20자로 입력해주세요.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.");
+      setError("비밀번호를 다시 입력해주세요.");
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    setSubmitting(true);
 
-    const existUser = users.find((user) => user.email === email);
+    try {
+      await signup({ email: userId, password, nickName: name });
+      rememberNickname(userId, name);
 
-    if (existUser) {
-      setError("이미 가입된 이메일입니다.");
-      return;
+      alert("회원가입이 완료되었습니다.");
+      navigate("/login");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
-
-    const now = new Date().toISOString();
-
-    const newUser = {
-      name,
-      email,
-      phone,
-      password,
-      serviceTermsAgreed: agreements.service,
-      privacyTermsAgreed: agreements.privacy,
-      termsAgreedAt: now,
-      joinedAt: now,
-    };
-
-    users.push(newUser);
-
-    localStorage.setItem("users", JSON.stringify(users));
-
-    alert("회원가입이 완료되었습니다.");
-
-    navigate("/login");
   };
 
   return (
@@ -179,8 +156,8 @@ function SignUpPage() {
               <h3>개인정보 수집 및 이용 안내</h3>
 
               <p>
-                VORA는 회원가입과 서비스 제공을 위해 이름, 이메일,
-                전화번호를 수집합니다.
+                VORA는 회원가입과 서비스 제공을 위해 이름, 아이디,
+                비밀번호를 수집합니다.
               </p>
 
               <p>
@@ -272,37 +249,22 @@ function SignUpPage() {
 
                 <input
                   type="text"
-                  placeholder="담당자 이름"
+                  placeholder="실명을 입력해주세요."
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   autoComplete="name"
                 />
               </label>
 
-              <label>
-                <span>전화번호</span>
-
-                <input
-                  type="tel"
-                  placeholder="010-0000-0000"
-                  value={phone}
-                  maxLength={13}
-                  onChange={(event) =>
-                    setPhone(formatPhone(event.target.value))
-                  }
-                  autoComplete="tel"
-                />
-              </label>
-
               <label className="wide">
-                <span>이메일</span>
+                <span>아이디</span>
 
                 <input
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  autoComplete="email"
+                  type="text"
+                  placeholder="영문, 숫자 포함 4~20자"
+                  value={userId}
+                  onChange={(event) => setUserId(event.target.value)}
+                  autoComplete="username"
                 />
               </label>
 
@@ -311,7 +273,7 @@ function SignUpPage() {
 
                 <input
                   type="password"
-                  placeholder="8자 이상"
+                  placeholder="영문, 숫자, 특수문자 포함 8~20자"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   autoComplete="new-password"
@@ -323,7 +285,7 @@ function SignUpPage() {
 
                 <input
                   type="password"
-                  placeholder="한 번 더 입력"
+                  placeholder="비밀번호를 다시 입력해주세요."
                   value={confirmPassword}
                   onChange={(event) =>
                     setConfirmPassword(event.target.value)
@@ -339,8 +301,12 @@ function SignUpPage() {
               </p>
             )}
 
-            <button type="submit" className="heritage-auth-submit">
-              회원가입
+            <button
+              type="submit"
+              className="heritage-auth-submit"
+              disabled={submitting}
+            >
+              {submitting ? "가입 중..." : "회원가입"}
             </button>
           </form>
 
@@ -355,7 +321,9 @@ function SignUpPage() {
       </main>
 
       <footer className="heritage-auth-footer">
-        © 2026 VORA. All rights reserved.
+        <TermsOfServiceModal />
+        <span> · </span>
+        <PrivacyPolicyModal />
       </footer>
     </div>
   );

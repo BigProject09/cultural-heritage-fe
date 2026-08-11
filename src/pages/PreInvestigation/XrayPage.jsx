@@ -780,6 +780,20 @@ export default function XrayPage() {
   }
 
   /**
+   * AI가 자동 배치하지 못한(unmatched) 조각이 남아있는지.
+   *
+   * 이 조각들은 "조각 위치 보정"에서 사람이 직접 놓아야 한다. 이 상태를
+   * 무시하고 AI 초안 그대로 확정하면, 백엔드가 기대하는 "위치 보정 완료"
+   * 상태에 도달하지 못한 채로 결함 분석(/detect)을 요청하게 되어 409가
+   * 발생한다.
+   */
+  const hasUnmatchedFragments = (stitchLayout?.fragments ?? []).some(
+    (fragment) => fragment.matched === false,
+  );
+  const layoutNeedsCorrection =
+    !USE_MOCK && hasUnmatchedFragments && !correctedFragments;
+
+  /**
    * 결합 결과 확정.
    *
    * 사람이 확인하고 넘기는 지점이다. AI 결합 결과를 그대로
@@ -800,6 +814,14 @@ export default function XrayPage() {
 
     if (!stitchJobId) {
       setStitchMessage("결합 작업 ID가 없습니다. 조각 결합을 다시 실행하세요.");
+      return;
+    }
+
+    // 버튼은 disabled로 막아두지만, 방어적으로 함수 내부에서도 한 번 더 막는다.
+    if (layoutNeedsCorrection) {
+      setStitchMessage(
+        "AI가 배치하지 못한 조각이 있습니다. \"조각 위치 보정\"에서 먼저 위치를 맞춰주세요.",
+      );
       return;
     }
 
@@ -1581,7 +1603,11 @@ export default function XrayPage() {
                   </div>
 
                   <div className="section-action-bar">
-                    <p>결과를 계속 사용해도 원본 X-RAY 이미지는 보존됩니다.</p>
+                    <p>
+                      {layoutNeedsCorrection
+                        ? "AI가 배치하지 못한 조각이 있습니다. \"조각 위치 보정\"에서 위치를 맞춘 뒤 계속하세요."
+                        : "결과를 계속 사용해도 원본 X-RAY 이미지는 보존됩니다."}
+                    </p>
                     <div className="xray-actions">
                       <button
                         className="xray-secondary"
@@ -1602,14 +1628,26 @@ export default function XrayPage() {
                     */}
                       {stitchLayout?.fragments?.length > 0 && (
                         <button
-                          className="xray-secondary"
+                          className={`xray-secondary${layoutNeedsCorrection ? " needs-attention" : ""}`}
                           onClick={() => setEditingPlacement(true)}
                         >
                           조각 위치 보정
+                          {layoutNeedsCorrection && (
+                            <span className="requirement-chip">필수</span>
+                          )}
                         </button>
                       )}
 
-                      <button className="xray-primary" onClick={confirmStitch}>
+                      <button
+                        className="xray-primary"
+                        onClick={confirmStitch}
+                        disabled={layoutNeedsCorrection}
+                        title={
+                          layoutNeedsCorrection
+                            ? "AI가 배치하지 못한 조각이 있습니다. 조각 위치 보정을 먼저 완료하세요."
+                            : undefined
+                        }
+                      >
                         이 결과로 분석 계속하기
                         <span aria-hidden="true">→</span>
                       </button>
