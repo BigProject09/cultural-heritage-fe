@@ -77,12 +77,12 @@ function HeritageHeader({ active = "dashboard" }) {
       >
         <img
           src="/vora-logo.png"
-          alt="VORA Heritage"
+          alt=""
           className="heritage-brand-mark"
         />
-        <span>
-          VORA
-          <small>AI CONSERVATION WORKSPACE</small>
+        <span className="heritage-brand-copy">
+          <small lang="en">Value of Restoration with AI</small>
+          <strong>VORA</strong>
         </span>
       </button>
 

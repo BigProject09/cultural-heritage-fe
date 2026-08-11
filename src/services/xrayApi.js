@@ -295,6 +295,47 @@ export function getStitchJob(jobId) {
   return requestJson(`${STITCH_JOBS_BASE}/${encodeURIComponent(jobId)}`);
 }
 
+/** artifactId에 연결된 기존 작업을 찾는다. 작업이 없으면 null을 반환한다. */
+export async function getStitchJobByArtifactId(artifactId) {
+  if (USE_MOCK || !artifactId) return null;
+
+  const response = await fetch(
+    `${STITCH_JOBS_BASE}/by-artifact/${encodeURIComponent(artifactId)}`,
+  );
+
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`기존 X-RAY 작업 조회 실패: HTTP ${response.status} ${detail}`);
+  }
+
+  return response.json();
+}
+
+/** 상태 응답의 resultUrl을 사용해 base/final 중 현재 정본 이미지를 받는다. */
+export async function downloadAvailableStitchResult(status, fileName) {
+  if (!status?.resultUrl) {
+    throw new Error("저장된 X-RAY 결합 결과가 없습니다.");
+  }
+
+  const url = /^https?:\/\//i.test(status.resultUrl)
+    ? status.resultUrl
+    : `${SPRING_BASE}${status.resultUrl.startsWith("/") ? "" : "/"}${status.resultUrl}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`결합 결과 조회 실패: HTTP ${response.status} ${detail}`);
+  }
+
+  const blob = await response.blob();
+  if (!blob.type.startsWith("image/")) {
+    throw new Error("결합 결과 응답이 이미지가 아닙니다.");
+  }
+
+  return new File([blob], fileName, { type: blob.type || "image/png" });
+}
+
 /**
  * 결합이 끝날 때까지 상태를 확인한다.
  *

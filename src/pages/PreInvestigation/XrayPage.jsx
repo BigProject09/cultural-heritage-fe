@@ -20,14 +20,15 @@ import {
   detectBatch,
   detectOne,
   detectWorkflow,
+  downloadAvailableStitchResult,
   downloadFinalStitchResult,
   downloadStitchResult,
   fetchStitchLayout,
   fetchStitchSources,
   generateReport,
   generateWorkflowReportText,
-  getRememberedXrayJob,
   getStitchJob,
+  getStitchJobByArtifactId,
   getWorkflowDefects,
   getWorkflowReportText,
   rememberXrayJob,
@@ -274,13 +275,20 @@ function finalLayoutFragments(layout) {
   }));
 }
 
-function workflowDefectToRegion(defect, index) {
-  const geometry = defect?.geometry || {};
-  const bbox = {
+function bboxFrom(value) {
+  const geometry = value?.geometry ?? value?.bbox ?? value ?? {};
+
+  return {
     x1: Number(geometry.x1 ?? 0),
     y1: Number(geometry.y1 ?? 0),
     x2: Number(geometry.x2 ?? 0),
     y2: Number(geometry.y2 ?? 0),
+  };
+}
+
+function workflowDefectToRegions(defect, index) {
+  const bbox = {
+    ...bboxFrom(defect?.geometry),
   };
   const originType = defect?.originType || "ASSEMBLED_ONLY";
   const originLabel =
@@ -290,9 +298,14 @@ function workflowDefectToRegion(defect, index) {
       ASSEMBLED_ONLY: "최종 결합본에서만 탐지",
     }[originType] || originType;
 
-  return {
+  const reviewDecision =
+    String(defect?.reviewDecision || "DAMAGE").toLowerCase() === "normal"
+      ? "normal"
+      : "damage";
+  const defectRegionId = `D-${String(defect.id ?? index + 1).padStart(3, "0")}`;
+  const assembledRegion = {
     defectId: defect.id,
-    regionId: `D-${String(defect.id ?? index + 1).padStart(3, "0")}`,
+    regionId: defectRegionId,
     analysisTarget: TARGET.ASSEMBLED,
     fileName: "assembled_xray.final.png",
     bbox,
@@ -302,11 +315,51 @@ function workflowDefectToRegion(defect, index) {
     mappingStatus: originType,
     originType,
     userNote: `${originLabel}. 최종 결합본의 표시 영역을 확인하세요.`,
-    reviewDecision:
-      String(defect?.reviewDecision || "DAMAGE").toLowerCase() === "normal"
-        ? "normal"
-        : "damage",
+    reviewDecision,
   };
+
+  const sourceObservations =
+    defect?.sourceObservations ?? defect?.geometry?.sourceObservations ?? [];
+  const sourceRegions = sourceObservations.flatMap(
+    (observation, observationIndex) => {
+      const sourceIndex = Number(
+        observation?.originalSourceIndex ?? observation?.sourceIndex,
+      );
+      if (!Number.isInteger(sourceIndex) || sourceIndex < 0) return [];
+
+      const sourceGeometry =
+        observation?.sourceGeometry ??
+        observation?.originalGeometry ??
+        observation?.sourceBBox ??
+        observation?.originalBBox ??
+        observation?.geometry ??
+        observation?.bbox;
+      if (!sourceGeometry) return [];
+
+      return [
+        {
+          defectId: defect.id,
+          regionId: `${defectRegionId}-S${sourceIndex}-${observationIndex + 1}`,
+          analysisTarget: TARGET.FRAGMENT,
+          sourceIndex,
+          fileName:
+            observation?.sourceFileName ??
+            observation?.fileName ??
+            `source-${sourceIndex}`,
+          bbox: bboxFrom(sourceGeometry),
+          position: "원본 조각에서 탐지",
+          confidence: observation?.confidence ?? null,
+          areaRatioPercent: null,
+          mappingStatus: originType,
+          originType,
+          userNote: "원본 조각에서 탐지된 영역입니다. 결합본과 함께 확인하세요.",
+          reviewDecision,
+        },
+      ];
+    },
+  );
+
+  return [assembledRegion, ...sourceRegions];
 }
 
 // 백엔드/결합 엔진의 originalSourceIndex는 파일명 natural sort 순서다.
@@ -501,8 +554,6 @@ export default function XrayPage() {
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [inspectionDone, setInspectionDone] = useState(false);
   const [inspectionMessage, setInspectionMessage] = useState("");
-  const [elapsed, setElapsed] = useState(null);
-
   // 결함 분석의 현재 단계. INSPECTION_STEPS 의 key 를 갖는다.
   const [inspectionStep, setInspectionStep] = useState(null);
 
@@ -512,9 +563,13 @@ export default function XrayPage() {
   const [reportStyle, setReportStyle] = useState("summary");
   const [isDragging, setIsDragging] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
-  const [resultLoading, setResultLoading] = useState(resultMode);
+  const [resultLoading, setResultLoading] = useState(
+    !USE_MOCK && Boolean(artifactId),
+  );
   const [resultError, setResultError] = useState("");
   const [resultXrayCount, setResultXrayCount] = useState(0);
+  const [restoredCompleted, setRestoredCompleted] = useState(false);
+  const readOnlyMode = resultMode || restoredCompleted;
 
   // AI 서비스 상태를 미리 확인해 두고 결함 분석 버튼 활성화에 쓴다
   useEffect(() => {
@@ -524,47 +579,190 @@ export default function XrayPage() {
   }, []);
 
   useEffect(() => {
-    if (!resultMode || !artifactId || USE_MOCK) return undefined;
+    if (!artifactId || USE_MOCK) return undefined;
 
     let cancelled = false;
+    const wait = (ms) =>
+      new Promise((resolve) => window.setTimeout(resolve, ms));
 
-    async function loadCompletedResult() {
-      setResultLoading(true);
-      setResultError("");
+    async function restoreSources(jobId) {
+      let sources = [];
 
       try {
-        const remembered = getRememberedXrayJob(artifactId);
-        if (!remembered?.jobId) {
-          throw new Error(
-            "이 유물의 X-RAY 작업 ID가 브라우저에 저장되어 있지 않습니다. 기존 완료 건은 백엔드의 artifactId→jobId 조회 API가 추가되어야 바로 열 수 있습니다.",
+        sources = await fetchStitchSources(jobId);
+        const files = await Promise.all(
+          sources.map(async (source, index) => {
+            const response = await fetch(source.url);
+            if (!response.ok) {
+              throw new Error(
+                `HTTP ${response.status} (${source.fileName || index + 1})`,
+              );
+            }
+
+            const blob = await response.blob();
+            return new File(
+              [blob],
+              source.fileName || `xray-source-${index + 1}.png`,
+              { type: blob.type || "image/png" },
+            );
+          }),
+        );
+
+        return { sources, files };
+      } catch (error) {
+        console.warn("기존 원본 X-RAY 복원 실패:", error);
+        return { sources, files: [] };
+      }
+    }
+
+    async function loadExistingJob() {
+      setResultLoading(true);
+      setResultError("");
+      setRestoredCompleted(false);
+
+      try {
+        let status = await getStitchJobByArtifactId(artifactId);
+
+        if (!status) {
+          if (resultMode) {
+            throw new Error("이 유물에 저장된 X-RAY 작업이 없습니다.");
+          }
+          return;
+        }
+
+        setStitchJobId(status.jobId);
+        setStitchStatus(status.status);
+        setStitchMessage(status.message || "기존 X-RAY 작업을 복원했습니다.");
+
+        while (
+          !cancelled &&
+          [
+            "STITCHING",
+            "DETECTING",
+            "DETECTING_FRAGMENTS",
+            "DETECTING_ASSEMBLED",
+            "MAPPING",
+          ].includes(status.status)
+        ) {
+          if (status.status === "STITCHING") {
+            setWorkflow(WORKFLOW.STITCH);
+            setStitchView("UPLOAD");
+          } else {
+            setWorkflow(WORKFLOW.INSPECTION);
+            setActiveStep(3);
+            setMaxReachedStep(3);
+            setInspectionLoading(true);
+            setInspectionStep(
+              INSPECTION_STATUS_TO_STEP[status.status] || "FRAGMENTS",
+            );
+          }
+
+          await wait(2000);
+          if (cancelled) return;
+
+          status = await getStitchJob(status.jobId);
+          setStitchStatus(status.status);
+          setStitchMessage(
+            status.message || "기존 X-RAY 작업을 복원하고 있습니다.",
           );
         }
 
-        const [defectResult, reportResult] = await Promise.all([
-          getWorkflowDefects(remembered.jobId),
-          getWorkflowReportText(remembered.jobId),
-        ]);
+        if (cancelled) return;
+
+        setInspectionLoading(false);
+        setInspectionStep(null);
+
+        if (["PREPARED", "UPLOADING"].includes(status.status)) {
+          setWorkflow(WORKFLOW.STITCH);
+          setStitchView("UPLOAD");
+          setStitchStatus("IDLE");
+          setStitchMessage(
+            "이전 이미지 업로드가 완료되지 않았습니다. X-RAY 조각을 다시 선택하세요.",
+          );
+          return;
+        }
+
+        if (status.status === "FAILED") {
+          setWorkflow(WORKFLOW.STITCH);
+          setStitchView("UPLOAD");
+          setStitchMessage(
+            `이전 X-RAY 작업이 실패했습니다: ${status.errorMessage || status.message || "원인 정보 없음"}`,
+          );
+          return;
+        }
+
+        const hasFinalResult = String(status.resultUrl || "").includes(
+          "/result/final",
+        );
+        const assembled = await downloadAvailableStitchResult(
+          status,
+          `assembled-${artifactId}${hasFinalResult ? "-final" : ""}.png`,
+        );
+        const { sources, files } = await restoreSources(status.jobId);
+        const layout = await fetchStitchLayout(status.jobId);
 
         if (cancelled) return;
 
-        const loadedRegions = (defectResult.defects || []).map(
-          workflowDefectToRegion,
+        setAssembledFile(assembled);
+        setViewFile(assembled);
+        setFragmentFiles(files);
+        setStitchSources(sources);
+        setStitchLayout(layout);
+        setResultXrayCount(sources.length || files.length);
+        rememberXrayJob(
+          artifactId,
+          status.jobId,
+          sources.length || files.length,
         );
-        const finalImageUrl =
-          defectResult.assembledFinalUrl || defectResult.assembledUrl || null;
 
-        setStitchJobId(remembered.jobId);
-        setResultXrayCount(remembered.xrayCount || 0);
-        setAssembledFile(finalImageUrl);
-        setRegions(loadedRegions);
-        setSelectedId(loadedRegions[0]?.regionId || null);
-        setInspectionDone(true);
-        setReport(reportResult.reportText || "");
-        setReportMeta(null);
-        setReportStyle("summary");
-        setWorkflow(WORKFLOW.REVIEW);
-        setActiveStep(5);
-        setMaxReachedStep(5);
+        if (status.status === "STITCHED") {
+          setStitchView("RESULT");
+
+          if (hasFinalResult) {
+            setWorkflow(WORKFLOW.INSPECTION);
+            setActiveStep(3);
+            setMaxReachedStep(3);
+            setStitchMessage("확정된 결합 결과를 복원했습니다.");
+          } else {
+            setWorkflow(WORKFLOW.STITCH);
+            setActiveStep(2);
+            setMaxReachedStep(2);
+            setStitchMessage("기존 결합 결과를 복원했습니다.");
+          }
+          return;
+        }
+
+        if (["REVIEW_READY", "COMPLETED"].includes(status.status)) {
+          const [defectResult, reportResult] = await Promise.all([
+            getWorkflowDefects(status.jobId),
+            getWorkflowReportText(status.jobId),
+          ]);
+
+          if (cancelled) return;
+
+          const loadedRegions = (defectResult.defects || []).flatMap(
+            workflowDefectToRegions,
+          );
+          const savedReport = reportResult.reportText || "";
+
+          setRegions(loadedRegions);
+          setSelectedId(loadedRegions[0]?.regionId || null);
+          setInspectionDone(true);
+          setReport(savedReport);
+          setReportMeta(null);
+          setReportStyle("summary");
+
+          if (status.status === "COMPLETED") {
+            setRestoredCompleted(true);
+            setWorkflow(WORKFLOW.REVIEW);
+            setActiveStep(5);
+            setMaxReachedStep(5);
+          } else {
+            setWorkflow(WORKFLOW.INSPECTION);
+            setActiveStep(savedReport ? 4 : 3);
+            setMaxReachedStep(savedReport ? 5 : 4);
+          }
+        }
       } catch (error) {
         if (!cancelled) setResultError(error.message);
       } finally {
@@ -572,7 +770,7 @@ export default function XrayPage() {
       }
     }
 
-    loadCompletedResult();
+    loadExistingJob();
     return () => {
       cancelled = true;
     };
@@ -592,7 +790,6 @@ export default function XrayPage() {
     setInspectionLoading(false);
     setInspectionDone(false);
     setInspectionMessage("");
-    setElapsed(null);
     setInspectionStep(null);
     setReport("");
     setReportMeta(null);
@@ -788,20 +985,6 @@ export default function XrayPage() {
   }
 
   /**
-   * AI가 자동 배치하지 못한(unmatched) 조각이 남아있는지.
-   *
-   * 이 조각들은 "조각 위치 보정"에서 사람이 직접 놓아야 한다. 이 상태를
-   * 무시하고 AI 초안 그대로 확정하면, 백엔드가 기대하는 "위치 보정 완료"
-   * 상태에 도달하지 못한 채로 결함 분석(/detect)을 요청하게 되어 409가
-   * 발생한다.
-   */
-  const hasUnmatchedFragments = (stitchLayout?.fragments ?? []).some(
-    (fragment) => fragment.matched === false,
-  );
-  const layoutNeedsCorrection =
-    !USE_MOCK && hasUnmatchedFragments && !correctedFragments;
-
-  /**
    * 결합 결과 확정.
    *
    * 사람이 확인하고 넘기는 지점이다. AI 결합 결과를 그대로
@@ -822,14 +1005,6 @@ export default function XrayPage() {
 
     if (!stitchJobId) {
       setStitchMessage("결합 작업 ID가 없습니다. 조각 결합을 다시 실행하세요.");
-      return;
-    }
-
-    // 버튼은 disabled로 막아두지만, 방어적으로 함수 내부에서도 한 번 더 막는다.
-    if (layoutNeedsCorrection) {
-      setStitchMessage(
-        "AI가 배치하지 못한 조각이 있습니다. \"조각 위치 보정\"에서 먼저 위치를 맞춰주세요.",
-      );
       return;
     }
 
@@ -925,11 +1100,8 @@ export default function XrayPage() {
     setRegions([]);
     setSummaries([]);
     setDefectMapping(null);
-    setElapsed(null);
     setReport("");
     setReportMeta(null);
-
-    const startedAt = performance.now();
 
     try {
       let allRegions;
@@ -992,7 +1164,9 @@ export default function XrayPage() {
           window.clearInterval(statusPollTimer);
         }
 
-        allRegions = (workflowResult.defects || []).map(workflowDefectToRegion);
+        allRegions = (workflowResult.defects || []).flatMap(
+          workflowDefectToRegions,
+        );
         allSummaries = [
           `통합 결함 탐지 완료 · ${allRegions.length}건 · ${workflowResult.status || "REVIEW_READY"}`,
         ];
@@ -1008,7 +1182,6 @@ export default function XrayPage() {
       setInspectionDone(true);
       // 분석이 끝나면 문안 작성 단계까지 이동할 수 있다.
       setMaxReachedStep(4);
-      setElapsed(((performance.now() - startedAt) / 1000).toFixed(1));
       setInspectionMessage(
         allRegions.length === 0 ? "탐지된 검토 필요 영역이 없습니다." : "",
       );
@@ -1053,9 +1226,13 @@ export default function XrayPage() {
     }
 
     setRegions((current) =>
-      current.map((region) =>
-        region.regionId === id ? { ...region, reviewDecision } : region,
-      ),
+      current.map((region) => {
+        const sameDefect =
+          selected.defectId != null
+            ? region.defectId === selected.defectId
+            : region.regionId === id;
+        return sameDefect ? { ...region, reviewDecision } : region;
+      }),
     );
     setReport("");
     setReportMeta(null);
@@ -1189,7 +1366,7 @@ export default function XrayPage() {
    * 지우지 않으며, 실제 파일을 바꾸거나 재결합할 때만 하위 결과를 초기화한다.
    */
   function goToWorkflowStep(step) {
-    if (resultMode && step !== 5) return;
+    if (readOnlyMode && step !== 5) return;
     if (step > maxReachedStep) return;
 
     if (step === 1) {
@@ -1297,11 +1474,19 @@ export default function XrayPage() {
   const selectedIndex = regions.findIndex(
     (region) => region.regionId === selectedRegion?.regionId,
   );
-  const includedRegions = regions.filter(
+  const logicalRegions = regions.filter(
+    (region, index, allRegions) =>
+      allRegions.findIndex((candidate) =>
+        region.defectId != null
+          ? candidate.defectId === region.defectId
+          : candidate.regionId === region.regionId,
+      ) === index,
+  );
+  const includedRegions = logicalRegions.filter(
     (region) => region.reviewDecision !== "normal",
   );
   const includedCount = includedRegions.length;
-  const excludedCount = regions.length - includedCount;
+  const excludedCount = logicalRegions.length - includedCount;
   const artifactManager = String(
     valueFrom(
       artifactInfo,
@@ -1429,12 +1614,12 @@ export default function XrayPage() {
           })}
         </ol>
 
-        {resultMode && resultLoading && (
+        {resultLoading && (
           <div className="xray-message">
-            완료된 X-RAY 결과를 불러오는 중입니다.
+            기존 X-RAY 작업을 불러오는 중입니다.
           </div>
         )}
-        {resultMode && resultError && (
+        {resultError && (
           <div className="xray-message error">{resultError}</div>
         )}
 
@@ -1565,8 +1750,8 @@ export default function XrayPage() {
                   detail={`조각 ${fragmentFiles.length}장 · 컬러 기준 ${colorSources.length}장`}
                   steps={STITCH_STEPS}
                   currentKey={stitchStatus}
-                  note="결합은 조각 수에 따라 수 분 이상 걸립니다."
-                  longNote="조각 수가 많으면 수십 분이 걸립니다. 창을 닫으면 결과를 받을 수 없습니다."
+                  note="결합 상태는 단계별로 자동 갱신됩니다."
+                  showElapsed={false}
                 />
               </section>
             )}
@@ -1585,7 +1770,7 @@ export default function XrayPage() {
                         있습니다.
                       </p>
                     </div>
-                    <span className="requirement-chip">전문가 보정</span>
+                    <span className="requirement-chip">선택 보정</span>
                   </div>
 
                   <StitchEditor
@@ -1636,9 +1821,8 @@ export default function XrayPage() {
 
                   <div className="section-action-bar">
                     <p>
-                      {layoutNeedsCorrection
-                        ? "AI가 배치하지 못한 조각이 있습니다. \"조각 위치 보정\"에서 위치를 맞춘 뒤 계속하세요."
-                        : "결과를 계속 사용해도 원본 X-RAY 이미지는 보존됩니다."}
+                      필요하면 조각 위치를 보정할 수 있으며, 보정 없이도 현재
+                      결과를 확정할 수 있습니다.
                     </p>
                     <div className="xray-actions">
                       <button
@@ -1660,25 +1844,16 @@ export default function XrayPage() {
                     */}
                       {stitchLayout?.fragments?.length > 0 && (
                         <button
-                          className={`xray-secondary${layoutNeedsCorrection ? " needs-attention" : ""}`}
+                          className="xray-secondary"
                           onClick={() => setEditingPlacement(true)}
                         >
                           조각 위치 보정
-                          {layoutNeedsCorrection && (
-                            <span className="requirement-chip">필수</span>
-                          )}
                         </button>
                       )}
 
                       <button
                         className="xray-primary"
                         onClick={confirmStitch}
-                        disabled={layoutNeedsCorrection}
-                        title={
-                          layoutNeedsCorrection
-                            ? "AI가 배치하지 못한 조각이 있습니다. 조각 위치 보정을 먼저 완료하세요."
-                            : undefined
-                        }
                       >
                         이 결과로 분석 계속하기
                         <span aria-hidden="true">→</span>
@@ -1761,6 +1936,7 @@ export default function XrayPage() {
                 steps={INSPECTION_STEPS}
                 currentKey={inspectionStep}
                 note="조각 수에 따라 1분에서 4분이 걸립니다."
+                showElapsed={false}
               />
 
               {inspectionDone && (
@@ -1773,7 +1949,6 @@ export default function XrayPage() {
                     <strong>{excludedCount}</strong>
                     <span>정상으로 제외</span>
                   </div>
-                  {elapsed && <p>분석 소요 {elapsed}초</p>}
                   <button
                     type="button"
                     className="text-button"
@@ -1816,7 +1991,7 @@ export default function XrayPage() {
                           title={file.name}
                         >
                           <span>{inspectionFileLabel(file, index)}</span>
-                          <strong>{count}</strong>
+                          {file === assembledFile && <strong>{count}</strong>}
                         </button>
                       );
                     })}
@@ -2036,6 +2211,7 @@ export default function XrayPage() {
                   headline="AI 1차 상태조사 문안을 작성하고 있습니다"
                   detail={`이상 포함 ${includedCount}건 · 정상 제외 ${excludedCount}건`}
                   note="30초에서 2분이 걸립니다."
+                  showElapsed={false}
                 />
               </section>
             )}
@@ -2121,7 +2297,7 @@ export default function XrayPage() {
                       <h3>X-RAY 결합 결과</h3>
                     </div>
                     <small>
-                      {resultMode ? resultXrayCount : fragmentFiles.length}개
+                      {readOnlyMode ? resultXrayCount : fragmentFiles.length}개
                       조각 결합
                     </small>
                   </header>
@@ -2142,7 +2318,7 @@ export default function XrayPage() {
                   </div>
                   <div className="final-report-actions">
                     <span>전문가 검토본</span>
-                    {!resultMode && (
+                    {!readOnlyMode && (
                       <button type="button" onClick={returnToReport}>
                         문안 수정하기
                       </button>
@@ -2162,7 +2338,7 @@ export default function XrayPage() {
             </section>
 
             <div className="xray-complete-bar final">
-              {resultMode ? (
+              {readOnlyMode ? (
                 <>
                   <div>
                     <strong>완료된 X-RAY 분석 결과입니다.</strong>
@@ -2213,7 +2389,7 @@ export default function XrayPage() {
           </main>
         )}
 
-        {!resultMode && showCompleteConfirm && (
+        {!readOnlyMode && showCompleteConfirm && (
           <div
             className="complete-modal-backdrop"
             role="presentation"
