@@ -1543,8 +1543,8 @@ export default function XrayPage() {
                   detail={`조각 ${fragmentFiles.length}장 · 컬러 기준 ${colorSources.length}장`}
                   steps={STITCH_STEPS}
                   currentKey={stitchStatus}
-                  note="결합은 조각 수에 따라 수 분 이상 걸립니다."
-                  longNote="조각 수가 많으면 수십 분이 걸립니다. 창을 닫으면 결과를 받을 수 없습니다."
+                  note="결합 상태는 단계별로 자동 갱신됩니다."
+                  showElapsed={false}
                 />
               </section>
             )}
