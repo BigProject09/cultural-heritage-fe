@@ -41,6 +41,19 @@
 }
 
 /* ===========================
+   주의사항
+=========================== */
+.overall-caution {
+    @apply w-[min(1120px,100%)] max-w-none mx-auto [background:#fff8ec] border border-solid border-[#f0dfb8] mb-8 p-6 rounded-[18px];
+}
+.overall-caution strong {
+    @apply block text-base text-[#8a6d2f] mb-1.5;
+}
+.overall-caution p {
+    @apply text-base text-[#5c4a20] leading-[1.6] m-0;
+}
+
+/* ===========================
    체크리스트 카드
 =========================== */
 .checklist-card {
@@ -51,29 +64,61 @@
 }
 
 /* ===========================
-   체크리스트 항목
+   진행률
+=========================== */
+.checklist-progress {
+    @apply mb-7;
+}
+.checklist-progress-header {
+    @apply flex items-center justify-between mb-2.5;
+}
+.checklist-progress-title {
+    @apply text-sm font-bold text-vora-ink;
+}
+.checklist-progress-label {
+    @apply text-sm font-semibold text-vora-muted;
+}
+.checklist-progress-bar {
+    @apply h-2.5 bg-vora-line/30 rounded-full overflow-hidden;
+}
+.checklist-progress-fill {
+    @apply h-full [background:var(--color-vora-bronze)] rounded-full transition-[width] duration-300 ease-out;
+}
+
+/* ===========================
+   체크리스트 항목 목록 (2열 그리드)
+=========================== */
+.checklist-items {
+    @apply grid grid-cols-2 gap-2.5;
+}
+
+/* ===========================
+   체크리스트 항목 카드
 =========================== */
 .check-item {
-    @apply flex items-center gap-[18px] border border cursor-pointer transition-all duration-200 mb-4 px-5 py-[18px] rounded-[14px] border-solid hover:border-blue-600 hover:[background:#f8fbff];
+    @apply flex items-center gap-3 bg-white border transition-all duration-200 rounded-xl border-vora-line border-solid cursor-pointer px-4 py-2.5 hover:-translate-y-0.5 hover:border-vora-bronze hover:shadow-[0_8px_18px_rgba(63,52,38,0.08)];
+}
+.check-item-number {
+    @apply shrink-0 text-sm font-bold text-vora-muted tabular-nums w-6;
 }
 .check-item input {
-    @apply w-[22px] h-[22px] accent-blue-600 cursor-pointer;
-}
-.check-content {
-    @apply flex-1;
+    @apply w-[18px] h-[18px] accent-[#96683d] cursor-pointer shrink-0 transition-colors duration-200;
 }
 .check-title {
-    @apply text-[17px] font-medium text-gray-800 leading-[1.6];
+    @apply flex-1 text-sm font-medium text-vora-ink leading-[1.5] transition-colors duration-200;
 }
 
 /* ===========================
    체크된 항목
 =========================== */
-.check-item:has(input:checked) {
-    @apply border-blue-600 bg-guide-primary-soft;
+.check-item.checked {
+    @apply [background:#f2f7ee] border-[#8fae7d];
 }
-.check-item:has(input:checked) .check-title {
-    @apply text-blue-600 font-semibold;
+.check-item.checked input {
+    @apply accent-[#6f9a58];
+}
+.check-item.checked .check-title {
+    @apply font-semibold text-vora-ink;
 }
 
 /* ===========================
@@ -91,6 +136,9 @@
     }
     .card-title {
         @apply text-[22px];
+    }
+    .checklist-items {
+        @apply grid-cols-1;
     }
 }
 }

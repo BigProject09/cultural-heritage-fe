@@ -1,0 +1,25 @@
+@reference "../../index.css";
+
+@layer components {
+.board-write-form {
+  @apply flex flex-col gap-5;
+}
+.board-write-field {
+  @apply flex flex-col gap-2;
+}
+.board-write-writer {
+  @apply text-[color:var(--heritage-muted)] text-xs tracking-[0.04em];
+}
+.board-write-label {
+  @apply text-[color:var(--heritage-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[17px];
+}
+.board-write-textarea {
+  @apply h-auto min-h-[240px] py-3 resize-y leading-[1.6];
+}
+.board-write-error {
+  @apply text-[color:#b3452c] text-sm;
+}
+.board-write-actions {
+  @apply flex justify-end gap-3;
+}
+}

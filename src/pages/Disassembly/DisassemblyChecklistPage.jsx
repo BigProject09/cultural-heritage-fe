@@ -15,6 +15,7 @@ function DisassemblyChecklistPage() {
     setStepSaving,
     taskId,
     checklist: aiChecklist,
+    checklistCaution,
     checklistSelection: checkedIds,
     setChecklistSelection: setCheckedIds,
   } = ctx;
@@ -57,6 +58,10 @@ function DisassemblyChecklistPage() {
     })();
   };
 
+  const totalCount = aiChecklist.length;
+  const checkedCount = checkedIds.length;
+  const progressPercent = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+
   return (
     <div className="checklist-page">
       {/* 상단 */}
@@ -83,27 +88,63 @@ function DisassemblyChecklistPage() {
         <h1>해체 전 조사</h1>
       </div>
 
-      {/* 체크리스트 */}
-      <div className="checklist-card">
-        {aiChecklist.map((item) => (
-          <label key={item.id} className="check-item">
-            <input
-              type="checkbox"
-              checked={checkedIds.includes(item.id)}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setCheckedIds([...checkedIds, item.id]);
-                } else {
-                  setCheckedIds(checkedIds.filter((id) => id !== item.id));
-                }
-              }}
-            />
+      {/* 주의사항 */}
+      {checklistCaution && (
+        <div className="overall-caution">
+          <strong>주의사항</strong>
+          <p>{checklistCaution}</p>
+        </div>
+      )}
 
-            <div className="check-content">
-              <span className="check-title">{item.label}</span>
-            </div>
-          </label>
-        ))}
+      <div className="checklist-card">
+        {/* 진행률 */}
+        <div className="checklist-progress">
+          <div className="checklist-progress-header">
+            <span className="checklist-progress-title">진행률</span>
+            <span className="checklist-progress-label">
+              {checkedCount} / {totalCount} 완료
+            </span>
+          </div>
+
+          <div className="checklist-progress-bar">
+            <div
+              className="checklist-progress-fill"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        {/* 체크리스트 */}
+        <div className="checklist-items">
+          {aiChecklist.map((item, index) => {
+            const isChecked = checkedIds.includes(item.id);
+
+            return (
+              <label
+                key={item.id}
+                className={`check-item ${isChecked ? "checked" : ""}`}
+              >
+                <span className="check-item-number" aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+
+                <span className="check-title">{item.label}</span>
+
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setCheckedIds([...checkedIds, item.id]);
+                    } else {
+                      setCheckedIds(checkedIds.filter((id) => id !== item.id));
+                    }
+                  }}
+                />
+              </label>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

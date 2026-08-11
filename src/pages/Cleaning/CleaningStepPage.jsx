@@ -121,6 +121,14 @@ function CleaningStepPage() {
         <h1>세척</h1>
       </div>
 
+      {/* 주의사항 */}
+      {cleaningGuide?.overall_caution && (
+        <div className="overall-caution">
+          <strong>주의사항</strong>
+          <p>{cleaningGuide.overall_caution}</p>
+        </div>
+      )}
+
       {/* 메인 카드 */}
       <div className="method-card">
         {/* 단계 목록 */}

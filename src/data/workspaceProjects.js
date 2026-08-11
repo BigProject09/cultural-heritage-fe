@@ -30,7 +30,7 @@ export const WORKSPACE_MODULES = [
     shortTitle: "복원 가이드",
     subtitle: "AI 보존처리 가이드",
     description:
-      "유물 기본 정보를 바탕으로 필요한 보존처리 공정을 선택하고 단계별 작업을 기록합니다.",
+      "유물 기본 정보를 바탕으로 필요한 보존처리 단계를 선택하고 단계별 작업을 기록합니다.",
   },
   {
     key: "xray",

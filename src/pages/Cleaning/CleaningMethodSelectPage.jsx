@@ -76,31 +76,28 @@ function CleaningMethodSelectPage() {
           <h1>세척법 선택</h1>
         </div>
 
-        <div className="info-card">
-          <p>
-            <strong>유물 상태</strong>
-            <br />
-            {cleaningMethod?.ai_analysis?.relic_condition_summary}
-          </p>
+        <div className="info-card info-card--relic">
+          <div className="info-block">
+            <h3>유물 상태</h3>
+            <p>{cleaningMethod?.ai_analysis?.relic_condition_summary}</p>
+          </div>
 
-          <p>
-            <strong>오염물 분석</strong>
-            <br />
-            {cleaningMethod?.ai_analysis?.contamination_summary}
-          </p>
+          <div className="info-block">
+            <h3>오염물 분석</h3>
+            <p>{cleaningMethod?.ai_analysis?.contamination_summary}</p>
+          </div>
 
-          <p>
-            <strong>추천 이유</strong>
-            <br />
-            {cleaningMethod?.ai_analysis?.reason}
-          </p>
+          <div className="info-block">
+            <h3>추천 이유</h3>
+            <p>{cleaningMethod?.ai_analysis?.reason}</p>
+          </div>
         </div>
 
         <div className="info-card">
           <h2>추천 세척법</h2>
 
           <div className="method-select">
-            <label className="method-box">
+            <label className={`method-box ${usePhysical ? "selected" : ""}`}>
               <strong>물리적 세척</strong>
 
               <input
@@ -110,7 +107,7 @@ function CleaningMethodSelectPage() {
               />
             </label>
 
-            <label className="method-box">
+            <label className={`method-box ${useChemical ? "selected" : ""}`}>
               <strong>화학적 세척</strong>
 
               <input

@@ -12,7 +12,10 @@ export function applyInterrupt(interrupt, ctx) {
   // 첫 start 응답에 모든 화면용 데이터를 채워 각 공정을 독립적으로 테스트한다.
   if (mockContext) {
     ctx.setChecklist(mockContext.checklist || []);
+    ctx.setChecklistCaution(mockContext.checklistCaution || "");
     ctx.setTools(mockContext.tools || []);
+    ctx.setToolsReason(mockContext.toolsReason || "");
+    ctx.setToolsPrecautions(mockContext.toolsPrecautions || []);
     ctx.setToolSelection(
       (mockContext.tools || [])
         .filter((tool) => tool.recommended)
@@ -42,9 +45,12 @@ export function applyInterrupt(interrupt, ctx) {
   // 해체
   if (interrupt.ai_checklist) {
     ctx.setChecklist(interrupt.ai_checklist.checklist);
+    ctx.setChecklistCaution(interrupt.ai_checklist.caution || "");
   }
   if (interrupt.ai_tools) {
     ctx.setTools(interrupt.ai_tools.recommended_tools);
+    ctx.setToolsReason(interrupt.ai_tools.reason || "");
+    ctx.setToolsPrecautions(interrupt.ai_tools.precautions || []);
     ctx.setToolSelection(
       interrupt.ai_tools.recommended_tools
         .filter((tool) => tool.recommended)

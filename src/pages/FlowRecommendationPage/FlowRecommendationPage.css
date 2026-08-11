@@ -7,16 +7,39 @@
 
 .flow-page{
 
-    @apply min-h-screen [background:#F4F7FB] pt-8 pb-[60px] px-0;
+    @apply min-h-screen [background:#F4F7FB] [font-family:Pretendard,"Noto_Sans_KR",-apple-system,BlinkMacSystemFont,"Segoe_UI",sans-serif] tracking-[-0.015em] pt-9 pb-[108px] px-6;
 }
 
 /* ===========================
    Top
 =========================== */
 
-.top-bar{
-
-    @apply w-[1200px] flex justify-between items-center mt-0 mb-6 mx-auto;
+.guide-container {
+    @apply w-[min(1380px,100%)] mx-auto my-0 mb-8;
+}
+.guide-breadcrumb {
+    @apply flex items-center gap-2 text-[13px] text-vora-muted mb-6;
+}
+.guide-breadcrumb button {
+    @apply bg-transparent border-0 p-0 cursor-pointer font-medium text-vora-muted hover:text-vora-bronze-dark;
+}
+.guide-breadcrumb strong {
+    @apply text-vora-ink font-semibold;
+}
+.guide-header {
+    @apply flex items-end justify-between gap-6 mb-7;
+}
+.guide-eyebrow {
+    @apply block text-vora-bronze-dark text-[11px] font-extrabold tracking-widest mb-2;
+}
+.guide-title {
+    @apply text-[clamp(28px,3vw,36px)] leading-tight tracking-[-0.04em] text-vora-ink m-0;
+}
+.guide-heading p {
+    @apply text-vora-muted text-[15px] mt-2.5 mb-0 mx-0;
+}
+.guide-start-btn {
+    @apply shrink-0 h-12 px-6 rounded-xl border-0 bg-vora-bronze text-white text-base font-semibold cursor-pointer transition-all duration-200 hover:[background:var(--color-vora-bronze-dark)] disabled:cursor-not-allowed disabled:opacity-60;
 }
 
 .analyzing-overlay {
@@ -77,16 +100,6 @@
     @apply w-2/5 h-full rounded bg-guide-primary animate-[analyzing-slide_1.1s_ease-in-out_infinite];
 }
 
-.logo{
-
-    @apply text-5xl font-extrabold text-[#2C6BED] cursor-pointer transition-all duration-200 hover:scale-105;
-}
-
-.nav-btn{
-
-    @apply bg-transparent text-xl font-semibold text-[#2C6BED] cursor-pointer transition-all duration-200 border-0 hover:text-[#2C6BED];
-}
-
 /* ===========================
    Title
 =========================== */
@@ -102,7 +115,7 @@
 
 .flow-container{
 
-    @apply w-[900px] grid grid-cols-[1fr_1fr] gap-10 mx-auto my-0;
+    @apply w-[min(1380px,100%)] grid grid-cols-[1fr_1fr] gap-10 mx-auto my-0;
 }
 
 .flow-box{
@@ -159,7 +172,7 @@
         @apply w-[95%] grid-cols-[1fr];
     }
 
-    .top-bar{
+    .guide-container{
 
         @apply w-[95%];
     }
@@ -167,9 +180,9 @@
 
 @media (max-width:768px){
 
-    .logo{
+    .guide-header{
 
-        @apply text-4xl;
+        @apply items-start flex-col;
     }
 
     .flow-box{

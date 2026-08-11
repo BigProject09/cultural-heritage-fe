@@ -6,6 +6,7 @@ import "./CleaningPage.css";
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import {
   getNextStep,
+  getPreviousStep,
   moveToNextStep,
   moveToPreviousStep,
 } from "../../utils/flowNavigation";
@@ -91,6 +92,7 @@ function CleaningPage() {
         ...prev,
         cleaningPost: true,
       }));
+      ctx.setPostRecord("cleaning", { memo, photos });
 
       return true;
     } catch (error) {
@@ -122,7 +124,9 @@ function CleaningPage() {
     <div className="cleaning-page">
       <div className="top-bar">
         <button
-          className="nav-btn"
+          className={`nav-btn${
+            getPreviousStep(approvedFlow, "세척") ? "" : " invisible"
+          }`}
           onClick={() =>
             moveToPreviousStep(
               navigate,

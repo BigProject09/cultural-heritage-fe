@@ -13,8 +13,11 @@ function BondingMethodPage() {
   const ctx = useDisassembly();
   const { taskId, bondingGuide, setCompleted, setStepSaving } = ctx;
 
-  const { steps: bondingSteps = [], method_type: methodType } =
-    bondingGuide || {};
+  const {
+    steps: bondingSteps = [],
+    method_type: methodType,
+    overall_caution: overallCaution,
+  } = bondingGuide || {};
 
   const [steps, setSteps] = useState(
     bondingSteps.map((step) => ({
@@ -149,6 +152,14 @@ function BondingMethodPage() {
         <h1>접합</h1>
       </div>
 
+      {/* 주의사항 */}
+      {overallCaution && (
+        <div className="overall-caution">
+          <strong>주의사항</strong>
+          <p>{overallCaution}</p>
+        </div>
+      )}
+
       <div className="method-card">
         <div className="step-title">
           <span>
@@ -189,7 +200,7 @@ function BondingMethodPage() {
                   );
                 }}
               >
-                {step.approved ? "✔ 완료됨" : "완료"}
+                {step.approved ? "✔ 완료" : "완료"}
               </button>
 
               <button className="edit-btn" onClick={() => handleEdit(step.id)}>
