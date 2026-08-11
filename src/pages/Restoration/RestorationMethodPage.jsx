@@ -18,7 +18,8 @@ function RestorationMethodPage({
   const ctx = useDisassembly();
   const { taskId, setCompleted, setStepSaving } = ctx;
 
-  const { steps: restorationSteps = [] } = ctx[guideField] || {};
+  const { steps: restorationSteps = [], overall_caution: overallCaution } =
+    ctx[guideField] || {};
 
   const [steps, setSteps] = useState(
     restorationSteps.map((step) => ({
@@ -162,6 +163,14 @@ function RestorationMethodPage({
         <h1>{title}</h1>
       </div>
 
+      {/* 주의사항 */}
+      {overallCaution && (
+        <div className="overall-caution">
+          <strong>주의사항</strong>
+          <p>{overallCaution}</p>
+        </div>
+      )}
+
       <div className="method-card">
         {steps.map((step, index) => (
           <div key={step.id} className="step-card">
@@ -195,7 +204,7 @@ function RestorationMethodPage({
                   );
                 }}
               >
-                {step.approved ? "✔ 완료됨" : "완료"}
+                {step.approved ? "✔ 완료" : "완료"}
               </button>
 
               <button className="edit-btn" onClick={() => handleEdit(step.id)}>

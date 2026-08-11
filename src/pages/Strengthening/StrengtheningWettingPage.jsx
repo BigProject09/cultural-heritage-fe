@@ -8,6 +8,35 @@ import { applyInterrupt } from "../../utils/applyInterrupt";
 
 import "./StrengtheningWettingPage.css";
 
+// 업로드 박스용 아이콘. 새 패키지 의존성 없이 인라인 SVG로 둔다.
+function UploadDropIcon() {
+  return (
+    <svg
+      className="upload-dropzone-icon"
+      width="30"
+      height="30"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 15.5V4M12 4 7.8 8.2M12 4l4.2 4.2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 15.5v2.3A2.2 2.2 0 0 0 7.2 20h9.6a2.2 2.2 0 0 0 2.2-2.2v-2.3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 // ai_color_analysis에 담겨오는 9개 세부 항목 키 -> 한글 라벨 (표시 순서 고정)
 const COLOR_ANALYSIS_METRICS = [
   ["hue_shift", "색조 변화"],
@@ -166,7 +195,7 @@ function StrengtheningWettingPage() {
           <div
             className={`info-card photo-upload-zone ${
               colorChangeAnalysis || beforeUploading ? "is-disabled" : ""
-            }`}
+            } ${beforePhoto ? "has-photo" : ""}`}
           >
             <h2>처리 전</h2>
 
@@ -179,25 +208,39 @@ function StrengtheningWettingPage() {
               onChange={handleBeforeFileChange}
             />
 
-            <p className="photo-upload-guide">
-              {beforeUploading
-                ? "사진을 업로드하고 있어요..."
-                : beforePhoto
-                  ? "다른 사진으로 바꾸려면 상자 안을 클릭하세요."
-                  : "상자 안을 클릭해 사진을 선택하세요."}
-            </p>
-
-            {beforePhoto && (
-              <div className="photo-preview">
-                <img src={beforePhoto} alt="처리 전" />
-              </div>
-            )}
+            <div className="upload-dropzone">
+              {beforeUploading ? (
+                <div className="upload-dropzone-status">
+                  <p className="photo-upload-guide">
+                    사진을 업로드하고 있어요...
+                  </p>
+                  <div className="upload-progress-track">
+                    <div className="upload-progress-fill" />
+                  </div>
+                </div>
+              ) : beforePhoto ? (
+                <>
+                  <div className="photo-preview">
+                    <img src={beforePhoto} alt="처리 전" />
+                  </div>
+                  <p className="photo-upload-guide">
+                    다른 사진으로 바꾸려면 상자 안을 클릭하세요.
+                  </p>
+                </>
+              ) : (
+                <div className="upload-dropzone-empty">
+                  <UploadDropIcon />
+                  <p className="upload-dropzone-title">사진을 업로드하세요</p>
+                  <p className="upload-dropzone-hint">이미지 파일 (JPG, PNG 등)</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div
             className={`info-card photo-upload-zone ${
               colorChangeAnalysis || afterUploading ? "is-disabled" : ""
-            }`}
+            } ${afterPhoto ? "has-photo" : ""}`}
           >
             <h2>처리 후</h2>
 
@@ -210,19 +253,33 @@ function StrengtheningWettingPage() {
               onChange={handleAfterFileChange}
             />
 
-            <p className="photo-upload-guide">
-              {afterUploading
-                ? "사진을 업로드하고 있어요..."
-                : afterPhoto
-                  ? "다른 사진으로 바꾸려면 상자 안을 클릭하세요."
-                  : "상자 안을 클릭해 사진을 선택하세요."}
-            </p>
-
-            {afterPhoto && (
-              <div className="photo-preview">
-                <img src={afterPhoto} alt="처리 후" />
-              </div>
-            )}
+            <div className="upload-dropzone">
+              {afterUploading ? (
+                <div className="upload-dropzone-status">
+                  <p className="photo-upload-guide">
+                    사진을 업로드하고 있어요...
+                  </p>
+                  <div className="upload-progress-track">
+                    <div className="upload-progress-fill" />
+                  </div>
+                </div>
+              ) : afterPhoto ? (
+                <>
+                  <div className="photo-preview">
+                    <img src={afterPhoto} alt="처리 후" />
+                  </div>
+                  <p className="photo-upload-guide">
+                    다른 사진으로 바꾸려면 상자 안을 클릭하세요.
+                  </p>
+                </>
+              ) : (
+                <div className="upload-dropzone-empty">
+                  <UploadDropIcon />
+                  <p className="upload-dropzone-title">사진을 업로드하세요</p>
+                  <p className="upload-dropzone-hint">이미지 파일 (JPG, PNG 등)</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

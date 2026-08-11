@@ -13,13 +13,20 @@ import {
   markWorkspaceModule,
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
-import { getFinalReportRoute } from "../../utils/artifactRoutes";
+import {
+  getArtifactWorkflowRoute,
+  getFinalReportRoute,
+} from "../../utils/artifactRoutes";
+import { getCurrentStep } from "../../utils/flowNavigation";
+import { flowRoutes } from "../../data/flowData";
+import { useDisassembly } from "../../context/useDisassembly";
 import "./ProjectDetailPage.css";
 
 const PROGRESS_WIDTH_CLASSES = ["w-0", "w-1/3", "w-2/3", "w-full"];
 
 function ProjectDetailPage() {
   const navigate = useNavigate();
+  const disassemblyCtx = useDisassembly();
   const { artifactId, id } = useParams();
   const decodedId = decodeURIComponent(artifactId || id || "");
   const [project, setProject] = useState(null);
@@ -97,6 +104,51 @@ function ProjectDetailPage() {
 
       if (nextProject !== project) setProject(nextProject);
       const artifactInfo = selectWorkspaceProject(nextProject);
+
+      // 복원 가이드는 이미 진행하던 단계가 메모리(Context)에 남아있으면
+      // 단계를 새로 고르는 화면 대신 그 단계로 바로 이어서 들어간다. 이미 다
+      // 끝났으면(완료 상태거나, 승인된 단계 중 안 끝난 게 없으면) 결과 화면으로
+      // 보낸다. 새로고침하면 이 메모리가 초기화되어 다시 단계 선택 화면으로
+      // 돌아간다.
+      if (moduleKey === "guide") {
+        if (project.modules.guide === MODULE_STATUS.DONE) {
+          navigate(getArtifactWorkflowRoute(nextProject.artifactId, "result"), {
+            state: {
+              artifactId: nextProject.artifactId,
+              artifactInfo,
+              workspaceEntry: true,
+              workspaceModule: moduleKey,
+            },
+          });
+          return;
+        }
+
+        if (disassemblyCtx.taskId) {
+          const currentStep = getCurrentStep(
+            disassemblyCtx.approvedFlow,
+            disassemblyCtx.completed,
+          );
+
+          navigate(
+            currentStep
+              ? getArtifactWorkflowRoute(
+                  nextProject.artifactId,
+                  flowRoutes[currentStep.name],
+                )
+              : getArtifactWorkflowRoute(nextProject.artifactId, "result"),
+            {
+              state: {
+                artifactId: nextProject.artifactId,
+                artifactInfo,
+                workspaceEntry: true,
+                workspaceModule: moduleKey,
+                approvedFlow: disassemblyCtx.approvedFlow,
+              },
+            },
+          );
+          return;
+        }
+      }
 
       navigate(getModuleRoute(moduleKey, nextProject.artifactId), {
         state: {

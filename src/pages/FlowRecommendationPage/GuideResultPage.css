@@ -1,0 +1,105 @@
+@reference "../../index.css";
+
+@layer components {
+.guide-result-container {
+    @apply w-[min(760px,100%)] mx-auto my-0;
+}
+
+.guide-result-flow {
+    @apply flex flex-col items-stretch;
+}
+
+.guide-result-step {
+    @apply w-full;
+}
+
+.guide-result-card {
+    @apply w-full bg-white border border-solid border-vora-line shadow-[0_10px_30px_rgba(63,52,38,0.06)] p-7 rounded-2xl;
+}
+
+.guide-result-card-header {
+    @apply mb-5 pb-4 border-b border-solid border-vora-line;
+}
+.guide-result-card-header h2 {
+    @apply text-2xl font-bold text-vora-ink m-0;
+}
+
+.guide-result-substeps {
+    @apply flex flex-col gap-2 m-0 p-0 list-none;
+}
+.guide-result-substeps li {
+    @apply flex items-start gap-3;
+}
+
+.guide-result-substep-mark {
+    @apply flex items-center justify-center shrink-0 w-6 h-6 rounded-full border border-solid border-vora-line text-white text-xs font-bold mt-2.5;
+}
+.guide-result-substep-mark.done {
+    @apply bg-vora-bronze border-vora-bronze;
+}
+
+.guide-result-substep-body {
+    @apply flex-1 flex flex-col items-start text-left bg-transparent border-0 rounded-lg px-2 py-2 cursor-default;
+}
+.guide-result-substep-body.clickable {
+    @apply cursor-pointer hover:[background:var(--color-vora-paper)];
+}
+
+.guide-result-substep-label {
+    @apply block text-[15px] font-semibold text-vora-ink;
+}
+
+.guide-result-notice {
+    @apply bg-white border border-solid border-vora-line rounded-2xl p-8 text-center;
+}
+.guide-result-notice strong {
+    @apply block text-lg text-vora-ink mb-2;
+}
+.guide-result-notice p {
+    @apply text-vora-muted text-[15px] leading-relaxed m-0;
+}
+
+/* ================= 상세 팝업 ================= */
+.guide-result-modal-backdrop {
+    @apply fixed inset-0 z-[100] flex items-center justify-center [background:rgba(23,32,29,0.48)] px-5;
+}
+.guide-result-modal {
+    @apply relative w-[min(560px,100%)] max-h-[80vh] overflow-y-auto bg-white border border-solid border-vora-line shadow-[0_20px_60px_rgba(0,0,0,0.25)] p-8 rounded-2xl;
+}
+.guide-result-modal-close {
+    @apply absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-transparent border-0 text-xl text-vora-muted cursor-pointer hover:text-vora-ink;
+}
+.guide-result-modal-stage {
+    @apply block text-[11px] font-extrabold tracking-widest text-vora-bronze mb-2;
+}
+.guide-result-modal h3 {
+    @apply text-2xl font-bold text-vora-ink mt-0 mb-4;
+}
+.guide-result-modal-body {
+    @apply text-[15px] text-vora-ink leading-relaxed;
+}
+.guide-result-modal-body p {
+    @apply m-0 mb-3;
+}
+.guide-result-modal-empty {
+    @apply text-vora-muted text-sm m-0;
+}
+.guide-result-modal-list {
+    @apply flex flex-col gap-2 m-0 mb-3 p-0 list-none;
+}
+.guide-result-modal-list li.checked {
+    @apply text-vora-ink font-medium;
+}
+.guide-result-modal-list li:not(.checked) {
+    @apply text-vora-muted;
+}
+.guide-result-modal-steps {
+    @apply flex flex-col gap-3 m-0 mb-3 pl-5;
+}
+.guide-result-modal-steps li strong {
+    @apply block text-vora-ink;
+}
+.guide-result-modal-tools {
+    @apply block text-xs text-vora-bronze-dark mt-1;
+}
+}

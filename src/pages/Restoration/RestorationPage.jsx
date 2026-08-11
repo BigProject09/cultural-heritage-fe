@@ -5,6 +5,7 @@ import "./RestorationPage.css";
 
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import {
+  getPreviousStep,
   moveToNextStep,
   moveToPreviousStep,
 } from "../../utils/flowNavigation";
@@ -87,6 +88,7 @@ function RestorationPage() {
         ...prev,
         restorationPost: true,
       }));
+      ctx.setPostRecord("restoration", { memo, photos });
 
       return true;
     } catch (error) {
@@ -118,7 +120,9 @@ function RestorationPage() {
     <div className="restoration-page">
       <div className="top-bar">
         <button
-          className="nav-btn"
+          className={`nav-btn${
+            getPreviousStep(approvedFlow, "복원") ? "" : " invisible"
+          }`}
           onClick={() => moveToPreviousStep(navigate, approvedFlow, "복원")}
         >
           ← 이전

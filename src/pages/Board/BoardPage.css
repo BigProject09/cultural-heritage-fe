@@ -1,16 +1,13 @@
 @reference "../../index.css";
 
 @layer components {
-.board-search-label {
-  @apply text-[color:var(--heritage-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[17px] mr-auto;
-}
 .board-post-number {
   @apply text-[color:var(--heritage-bronze)] inline-block text-[10px] tracking-[0.12em] min-w-5 mr-[15px];
 }
+.heritage-button.secondary.active {
+  @apply [background:var(--heritage-ink)] border-[color:var(--heritage-ink)] text-[color:var(--heritage-paper-2)];
+}
 @media (max-width: 720px) {
-  .board-search-label {
-    @apply mb-1;
-  }
   .board-panel {
     @apply p-4;
   }

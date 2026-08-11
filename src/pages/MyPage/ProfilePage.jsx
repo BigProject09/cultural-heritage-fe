@@ -46,7 +46,7 @@ function ProfilePage() {
     name: loginUser.name,
     role: profileExtra?.role || DEFAULT_ROLE,
     email: loginUser.email,
-    phone: loginUser.phone || "-",
+    memberGrade: loginUser.role === "ADMIN" ? "관리자" : "일반회원",
   };
 
   return (
@@ -81,8 +81,8 @@ function ProfilePage() {
             <dd>{profile.email}</dd>
           </div>
           <div className="account-info-row">
-            <dt>연락처</dt>
-            <dd>{profile.phone}</dd>
+            <dt>회원 등급</dt>
+            <dd>{profile.memberGrade}</dd>
           </div>
         </dl>
         <button
