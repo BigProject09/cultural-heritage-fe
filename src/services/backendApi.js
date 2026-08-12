@@ -5,10 +5,9 @@
  * 이 도메인에서만 쓰기 위해 별도로 둔다(기존 워크스페이스 흐름에 영향 없도록).
  */
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080").replace(
-  /\/+$/,
-  "",
-);
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+).replace(/\/+$/, "");
 
 const STATUS_FALLBACK_MESSAGE = {
   400: "입력값을 확인해주세요.",
@@ -19,7 +18,11 @@ const STATUS_FALLBACK_MESSAGE = {
 
 function getAccessToken() {
   try {
-    return JSON.parse(localStorage.getItem("loginUser") || "null")?.accessToken || "";
+    const loginUser = JSON.parse(
+      localStorage.getItem("loginUser") || "null"
+    );
+
+    return loginUser?.accessToken || loginUser?.token || "";
   } catch {
     return "";
   }
@@ -81,3 +84,4 @@ export async function request(path, options = {}) {
 
   return payload;
 }
+
