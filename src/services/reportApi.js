@@ -17,7 +17,7 @@
 const SPRING_BASE = (
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_BASE ||
-  "http://localhost:8080"
+  "https://api.vora-heritage.click"
 ).replace(/\/+$/, "");
 
 const REPORTS_BASE = `${SPRING_BASE}/api/reports`;

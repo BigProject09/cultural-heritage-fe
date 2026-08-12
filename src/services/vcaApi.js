@@ -9,7 +9,7 @@
 const SPRING_BASE = (
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_BASE ||
-  "http://localhost:8080"
+  "https://api.vora-heritage.click"
 ).replace(/\/+$/, "");
 
 async function readError(response) {
