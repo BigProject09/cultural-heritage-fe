@@ -68,25 +68,56 @@ const MOCK_RESULT = {
 };
 
 /**
+ * 다중 객체 감지(422 + code=MULTIPLE_OBJECTS_DETECTED) 전용 에러.
+ * VisualPage.jsx가 이걸 잡아서 "하나의 유물이 깨진 조각들이에요" 재시도
+ * 선택지를 보여줄지 판단한다 - 그냥 Error면 이 정보가 메시지 문자열에만
+ * 남아서 구분이 어렵다.
+ */
+export class MultipleObjectsDetectedError extends Error {
+  constructor(message, { detectedRegionCount, regionGroups } = {}) {
+    super(message);
+    this.name = "MultipleObjectsDetectedError";
+    this.detectedRegionCount = detectedRegionCount;
+    this.regionGroups = regionGroups;
+  }
+}
+
+/**
  * 오류 응답에서 사용자에게 표시할 메시지를 추출한다.
+ * detail이 문자열이 아니라 구조화된 객체(다중 객체 감지)면 그 신호를 살려서
+ * MultipleObjectsDetectedError를 던진다.
  */
 async function readError(response) {
   const copy = response.clone();
 
   try {
     const data = await response.json();
-    return data.message || data.detail || JSON.stringify(data);
-  } catch {
+    const detail = data.detail;
+
+    if (detail && typeof detail === "object" && detail.code === "MULTIPLE_OBJECTS_DETECTED") {
+      throw new MultipleObjectsDetectedError(detail.message || "다중 객체가 감지되었습니다.", {
+        detectedRegionCount: detail.detected_region_count,
+        regionGroups: detail.region_groups,
+      });
+    }
+
+    return data.message || detail || JSON.stringify(data);
+  } catch (error) {
+    if (error instanceof MultipleObjectsDetectedError) throw error;
     return copy.text();
   }
 }
 
 /**
  * 도자기 육안 상태조사 AI 분석 요청.
+ *
+ * treatAsSingleArtifact: 이전 호출이 MultipleObjectsDetectedError로
+ * 실패했고, 사용자가 "이건 하나의 유물이 깨진 조각들이다"라고 확인한 뒤
+ * 재요청할 때만 true로 준다. 기본은 false.
  */
 export async function inspectPottery(
   imageBlob,
-  { nCalls = 3, useVlmPattern = true } = {},
+  { nCalls = 3, useVlmPattern = true, treatAsSingleArtifact = false } = {},
 ) {
   if (USE_MOCK) {
     await new Promise((resolve) => window.setTimeout(resolve, MOCK_DELAY_MS));
@@ -101,6 +132,7 @@ export async function inspectPottery(
   const params = new URLSearchParams({
     n_calls: String(nCalls),
     use_vlm_pattern: String(useVlmPattern),
+    treat_as_single_artifact: String(treatAsSingleArtifact),
   });
 
   const response = await fetch(

@@ -42,13 +42,12 @@ function readStoredArtifactInfo() {
 
 /**
  * 화면에 <svg>로 실시간으로만 그려주던 문양 박스/라벨을, 실제 사진 위에
- * 합성해서 PNG Blob으로 만든다. 이 SVG 오버레이는 렌더링 중에만 존재하는
- * 가상의 레이어라서, 이렇게 캔버스로 "구워내지" 않으면 최종보고서 docx에도
- * 절대 반영되지 않는다.
- *
+ * 합성해서 하나의 PNG 파일로 만든다. 이 SVG 오버레이는 렌더링 중에만
+ * 존재하는 가상의 레이어라서, 이렇게 캔버스로 "구워내지" 않으면 페이지를
+ * 벗어나는 순간 사라지고 docx에도 절대 반영되지 않는다.
  * VisualPage.css의 .pattern-rect/.pattern-label 색상과 동일하게 그린다.
  */
-function compositeAnnotatedPhoto(imageEl, patterns) {
+async function compositeAnnotatedPhoto(imageEl, patterns) {
   const canvas = document.createElement("canvas");
   canvas.width = imageEl.naturalWidth;
   canvas.height = imageEl.naturalHeight;
@@ -88,24 +87,15 @@ function compositeAnnotatedPhoto(imageEl, patterns) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
 }
 
-/** Blob을 report-ai가 받는 순수 base64 문자열(data: 접두사 없음)로 바꾼다. */
-function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = String(reader.result).split(",")[1] || "";
-      resolve(base64);
-    };
-    reader.onerror = () => reject(reader.error || new Error("이미지 인코딩 실패"));
-    reader.readAsDataURL(blob);
-  });
+/** DB/AI 응답에 없는, 화면 표시용으로만 붙여둔 내부 필드(__로 시작)를 뗀다. */
+function stripInternalFields(result) {
+  if (!result) return result;
+  const clean = { ...result };
+  Object.keys(clean)
+    .filter((key) => key.startsWith("__"))
+    .forEach((key) => delete clean[key]);
+  return clean;
 }
-
-// 합성한 마스킹 사진을 새로고침 후에도 쓸 수 있게 보관하는 키.
-// FinalReportPage.jsx가 같은 문자열로 읽어간다(페이지끼리 import하지 않기 위해 상수만 맞춤).
-const ANNOTATED_IMAGE_STORAGE_KEY = "voraAnnotatedInspectionImageV1";
-// S3 업로드가 성공했을 때, 그 URL도 같은 방식으로 보관하는 키.
-const ANNOTATED_IMAGE_URL_STORAGE_KEY = "voraAnnotatedInspectionImageUrlV1";
 
 function VisualPage() {
   const navigate = useNavigate();
@@ -134,10 +124,11 @@ function VisualPage() {
   const imgRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // 사용자가 이 화면에서 새로 고른 육안조사용 사진(즉시 미리보기용 로컬 object URL).
-  // S3 업로드가 끝난 뒤의 실제 URL은 visualResult.__photoUrl로 그대로
-  // 흘려보내므로, 여기서 별도 state로 다시 들고 있지 않는다.
+  // 사용자가 이 화면에서 새로 고른 육안조사용 사진.
+  // inspectionPhotoUrl은 즉시 미리보기용(로컬 object URL), uploadedPhotoUrl은
+  // S3 업로드가 끝난 뒤의 실제 URL(추후 결과 저장 시 같이 보관할 값)이다.
   const [inspectionPhotoUrl, setInspectionPhotoUrl] = useState(null);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState(null);
 
   const isPottery = isPotteryMaterial(artifactInfo.material);
 
@@ -167,6 +158,21 @@ function VisualPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 같은 세션 안에서 이 유물의 육안조사를 이미 했었다면(예: 결과 확인 후
+  // 워크스페이스로 나갔다가 다시 들어온 경우), 사진 선택부터 다시 시키지
+  // 않고 마지막 결과를 그대로 복원한다. 마스킹 합성본이 있으면 그걸,
+  // 없으면 원본 사진을 보여준다 - 원본이어도 detail이 그대로 있으니
+  // <svg> 오버레이가 다시 그려져서 마스킹은 동일하게 보인다.
+  useEffect(() => {
+    if (resultIsCurrent && !inspectionPhotoUrl) {
+      const restoredUrl = visualResult.__annotatedPhotoUrl || visualResult.__photoUrl;
+      if (restoredUrl) {
+        setInspectionPhotoUrl(restoredUrl);
+        setStatus("done");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultIsCurrent]);
 
   const runInspection = async (file) => {
     setStatus("loading");
@@ -198,6 +204,7 @@ function VisualPage() {
       setUploadWarning(true);
     }
 
+    setUploadedPhotoUrl(uploadedUrl);
     setVisualResult({
       ...analysisSettled.value,
       __artifactId: artifactId,
@@ -225,6 +232,7 @@ function VisualPage() {
     const previewUrl = URL.createObjectURL(file);
 
     setInspectionPhotoUrl(previewUrl);
+    setUploadedPhotoUrl(null);
     setImageSize(null);
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -242,65 +250,32 @@ function VisualPage() {
 
   const handleComplete = async () => {
     if (artifactId) {
-      // 문양 박스(마스킹)가 화면에 떠 있으면 사진 위에 합성해서 base64로
-      // 들고 있는다. 최종보고서 docx를 만들 때 이 값을 그대로 실어 보낸다.
-      // 서버 업로드를 안 하므로 실패할 일이 거의 없지만, 실패해도 완료
-      // 처리 자체는 막지 않는다.
+      // 문양 박스(마스킹)가 화면에 떠 있는 상태면, 사진 위에 합성해서 진짜
+      // 이미지 파일로 만들어 업로드한다. 실패해도 완료 처리 자체는 막지
+      // 않는다 - 마스킹 저장은 부가 기능이라 이것 때문에 진행을 못 하게
+      // 하면 안 된다.
       if (resultIsCurrent && imgRef.current && visiblePatterns.length > 0) {
         try {
           const blob = await compositeAnnotatedPhoto(imgRef.current, visiblePatterns);
-          const annotatedImageBase64 = await blobToBase64(blob);
-
-          // AWS(S3)가 설정돼 있으면 원본 사진처럼 S3에 올려서 세션이 끝나도
-          // (다른 사람/다른 브라우저에서도) 재사용 가능한 URL로 남긴다.
-          // 자격증명이 없는 로컬 환경 등에서 업로드가 실패하면 base64로
-          // 대체한다 - 이번 세션/이번 보고서 다운로드는 그래도 되게 하기 위함.
-          let annotatedPhotoUrl = null;
-          try {
-            // handleComplete는 버튼 클릭으로만 실행되는 이벤트 핸들러라
-            // 렌더링 중에는 절대 호출되지 않는다 - Date.now()는 파일명
-            // 유일성만 위한 것이라 여기서는 안전하다.
-            // eslint-disable-next-line react-hooks/purity
-            const file = new File([blob], `annotated-${Date.now()}.png`, {
-              type: "image/png",
-            });
-            annotatedPhotoUrl = await uploadPhoto(file);
-          } catch (uploadError) {
-            console.warn(
-              "마스킹 사진 S3 업로드 실패 - base64로 대체합니다:",
-              uploadError,
-            );
-          }
+          const file = new File([blob], `annotated-${Date.now()}.png`, {
+            type: "image/png",
+          });
+          const annotatedPhotoUrl = await uploadPhoto(file);
 
           setVisualResult((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  __annotatedImageBase64: annotatedImageBase64,
-                  __annotatedPhotoUrl: annotatedPhotoUrl,
-                }
-              : prev,
+            prev ? { ...prev, __annotatedPhotoUrl: annotatedPhotoUrl } : prev,
           );
 
-          // Context(메모리)에만 두면 새로고침 한 번에 사라져서 보고서에
-          // 사진이 빠진다. 같은 탭 안에서는 살아남도록 sessionStorage에도
-          // 같이 넣어둔다(용량 초과 시 조용히 실패해도 메모리 쪽은 유효).
-          try {
-            sessionStorage.setItem(
-              `${ANNOTATED_IMAGE_STORAGE_KEY}:${artifactId}`,
-              annotatedImageBase64,
-            );
-            if (annotatedPhotoUrl) {
-              sessionStorage.setItem(
-                `${ANNOTATED_IMAGE_URL_STORAGE_KEY}:${artifactId}`,
-                annotatedPhotoUrl,
-              );
-            }
-          } catch (storageError) {
-            console.error("마스킹 사진 임시 저장 실패:", storageError);
-          }
+          const run = await getOrCreateAssessmentRun(artifactId);
+          await savePotteryInspectionResult(artifactId, run.id, {
+            ...stripInternalFields(visualResult),
+            detail: {
+              ...(visualResult.detail || {}),
+              annotated_image_url: annotatedPhotoUrl,
+            },
+          });
         } catch (compositeError) {
-          console.error("마스킹 사진 합성 실패:", compositeError);
+          console.error("마스킹 사진 합성/저장 실패:", compositeError);
         }
       }
 
