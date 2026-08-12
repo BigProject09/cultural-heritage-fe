@@ -1,4 +1,4 @@
-**
+/**
  * 회원/게시판/공지사항용 공용 백엔드 요청 헬퍼.
  *
  * data/workspaceProjects.js의 request()/getAccessToken() 패턴을 그대로 따르되,
