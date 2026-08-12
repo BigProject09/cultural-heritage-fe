@@ -134,11 +134,10 @@ function VisualPage() {
   const imgRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // 사용자가 이 화면에서 새로 고른 육안조사용 사진.
-  // inspectionPhotoUrl은 즉시 미리보기용(로컬 object URL), uploadedPhotoUrl은
-  // S3 업로드가 끝난 뒤의 실제 URL(추후 결과 저장 시 같이 보관할 값)이다.
+  // 사용자가 이 화면에서 새로 고른 육안조사용 사진(즉시 미리보기용 로컬 object URL).
+  // S3 업로드가 끝난 뒤의 실제 URL은 visualResult.__photoUrl로 그대로
+  // 흘려보내므로, 여기서 별도 state로 다시 들고 있지 않는다.
   const [inspectionPhotoUrl, setInspectionPhotoUrl] = useState(null);
-  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState(null);
 
   const isPottery = isPotteryMaterial(artifactInfo.material);
 
@@ -199,7 +198,6 @@ function VisualPage() {
       setUploadWarning(true);
     }
 
-    setUploadedPhotoUrl(uploadedUrl);
     setVisualResult({
       ...analysisSettled.value,
       __artifactId: artifactId,
@@ -227,7 +225,6 @@ function VisualPage() {
     const previewUrl = URL.createObjectURL(file);
 
     setInspectionPhotoUrl(previewUrl);
-    setUploadedPhotoUrl(null);
     setImageSize(null);
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -260,6 +257,10 @@ function VisualPage() {
           // 대체한다 - 이번 세션/이번 보고서 다운로드는 그래도 되게 하기 위함.
           let annotatedPhotoUrl = null;
           try {
+            // handleComplete는 버튼 클릭으로만 실행되는 이벤트 핸들러라
+            // 렌더링 중에는 절대 호출되지 않는다 - Date.now()는 파일명
+            // 유일성만 위한 것이라 여기서는 안전하다.
+            // eslint-disable-next-line react-hooks/purity
             const file = new File([blob], `annotated-${Date.now()}.png`, {
               type: "image/png",
             });
