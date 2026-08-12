@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./VisualPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
-import { inspectPottery } from "../../services/potteryInspectionApi";
+import {
+  inspectPottery,
+  MultipleObjectsDetectedError,
+} from "../../services/potteryInspectionApi";
 import { uploadPhoto } from "../../services/photoUploadApi";
 import {
   getOrCreateAssessmentRun,
@@ -125,6 +128,7 @@ function VisualPage() {
   const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [uploadWarning, setUploadWarning] = useState(false);
+  const [multiObjectPrompt, setMultiObjectPrompt] = useState(null);
   const [saveWarning, setSaveWarning] = useState(false);
   const [imageSize, setImageSize] = useState(null);
   const [zoom, setZoom] = useState(1);
@@ -174,6 +178,7 @@ function VisualPage() {
     setErrorMessage("");
     setUploadWarning(false);
     setSaveWarning(false);
+    setMultiObjectPrompt(null);
 
     // S3 업로드와 AI 분석은 서로 의존하지 않으므로 동시에 진행한다.
     // 업로드가 실패해도 분석 자체는 보여줄 수 있어야 하므로(반대도 마찬가지),
@@ -183,7 +188,29 @@ function VisualPage() {
       uploadPhoto(file),
     ]);
 
+    const uploadedUrl =
+      uploadSettled.status === "fulfilled" ? uploadSettled.value : null;
+    if (uploadSettled.status === "rejected") {
+      console.error("사진 S3 업로드 실패:", uploadSettled.reason);
+      setUploadWarning(true);
+    }
+
     if (analysisSettled.status === "rejected") {
+      if (analysisSettled.reason instanceof MultipleObjectsDetectedError) {
+        // 사진에서 서로 떨어진 영역이 여러 개 감지된 상태 - 마스크가 안
+        // 닿아있다고 반드시 "서로 다른 유물"인 건 아니다(깨진 조각들일
+        // 수도 있음). 사진만으로는 이걸 확정할 수 없으니 자동 판단 대신
+        // 사용자에게 확인받는다.
+        setMultiObjectPrompt({
+          file,
+          message: analysisSettled.reason.message,
+          detectedRegionCount: analysisSettled.reason.detectedRegionCount,
+          uploadedUrl,
+        });
+        setStatus("idle");
+        return;
+      }
+
       setErrorMessage(
         analysisSettled.reason?.message ||
           "분석 요청 중 오류가 발생했습니다. 다시 시도해주세요.",
@@ -192,16 +219,17 @@ function VisualPage() {
       return;
     }
 
-    const uploadedUrl =
-      uploadSettled.status === "fulfilled" ? uploadSettled.value : null;
-    if (uploadSettled.status === "rejected") {
-      console.error("사진 S3 업로드 실패:", uploadSettled.reason);
-      setUploadWarning(true);
-    }
+    await finishInspection(analysisSettled.value, uploadedUrl);
+  };
 
+  /**
+   * 분석 성공 이후 공통 처리(화면 반영 + DB 저장). 정상 분석 경로와,
+   * "하나의 유물이 깨진 조각들" 확인 후 재분석 경로가 이 부분을 공유한다.
+   */
+  const finishInspection = async (analysisResult, uploadedUrl) => {
     setUploadedPhotoUrl(uploadedUrl);
     setVisualResult({
-      ...analysisSettled.value,
+      ...analysisResult,
       __artifactId: artifactId,
       __photoUrl: uploadedUrl,
     });
@@ -212,11 +240,40 @@ function VisualPage() {
     // 경고만 띄운다 - 위 사진 업로드 실패 처리와 같은 방식이다.
     try {
       const run = await getOrCreateAssessmentRun(artifactId);
-      await savePotteryInspectionResult(artifactId, run.id, analysisSettled.value);
+      await savePotteryInspectionResult(artifactId, run.id, analysisResult);
     } catch (saveError) {
       console.error("육안조사 결과 저장 실패:", saveError);
       setSaveWarning(true);
     }
+  };
+
+  /** "하나의 유물이 깨진 조각들이에요" 확인 후 같은 사진으로 재분석한다. */
+  const handleConfirmSingleArtifact = async () => {
+    if (!multiObjectPrompt) return;
+    const { file, uploadedUrl } = multiObjectPrompt;
+
+    setStatus("loading");
+    setMultiObjectPrompt(null);
+
+    try {
+      const analysisResult = await inspectPottery(file, {
+        treatAsSingleArtifact: true,
+      });
+      await finishInspection(analysisResult, uploadedUrl);
+    } catch (retryError) {
+      setErrorMessage(
+        retryError?.message || "분석 요청 중 오류가 발생했습니다. 다시 시도해주세요.",
+      );
+      setStatus("error");
+    }
+  };
+
+  /** "서로 다른 유물이에요" - 재촬영을 안내하고 그냥 에러 상태로 보여준다. */
+  const handleRejectSingleArtifact = () => {
+    if (!multiObjectPrompt) return;
+    setErrorMessage(multiObjectPrompt.message);
+    setMultiObjectPrompt(null);
+    setStatus("error");
   };
 
   const handleFileChange = (e) => {
@@ -580,6 +637,34 @@ function VisualPage() {
             <button className="retry-btn" onClick={handleRetry}>
               다시 시도
             </button>
+          </section>
+        )}
+
+        {multiObjectPrompt && (
+          <section className="visual-notice visual-notice--confirm">
+            <div className="visual-notice-heading">
+              <p>
+                이 사진에서 서로 떨어진 조각이 {multiObjectPrompt.detectedRegionCount}개
+                감지됐어요.
+              </p>
+              <span className="visual-notice-info" title={multiObjectPrompt.message}>
+                !
+              </span>
+            </div>
+            <p className="visual-notice-question">
+              하나의 유물이 깨진 조각들인가요, 서로 다른 유물인가요?
+            </p>
+            <div className="visual-notice-actions">
+              <button
+                className="retry-btn retry-btn--primary"
+                onClick={handleConfirmSingleArtifact}
+              >
+                하나의 유물이에요
+              </button>
+              <button className="retry-btn retry-btn--secondary" onClick={handleRejectSingleArtifact}>
+                다른 유물이에요
+              </button>
+            </div>
           </section>
         )}
 
