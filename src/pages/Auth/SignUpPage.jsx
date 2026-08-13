@@ -6,13 +6,13 @@ import HeritageHeader from "../../components/workspace/HeritageHeader";
 import PrivacyPolicyModal from "../../components/common/PrivacyPolicyModal";
 import TermsOfServiceModal from "../../components/common/TermsOfServiceModal";
 import { signup } from "../../services/userApi";
-import { rememberNickname } from "../../utils/nicknameCache";
 
 function SignUpPage() {
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [userId, setUserId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -72,7 +72,7 @@ function SignUpPage() {
       return;
     }
 
-    if (!name || !userId || !password || !confirmPassword) {
+    if (!name || !userId || !email || !password || !confirmPassword) {
       setError("모든 항목을 입력해주세요.");
       return;
     }
@@ -86,6 +86,13 @@ function SignUpPage() {
 
     if (!idRegex.test(userId)) {
       setError("아이디는 영문, 숫자를 포함해 4~20자로 입력해주세요.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      setError("올바른 이메일 형식을 입력해주세요.");
       return;
     }
 
@@ -104,8 +111,12 @@ function SignUpPage() {
     setSubmitting(true);
 
     try {
-      await signup({ email: userId, password, nickName: name });
-      rememberNickname(userId, name);
+      await signup({
+        loginId: userId,
+        email,
+        password,
+        nickName: name,
+      });
 
       alert("회원가입이 완료되었습니다.");
       navigate("/login");
@@ -156,7 +167,7 @@ function SignUpPage() {
               <h3>개인정보 수집 및 이용 안내</h3>
 
               <p>
-                VORA는 회원가입과 서비스 제공을 위해 이름, 아이디,
+                VORA는 회원가입과 서비스 제공을 위해 이름, 아이디, 이메일,
                 비밀번호를 수집합니다.
               </p>
 
@@ -265,6 +276,18 @@ function SignUpPage() {
                   value={userId}
                   onChange={(event) => setUserId(event.target.value)}
                   autoComplete="username"
+                />
+              </label>
+
+              <label className="wide">
+                <span>이메일</span>
+
+                <input
+                  type="email"
+                  placeholder="example@vora.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  autoComplete="email"
                 />
               </label>
 
