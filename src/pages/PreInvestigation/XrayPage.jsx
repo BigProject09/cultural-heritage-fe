@@ -642,11 +642,19 @@ export default function XrayPage() {
             "DETECTING_FRAGMENTS",
             "DETECTING_ASSEMBLED",
             "MAPPING",
+            "REPORTING",
           ].includes(status.status)
         ) {
           if (status.status === "STITCHING") {
             setWorkflow(WORKFLOW.STITCH);
             setStitchView("UPLOAD");
+          } else if (status.status === "REPORTING") {
+            setWorkflow(WORKFLOW.INSPECTION);
+            setActiveStep(4);
+            setMaxReachedStep(4);
+            setInspectionLoading(false);
+            setInspectionStep(null);
+            setReportLoading(true);
           } else {
             setWorkflow(WORKFLOW.INSPECTION);
             setActiveStep(3);
@@ -671,6 +679,7 @@ export default function XrayPage() {
 
         setInspectionLoading(false);
         setInspectionStep(null);
+        setReportLoading(false);
 
         if (["PREPARED", "UPLOADING"].includes(status.status)) {
           setWorkflow(WORKFLOW.STITCH);
@@ -1025,6 +1034,13 @@ export default function XrayPage() {
     try {
       setStitchStatus("FINALIZING");
 
+      // 최종 렌더링을 기다리는 동안에도 다음 단계 화면으로 즉시 이동한다.
+      // 실제 결함 분석 버튼은 final 파일이 준비될 때까지 잠근다.
+      setWorkflow(WORKFLOW.INSPECTION);
+      setActiveStep(3);
+      setMaxReachedStep((current) => Math.max(current, 3));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
       setStitchMessage(
         correctedFragments?.length > 0
           ? "보정한 최종 배치를 저장하고 있습니다."
@@ -1049,6 +1065,7 @@ export default function XrayPage() {
           if (attempt === 3) {
             throw new Error(
               "최종 결합 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+              { cause: error },
             );
           }
 
@@ -1060,14 +1077,13 @@ export default function XrayPage() {
       setViewFile(finalFile);
       setStitchStatus("STITCHED");
       setStitchMessage("최종 결합 결과가 확정되었습니다.");
-
-      setWorkflow(WORKFLOW.INSPECTION);
-      setActiveStep(3);
-      setMaxReachedStep((current) => Math.max(current, 3));
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       setStitchStatus("STITCHED");
       setStitchMessage(`최종 결합 확정 실패: ${error.message}`);
+      setWorkflow(WORKFLOW.STITCH);
+      setStitchView("RESULT");
+      setActiveStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
@@ -1367,6 +1383,7 @@ export default function XrayPage() {
    */
   function goToWorkflowStep(step) {
     if (readOnlyMode && step !== 5) return;
+    if (stitchStatus === "FINALIZING" && step < 3) return;
     if (step > maxReachedStep) return;
 
     if (step === 1) {
@@ -1526,7 +1543,14 @@ export default function XrayPage() {
     <div className="xray-page">
       <div className="xray-container">
         <nav className="xray-breadcrumb" aria-label="현재 위치">
-          <button type="button" onClick={() => navigate(-1)}>
+          <button type="button" onClick={() => navigate("/")}>
+            홈
+          </button>
+          <span>/</span>
+          <button
+            type="button"
+            onClick={() => navigate(getArtifactRoute(artifactId))}
+          >
             유물 워크스페이스
           </button>
           <span>/</span>
@@ -1580,7 +1604,9 @@ export default function XrayPage() {
             const step = index + 1;
             const isActive = step === activeStep;
             const isCompleted = step < maxReachedStep && !isActive;
-            const isAvailable = step <= maxReachedStep;
+            const isAvailable =
+              step <= maxReachedStep &&
+              !(stitchStatus === "FINALIZING" && step < 3);
             const state = [
               isActive ? "active" : "",
               isCompleted ? "done" : "",
@@ -1888,6 +1914,15 @@ export default function XrayPage() {
 
               {!inspectionDone && (
                 <>
+                  <TaskProgress
+                    active={stitchStatus === "FINALIZING"}
+                    headline="최종 결합 결과를 확정하고 있습니다"
+                    detail="완료되는 즉시 이상 영역 분석을 시작할 수 있습니다."
+                    steps={[{ key: "FINALIZING", label: "최종 확정" }]}
+                    currentKey="FINALIZING"
+                    note="현재 화면을 벗어나도 서버 작업은 계속됩니다."
+                    showElapsed={false}
+                  />
                   <div className="analysis-notice">
                     <span className="ai-symbol" aria-hidden="true">
                       AI
@@ -1907,16 +1942,24 @@ export default function XrayPage() {
                     <button
                       className="text-button"
                       onClick={() => goToWorkflowStep(2)}
-                      disabled={inspectionLoading}
+                      disabled={
+                        inspectionLoading || stitchStatus === "FINALIZING"
+                      }
                     >
                       ← 결합 결과로 돌아가기
                     </button>
                     <button
                       className="xray-primary"
                       onClick={runInspection}
-                      disabled={inspectionLoading || !health?.ok}
+                      disabled={
+                        inspectionLoading ||
+                        stitchStatus === "FINALIZING" ||
+                        !health?.ok
+                      }
                     >
-                      {inspectionLoading
+                      {stitchStatus === "FINALIZING"
+                        ? "결합 결과 확정 중..."
+                        : inspectionLoading
                         ? "이상 영역 찾는 중..."
                         : "이상 영역 찾기"}
                       <span aria-hidden="true">→</span>
@@ -2201,8 +2244,12 @@ export default function XrayPage() {
                   style={reportStyle}
                   onStyleChange={setReportStyle}
                   loading={reportLoading}
-                  disabled={!health?.llmEnabled}
-                  disabledReason="문안 생성 서비스가 비활성화되어 있습니다."
+                  disabled={health === null || health.llmEnabled !== true}
+                  disabledReason={
+                    health === null
+                      ? "문안 생성 환경을 확인하고 있습니다."
+                      : "문안 생성 서비스가 비활성화되어 있습니다."
+                  }
                   onGenerate={runReport}
                   onChange={setReport}
                 />

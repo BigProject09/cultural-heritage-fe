@@ -125,7 +125,7 @@
   @apply items-center flex flex-col relative z-[1];
 }
 .heritage-status-node {
-  @apply items-center [background:var(--heritage-paper-2)] border cursor-pointer flex [font-family:Georgia,serif] h-[41px] justify-center w-[41px] mb-[5px] rounded-full border-solid border-[#a8a69d];
+  @apply items-center [background:var(--heritage-paper-2)] border cursor-default flex [font-family:Georgia,serif] h-[41px] justify-center w-[41px] mb-[5px] rounded-full border-solid border-[#a8a69d];
 }
 .heritage-status-node.done {
   @apply [background:var(--heritage-green)] border-[color:var(--heritage-green)] text-white;

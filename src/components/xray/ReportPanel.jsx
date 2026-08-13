@@ -39,7 +39,9 @@ export default function ReportPanel({
         요약됩니다.
       </p>
 
-      {disabled && <div className="alert">{disabledReason}</div>}
+      {disabled && disabledReason && (
+        <div className="alert">{disabledReason}</div>
+      )}
 
       <div className="style-picker">
         {STYLES.map((s) => (
