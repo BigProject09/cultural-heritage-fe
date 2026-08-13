@@ -435,7 +435,10 @@ function VisualPage() {
     <div className="visual-page">
       <div className="visual-container">
         <nav className="visual-breadcrumb" aria-label="현재 위치">
-          <button type="button" onClick={() => navigate(-1)}>
+          <button
+            type="button"
+            onClick={() => navigate(getArtifactRoute(artifactId))}
+          >
             유물 워크스페이스
           </button>
           <span>/</span>
