@@ -111,6 +111,14 @@ async function readError(response) {
 /**
  * 도자기 육안 상태조사 AI 분석 요청.
  *
+ * 내부적으로 "접수(POST /jobs) → 폴링(GET /jobs/{id})" 방식을 쓴다 - 문양이
+ * 여러 개면 확정된 문양별 상태조사까지 순차로 이어져 60초를 넘기는 경우가
+ * 있는데, 예전처럼 한 요청으로 끝까지 기다리면 ALB 유휴 타임아웃(기본
+ * 60초)에 걸려 504가 났다. 접수/폴링 각각은 항상 순식간에 끝나므로 이
+ * 문제가 없다. 호출하는 쪽(VisualPage.jsx)은 이 함수가 내부적으로 폴링을
+ *하는지 몰라도 된다 - 여전히 "기다리면 결과가 오거나, 실패하면 던지는"
+ * 함수 하나로 보인다.
+ *
  * treatAsSingleArtifact: 이전 호출이 MultipleObjectsDetectedError로
  * 실패했고, 사용자가 "이건 하나의 유물이 깨진 조각들이다"라고 확인한 뒤
  * 재요청할 때만 true로 준다. 기본은 false.
@@ -125,8 +133,21 @@ export async function inspectPottery(
     return MOCK_RESULT;
   }
 
-  const formData = new FormData();
+  const { jobId } = await createInspectionJob(imageBlob, {
+    nCalls,
+    useVlmPattern,
+    treatAsSingleArtifact,
+  });
 
+  return pollInspectionJob(jobId);
+}
+
+/** 분석을 접수만 하고 job_id를 즉시 받는다. */
+async function createInspectionJob(
+  imageBlob,
+  { nCalls, useVlmPattern, treatAsSingleArtifact },
+) {
+  const formData = new FormData();
   formData.append("image", imageBlob, "artifact.jpg");
 
   const params = new URLSearchParams({
@@ -136,18 +157,49 @@ export async function inspectPottery(
   });
 
   const response = await fetch(
-    `${API_BASE_URL}/pottery-inspection?${params.toString()}`,
-    {
-      method: "POST",
-      body: formData,
-    },
+    `${API_BASE_URL}/pottery-inspection/jobs?${params.toString()}`,
+    { method: "POST", body: formData },
   );
 
   if (!response.ok) {
     const detail = await readError(response);
-
     throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  return { jobId: data.job_id };
+}
+
+const POLL_INTERVAL_MS = 1500;
+// n_calls(최대 몇 번)와 확정 문양 수에 따라 오래 걸릴 수 있어 넉넉히 잡는다.
+// 이 값을 넘기면 이 폴링 함수만 포기하는 거고, 서버 쪽 작업 자체는 계속
+// 진행되다가 나중에 다시 조회하면 결과를 받을 수도 있다(막힌 게 아니다).
+const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+
+/** job이 끝날 때까지 주기적으로 상태를 확인한다. */
+async function pollInspectionJob(jobId) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < POLL_TIMEOUT_MS) {
+    const response = await fetch(`${API_BASE_URL}/pottery-inspection/jobs/${jobId}`);
+
+    if (response.ok) {
+      const data = await response.json();
+
+      if (data.status === "done") return data.result;
+
+      // queued | processing이면 계속 기다린다.
+    } else {
+      // 폴링 요청 자체가 실패 응답이면(404 등) 더 기다려도 의미가 없으니
+      // 바로 던진다. 분석 실패(422/500)도 여기로 온다.
+      const detail = await readError(response);
+      throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+    }
+
+    await new Promise((resolve) => window.setTimeout(resolve, POLL_INTERVAL_MS));
+  }
+
+  throw new Error(
+    "분석이 예상보다 오래 걸리고 있어요. 잠시 후 다시 시도해주세요.",
+  );
 }
