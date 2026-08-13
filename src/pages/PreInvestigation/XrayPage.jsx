@@ -309,10 +309,10 @@ function workflowDefectToRegions(defect, index) {
     analysisTarget: TARGET.ASSEMBLED,
     fileName: "assembled_xray.final.png",
     bbox,
-    position: originLabel,
-    confidence: null,
-    areaRatioPercent: null,
-    mappingStatus: originType,
+    position: defect?.geometry?.position || originLabel,
+    confidence: defect?.geometry?.confidence ?? null,
+    areaRatioPercent: defect?.geometry?.areaRatioPercent ?? null,
+    mappingStatus: defect?.geometry?.mappingStatus || originType,
     originType,
     userNote: `${originLabel}. 최종 결합본의 표시 영역을 확인하세요.`,
     reviewDecision,
@@ -563,6 +563,12 @@ export default function XrayPage() {
   const [reportStyle, setReportStyle] = useState("summary");
   const [isDragging, setIsDragging] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  // 페이지 재진입 직후에는 아직 서버의 실제 진행 단계를 모른다.
+  // 이 짧은 구간에 기본값(STEP 1 이미지 등록)이 번쩍이지 않도록
+  // 최초 XRAY_JOB 상태 조회가 끝날 때까지만 전용 로딩 화면을 표시한다.
+  const [initialJobLookupLoading, setInitialJobLookupLoading] = useState(
+    !USE_MOCK && Boolean(artifactId),
+  );
   const [resultLoading, setResultLoading] = useState(
     !USE_MOCK && Boolean(artifactId),
   );
@@ -571,11 +577,40 @@ export default function XrayPage() {
   const [restoredCompleted, setRestoredCompleted] = useState(false);
   const readOnlyMode = resultMode || restoredCompleted;
 
-  // AI 서비스 상태를 미리 확인해 두고 결함 분석 버튼 활성화에 쓴다
+  // AI 서비스 상태를 미리 확인한다.
+  // 문안 생성처럼 오래 걸리는 요청과 겹쳐 일시적으로 health 조회가 실패해도
+  // 곧바로 "서비스 비활성화"로 확정하지 않고 자동으로 다시 확인한다.
   useEffect(() => {
-    checkInspectionHealth()
-      .then(setHealth)
-      .catch((error) => setHealth({ ok: false, error: error.message }));
+    let cancelled = false;
+    let retryTimer = null;
+
+    async function refreshHealth() {
+      try {
+        const next = await checkInspectionHealth();
+        if (cancelled) return;
+
+        setHealth({ ...next, unreachable: false });
+        if (!next.ok) {
+          retryTimer = window.setTimeout(refreshHealth, 5000);
+        }
+      } catch (error) {
+        if (cancelled) return;
+
+        setHealth({
+          ok: false,
+          llmEnabled: null,
+          unreachable: true,
+          error: error.message,
+        });
+        retryTimer = window.setTimeout(refreshHealth, 5000);
+      }
+    }
+
+    refreshHealth();
+    return () => {
+      cancelled = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -616,12 +651,18 @@ export default function XrayPage() {
     }
 
     async function loadExistingJob() {
+      setInitialJobLookupLoading(true);
       setResultLoading(true);
       setResultError("");
       setRestoredCompleted(false);
 
       try {
         let status = await getStitchJobByArtifactId(artifactId);
+
+        // 이 시점부터는 실제 서버 상태를 알고 있으므로 STEP 1 기본 화면을
+        // 숨길 이유가 없다. 이후 이미지/layout 복원은 해당 단계 화면 안에서
+        // 계속 진행한다.
+        setInitialJobLookupLoading(false);
 
         if (!status) {
           if (resultMode) {
@@ -634,6 +675,75 @@ export default function XrayPage() {
         setStitchStatus(status.status);
         setStitchMessage(status.message || "기존 X-RAY 작업을 복원했습니다.");
 
+        // 무거운 이미지/JSON 다운로드가 끝날 때까지 화면 전체를 숨기지 않는다.
+        // 상태 API만 받은 즉시 현재 작업 단계부터 복원하고, 실제 파일은 아래에서
+        // 병렬로 채워 넣는다.
+        const initialHasFinalResult = String(status.resultUrl || "").includes(
+          "/result/final",
+        );
+
+        if (status.status === "STITCHED") {
+          setStitchView("RESULT");
+          if (initialHasFinalResult) {
+            setWorkflow(WORKFLOW.INSPECTION);
+            setActiveStep(3);
+            setMaxReachedStep(3);
+          } else {
+            setWorkflow(WORKFLOW.STITCH);
+            setActiveStep(2);
+            setMaxReachedStep(2);
+          }
+        } else if (status.status === "REPORTING") {
+          setWorkflow(WORKFLOW.INSPECTION);
+          setActiveStep(4);
+          setMaxReachedStep(4);
+          setReportLoading(true);
+
+          // REPORTING 중에도 결함 검수 결과는 이미 확정돼 있으므로 화면을 먼저
+          // 복원한다. 백엔드는 REPORTING 상태의 defects 조회를 허용한다.
+          try {
+            const defectResult = await getWorkflowDefects(status.jobId);
+            if (!cancelled) {
+              const loadedRegions = (defectResult.defects || []).flatMap(
+                workflowDefectToRegions,
+              );
+              setRegions(loadedRegions);
+              setSelectedId(loadedRegions[0]?.regionId || null);
+              setInspectionDone(true);
+            }
+          } catch (error) {
+            console.warn("문안 생성 중 결함 검수 결과 복원 실패:", error);
+          }
+        } else if (
+          [
+            "DETECTING",
+            "DETECTING_FRAGMENTS",
+            "DETECTING_ASSEMBLED",
+            "MAPPING",
+          ].includes(status.status)
+        ) {
+          setWorkflow(WORKFLOW.INSPECTION);
+          setActiveStep(3);
+          setMaxReachedStep(3);
+          setInspectionLoading(true);
+          setInspectionStep(
+            INSPECTION_STATUS_TO_STEP[status.status] || "FRAGMENTS",
+          );
+        } else if (status.status === "COMPLETED") {
+          setWorkflow(WORKFLOW.REVIEW);
+          setActiveStep(5);
+          setMaxReachedStep(5);
+        } else if (status.status === "REVIEW_READY") {
+          setWorkflow(WORKFLOW.INSPECTION);
+          setActiveStep(3);
+          setMaxReachedStep(4);
+        } else {
+          setWorkflow(WORKFLOW.STITCH);
+          setStitchView("UPLOAD");
+          setActiveStep(1);
+          setMaxReachedStep(1);
+        }
+
         while (
           !cancelled &&
           [
@@ -642,11 +752,19 @@ export default function XrayPage() {
             "DETECTING_FRAGMENTS",
             "DETECTING_ASSEMBLED",
             "MAPPING",
+            "REPORTING",
           ].includes(status.status)
         ) {
           if (status.status === "STITCHING") {
             setWorkflow(WORKFLOW.STITCH);
             setStitchView("UPLOAD");
+          } else if (status.status === "REPORTING") {
+            setWorkflow(WORKFLOW.INSPECTION);
+            setActiveStep(4);
+            setMaxReachedStep(4);
+            setInspectionLoading(false);
+            setInspectionStep(null);
+            setReportLoading(true);
           } else {
             setWorkflow(WORKFLOW.INSPECTION);
             setActiveStep(3);
@@ -671,6 +789,7 @@ export default function XrayPage() {
 
         setInspectionLoading(false);
         setInspectionStep(null);
+        setReportLoading(false);
 
         if (["PREPARED", "UPLOADING"].includes(status.status)) {
           setWorkflow(WORKFLOW.STITCH);
@@ -694,12 +813,15 @@ export default function XrayPage() {
         const hasFinalResult = String(status.resultUrl || "").includes(
           "/result/final",
         );
-        const assembled = await downloadAvailableStitchResult(
-          status,
-          `assembled-${artifactId}${hasFinalResult ? "-final" : ""}.png`,
-        );
-        const { sources, files } = await restoreSources(status.jobId);
-        const layout = await fetchStitchLayout(status.jobId);
+        const [assembled, restoredSources, layout] = await Promise.all([
+          downloadAvailableStitchResult(
+            status,
+            `assembled-${artifactId}${hasFinalResult ? "-final" : ""}.png`,
+          ),
+          restoreSources(status.jobId),
+          fetchStitchLayout(status.jobId),
+        ]);
+        const { sources, files } = restoredSources;
 
         if (cancelled) return;
 
@@ -766,7 +888,10 @@ export default function XrayPage() {
       } catch (error) {
         if (!cancelled) setResultError(error.message);
       } finally {
-        if (!cancelled) setResultLoading(false);
+        if (!cancelled) {
+          setInitialJobLookupLoading(false);
+          setResultLoading(false);
+        }
       }
     }
 
@@ -842,7 +967,9 @@ export default function XrayPage() {
   function handleDrop(event) {
     event.preventDefault();
     setIsDragging(false);
-    if (!stitchBusy) acceptFragmentFiles(event.dataTransfer.files);
+    if (!stitchBusy && !resultLoading) {
+      acceptFragmentFiles(event.dataTransfer.files);
+    }
   }
 
   /**
@@ -1049,6 +1176,7 @@ export default function XrayPage() {
           if (attempt === 3) {
             throw new Error(
               "최종 결합 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+              { cause: error },
             );
           }
 
@@ -1061,6 +1189,7 @@ export default function XrayPage() {
       setStitchStatus("STITCHED");
       setStitchMessage("최종 결합 결과가 확정되었습니다.");
 
+      // final layout 저장과 최종 이미지 조회가 모두 끝난 뒤에만 STEP 3으로 이동한다.
       setWorkflow(WORKFLOW.INSPECTION);
       setActiveStep(3);
       setMaxReachedStep((current) => Math.max(current, 3));
@@ -1068,6 +1197,10 @@ export default function XrayPage() {
     } catch (error) {
       setStitchStatus("STITCHED");
       setStitchMessage(`최종 결합 확정 실패: ${error.message}`);
+      setWorkflow(WORKFLOW.STITCH);
+      setStitchView("RESULT");
+      setActiveStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
@@ -1366,7 +1499,9 @@ export default function XrayPage() {
    * 지우지 않으며, 실제 파일을 바꾸거나 재결합할 때만 하위 결과를 초기화한다.
    */
   function goToWorkflowStep(step) {
+    if (resultLoading) return;
     if (readOnlyMode && step !== 5) return;
+    if (stitchStatus === "FINALIZING" && step < 3) return;
     if (step > maxReachedStep) return;
 
     if (step === 1) {
@@ -1420,6 +1555,12 @@ export default function XrayPage() {
   function showRetryNotice() {
     window.alert(
       "현재 재결합 기능은 지원 준비 중입니다. 백엔드 재결합 처리 정책 적용 후 사용할 수 있습니다.",
+    );
+  }
+
+  function showReanalysisNotice() {
+    window.alert(
+      "현재 재분석 기능은 지원 준비 중입니다. 백엔드 재분석 처리 정책 적용 후 사용할 수 있습니다.",
     );
   }
 
@@ -1526,7 +1667,14 @@ export default function XrayPage() {
     <div className="xray-page">
       <div className="xray-container">
         <nav className="xray-breadcrumb" aria-label="현재 위치">
-          <button type="button" onClick={() => navigate(-1)}>
+          <button type="button" onClick={() => navigate("/")}>
+            홈
+          </button>
+          <span>/</span>
+          <button
+            type="button"
+            onClick={() => navigate(getArtifactRoute(artifactId))}
+          >
             유물 워크스페이스
           </button>
           <span>/</span>
@@ -1580,7 +1728,10 @@ export default function XrayPage() {
             const step = index + 1;
             const isActive = step === activeStep;
             const isCompleted = step < maxReachedStep && !isActive;
-            const isAvailable = step <= maxReachedStep;
+            const isAvailable =
+              !resultLoading &&
+              step <= maxReachedStep &&
+              !(stitchStatus === "FINALIZING" && step < 3);
             const state = [
               isActive ? "active" : "",
               isCompleted ? "done" : "",
@@ -1614,8 +1765,8 @@ export default function XrayPage() {
           })}
         </ol>
 
-        {resultLoading && (
-          <div className="xray-message">
+        {initialJobLookupLoading && (
+          <div className="xray-message" role="status" aria-live="polite">
             기존 X-RAY 작업을 불러오는 중입니다.
           </div>
         )}
@@ -1623,7 +1774,7 @@ export default function XrayPage() {
           <div className="xray-message error">{resultError}</div>
         )}
 
-        {!resultLoading && !resultError && workflow === WORKFLOW.STITCH && (
+        {!initialJobLookupLoading && workflow === WORKFLOW.STITCH && (
           <main className="workflow-content">
             {stitchView === "UPLOAD" && (
               <section className="xray-section">
@@ -1704,7 +1855,7 @@ export default function XrayPage() {
                     handleFragmentChange(event);
                     event.target.value = "";
                   }}
-                  disabled={stitchBusy}
+                  disabled={stitchBusy || resultLoading}
                 />
 
                 {fragmentFiles.length > 0 && (
@@ -1714,7 +1865,7 @@ export default function XrayPage() {
                         key={`${file.name}-${file.lastModified}`}
                         file={file}
                         index={index}
-                        disabled={stitchBusy}
+                        disabled={stitchBusy || resultLoading}
                         onRemove={removeFragment}
                       />
                     ))}
@@ -1729,7 +1880,9 @@ export default function XrayPage() {
                   <button
                     className="xray-primary"
                     onClick={runStitch}
-                    disabled={fragmentFiles.length < 2 || stitchBusy}
+                    disabled={
+                      fragmentFiles.length < 2 || stitchBusy || resultLoading
+                    }
                   >
                     {stitchBusy ? "조각 결합 중..." : "조각 결합 시작"}
                     <span aria-hidden="true">→</span>
@@ -1854,9 +2007,23 @@ export default function XrayPage() {
                       <button
                         className="xray-primary"
                         onClick={confirmStitch}
+                        disabled={stitchStatus === "FINALIZING" || resultLoading}
+                        aria-busy={stitchStatus === "FINALIZING"}
                       >
-                        이 결과로 분석 계속하기
-                        <span aria-hidden="true">→</span>
+                        {stitchStatus === "FINALIZING" ? (
+                          <>
+                            <span
+                              className="xray-button-spinner"
+                              aria-hidden="true"
+                            />
+                            최종 결과 불러오는 중...
+                          </>
+                        ) : (
+                          <>
+                            이 결과로 분석 계속하기
+                            <span aria-hidden="true">→</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1865,7 +2032,7 @@ export default function XrayPage() {
           </main>
         )}
 
-        {!resultLoading && !resultError && workflow === WORKFLOW.INSPECTION && (
+        {!initialJobLookupLoading && workflow === WORKFLOW.INSPECTION && (
           <main className="workflow-content">
             <section className="xray-section analysis-launch">
               <div className="section-heading compact">
@@ -1888,6 +2055,15 @@ export default function XrayPage() {
 
               {!inspectionDone && (
                 <>
+                  <TaskProgress
+                    active={stitchStatus === "FINALIZING"}
+                    headline="최종 결합 결과를 확정하고 있습니다"
+                    detail="완료되는 즉시 이상 영역 분석을 시작할 수 있습니다."
+                    steps={[{ key: "FINALIZING", label: "최종 확정" }]}
+                    currentKey="FINALIZING"
+                    note="현재 화면을 벗어나도 서버 작업은 계속됩니다."
+                    showElapsed={false}
+                  />
                   <div className="analysis-notice">
                     <span className="ai-symbol" aria-hidden="true">
                       AI
@@ -1907,16 +2083,25 @@ export default function XrayPage() {
                     <button
                       className="text-button"
                       onClick={() => goToWorkflowStep(2)}
-                      disabled={inspectionLoading}
+                      disabled={
+                        inspectionLoading || stitchStatus === "FINALIZING"
+                      }
                     >
                       ← 결합 결과로 돌아가기
                     </button>
                     <button
                       className="xray-primary"
                       onClick={runInspection}
-                      disabled={inspectionLoading || !health?.ok}
+                      disabled={
+                        resultLoading ||
+                        inspectionLoading ||
+                        stitchStatus === "FINALIZING" ||
+                        !health?.ok
+                      }
                     >
-                      {inspectionLoading
+                      {stitchStatus === "FINALIZING"
+                        ? "결합 결과 확정 중..."
+                        : inspectionLoading
                         ? "이상 영역 찾는 중..."
                         : "이상 영역 찾기"}
                       <span aria-hidden="true">→</span>
@@ -1952,8 +2137,7 @@ export default function XrayPage() {
                   <button
                     type="button"
                     className="text-button"
-                    onClick={runInspection}
-                    disabled={inspectionLoading}
+                    onClick={showReanalysisNotice}
                   >
                     다시 분석
                   </button>
@@ -2201,8 +2385,21 @@ export default function XrayPage() {
                   style={reportStyle}
                   onStyleChange={setReportStyle}
                   loading={reportLoading}
-                  disabled={!health?.llmEnabled}
-                  disabledReason="문안 생성 서비스가 비활성화되어 있습니다."
+                  disabled={
+                    health === null ||
+                    health.unreachable === true ||
+                    health.ok !== true ||
+                    health.llmEnabled !== true
+                  }
+                  disabledReason={
+                    health === null
+                      ? "문안 생성 환경을 확인하고 있습니다."
+                      : health.unreachable === true || health.ok !== true
+                        ? "문안 생성 서비스 연결을 확인하고 있습니다. 잠시 후 자동으로 다시 확인합니다."
+                        : health.llmEnabled !== true
+                          ? "문안 생성 서비스가 비활성화되어 있습니다. 서버의 OPENAI_API_KEY 설정을 확인하세요."
+                          : ""
+                  }
                   onGenerate={runReport}
                   onChange={setReport}
                 />
@@ -2236,7 +2433,7 @@ export default function XrayPage() {
           </main>
         )}
 
-        {!resultLoading && !resultError && workflow === WORKFLOW.REVIEW && (
+        {!initialJobLookupLoading && workflow === WORKFLOW.REVIEW && (
           <main className="workflow-content">
             <section className="final-review-section">
               <div className="section-heading">

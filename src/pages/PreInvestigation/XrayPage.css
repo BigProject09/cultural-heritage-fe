@@ -249,6 +249,15 @@
 .xray-primary {
   @apply inline-flex min-h-[46px] items-center justify-center gap-3.5 [background:var(--xray-primary)] text-white;
 }
+.xray-button-spinner {
+  @apply block w-4 h-4 rounded-full border-2 border-solid border-white/40 border-t-white;
+  animation: xray-button-spin 0.75s linear infinite;
+}
+@keyframes xray-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .xray-secondary {
   @apply border [background:#fff] text-[#4e5968] border-solid border-[#d5dbe1];
 }

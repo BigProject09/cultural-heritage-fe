@@ -60,12 +60,19 @@ function readStoredXrayJobs() {
   }
 }
 
-export function rememberXrayJob(artifactId, jobId, xrayCount = 0) {
+export function rememberXrayJob(
+  artifactId,
+  jobId,
+  xrayCount = 0,
+  status = null,
+) {
   if (!artifactId || !jobId) return;
   const jobs = readStoredXrayJobs();
+  const previous = jobs[artifactId] || {};
   jobs[artifactId] = {
     jobId,
-    xrayCount: Number(xrayCount) || 0,
+    xrayCount: Number(xrayCount) || Number(previous.xrayCount) || 0,
+    status: status || previous.status || null,
     updatedAt: new Date().toISOString(),
   };
   localStorage.setItem(XRAY_JOB_STORAGE_KEY, JSON.stringify(jobs));
