@@ -10,7 +10,7 @@ function BoardWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const loginUser = readLoginUser();
-  const writer = loginUser?.name ? maskName(loginUser.name) : "익명";
+  const writer = loginUser?.nickName ? maskName(loginUser.nickName) : "익명";
 
   const editPostId = location.state?.editPostId;
   const editMode = Boolean(editPostId);

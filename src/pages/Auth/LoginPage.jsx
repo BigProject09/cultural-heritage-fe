@@ -6,7 +6,6 @@ import PrivacyPolicyModal from "../../components/common/PrivacyPolicyModal";
 import TermsOfServiceModal from "../../components/common/TermsOfServiceModal";
 import { login } from "../../services/userApi";
 import { decodeJwtPayload } from "../../utils/jwt";
-import { recallNickname } from "../../utils/nicknameCache";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -23,15 +22,15 @@ function LoginPage() {
     setSubmitting(true);
 
     try {
-      const { token } = await login({ email: userId, password });
-      const payload = decodeJwtPayload(token);
-      const resolvedId = payload?.sub || userId;
+      const response = await login({ loginId: userId, password });
+      const payload = decodeJwtPayload(response.token);
 
       const loginUser = {
-        email: resolvedId,
-        name: recallNickname(resolvedId) || resolvedId,
-        role: payload?.role || "USER",
-        accessToken: token,
+        loginId: response.loginId || payload?.sub || userId,
+        email: response.email || "",
+        name: response.nickName || response.loginId || payload?.sub || userId,
+        role: response.role || payload?.role || "USER",
+        accessToken: response.token,
       };
 
       localStorage.setItem("loginUser", JSON.stringify(loginUser));

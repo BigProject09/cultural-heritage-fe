@@ -46,9 +46,9 @@ function BoardDetailPage() {
       .then(setIsOwner)
       .catch(() => setIsOwner(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, loginUser?.email]);
+  }, [id, loginUser?.loginId]);
 
-  const canEdit = isOwner;
+  const canEdit = isOwner || isAdmin;
   const canDelete = isOwner || isAdmin;
 
   const handleDelete = async () => {

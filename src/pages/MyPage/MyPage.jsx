@@ -154,8 +154,12 @@ function MyPage() {
               <dd>{loginUser.name}</dd>
             </div>
             <div className="account-info-row">
+              <dt>아이디</dt>
+              <dd>{loginUser.loginId || "-"}</dd>
+            </div>
+            <div className="account-info-row">
               <dt>이메일</dt>
-              <dd>{loginUser.email}</dd>
+              <dd>{loginUser.email || "-"}</dd>
             </div>
             <div className="account-info-row">
               <dt>회원 등급</dt>
@@ -180,7 +184,7 @@ function MyPage() {
           <dl className="account-info-list">
             <div className="account-info-row">
               <dt>로그인 방식</dt>
-              <dd>이메일 로그인</dd>
+              <dd>아이디 로그인</dd>
             </div>
             <div className="account-info-row">
               <dt>계정 상태</dt>

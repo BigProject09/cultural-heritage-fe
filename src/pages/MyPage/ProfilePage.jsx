@@ -45,6 +45,7 @@ function ProfilePage() {
   const profile = {
     name: loginUser.name,
     role: profileExtra?.role || DEFAULT_ROLE,
+    loginId: loginUser.loginId,
     email: loginUser.email,
     memberGrade: loginUser.role === "ADMIN" ? "관리자" : "일반회원",
   };
@@ -77,8 +78,12 @@ function ProfilePage() {
             <dd>{profile.role}</dd>
           </div>
           <div className="account-info-row">
+            <dt>아이디</dt>
+            <dd>{profile.loginId || "-"}</dd>
+          </div>
+          <div className="account-info-row">
             <dt>이메일</dt>
-            <dd>{profile.email}</dd>
+            <dd>{profile.email || "-"}</dd>
           </div>
           <div className="account-info-row">
             <dt>회원 등급</dt>
