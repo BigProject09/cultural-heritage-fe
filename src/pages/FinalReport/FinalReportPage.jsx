@@ -53,7 +53,8 @@ function blobToBase64(blob) {
       const base64 = String(reader.result).split(",")[1] || "";
       resolve(base64);
     };
-    reader.onerror = () => reject(reader.error || new Error("이미지 인코딩 실패"));
+    reader.onerror = () =>
+      reject(reader.error || new Error("이미지 인코딩 실패"));
     reader.readAsDataURL(blob);
   });
 }
@@ -62,14 +63,18 @@ function blobToBase64(blob) {
 async function urlToBase64(url) {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`이미지를 불러오지 못했습니다 (HTTP ${response.status}): ${url}`);
+    throw new Error(
+      `이미지를 불러오지 못했습니다 (HTTP ${response.status}): ${url}`,
+    );
   }
   return blobToBase64(await response.blob());
 }
 
 /** section.key가 없는 구버전 report_json도 대비해 title로 한 번 더 판별한다. */
 function isPreInvestigationSection(section) {
-  return section.key === "pre_investigation" || section.title?.includes("처리 전");
+  return (
+    section.key === "pre_investigation" || section.title?.includes("처리 전")
+  );
 }
 
 function percent(score) {
@@ -87,15 +92,21 @@ function VisualInspectionBadges({ detail, xrayDamageCount }) {
   const badges = [];
   if (detail?.completeness?.prediction) {
     const value = percent(detail.completeness.score);
-    badges.push(`완전도 ${detail.completeness.prediction}${value ? ` (${value})` : ""}`);
+    badges.push(
+      `완전도 ${detail.completeness.prediction}${value ? ` (${value})` : ""}`,
+    );
   }
   if (detail?.glaze) {
     const value = percent(detail.glaze.score);
-    badges.push(`광택${value ? ` ${value}` : ""}${detail.glaze.prediction ? ` · ${detail.glaze.prediction}` : ""}`);
+    badges.push(
+      `광택${value ? ` ${value}` : ""}${detail.glaze.prediction ? ` · ${detail.glaze.prediction}` : ""}`,
+    );
   }
   if (detail?.era?.prediction) {
     const value = percent(detail.era.score);
-    badges.push(`시대 ${detail.era.prediction} 예측${value ? ` (모델점수 ${value})` : ""}`);
+    badges.push(
+      `시대 ${detail.era.prediction} 예측${value ? ` (모델점수 ${value})` : ""}`,
+    );
   }
   if (typeof xrayDamageCount === "number") {
     badges.push(
@@ -149,6 +160,8 @@ function ReportSection({ section, index, badgeSlot, photoSlot }) {
     );
   }
 
+  const parts = Array.isArray(section.parts) ? section.parts : [];
+
   const paragraphs = String(section.body || "")
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
@@ -159,13 +172,38 @@ function ReportSection({ section, index, badgeSlot, photoSlot }) {
       <h3>
         {index}. {section.title}
       </h3>
+
       {badgeSlot}
-      {photoSlot}
-      {paragraphs.length === 0 ? (
+
+      {parts.length > 0 ? (
+        parts.map((part, partIndex) => {
+          const partParagraphs = String(part.body || "")
+            .split(/\n\s*\n/)
+            .map((paragraph) => paragraph.trim())
+            .filter(Boolean);
+
+          return (
+            <div
+              key={part.key || `${section.key || index}-part-${partIndex}`}
+              className="report-preview-part"
+            >
+              {part.title && <h4>{part.title}</h4>}
+
+              {partParagraphs.length === 0 ? (
+                <p className="report-preview-empty">내용이 없습니다.</p>
+              ) : (
+                partParagraphs.map((paragraph, i) => <p key={i}>{paragraph}</p>)
+              )}
+            </div>
+          );
+        })
+      ) : paragraphs.length === 0 ? (
         <p className="report-preview-empty">내용이 없습니다.</p>
       ) : (
         paragraphs.map((paragraph, i) => <p key={i}>{paragraph}</p>)
       )}
+
+      {photoSlot}
     </section>
   );
 }
@@ -177,7 +215,8 @@ function ReportSection({ section, index, badgeSlot, photoSlot }) {
  * 없으면 이번 세션에서 합성한 base64를 쓴다.
  */
 function resolvePreviewPhotoSrc(visualResult, artifactId) {
-  if (visualResult?.__annotatedPhotoUrl) return visualResult.__annotatedPhotoUrl;
+  if (visualResult?.__annotatedPhotoUrl)
+    return visualResult.__annotatedPhotoUrl;
   if (visualResult?.__annotatedImageBase64) {
     return `data:image/png;base64,${visualResult.__annotatedImageBase64}`;
   }
@@ -336,8 +375,9 @@ function FinalReportPage() {
         hasXray: Boolean(xrayReportText),
         hasPottery: Boolean(potteryInspection),
         potteryDetail: potteryInspection?.detail || null,
-        xrayDamageCount: xrayRegions.filter((r) => r.review_decision === "damage")
-          .length,
+        xrayDamageCount: xrayRegions.filter(
+          (r) => r.review_decision === "damage",
+        ).length,
       });
     } catch (requestError) {
       setGenerateError(requestError.message || "보고서 생성에 실패했습니다.");
@@ -366,7 +406,8 @@ function FinalReportPage() {
     // 세션/기기에서도 유효), 없으면 이번 세션에서 합성한 base64를 쓴다.
     // 업로드 URL만 있고 base64가 없는 경우(다른 세션에서 이어받은 경우 등)를
     // 대비해 URL이면 fetch해서 base64로 변환한다 - report-ai는 base64만 받는다.
-    let annotatedImageBase64 = visualResultForThisArtifact?.__annotatedImageBase64;
+    let annotatedImageBase64 =
+      visualResultForThisArtifact?.__annotatedImageBase64;
     let annotatedPhotoUrl = visualResultForThisArtifact?.__annotatedPhotoUrl;
 
     if (!annotatedImageBase64 && !annotatedPhotoUrl) {
@@ -387,13 +428,24 @@ function FinalReportPage() {
         const base64 = await urlToBase64(annotatedPhotoUrl);
         addPhoto("pre_investigation", "육안조사 문양 식별 결과", base64);
       } catch (photoError) {
-        console.error("마스킹 사진(S3) 첨부 실패, base64로 재시도:", photoError);
+        console.error(
+          "마스킹 사진(S3) 첨부 실패, base64로 재시도:",
+          photoError,
+        );
         if (annotatedImageBase64) {
-          addPhoto("pre_investigation", "육안조사 문양 식별 결과", annotatedImageBase64);
+          addPhoto(
+            "pre_investigation",
+            "육안조사 문양 식별 결과",
+            annotatedImageBase64,
+          );
         }
       }
     } else if (annotatedImageBase64) {
-      addPhoto("pre_investigation", "육안조사 문양 식별 결과", annotatedImageBase64);
+      addPhoto(
+        "pre_investigation",
+        "육안조사 문양 식별 결과",
+        annotatedImageBase64,
+      );
     }
 
     const rememberedXray = getRememberedXrayJob(project.artifactId);
@@ -686,7 +738,9 @@ function FinalReportPage() {
                   {generating ? "다시 생성 중..." : "다시 생성하기"}
                 </button>
                 <button onClick={handleDownload} disabled={downloading}>
-                  {downloading ? "사진 첨부 중..." : "저장하기 (.docx 다운로드)"}
+                  {downloading
+                    ? "사진 첨부 중..."
+                    : "저장하기 (.docx 다운로드)"}
                 </button>
               </div>
             </div>
