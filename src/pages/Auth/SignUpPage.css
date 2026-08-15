@@ -212,3 +212,33 @@
     }
   }
 }
+
+@layer components {
+.heritage-signup-grid label {
+  min-width: 0;
+}
+.heritage-signup-grid .heritage-password-field input {
+  margin: 0;
+}
+.heritage-signup-grid .heritage-field-message {
+  margin: 7px 0 0;
+}
+.heritage-signup-privacy-note {
+  margin: 22px 0 0;
+  padding: 13px 15px;
+  border: 1px solid rgba(97, 115, 93, 0.22);
+  border-radius: 8px;
+  background: rgba(97, 115, 93, 0.06);
+  color: #687069;
+  font-size: 11px;
+  line-height: 1.6;
+}
+@media (max-width: 640px) {
+  .heritage-signup-grid {
+    grid-template-columns: 1fr;
+  }
+  .heritage-signup-grid label.wide {
+    grid-column: auto;
+  }
+}
+}
