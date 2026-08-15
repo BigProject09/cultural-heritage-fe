@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -58,6 +58,8 @@ const SEVERITY_LABELS = {
 
 function BondingWorkPage() {
   const navigate = useNavigate();
+  const { artifactId: routeArtifactId = "" } = useParams();
+  const artifactId = decodeURIComponent(routeArtifactId);
 
   const ctx = useDisassembly();
   const {
@@ -84,7 +86,7 @@ function BondingWorkPage() {
 
     setBeforeUploading(true);
     try {
-      const url = await uploadPhoto(file);
+      const url = await uploadPhoto(file, artifactId);
       setBeforePhoto(url);
     } catch (error) {
       console.error(error);
@@ -100,7 +102,7 @@ function BondingWorkPage() {
 
     setAfterUploading(true);
     try {
-      const url = await uploadPhoto(file);
+      const url = await uploadPhoto(file, artifactId);
       setAfterPhoto(url);
     } catch (error) {
       console.error(error);
