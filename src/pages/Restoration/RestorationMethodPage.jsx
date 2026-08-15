@@ -91,7 +91,7 @@ function RestorationMethodPage({
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -108,10 +108,8 @@ function RestorationMethodPage({
     }
 
     setStepSaving(completedKey, true);
-    navigate(backPath);
 
-    (async () => {
-      try {
+    try {
         const result = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -125,14 +123,15 @@ function RestorationMethodPage({
 
           [completedKey]: true,
         }));
-      } catch (error) {
+
+      navigate(backPath);
+    } catch (error) {
         console.error(error);
 
         alert(`${title} 단계 저장 실패`);
-      } finally {
+    } finally {
         setStepSaving(completedKey, false);
-      }
-    })();
+    }
   };
 
   return (

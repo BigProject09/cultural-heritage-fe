@@ -58,17 +58,15 @@ function BondingMaterialPage() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
     }
 
     setStepSaving("bondingMaterial", true);
-    navigate("/bonding");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             adhesive,
@@ -83,13 +81,14 @@ function BondingMaterialPage() {
           ...prev,
           bondingMaterial: true,
         }));
-      } catch (error) {
+
+      navigate("/bonding");
+    } catch (error) {
         console.error(error);
         alert("접합제 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("bondingMaterial", false);
-      }
-    })();
+    }
   };
 
   if (!bondingAdhesive) {

@@ -131,12 +131,10 @@ function StrengtheningWettingPage() {
     }
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
     setStepSaving("strengtheningWetting", true);
-    navigate("/strengthening");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             action: "proceed",
@@ -149,13 +147,14 @@ function StrengtheningWettingPage() {
           ...prev,
           strengtheningWetting: true,
         }));
-      } catch (error) {
+
+      navigate("/strengthening");
+    } catch (error) {
         console.error(error);
         alert("습윤 테스트 결과 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("strengtheningWetting", false);
-      }
-    })();
+    }
   };
 
   return (

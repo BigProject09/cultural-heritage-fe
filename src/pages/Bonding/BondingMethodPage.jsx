@@ -84,7 +84,7 @@ function BondingMethodPage() {
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -101,10 +101,8 @@ function BondingMethodPage() {
     }
 
     setStepSaving("bondingMethod", true);
-    navigate("/bonding");
 
-    (async () => {
-      try {
+    try {
         const result = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -118,14 +116,15 @@ function BondingMethodPage() {
 
           bondingMethod: true,
         }));
-      } catch (error) {
+
+      navigate("/bonding");
+    } catch (error) {
         console.error(error);
 
         alert("접합 단계 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("bondingMethod", false);
-      }
-    })();
+    }
   };
 
   return (

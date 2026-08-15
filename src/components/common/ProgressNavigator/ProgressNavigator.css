@@ -62,6 +62,15 @@
 .progress-item.upcoming .progress-title {
   @apply text-[#8b929c];
 }
+.progress-restart-btn {
+  @apply mt-6 w-full rounded-xl border border-solid border-guide-primary bg-white px-3 py-3 text-xs font-bold text-guide-primary transition-colors;
+}
+.progress-restart-btn:hover {
+  @apply bg-[#fff8ef];
+}
+.progress-restart-copy {
+  @apply mt-2 text-[10px] leading-relaxed text-[#8b929c];
+}
 
 @media (max-width: 900px) {
   .progress-wrapper {

@@ -162,12 +162,10 @@ function BondingWorkPage() {
   };
 
   // 검증 결과를 그대로 승인하고 다음(접합 방법 안내)으로 진행한다.
-  const handleProceed = () => {
+  const handleProceed = async () => {
     setStepSaving("bondingWork", true);
-    navigate("/bonding");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: { action: "proceed" },
         });
@@ -178,13 +176,14 @@ function BondingWorkPage() {
           ...prev,
           bondingWork: true,
         }));
-      } catch (error) {
+
+      navigate("/bonding");
+    } catch (error) {
         console.error(error);
         alert("임시접합 검증 결과 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("bondingWork", false);
-      }
-    })();
+    }
   };
 
   return (

@@ -145,17 +145,15 @@ function StrengtheningMaterialPage() {
     setSolvent(name);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
     }
 
     setStepSaving("strengtheningMaterial", true);
-    navigate("/strengthening");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             agent,
@@ -171,13 +169,14 @@ function StrengtheningMaterialPage() {
           ...prev,
           strengtheningMaterial: true,
         }));
-      } catch (error) {
+
+      navigate("/strengthening");
+    } catch (error) {
         console.error(error);
         alert("강화제 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("strengtheningMaterial", false);
-      }
-    })();
+    }
   };
 
   if (!strengtheningRecommendation) {

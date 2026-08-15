@@ -80,7 +80,7 @@ function DisassemblyMethodPage() {
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -95,10 +95,8 @@ function DisassemblyMethodPage() {
     }
 
     setStepSaving("method", true);
-    navigate("/disassembly");
 
-    (async () => {
-      try {
+    try {
         const result = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -111,13 +109,14 @@ function DisassemblyMethodPage() {
           ...prev,
           method: true,
         }));
-      } catch (error) {
+
+      navigate("/disassembly");
+    } catch (error) {
         console.error(error);
         alert("해체 방법 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("method", false);
-      }
-    })();
+    }
   };
 
   return (

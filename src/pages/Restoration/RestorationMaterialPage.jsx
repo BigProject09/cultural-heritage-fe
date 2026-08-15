@@ -107,17 +107,15 @@ function RestorationMaterialPage() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
     }
 
     setStepSaving("restorationMaterial", true);
-    navigate("/restoration");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             material,
@@ -132,13 +130,14 @@ function RestorationMaterialPage() {
           ...prev,
           restorationMaterial: true,
         }));
-      } catch (error) {
+
+      navigate("/restoration");
+    } catch (error) {
         console.error(error);
         alert("복원 재료 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("restorationMaterial", false);
-      }
-    })();
+    }
   };
 
   if (!restorationMaterial) {
