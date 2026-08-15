@@ -19,3 +19,18 @@
   }
 }
 }
+
+@layer components {
+.account-profile-actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-self: start;
+}
+@media (max-width: 620px) {
+  .account-profile-actions {
+    grid-column: auto;
+  }
+}
+}

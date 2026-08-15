@@ -161,7 +161,8 @@ function HeritageHeader({ active = "dashboard" }) {
           onClick={() => navigate(loginUser ? "/mypage" : "/login")}
         >
           <span>
-            <small>마이페이지</small>
+            <small>{loginUser ? "마이페이지" : "회원"}</small>
+            <strong>{loginUser ? `${loginUser.name || loginUser.loginId}님` : "로그인"}</strong>
           </span>
         </button>
         <div

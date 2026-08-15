@@ -441,11 +441,17 @@ async function request(path, options = {}) {
     : await response.text();
 
   if (!response.ok) {
+    const fallbackMessage =
+      response.status === 401
+        ? "로그인이 필요합니다. 다시 로그인해주세요."
+        : response.status === 403
+          ? "이 유물 프로젝트에 접근할 권한이 없습니다."
+          : `요청에 실패했습니다. (HTTP ${response.status})`;
     const message =
       payload?.message ||
       payload?.error ||
       (typeof payload === "string" ? payload : "") ||
-      `요청에 실패했습니다. (HTTP ${response.status})`;
+      fallbackMessage;
     throw new Error(message);
   }
 
@@ -475,6 +481,30 @@ function artifactPayload(artifactInfo) {
     bondingArea: artifactInfo.bondingArea || null,
     treatmentPurpose: artifactInfo.treatmentPurpose || null,
   };
+}
+
+export async function getMyWorkspaceProjects({ signal } = {}) {
+  if (ARTIFACT_STORAGE_MODE === "local") {
+    return getWorkspaceProjects({ signal });
+  }
+
+  const payload = await request(`${ARTIFACTS_PATH}/mine`, { signal });
+  return extractList(payload)
+    .map(withApiModuleStatuses)
+    .filter((project) => project.artifactId);
+}
+
+export async function getPublicWorkspaceProjects({ signal } = {}) {
+  if (ARTIFACT_STORAGE_MODE === "local") {
+    ensureNotAborted(signal);
+    const projects = await prepareLocalProjects();
+    return projects.map(normalizeWorkspaceProject);
+  }
+
+  const payload = await request(`${ARTIFACTS_PATH}/public`, { signal });
+  return extractList(payload)
+    .map(normalizeWorkspaceProject)
+    .filter((project) => project.artifactId);
 }
 
 export async function getWorkspaceProjects({ signal } = {}) {

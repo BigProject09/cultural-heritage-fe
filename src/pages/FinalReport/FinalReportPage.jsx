@@ -18,10 +18,12 @@ import {
   getWorkflowReportText,
 } from "../../services/xrayApi";
 import {
-  downloadBlob,
+  downloadReportFromUrl,
   generateReportJson,
+  getLatestSavedReport,
   getPotterySource,
-  reportJsonToDocx,
+  saveReportDocument,
+  saveReportJson,
 } from "../../services/reportApi";
 import "./FinalReportPage.css";
 
@@ -252,6 +254,8 @@ function FinalReportPage() {
   const [downloading, setDownloading] = useState(false);
   const [reportJson, setReportJson] = useState(null);
   const [reportSources, setReportSources] = useState(null);
+  const [savedReport, setSavedReport] = useState(null);
+  const [savedReportLoading, setSavedReportLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -270,6 +274,26 @@ function FinalReportPage() {
       });
 
     return () => controller.abort();
+  }, [decodedArtifactId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSavedReportLoading(true);
+
+    getLatestSavedReport(decodedArtifactId)
+      .then((document) => {
+        if (!cancelled) setSavedReport(document);
+      })
+      .catch((requestError) => {
+        console.error("기존 최종보고서 조회 실패:", requestError);
+      })
+      .finally(() => {
+        if (!cancelled) setSavedReportLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [decodedArtifactId]);
 
   const missingModules = useMemo(
@@ -370,6 +394,17 @@ function FinalReportPage() {
 
       const json = await generateReportJson(payload);
       setReportJson(json);
+
+      try {
+        const stored = await saveReportJson(project.artifactId, json);
+        setSavedReport(stored);
+      } catch (saveError) {
+        console.error("생성된 최종보고서 저장 실패:", saveError);
+        setGenerateError(
+          "보고서는 생성됐지만 서버 저장에 실패했습니다. 다시 생성하거나 저장하기를 시도해주세요.",
+        );
+      }
+
       setReportSources({
         hasGuide: Boolean(guideResult && Object.keys(guideResult).length),
         hasXray: Boolean(xrayReportText),
@@ -426,7 +461,7 @@ function FinalReportPage() {
     if (annotatedPhotoUrl) {
       try {
         const base64 = await urlToBase64(annotatedPhotoUrl);
-        addPhoto("pre_investigation", "육안조사 문양 식별 결과", base64);
+        addPhoto("pre_investigation_visual", "육안조사 문양 식별 결과", base64);
       } catch (photoError) {
         console.error(
           "마스킹 사진(S3) 첨부 실패, base64로 재시도:",
@@ -434,7 +469,7 @@ function FinalReportPage() {
         );
         if (annotatedImageBase64) {
           addPhoto(
-            "pre_investigation",
+            "pre_investigation_visual",
             "육안조사 문양 식별 결과",
             annotatedImageBase64,
           );
@@ -442,7 +477,7 @@ function FinalReportPage() {
       }
     } else if (annotatedImageBase64) {
       addPhoto(
-        "pre_investigation",
+        "pre_investigation_visual",
         "육안조사 문양 식별 결과",
         annotatedImageBase64,
       );
@@ -456,7 +491,7 @@ function FinalReportPage() {
           "assembled_final.png",
         );
         const base64 = await blobToBase64(file);
-        addPhoto("pre_investigation", "X-ray 결합 이미지", base64);
+        addPhoto("pre_investigation_xray", "X-ray 결합 이미지", base64);
       } catch (photoError) {
         console.error("X-ray 이미지 첨부 실패:", photoError);
       }
@@ -496,13 +531,21 @@ function FinalReportPage() {
     try {
       const photos = await gatherPhotos();
 
-      // LLM을 다시 부르지 않고, 이미 만든 report_json을 docx로만 변환한다.
-      const blob = await reportJsonToDocx({
+      // 사진까지 포함한 DOCX를 S3/DB에 저장한 뒤 같은 파일을 다운로드한다.
+      const stored = await saveReportDocument({
         artifactId: project.artifactId,
         reportJson,
         photos,
       });
-      downloadBlob(blob, `${project.name}_최종보고서.docx`);
+      setSavedReport(stored);
+
+      if (!stored?.docxDownloadUrl) {
+        throw new Error("저장된 DOCX 다운로드 주소가 없습니다.");
+      }
+      await downloadReportFromUrl(
+        stored.docxDownloadUrl,
+        `${project.name}_최종보고서.docx`,
+      );
 
       addMyReport({
         id: `final-report-${project.artifactId}-${Date.now()}`,
@@ -533,6 +576,14 @@ function FinalReportPage() {
     } finally {
       setDownloading(false);
     }
+  };
+
+  const handleOpenSavedReport = () => {
+    if (!savedReport?.reportJson) return;
+    setReportJson(savedReport.reportJson);
+    setReportSources(null);
+    setGenerateError("");
+    setSaved(false);
   };
 
   if (loading) {
@@ -660,6 +711,34 @@ function FinalReportPage() {
                 ))}
               </div>
 
+              {!savedReportLoading && savedReport?.reportJson && (
+                <div className="final-report-saved-card">
+                  <div>
+                    <span>SAVED REPORT</span>
+                    <strong>기존 최종보고서가 저장되어 있습니다.</strong>
+                    <p>
+                      마지막 저장 · {new Date(savedReport.createdAt).toLocaleString("ko-KR")}
+                    </p>
+                  </div>
+                  <div className="final-report-saved-actions">
+                    <button
+                      type="button"
+                      className="final-report-secondary"
+                      onClick={handleOpenSavedReport}
+                    >
+                      최종보고서 보기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGenerateReport}
+                      disabled={generating}
+                    >
+                      {generating ? "재생성 중..." : "다시 생성하기"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <p className="final-report-note">
                 "최종 보고서 생성"을 누르면 AI가 세 모듈의 결과를 종합해
                 보고서를 만들고, 이 화면에서 먼저 내용을 확인할 수 있습니다.
@@ -672,9 +751,11 @@ function FinalReportPage() {
                 <span className="final-report-error">{generateError}</span>
               )}
               <div className="final-report-actions-right">
-                <button onClick={handleGenerateReport} disabled={generating}>
-                  {generating ? "생성 중..." : "최종 보고서 생성"}
-                </button>
+                {!savedReport?.reportJson && (
+                  <button onClick={handleGenerateReport} disabled={generating}>
+                    {generating ? "생성 중..." : "최종 보고서 생성"}
+                  </button>
+                )}
               </div>
             </div>
           </>
