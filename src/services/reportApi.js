@@ -114,6 +114,66 @@ export async function reportJsonToDocx({ artifactId, reportJson, photos }) {
   return response.blob();
 }
 
+/** 생성된 report_json만 DB에 먼저 저장한다. */
+export async function saveReportJson(artifactId, reportJson) {
+  const response = await fetch(
+    `${REPORTS_BASE}/${encodeURIComponent(artifactId)}/save-json`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ reportJson, photos: {} }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+  }
+
+  return response.json();
+}
+
+/** 이 유물의 가장 최근 저장 보고서를 조회한다. 저장본이 없으면 null. */
+export async function getLatestSavedReport(artifactId) {
+  const response = await fetch(`${REPORTS_BASE}/${encodeURIComponent(artifactId)}`);
+
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+  }
+
+  return response.json();
+}
+
+/** 사진까지 포함한 최종 DOCX를 S3 + report_document에 저장한다. */
+export async function saveReportDocument({ artifactId, reportJson, photos }) {
+  const response = await fetch(
+    `${REPORTS_BASE}/${encodeURIComponent(artifactId)}/save`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ reportJson, photos }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+  }
+
+  return response.json();
+}
+
+/** presigned DOCX URL을 기존 다운로드 UX로 저장한다. */
+export async function downloadReportFromUrl(url, filename) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`저장된 보고서를 불러오지 못했습니다 (HTTP ${response.status})`);
+  }
+  downloadBlob(await response.blob(), filename);
+}
+
 /** 브라우저에서 Blob을 파일로 즉시 다운로드한다. */
 export function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
