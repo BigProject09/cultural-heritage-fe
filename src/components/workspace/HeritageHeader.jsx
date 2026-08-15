@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./WorkspaceChrome.css";
 import { logout } from "../../services/userApi";
+import { maskLoginId, maskName } from "../../utils/privacy";
 
 function HeritageHeader({ active = "dashboard" }) {
   const navigate = useNavigate();
@@ -21,6 +22,13 @@ function HeritageHeader({ active = "dashboard" }) {
     active === "community" ||
     location.pathname.startsWith("/board") ||
     location.pathname.startsWith("/notice");
+  const accountName =
+    loginUser?.name || loginUser?.nickName || loginUser?.nickname || "";
+  const accountDisplayName = loginUser
+    ? accountName
+      ? maskName(accountName)
+      : maskLoginId(loginUser.loginId)
+    : "";
 
   useEffect(() => {
     const closeOnOutsideClick = (event) => {
@@ -75,11 +83,7 @@ function HeritageHeader({ active = "dashboard" }) {
         onClick={() => navigate("/")}
         aria-label="VORA 홈로 이동"
       >
-        <img
-          src="/vora-logo.png"
-          alt=""
-          className="heritage-brand-mark"
-        />
+        <img src="/vora-logo.png" alt="" className="heritage-brand-mark" />
         <span className="heritage-brand-copy">
           <small lang="en">Value of Restoration with AI</small>
           <strong>VORA</strong>
@@ -162,7 +166,7 @@ function HeritageHeader({ active = "dashboard" }) {
         >
           <span>
             <small>{loginUser ? "마이페이지" : "회원"}</small>
-            <strong>{loginUser ? `${loginUser.name || loginUser.loginId}님` : "로그인"}</strong>
+            <strong>{loginUser ? `${accountDisplayName}님` : "로그인"}</strong>
           </span>
         </button>
         <div

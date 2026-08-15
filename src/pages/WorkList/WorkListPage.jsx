@@ -40,9 +40,22 @@ function WorkListPage() {
 
   const isMine = scope === "mine";
 
+  const currentProjectReports = useMemo(() => {
+    if (!isMine) return [];
+
+    const projectIds = new Set(
+      projects.map((project) => String(project.artifactId)).filter(Boolean),
+    );
+
+    return reports.filter((report) =>
+      projectIds.has(getReportArtifactId(report)),
+    );
+  }, [isMine, projects, reports]);
+
   const reportArtifactIds = useMemo(
-    () => new Set(reports.map(getReportArtifactId).filter(Boolean)),
-    [reports],
+    () =>
+      new Set(currentProjectReports.map(getReportArtifactId).filter(Boolean)),
+    [currentProjectReports],
   );
 
   const projectStats = useMemo(() => {
@@ -60,9 +73,9 @@ function WorkListPage() {
       total: projects.length,
       active: projects.length - completed,
       completed,
-      reports: reports.length,
+      reports: currentProjectReports.length,
     };
-  }, [isMine, projects, reports]);
+  }, [currentProjectReports.length, isMine, projects]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -120,7 +133,8 @@ function WorkListPage() {
         return matchesKeyword && matchesFilter;
       })
       .sort(
-        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
       );
   }, [filter, isMine, projects, reportArtifactIds, search]);
 
@@ -185,7 +199,10 @@ function WorkListPage() {
           )}
         </section>
 
-        <section className="heritage-worklist-scope" aria-label="프로젝트 조회 범위">
+        <section
+          className="heritage-worklist-scope"
+          aria-label="프로젝트 조회 범위"
+        >
           <button
             className={isMine ? "active" : ""}
             aria-pressed={isMine}
@@ -251,8 +268,8 @@ function WorkListPage() {
             <strong>읽기 전용 공개 범위</strong>
             <span>
               유물명, 분류, 재질, 시대, 설명과 대표 이미지만 표시합니다. X-Ray,
-              육안조사, 보존가이드, 최종보고서 및 수정·삭제 기능은 소유자와 관리자만
-              접근할 수 있습니다.
+              육안조사, 보존가이드, 최종보고서 및 수정·삭제 기능은 소유자와
+              관리자만 접근할 수 있습니다.
             </span>
           </section>
         )}
@@ -333,8 +350,8 @@ function WorkListPage() {
                       <span>{project.artifactId}</span>
                       <h2>{project.name}</h2>
                       <p>
-                        {project.category || "분류 미입력"} · {project.material} ·{" "}
-                        {project.period}
+                        {project.category || "분류 미입력"} · {project.material}{" "}
+                        · {project.period}
                       </p>
                     </div>
                     <em>읽기 전용</em>
@@ -345,7 +362,9 @@ function WorkListPage() {
                   </p>
 
                   <div className="heritage-worklist-card-foot">
-                    <small>최근 갱신 {formatWorkspaceDate(project.updatedAt)}</small>
+                    <small>
+                      최근 갱신 {formatWorkspaceDate(project.updatedAt)}
+                    </small>
                     <div className="heritage-worklist-card-actions">
                       <button onClick={() => setPublicDetail(project)}>
                         유물 정보 보기 →
@@ -388,7 +407,9 @@ function WorkListPage() {
                 </div>
 
                 <div className="heritage-worklist-card-foot">
-                  <small>마지막 저장 {formatWorkspaceDate(project.updatedAt)}</small>
+                  <small>
+                    마지막 저장 {formatWorkspaceDate(project.updatedAt)}
+                  </small>
                   <div className="heritage-worklist-card-actions">
                     <button
                       className="delete"
@@ -458,8 +479,8 @@ function WorkListPage() {
                 <p>{publicDetail.description || "등록된 설명이 없습니다."}</p>
               </div>
               <p className="heritage-public-modal-policy">
-                다른 사용자의 조사 결과와 작업 문서는 개인정보 및 작업 데이터 보호를
-                위해 공개되지 않습니다.
+                다른 사용자의 조사 결과와 작업 문서는 개인정보 및 작업 데이터
+                보호를 위해 공개되지 않습니다.
               </p>
             </div>
           </section>
