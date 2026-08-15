@@ -227,10 +227,33 @@ async function sourceToFile(source, index) {
     throw new Error("사전 등록된 2D 이미지 형식을 확인할 수 없습니다.");
   }
 
-  const response = await fetch(source);
-  if (!response.ok) {
+  let response = null;
+  let lastError = null;
+
+  // S3/네트워크 응답이 일시적으로 늦는 경우 바로 결합 전체를 실패시키지
+  // 않고 짧게 재시도한다. production origin CORS 자체가 잘못된 경우에는
+  // 재시도 후에도 실패하므로 별도 S3 CORS 설정 확인이 필요하다.
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    try {
+      response = await fetch(source, { cache: "no-store" });
+      if (response.ok) break;
+
+      lastError = new Error(
+        `사전 등록된 2D 이미지를 불러오지 못했습니다. (HTTP ${response.status})`,
+      );
+    } catch (error) {
+      lastError = error;
+    }
+
+    if (attempt < 4) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+  }
+
+  if (!response?.ok) {
     throw new Error(
-      `사전 등록된 2D 이미지를 불러오지 못했습니다. (HTTP ${response.status})`,
+      "사전 등록된 2D 이미지를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+      { cause: lastError },
     );
   }
 
