@@ -6,7 +6,7 @@
  */
 
 const API_BASE = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+  import.meta.env.VITE_API_BASE_URL || "https://api.vora-heritage.click"
 ).replace(/\/+$/, "");
 
 const STATUS_FALLBACK_MESSAGE = {
@@ -18,9 +18,7 @@ const STATUS_FALLBACK_MESSAGE = {
 
 function getAccessToken() {
   try {
-    const loginUser = JSON.parse(
-      localStorage.getItem("loginUser") || "null"
-    );
+    const loginUser = JSON.parse(localStorage.getItem("loginUser") || "null");
 
     return loginUser?.accessToken || loginUser?.token || "";
   } catch {
@@ -79,9 +77,10 @@ export async function request(path, options = {}) {
     : await response.text();
 
   if (!response.ok) {
-    throw new Error(resolveErrorMessage(response.status, payload, fallback500Message));
+    throw new Error(
+      resolveErrorMessage(response.status, payload, fallback500Message),
+    );
   }
 
   return payload;
 }
-
