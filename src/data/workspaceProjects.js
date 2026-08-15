@@ -483,6 +483,30 @@ function artifactPayload(artifactInfo) {
   };
 }
 
+export async function getMyWorkspaceProjects({ signal } = {}) {
+  if (ARTIFACT_STORAGE_MODE === "local") {
+    return getWorkspaceProjects({ signal });
+  }
+
+  const payload = await request(`${ARTIFACTS_PATH}/mine`, { signal });
+  return extractList(payload)
+    .map(withApiModuleStatuses)
+    .filter((project) => project.artifactId);
+}
+
+export async function getPublicWorkspaceProjects({ signal } = {}) {
+  if (ARTIFACT_STORAGE_MODE === "local") {
+    ensureNotAborted(signal);
+    const projects = await prepareLocalProjects();
+    return projects.map(normalizeWorkspaceProject);
+  }
+
+  const payload = await request(`${ARTIFACTS_PATH}/public`, { signal });
+  return extractList(payload)
+    .map(normalizeWorkspaceProject)
+    .filter((project) => project.artifactId);
+}
+
 export async function getWorkspaceProjects({ signal } = {}) {
   if (ARTIFACT_STORAGE_MODE === "local") {
     ensureNotAborted(signal);
