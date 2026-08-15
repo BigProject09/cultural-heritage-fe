@@ -63,10 +63,10 @@
   @apply text-[#8b929c];
 }
 .progress-restart-btn {
-  @apply mt-6 w-full rounded-xl border border-solid border-guide-primary bg-white px-3 py-3 text-xs font-bold text-guide-primary transition-colors;
+  @apply mt-5 w-full rounded-lg border border-solid border-[#d7dde7] bg-white px-2.5 py-2 text-[11px] font-semibold leading-snug text-[#687386] transition-colors;
 }
 .progress-restart-btn:hover {
-  @apply bg-[#fff8ef];
+  @apply border-guide-primary bg-[#fffaf4] text-guide-primary;
 }
 .progress-restart-copy {
   @apply mt-2 text-[10px] leading-relaxed text-[#8b929c];

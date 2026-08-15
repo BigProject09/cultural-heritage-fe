@@ -16,9 +16,12 @@ function DisassemblyToolPage() {
     toolsPrecautions,
     setCompleted,
     setStepSaving,
+    savingSteps,
     toolSelection: selectedTools,
     setToolSelection: setSelectedTools,
   } = ctx;
+
+  const isSaving = savingSteps.has("tool");
 
   // 오른쪽 상세 영역에 어떤 도구를 보여줄지만 담당하는 순수 화면 상태.
   // 선택(체크) 로직인 selectedTools/handleSelect와는 별개다.
@@ -37,6 +40,7 @@ function DisassemblyToolPage() {
   };
 
   const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -113,12 +117,16 @@ function DisassemblyToolPage() {
         <h1 className="vora-logo">VORA</h1>
 
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" onClick={handleSelectAll}>
+          <button className="nav-btn secondary" disabled={isSaving} onClick={handleSelectAll}>
             전체 선택
           </button>
 
-          <button className="nav-btn" onClick={handleComplete}>
-            완료
+          <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
           </button>
         </div>
       </div>

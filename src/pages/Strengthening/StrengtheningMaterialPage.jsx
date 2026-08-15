@@ -62,7 +62,9 @@ function StrengtheningMaterialPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, strengtheningRecommendation, setCompleted, setStepSaving } = ctx;
+  const { taskId, strengtheningRecommendation, setCompleted, setStepSaving, savingSteps } = ctx;
+
+  const isSaving = savingSteps.has("strengtheningMaterial");
 
   // 실제로 확정(제출)할 강화제/용제. AI 추천값을 초기값으로 사용.
   const [agent, setAgent] = useState(
@@ -146,6 +148,7 @@ function StrengtheningMaterialPage() {
   };
 
   const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -192,9 +195,13 @@ function StrengtheningMaterialPage() {
 
         <h1 className="vora-logo">VORA</h1>
 
-        <button className="nav-btn" onClick={handleComplete}>
-          완료
-        </button>
+        <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
+          </button>
       </div>
 
       <div className="material-container">

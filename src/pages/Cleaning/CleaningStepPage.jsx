@@ -9,7 +9,9 @@ function CleaningStepPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, setCompleted, setStepSaving, cleaningGuide } = ctx;
+  const { taskId, setCompleted, setStepSaving, savingSteps, cleaningGuide } = ctx;
+
+  const isSaving = savingSteps.has("cleaningStep");
 
   const [steps, setSteps] = useState(() =>
     (cleaningGuide?.steps ?? []).map((step) => ({
@@ -57,6 +59,7 @@ function CleaningStepPage() {
   };
 
   const handleComplete = async () => {
+    if (isSaving) return;
     const completedStepIds = steps
       .filter((step) => step.approved)
       .map((step) => step.id);
@@ -105,12 +108,16 @@ function CleaningStepPage() {
         <h1 className="vora-logo">VORA</h1>
 
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" onClick={handleCheckAll}>
+          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택
           </button>
 
-          <button className="nav-btn" onClick={handleComplete}>
-            완료
+          <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
           </button>
         </div>
       </div>

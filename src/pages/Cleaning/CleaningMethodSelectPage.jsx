@@ -31,6 +31,7 @@ function CleaningMethodSelectPage() {
   const isSaving = savingSteps.has("cleaningMethod");
 
   const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("복원가이드 작업 정보를 찾을 수 없습니다. 단계 선택 화면에서 다시 시작해주세요.");
       return;
@@ -90,7 +91,7 @@ function CleaningMethodSelectPage() {
           disabled={isSaving}
           onClick={handleComplete}
         >
-          {isSaving ? "저장 중..." : "완료"}
+          {isSaving ? "완료 처리 중..." : "완료"}
         </button>
       </div>
 

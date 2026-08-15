@@ -11,7 +11,9 @@ function BondingMethodPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, bondingGuide, setCompleted, setStepSaving } = ctx;
+  const { taskId, bondingGuide, setCompleted, setStepSaving, savingSteps } = ctx;
+
+  const isSaving = savingSteps.has("bondingMethod");
 
   const {
     steps: bondingSteps = [],
@@ -85,6 +87,7 @@ function BondingMethodPage() {
   };
 
   const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -137,12 +140,16 @@ function BondingMethodPage() {
         <h1 className="vora-logo">VORA</h1>
 
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" onClick={handleCheckAll}>
+          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택
           </button>
 
-          <button className="nav-btn" onClick={handleComplete}>
-            완료
+          <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
           </button>
         </div>
       </div>

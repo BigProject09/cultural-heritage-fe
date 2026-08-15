@@ -223,7 +223,12 @@ function mockRegions(file, target, width, height, count = 2) {
  * 결합은 조각 수에 따라 수 분에서 수십 분이 걸린다. 결과를
  * 기다리지 않고 jobId 를 먼저 받은 뒤 상태를 폴링한다.
  */
-export async function createStitchJob({ artifactId, colorFiles, xrayFiles }) {
+export async function createStitchJob({
+  artifactId,
+  colorFiles,
+  xrayFiles,
+  onUploadProgress,
+}) {
   if (USE_MOCK) {
     await delay(500);
 
@@ -259,6 +264,17 @@ export async function createStitchJob({ artifactId, colorFiles, xrayFiles }) {
 
   const colorFile = colorFiles[0];
   const xrayFileNames = xrayFiles.map((file) => file.name);
+  const uploadTotal = colorFiles.length + xrayFiles.length;
+  let uploadCompleted = 0;
+
+  function reportUploadProgress(fileName) {
+    uploadCompleted += 1;
+    onUploadProgress?.({
+      completed: uploadCompleted,
+      total: uploadTotal,
+      fileName,
+    });
+  }
 
   // 1. Spring에서 Presigned PUT URL 발급
   const prepared = await requestJson(`${STITCH_JOBS_BASE}/prepare`, {
@@ -301,6 +317,8 @@ export async function createStitchJob({ artifactId, colorFiles, xrayFiles }) {
         }`,
       );
     }
+
+    reportUploadProgress(file.name);
   }
 
   // 2. 컬러 기준 이미지 S3 PUT
@@ -321,24 +339,48 @@ export async function createStitchJob({ artifactId, colorFiles, xrayFiles }) {
     xrayFiles.map((file, index) => uploadToS3(file, prepared.xrays[index])),
   );
 
-  // 4. 업로드 완료 후 Spring에 자동 결합 시작 요청
-  const started = await requestJson(
-    `${STITCH_JOBS_BASE}/${encodeURIComponent(prepared.jobId)}/start`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        colorFileName: prepared.color?.fileName || colorFile.name,
-        xrayFileNames: prepared.xrays.map(
-          (target, index) => target?.fileName || xrayFiles[index].name,
-        ),
-      }),
+  // 4. 모든 PUT 응답이 끝난 뒤에도 S3/Lambda 상태가 아주 짧게
+  // 늦게 보일 수 있다. 입력 미완료 계열 409만 짧게 재시도해
+  // 사용자가 다시 버튼을 누르지 않아도 결합을 시작한다.
+  const startUrl = `${STITCH_JOBS_BASE}/${encodeURIComponent(
+    prepared.jobId,
+  )}/start`;
+  const startOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({
+      colorFileName: prepared.color?.fileName || colorFile.name,
+      xrayFileNames: prepared.xrays.map(
+        (target, index) => target?.fileName || xrayFiles[index].name,
+      ),
+    }),
+  };
+  const startRetryDelays = [700, 1500, 2500, 3500];
+  let lastStartError = null;
 
-  return started;
+  for (let attempt = 0; attempt <= startRetryDelays.length; attempt += 1) {
+    const response = await fetchApiOrExternal(startUrl, startOptions);
+
+    if (response.ok) {
+      return response.json();
+    }
+
+    const detail = await readError(response);
+    const error = new Error(
+      `HTTP ${response.status}: ${detail.slice(0, 300)}`,
+    );
+
+    if (response.status !== 409 || attempt === startRetryDelays.length) {
+      throw error;
+    }
+
+    lastStartError = error;
+    await delay(startRetryDelays[attempt]);
+  }
+
+  throw lastStartError || new Error("결합 시작 요청에 실패했습니다.");
 }
 
 export function getStitchJob(jobId) {

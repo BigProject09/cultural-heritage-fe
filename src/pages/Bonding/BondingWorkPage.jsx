@@ -68,7 +68,10 @@ function BondingWorkPage() {
     setBondingTempAnalysis,
     setCompleted,
     setStepSaving,
+    savingSteps,
   } = ctx;
+
+  const isSaving = savingSteps.has("bondingWork");
 
   const [beforePhoto, setBeforePhoto] = useState("");
   const [afterPhoto, setAfterPhoto] = useState("");
@@ -163,6 +166,7 @@ function BondingWorkPage() {
 
   // 검증 결과를 그대로 승인하고 다음(접합 방법 안내)으로 진행한다.
   const handleProceed = async () => {
+    if (isSaving) return;
     setStepSaving("bondingWork", true);
 
     try {
@@ -218,10 +222,10 @@ function BondingWorkPage() {
 
           <button
             className={`nav-btn ${defaultAction === "retry" ? "secondary" : ""}`}
-            disabled={!bondingTempAnalysis}
+            disabled={!bondingTempAnalysis || isSaving}
             onClick={handleProceed}
           >
-            다음 →
+            {isSaving ? "완료 처리 중..." : "다음 →"}
           </button>
         </div>
       </div>

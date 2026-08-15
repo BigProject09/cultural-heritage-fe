@@ -546,6 +546,10 @@ export default function XrayPage() {
   const [stitchStatus, setStitchStatus] = useState("IDLE");
   const [stitchMessage, setStitchMessage] = useState("");
   const [stitchJobId, setStitchJobId] = useState("");
+  const [uploadProgress, setUploadProgress] = useState({
+    completed: 0,
+    total: 0,
+  });
 
   /**
    * 조각별 배치 정보.
@@ -1035,6 +1039,10 @@ export default function XrayPage() {
     setStitchJobId("");
     setStitchStatus("UPLOADING");
     setStitchMessage("입력 이미지를 준비하고 있습니다.");
+    setUploadProgress({
+      completed: 0,
+      total: fragmentFiles.length + (USE_MOCK ? 0 : colorSources.length),
+    });
     setAssembledFile(null);
 
     try {
@@ -1049,8 +1057,13 @@ export default function XrayPage() {
         artifactId,
         colorFiles,
         xrayFiles: fragmentFiles,
+        onUploadProgress: ({ completed, total }) => {
+          setUploadProgress({ completed, total });
+          setStitchMessage(`입력 이미지를 업로드하고 있습니다. (${completed}/${total})`);
+        },
       });
 
+      setStitchMessage("업로드를 완료했습니다. 결합 준비 상태를 확인하고 있습니다.");
       setStitchJobId(created.jobId);
       rememberXrayJob(artifactId, created.jobId, fragmentFiles.length);
       setStitchStatus(created.status || "STITCHING");
@@ -1925,7 +1938,13 @@ export default function XrayPage() {
                       fragmentFiles.length < 2 || stitchBusy || resultLoading
                     }
                   >
-                    {stitchBusy ? "조각 결합 중..." : "조각 결합 시작"}
+                    {stitchStatus === "UPLOADING"
+                      ? uploadProgress.total > 0
+                        ? `업로드 중 ${uploadProgress.completed}/${uploadProgress.total}`
+                        : "업로드 준비 중..."
+                      : stitchBusy
+                        ? "조각 결합 중..."
+                        : "조각 결합 시작"}
                     <span aria-hidden="true">→</span>
                   </button>
                 </div>
@@ -1941,7 +1960,11 @@ export default function XrayPage() {
                 <TaskProgress
                   active={stitchBusy}
                   headline={stitchMessage || "X-RAY 조각을 결합하고 있습니다"}
-                  detail={`조각 ${fragmentFiles.length}장 · 컬러 기준 ${colorSources.length}장`}
+                  detail={
+                    stitchStatus === "UPLOADING" && uploadProgress.total > 0
+                      ? `업로드 ${uploadProgress.completed}/${uploadProgress.total} · X-RAY ${fragmentFiles.length}장 · 컬러 기준 ${colorSources.length}장`
+                      : `조각 ${fragmentFiles.length}장 · 컬러 기준 ${colorSources.length}장`
+                  }
                   steps={STITCH_STEPS}
                   currentKey={stitchStatus}
                   note="결합 상태는 단계별로 자동 갱신됩니다."

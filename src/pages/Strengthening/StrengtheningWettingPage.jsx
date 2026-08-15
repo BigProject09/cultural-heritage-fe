@@ -63,7 +63,9 @@ function StrengtheningWettingPage() {
   const artifactId = decodeURIComponent(routeArtifactId);
 
   const ctx = useDisassembly();
-  const { taskId, colorChangeAnalysis, setCompleted, setStepSaving } = ctx;
+  const { taskId, colorChangeAnalysis, setCompleted, setStepSaving, savingSteps } = ctx;
+
+  const isSaving = savingSteps.has("strengtheningWetting");
 
   const [beforePhoto, setBeforePhoto] = useState("");
   const [afterPhoto, setAfterPhoto] = useState("");
@@ -132,6 +134,7 @@ function StrengtheningWettingPage() {
   };
 
   const handleProceed = async () => {
+    if (isSaving) return;
     setStepSaving("strengtheningWetting", true);
 
     try {
@@ -179,10 +182,10 @@ function StrengtheningWettingPage() {
 
           <button
             className="nav-btn"
-            disabled={!colorChangeAnalysis}
+            disabled={!colorChangeAnalysis || isSaving}
             onClick={handleProceed}
           >
-            다음 →
+            {isSaving ? "완료 처리 중..." : "다음 →"}
           </button>
         </div>
       </div>

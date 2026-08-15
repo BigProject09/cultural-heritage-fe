@@ -78,7 +78,9 @@ function RestorationMaterialPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, restorationMaterial, setCompleted, setStepSaving } = ctx;
+  const { taskId, restorationMaterial, setCompleted, setStepSaving, savingSteps } = ctx;
+
+  const isSaving = savingSteps.has("restorationMaterial");
 
   // 실제로 확정(제출)할 복원제. AI 추천값을 초기값으로 사용.
   const [material, setMaterial] = useState(
@@ -108,6 +110,7 @@ function RestorationMaterialPage() {
   };
 
   const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -156,9 +159,13 @@ function RestorationMaterialPage() {
 
         <h1 className="vora-logo">VORA</h1>
 
-        <button className="nav-btn" onClick={handleComplete}>
-          완료
-        </button>
+        <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
+          </button>
       </div>
 
       <div className="material-container">
