@@ -337,7 +337,9 @@ function workflowDefectToRegions(defect, index) {
     areaRatioPercent: defect?.geometry?.areaRatioPercent ?? null,
     mappingStatus: defect?.geometry?.mappingStatus || originType,
     originType,
-    userNote: `${originLabel}. 최종 결합본의 표시 영역을 확인하세요.`,
+    userNote:
+      defect?.geometry?.userNote ||
+      `${originLabel}. 최종 결합본의 표시 영역을 확인하세요.`,
     reviewDecision,
   };
 
@@ -583,7 +585,6 @@ export default function XrayPage() {
   const [report, setReport] = useState("");
   const [reportMeta, setReportMeta] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
-  const [reportStyle, setReportStyle] = useState("summary");
   const [isDragging, setIsDragging] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   // 페이지 재진입 직후에는 아직 서버의 실제 진행 단계를 모른다.
@@ -1358,6 +1359,24 @@ export default function XrayPage() {
     );
   }
 
+  async function persistReviewNote(region) {
+    if (USE_MOCK || !stitchJobId || region?.defectId == null) return;
+
+    try {
+      await updateWorkflowDefects(stitchJobId, [
+        {
+          id: region.defectId,
+          reviewDecision: String(region.reviewDecision || "damage").toUpperCase(),
+          userNote: region.userNote || "",
+        },
+      ]);
+      setReport("");
+      setReportMeta(null);
+    } catch (error) {
+      setInspectionMessage(`소견 저장 실패: ${error.message}`);
+    }
+  }
+
   async function persistReviewDecision(id, reviewDecision) {
     const selected = regions.find((region) => region.regionId === id);
     if (!selected) return;
@@ -1373,6 +1392,7 @@ export default function XrayPage() {
           {
             id: selected.defectId,
             reviewDecision: reviewDecision.toUpperCase(),
+            userNote: selected.userNote || "",
           },
         ]);
       } catch (error) {
@@ -1431,7 +1451,6 @@ export default function XrayPage() {
           rgbImages: [],
           artifactType,
           material,
-          reportStyle,
         });
         setReport(result.report || "");
         setReportMeta({
@@ -1445,12 +1464,11 @@ export default function XrayPage() {
         const result = await generateWorkflowReportText(stitchJobId, {
           artifactType,
           material,
-          reportStyle,
         });
         const text = result.reportText || "";
         setReport(text);
         setReportMeta({
-          style: reportStyle,
+          style: "summary",
           charCount: text.length,
           detailCount: includedCount,
           totalRegionCount: regions.length,
@@ -2342,6 +2360,7 @@ export default function XrayPage() {
                               event.target.value,
                             )
                           }
+                          onBlur={() => void persistReviewNote(selectedRegion)}
                           placeholder="이미지에서 확인한 특징과 판단 근거를 입력하세요."
                         />
                       </label>
@@ -2405,8 +2424,6 @@ export default function XrayPage() {
                 <ReportPanel
                   report={report}
                   meta={reportMeta}
-                  style={reportStyle}
-                  onStyleChange={setReportStyle}
                   loading={reportLoading}
                   disabled={
                     health === null ||

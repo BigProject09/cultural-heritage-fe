@@ -733,7 +733,6 @@ export async function generateReport({
   regions,
   artifactType = "",
   material = "",
-  reportStyle = "summary",
   assembled,
   fragments = [],
   rgbImages = [],
@@ -762,7 +761,7 @@ export async function generateReport({
 
     return {
       report,
-      style: reportStyle,
+      style: "summary",
       charCount: report.length,
       detailCount: Math.min(regions.length, 5),
       totalRegionCount: regions.length,
@@ -774,7 +773,6 @@ export async function generateReport({
   form.append("regions", JSON.stringify(regions));
   form.append("artifact_type", artifactType);
   form.append("material", material);
-  form.append("report_style", reportStyle);
 
   if (assembled) form.append("assembled", assembled);
 
@@ -829,14 +827,14 @@ export async function updateWorkflowDefects(jobId, defects) {
 /** 현재 DAMAGE 결함만 사용해 AI 상태조사 초안을 생성한다. */
 export async function generateWorkflowReportText(
   jobId,
-  { artifactType = "", material = "", reportStyle = "summary" } = {},
+  { artifactType = "", material = "" } = {},
 ) {
   return requestJson(
     `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/report-text/generate`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ artifactType, material, reportStyle }),
+      body: JSON.stringify({ artifactType, material }),
     },
   );
 }
