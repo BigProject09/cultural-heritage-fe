@@ -110,6 +110,7 @@ function FlowRecommendationPage() {
       }
 
       const result = await startTask(taskId, {
+        artifactId,
         taskName: "문화재 복원",
         taskManager: "오서하",
         relicInfo,
