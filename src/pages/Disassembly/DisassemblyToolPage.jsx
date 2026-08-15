@@ -36,7 +36,7 @@ function DisassemblyToolPage() {
     setSelectedTools(tools.map((tool) => tool.id));
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -48,10 +48,8 @@ function DisassemblyToolPage() {
     }
 
     setStepSaving("tool", true);
-    navigate("/disassembly");
 
-    (async () => {
-      try {
+    try {
         const result = await resumeTask(taskId, {
           resume: {
             confirmed_tools: selectedTools,
@@ -70,13 +68,14 @@ function DisassemblyToolPage() {
           ...prev,
           tool: true,
         }));
-      } catch (error) {
+
+      navigate("/disassembly");
+    } catch (error) {
         console.error(error);
         alert("도구 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("tool", false);
-      }
-    })();
+    }
   };
 
   const activeTool =

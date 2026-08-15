@@ -89,7 +89,7 @@ function StrengtheningMethodPage() {
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -108,10 +108,8 @@ function StrengtheningMethodPage() {
     }
 
     setStepSaving("strengtheningMethod", true);
-    navigate("/strengthening");
 
-    (async () => {
-      try {
+    try {
         const result = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -125,14 +123,15 @@ function StrengtheningMethodPage() {
 
           strengtheningMethod: true,
         }));
-      } catch (error) {
+
+      navigate("/strengthening");
+    } catch (error) {
         console.error(error);
 
         alert("강화 단계 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("strengtheningMethod", false);
-      }
-    })();
+    }
   };
 
   return (

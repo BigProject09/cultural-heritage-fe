@@ -1,5 +1,5 @@
 import "./FlowRecommendationPage.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import { startTask } from "../../services/conservationGuideApi";
 import { useDisassembly } from "../../context/useDisassembly";
@@ -17,19 +17,27 @@ const AI_RECOMMENDED_FLOW = DEFAULT_GUIDE_FLOW;
 
 function FlowRecommendationPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { artifactId: routeArtifactId = "" } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
 
-  const [steps, setSteps] = useState(() =>
-    DEFAULT_GUIDE_FLOW.map((step) => ({ ...step, active: false })),
-  );
+  const [steps, setSteps] = useState(() => {
+    const previousNames = new Set(
+      (location.state?.reselectFlow || []).map((step) => step?.name),
+    );
+
+    return DEFAULT_GUIDE_FLOW.map((step) => ({
+      ...step,
+      active: previousNames.has(step.name),
+    }));
+  });
 
   const aiFlow = AI_RECOMMENDED_FLOW;
 
   const [loading, setLoading] = useState(false);
 
   const ctx = useDisassembly();
-  const { setTaskId, setApprovedFlow, resetCompleted } = ctx;
+  const { setTaskId, setApprovedFlow, resetGuideWorkflow } = ctx;
 
   const toggleStep = (id) => {
     setSteps((prev) =>
@@ -82,7 +90,7 @@ function FlowRecommendationPage() {
     // 새 보존가이드를 시작할 때 이전 Guide 세션 상태를 모두 초기화한다.
     // X-RAY/육안조사 등 어떤 경로에서 진입했는지와 관계없이
     // 동일한 초기 상태에서 시작하도록 한다.
-    resetCompleted();
+    resetGuideWorkflow();
     setApprovedFlow(approvedFlow);
 
     const taskId = `task-${Date.now()}`;

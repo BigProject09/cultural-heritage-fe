@@ -56,7 +56,7 @@ function CleaningDryingStepPage() {
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const completedStepIds = steps
       .filter((step) => step.approved)
       .map((step) => step.id);
@@ -67,10 +67,8 @@ function CleaningDryingStepPage() {
     }
 
     setStepSaving("cleaningDryingStep", true);
-    navigate("/cleaning");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -83,13 +81,14 @@ function CleaningDryingStepPage() {
           ...prev,
           cleaningDryingStep: true,
         }));
-      } catch (error) {
+
+      navigate("/cleaning");
+    } catch (error) {
         console.error(error);
         alert("건조 단계 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("cleaningDryingStep", false);
-      }
-    })();
+    }
   };
 
   return (

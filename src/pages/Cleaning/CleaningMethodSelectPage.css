@@ -85,4 +85,10 @@
 .method-box input[type="checkbox"] {
     @apply w-6 h-6 accent-[#96683d] cursor-pointer shrink-0;
 }
+.method-selection-error {
+    @apply mt-2 text-sm font-semibold text-[#b45309];
+}
+.nav-btn:disabled {
+    @apply cursor-not-allowed opacity-60;
+}
 }

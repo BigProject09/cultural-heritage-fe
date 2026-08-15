@@ -1,13 +1,35 @@
+import { useNavigate, useParams } from "react-router-dom";
 import "./ProgressNavigator.css";
 import {
   DEFAULT_GUIDE_FLOW,
   sanitizeGuideFlow,
 } from "../../../data/flowData";
+import { useDisassembly } from "../../../context/useDisassembly";
+import { getArtifactModuleRoute } from "../../../utils/artifactRoutes";
 
 function ProgressNavigator({ approvedFlow, currentStep }) {
+  const navigate = useNavigate();
+  const { artifactId: routeArtifactId = "" } = useParams();
+  const artifactId = decodeURIComponent(routeArtifactId);
+  const { resetGuideWorkflow } = useDisassembly();
+
   const selectedSteps = sanitizeGuideFlow(approvedFlow);
   const steps = selectedSteps.length > 0 ? selectedSteps : DEFAULT_GUIDE_FLOW;
   const currentIndex = steps.findIndex((step) => step.name === currentStep);
+
+  const handleRestartGuide = () => {
+    const confirmed = window.confirm(
+      "보존처리 단계를 다시 선택하시겠습니까?\n\n현재 진행 중인 복원가이드 상태만 초기화됩니다. 유물 정보와 X-Ray·육안조사 결과는 유지됩니다.",
+    );
+
+    if (!confirmed) return;
+
+    resetGuideWorkflow();
+    navigate(getArtifactModuleRoute(artifactId, "guide"), {
+      replace: true,
+      state: { reselectFlow: selectedSteps },
+    });
+  };
 
   return (
     <aside className="progress-wrapper" aria-label="복원 가이드 진행도">
@@ -53,6 +75,17 @@ function ProgressNavigator({ approvedFlow, currentStep }) {
           );
         })}
       </div>
+
+      <button
+        type="button"
+        className="progress-restart-btn"
+        onClick={handleRestartGuide}
+      >
+        ↻ 보존처리 단계 다시 선택
+      </button>
+      <p className="progress-restart-copy">
+        가이드만 다시 시작하며 유물·X-Ray·육안조사 데이터는 유지됩니다.
+      </p>
     </aside>
   );
 }
