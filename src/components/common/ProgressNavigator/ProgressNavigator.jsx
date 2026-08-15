@@ -1,67 +1,59 @@
 import "./ProgressNavigator.css";
-import { useNavigate, useParams } from "react-router-dom";
 import {
   DEFAULT_GUIDE_FLOW,
-  flowRoutes,
   sanitizeGuideFlow,
 } from "../../../data/flowData";
-import { getActiveArtifactId } from "../../../data/workspaceProjects";
-import { getArtifactWorkflowRoute } from "../../../utils/artifactRoutes";
 
 function ProgressNavigator({ approvedFlow, currentStep }) {
-  const navigate = useNavigate();
-  const { artifactId: routeArtifactId } = useParams();
-  const artifactId = routeArtifactId
-    ? decodeURIComponent(routeArtifactId)
-    : getActiveArtifactId();
-
-  // AI Flow가 있으면 사용, 없으면 기본 Flow 사용
   const selectedSteps = sanitizeGuideFlow(approvedFlow);
-  const steps =
-    selectedSteps.length > 0 ? selectedSteps : DEFAULT_GUIDE_FLOW;
-
-  const handleStepClick = (step) => {
-    const stepKey = flowRoutes[step.name];
-
-    if (!stepKey) return;
-
-    navigate(getArtifactWorkflowRoute(artifactId, stepKey), {
-      state: {
-        approvedFlow: steps,
-      },
-    });
-  };
+  const steps = selectedSteps.length > 0 ? selectedSteps : DEFAULT_GUIDE_FLOW;
+  const currentIndex = steps.findIndex((step) => step.name === currentStep);
 
   return (
-    <div className="progress-wrapper">
-      {steps.map((step, index) => (
-        <div
-          key={step.id}
-          className="progress-item"
-          onClick={() => handleStepClick(step)}
-        >
-          <div
-            className={`progress-circle ${
-              currentStep === step.name ? "active" : ""
-            }`}
-          >
-            {index + 1}
-          </div>
+    <aside className="progress-wrapper" aria-label="복원 가이드 진행도">
+      <div className="progress-guide-copy">
+        <strong>작업 진행도</strong>
+        <span>단계 이동은 각 화면의 이전·다음 버튼을 이용해주세요.</span>
+      </div>
 
-          <span
-            className={`progress-title ${
-              currentStep === step.name ? "active" : ""
-            }`}
-          >
-            {step.name}
-          </span>
+      <div className="progress-steps">
+        {steps.map((step, index) => {
+          const status =
+            index < currentIndex
+              ? "completed"
+              : index === currentIndex
+                ? "current"
+                : "upcoming";
 
-          {index !== steps.length - 1 && (
-            <div className="progress-line"></div>
-          )}
-        </div>
-      ))}
-    </div>
+          const statusText =
+            status === "completed"
+              ? "완료"
+              : status === "current"
+                ? "현재 단계"
+                : "현재 단계 완료 후 진행 가능";
+
+          return (
+            <div
+              key={step.id}
+              className={`progress-item ${status}`}
+              aria-current={status === "current" ? "step" : undefined}
+              title={statusText}
+            >
+              <div className="progress-circle" aria-hidden="true">
+                {status === "completed" ? "✓" : index + 1}
+              </div>
+
+              <div className="progress-item-copy">
+                <span className="progress-title">{step.name}</span>
+                <small className="progress-status">{statusText}</small>
+              </div>
+
+              {index !== steps.length - 1 && <div className="progress-line" />}
+            </div>
+          );
+        })}
+      </div>
+    </aside>
   );
 }
 
