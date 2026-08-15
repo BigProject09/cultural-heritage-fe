@@ -1,3 +1,5 @@
+import { authFetch } from "./authToken";
+
 /**
  * VCA(육안조사) 실행 관리 + 결과 저장.
  *
@@ -28,7 +30,7 @@ async function readError(response) {
  * 목록 조회로 활성 run을 다시 찾아온다.
  */
 export async function getOrCreateAssessmentRun(artifactId) {
-  const createResponse = await fetch(`${SPRING_BASE}/api/vca/${artifactId}/runs`, {
+  const createResponse = await authFetch(`${SPRING_BASE}/api/vca/${artifactId}/runs`, {
     method: "POST",
   });
 
@@ -37,7 +39,7 @@ export async function getOrCreateAssessmentRun(artifactId) {
   }
 
   if (createResponse.status === 409) {
-    const listResponse = await fetch(`${SPRING_BASE}/api/vca/${artifactId}/runs`);
+    const listResponse = await authFetch(`${SPRING_BASE}/api/vca/${artifactId}/runs`);
     if (!listResponse.ok) {
       const detail = await readError(listResponse);
       throw new Error(`HTTP ${listResponse.status}: ${detail.slice(0, 300)}`);
@@ -55,7 +57,7 @@ export async function getOrCreateAssessmentRun(artifactId) {
 
 /** 육안조사 AI 응답(inspectPottery 결과)을 그대로 저장한다. */
 export async function savePotteryInspectionResult(artifactId, assessmentRunId, aiResult) {
-  const response = await fetch(
+  const response = await authFetch(
     `${SPRING_BASE}/api/vca/${artifactId}/runs/${assessmentRunId}/inspection-results/pottery`,
     {
       method: "POST",

@@ -1,3 +1,5 @@
+import { authFetch } from "./authToken";
+
 /**
  * X-RAY AI 서비스 호출.
  *
@@ -110,8 +112,18 @@ async function readError(response) {
   }
 }
 
+function isSpringBackendUrl(url) {
+  return String(url).startsWith(SPRING_BASE);
+}
+
+function fetchApiOrExternal(url, options = {}) {
+  return isSpringBackendUrl(url)
+    ? authFetch(url, options)
+    : fetch(url, options);
+}
+
 async function requestJson(url, options) {
-  const response = await fetch(url, options);
+  const response = await fetchApiOrExternal(url, options);
 
   if (!response.ok) {
     const detail = await readError(response);
@@ -134,7 +146,7 @@ async function fetchImageWithRetry(
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      const response = await fetch(url, { cache: "no-store" });
+      const response = await fetchApiOrExternal(url, { cache: "no-store" });
 
       if (response.ok) {
         const blob = await response.blob();
@@ -350,7 +362,7 @@ export function getStitchJob(jobId) {
 export async function getStitchJobByArtifactId(artifactId) {
   if (USE_MOCK || !artifactId) return null;
 
-  const response = await fetch(
+  const response = await authFetch(
     `${STITCH_JOBS_BASE}/by-artifact/${encodeURIComponent(artifactId)}`,
   );
 
@@ -589,7 +601,7 @@ export async function downloadFinalStitchResult(jobId, fileName) {
     });
   }
 
-  const response = await fetch(
+  const response = await authFetch(
     `${STITCH_JOBS_BASE}/${encodeURIComponent(jobId)}/result/final`,
   );
   if (!response.ok) {
