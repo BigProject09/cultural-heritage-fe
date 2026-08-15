@@ -441,11 +441,17 @@ async function request(path, options = {}) {
     : await response.text();
 
   if (!response.ok) {
+    const fallbackMessage =
+      response.status === 401
+        ? "로그인이 필요합니다. 다시 로그인해주세요."
+        : response.status === 403
+          ? "이 유물 프로젝트에 접근할 권한이 없습니다."
+          : `요청에 실패했습니다. (HTTP ${response.status})`;
     const message =
       payload?.message ||
       payload?.error ||
       (typeof payload === "string" ? payload : "") ||
-      `요청에 실패했습니다. (HTTP ${response.status})`;
+      fallbackMessage;
     throw new Error(message);
   }
 
