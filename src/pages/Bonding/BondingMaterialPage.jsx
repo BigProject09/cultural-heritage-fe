@@ -29,28 +29,47 @@ function BondingMaterialPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, bondingAdhesive, setCompleted, setStepSaving } = ctx;
+  const { taskId, bondingAdhesive, setCompleted, setStepSaving, savingSteps } = ctx;
 
-  // AI 추천값을 드롭다운 초기값으로 사용 (사용자가 이후 자유롭게 변경 가능)
+  const isSaving = savingSteps.has("bondingMaterial");
+
+  // 실제로 확정(제출)할 접합제. AI 추천값을 초기값으로 사용.
   const [adhesive, setAdhesive] = useState(
     () => bondingAdhesive?.recommended_adhesive || "",
   );
 
-  const selectedOption = ADHESIVE_OPTIONS.find(
-    (option) => option.name === adhesive,
+  // 오른쪽 상세 영역에 어떤 접합제를 보여줄지만 담당하는 순수 화면 상태.
+  // 목록 클릭은 미리보기일 뿐, 확정은 오른쪽 "선택" 버튼에서만 한다.
+  const [activeAdhesiveName, setActiveAdhesiveName] = useState(
+    () => bondingAdhesive?.recommended_adhesive || "",
   );
 
-  const handleComplete = () => {
+  const activeOption =
+    ADHESIVE_OPTIONS.find((option) => option.name === activeAdhesiveName) ||
+    ADHESIVE_OPTIONS[0] ||
+    null;
+
+  const handleCardClick = (name) => {
+    setActiveAdhesiveName(name);
+  };
+
+  const handleCardKeyDown = (e, name) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleCardClick(name);
+    }
+  };
+
+  const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
     }
 
     setStepSaving("bondingMaterial", true);
-    navigate("/bonding");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             adhesive,
@@ -65,18 +84,21 @@ function BondingMaterialPage() {
           ...prev,
           bondingMaterial: true,
         }));
-      } catch (error) {
+
+      navigate("/bonding");
+    } catch (error) {
         console.error(error);
         alert("접합제 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("bondingMaterial", false);
-      }
-    })();
+    }
   };
 
   if (!bondingAdhesive) {
     return <div>불러오는 중...</div>;
   }
+
+  const isActiveSelected = activeOption ? adhesive === activeOption.name : false;
 
   return (
     <div className="bonding-material-page">
@@ -87,57 +109,95 @@ function BondingMaterialPage() {
 
         <h1 className="vora-logo">VORA</h1>
 
-        <button className="nav-btn" onClick={handleComplete}>
-          완료
-        </button>
+        <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
+          </button>
       </div>
 
       <div className="material-container">
-        <div className="page-header">
-          <h1>접합제</h1>
-        </div>
-
-        <div className="material-card">
-          <div className="material-layout">
-            <div className="material-image-col">
-              <div className="material-image-box">
-                <AdhesiveThumbnail
-                  key={adhesive}
-                  src={selectedOption?.image}
-                  alt={adhesive}
-                />
-              </div>
-
-              <div className="material-select-item">
-                <label>접합제</label>
-
-                <select
-                  value={adhesive}
-                  onChange={(e) => setAdhesive(e.target.value)}
-                >
-                  {ADHESIVE_OPTIONS.map((option) => (
-                    <option key={option.name} value={option.name}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        {/* 좌우 2단 레이아웃 */}
+        <div className="material-layout">
+          {/* 왼쪽: 접합제 목록 */}
+          <aside className="material-list-panel">
+            <div className="material-list-panel-header">
+              <h2 className="material-list-title">접합제</h2>
             </div>
 
-            <div className="material-info-col">
-              <p className="material-description">
-                {bondingAdhesive.reason}
-              </p>
+            <div className="material-list-items">
+              {ADHESIVE_OPTIONS.map((option) => {
+                const isActive = activeOption?.name === option.name;
+                const isSelected = adhesive === option.name;
 
-              {bondingAdhesive.precautions?.length > 0 && (
-                <ul className="material-precautions">
-                  {bondingAdhesive.precautions.map((precaution) => (
-                    <li key={precaution}>⚠ {precaution}</li>
-                  ))}
-                </ul>
-              )}
+                return (
+                  <div
+                    key={option.name}
+                    className={`material-list-row ${isActive ? "active" : ""}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleCardClick(option.name)}
+                    onKeyDown={(e) => handleCardKeyDown(e, option.name)}
+                  >
+                    <span>{option.name}</span>
+                    {isSelected && (
+                      <span className="material-list-row-badge">선택됨</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          </aside>
+
+          {/* 오른쪽: 선택된 접합제 상세 */}
+          <section className="material-detail-panel">
+            {activeOption ? (
+              <>
+                <div className="material-image-box">
+                  <AdhesiveThumbnail
+                    key={activeOption.name}
+                    src={activeOption.image}
+                    alt={activeOption.name}
+                  />
+                </div>
+
+                <h2 className="material-detail-name">{activeOption.name}</h2>
+
+                {bondingAdhesive.reason && (
+                  <div className="material-detail-block">
+                    <h3>추천 이유</h3>
+                    <p className="material-description">
+                      {bondingAdhesive.reason}
+                    </p>
+                  </div>
+                )}
+
+                {bondingAdhesive.precautions?.length > 0 && (
+                  <div className="material-detail-block">
+                    <h3>주의사항</h3>
+                    <ul className="material-precautions">
+                      {bondingAdhesive.precautions.map((precaution) => (
+                        <li key={precaution}>⚠ {precaution}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="material-detail-actions">
+                  <button
+                    className={`nav-btn ${isActiveSelected ? "" : "secondary"}`}
+                    onClick={() => setAdhesive(activeOption.name)}
+                  >
+                    {isActiveSelected ? "선택됨" : "선택"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="material-detail-empty">표시할 접합제가 없습니다.</p>
+            )}
+          </section>
         </div>
       </div>
     </div>

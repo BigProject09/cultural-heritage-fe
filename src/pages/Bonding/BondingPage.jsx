@@ -6,6 +6,7 @@ import "./BondingPage.css";
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import {
   getNextStep,
+  getPreviousStep,
   moveToNextStep,
   moveToPreviousStep,
 } from "../../utils/flowNavigation";
@@ -91,6 +92,7 @@ function BondingPage() {
         ...prev,
         bondingPost: true,
       }));
+      ctx.setPostRecord("bonding", { memo, photos });
 
       return true;
     } catch (error) {
@@ -122,7 +124,9 @@ function BondingPage() {
     <div className="bonding-page">
       <div className="top-bar">
         <button
-          className="nav-btn"
+          className={`nav-btn${
+            getPreviousStep(approvedFlow, "접합") ? "" : " invisible"
+          }`}
           onClick={() =>
             moveToPreviousStep(
               navigate,

@@ -1,5 +1,5 @@
 import "./FlowRecommendationPage.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import { startTask } from "../../services/conservationGuideApi";
 import { useDisassembly } from "../../context/useDisassembly";
@@ -17,19 +17,27 @@ const AI_RECOMMENDED_FLOW = DEFAULT_GUIDE_FLOW;
 
 function FlowRecommendationPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { artifactId: routeArtifactId = "" } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
 
-  const [steps, setSteps] = useState(() =>
-    DEFAULT_GUIDE_FLOW.map((step) => ({ ...step, active: false })),
-  );
+  const [steps, setSteps] = useState(() => {
+    const previousNames = new Set(
+      (location.state?.reselectFlow || []).map((step) => step?.name),
+    );
+
+    return DEFAULT_GUIDE_FLOW.map((step) => ({
+      ...step,
+      active: previousNames.has(step.name),
+    }));
+  });
 
   const aiFlow = AI_RECOMMENDED_FLOW;
 
   const [loading, setLoading] = useState(false);
 
   const ctx = useDisassembly();
-  const { setTaskId, setApprovedFlow } = ctx;
+  const { setTaskId, setApprovedFlow, resetGuideWorkflow } = ctx;
 
   const toggleStep = (id) => {
     setSteps((prev) =>
@@ -66,11 +74,9 @@ function FlowRecommendationPage() {
   // 다음 버튼 : 사용자가 확정한 Flow로만 AI 작업을 시작
   const handleNext = async () => {
     if (approvedFlow.length === 0) {
-      alert("진행할 복원 공정을 하나 이상 선택해주세요.");
+      alert("진행할 보존처리 단계를 하나 이상 선택해주세요.");
       return;
     }
-
-    setApprovedFlow(approvedFlow);
 
     const artifactInfo = JSON.parse(localStorage.getItem("artifactInfo"));
 
@@ -80,6 +86,12 @@ function FlowRecommendationPage() {
       });
       return;
     }
+
+    // 새 보존가이드를 시작할 때 이전 Guide 세션 상태를 모두 초기화한다.
+    // X-RAY/육안조사 등 어떤 경로에서 진입했는지와 관계없이
+    // 동일한 초기 상태에서 시작하도록 한다.
+    resetGuideWorkflow();
+    setApprovedFlow(approvedFlow);
 
     const taskId = `task-${Date.now()}`;
 
@@ -106,6 +118,7 @@ function FlowRecommendationPage() {
       }
 
       const result = await startTask(taskId, {
+        artifactId,
         taskName: "문화재 복원",
         taskManager: "오서하",
         relicInfo,
@@ -141,42 +154,51 @@ function FlowRecommendationPage() {
 
   return (
     <div className="flow-page">
-      {/* Header */}
-      <div className="top-bar">
-        <button
-          className="nav-btn"
-          onClick={() => navigate(getArtifactRoute(artifactId))}
-        >
-          ← 이전
-        </button>
+      <div className="guide-container">
+        <nav className="guide-breadcrumb" aria-label="현재 위치">
+          <button
+            type="button"
+            onClick={() => navigate(getArtifactRoute(artifactId))}
+          >
+            유물 워크스페이스
+          </button>
+          <span>/</span>
+          <strong>복원 가이드</strong>
+        </nav>
 
-        <div className="logo" onClick={() => navigate("/")}>
-          VORA
-        </div>
+        <header className="guide-header">
+          <div className="guide-heading">
+            <span className="guide-eyebrow">INDEPENDENT GUIDE MODULE</span>
+            <h1 className="guide-title">복원 가이드</h1>
+            <p>진행할 보존처리 단계를 선택하고 AI 작업을 시작합니다.</p>
+          </div>
 
-        <button className="nav-btn" disabled={loading} onClick={handleNext}>
-          시작하기 →
-        </button>
+          <button
+            className="guide-start-btn"
+            disabled={loading}
+            onClick={handleNext}
+          >
+            시작하기 →
+          </button>
+        </header>
       </div>
 
       <div className="flow-container">
         {/* Flow 수정 */}
         <div className="flow-box">
-          <h2>추천 공정</h2>
+          <h2>추천</h2>
 
           {aiFlow.map((step, index) => (
             <div key={step.id} className="flow-step">
               <div className="ai-step">{step.name}</div>
 
-              {index !== aiFlow.length - 1 && (
-                <div className="arrow">↓</div>
-              )}
+              {index !== aiFlow.length - 1 && <div className="arrow">↓</div>}
             </div>
           ))}
         </div>
 
         <div className="flow-box">
-          <h2>최종 공정</h2>
+          <h2>보존처리 단계</h2>
 
           {steps.map((step, index) => (
             <div key={step.id} className="flow-step">
@@ -194,7 +216,6 @@ function FlowRecommendationPage() {
             </div>
           ))}
         </div>
-
       </div>
 
       {loading && (

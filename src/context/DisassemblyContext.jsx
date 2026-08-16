@@ -35,8 +35,20 @@ export function DisassemblyProvider({
   const [checklist, setChecklist] =
     useState([]);
 
+  // 해체 체크리스트 - 전체 항목 중 가장 중요한 주의사항 한 줄
+  const [checklistCaution, setChecklistCaution] =
+    useState("");
+
   // 해체 도구
   const [tools, setTools] =
+    useState([]);
+
+  // 해체 도구 - AI가 이 도구들을 추천하는 이유 (도구 개별이 아닌 3개 공통 한 줄)
+  const [toolsReason, setToolsReason] =
+    useState("");
+
+  // 해체 도구 - 사용 시 주의사항 (도구 개별이 아닌 3개 공통 목록)
+  const [toolsPrecautions, setToolsPrecautions] =
     useState([]);
 
   // 해체 방법
@@ -162,9 +174,8 @@ const [restorationChoice, setRestorationChoice] =
 
       });
 
-  // 하위 단계 페이지에서 "완료" 버튼을 누르면 응답을 기다리지 않고 바로 메인 페이지로
-  // 돌아가고, resume 요청은 백그라운드에서 계속 진행된다. 이 목록에 들어있는 동안
-  // 메인 페이지가 해당 단계 아이콘을 로딩 스피너로 표시한다.
+  // 하위 단계 저장 중 상태. 저장 성공 후에만 공정 메인으로 이동하도록 하며,
+  // 이 값은 중복 제출 방지와 저장 상태 표시에 사용할 수 있다.
   const [savingSteps, setSavingSteps] = useState(new Set());
 
   const setStepSaving = (key, isSaving) => {
@@ -179,14 +190,25 @@ const [restorationChoice, setRestorationChoice] =
     });
   };
 
+  // 각 공정 허브 페이지("작업 후 기록")에서 입력한 메모/사진 URL. 페이지를 벗어나면
+  // 사라지는 로컬 state였던 걸 결과 화면에서도 볼 수 있게 여기로 옮겨 보관한다.
+  const [postRecords, setPostRecords] = useState({
+    disassembly: null,
+    cleaning: null,
+    strengthening: null,
+    bonding: null,
+    restoration: null,
+  });
+
+  const setPostRecord = (stageKey, record) => {
+    setPostRecords((prev) => ({ ...prev, [stageKey]: record }));
+  };
+
+  // 보존가이드 세션만 초기화한다. X-Ray/육안조사 결과는 독립 모듈이므로
+  // 단계 재선택이나 새 가이드 시작 시 유지한다.
   const resetCompleted = () => {
     setTaskId(null);
     setApprovedFlow(null);
-
-    setPreInvestigation({
-      xray: false,
-      visual: false,
-    });
 
     setCleaning({
       mission1: false,
@@ -195,7 +217,10 @@ const [restorationChoice, setRestorationChoice] =
     });
 
     setChecklist([]);
+    setChecklistCaution("");
     setTools([]);
+    setToolsReason("");
+    setToolsPrecautions([]);
     setDisassemblyMethod([]);
     setSelectedTools([]);
     setChecklistSelection([]);
@@ -208,7 +233,6 @@ const [restorationChoice, setRestorationChoice] =
     });
 
   setCleaningAnalysis(null);
-  setVisualResult(null);
   setCleaningGuide(null);
   setDryingGuide(null);
   setCleaningSelection({ usePhysical: false, useChemical: false });
@@ -225,6 +249,13 @@ const [restorationChoice, setRestorationChoice] =
   setRestorationFinishingGuide(null);
   setRestorationChoice({ material: "" });
   setSavingSteps(new Set());
+  setPostRecords({
+    disassembly: null,
+    cleaning: null,
+    strengthening: null,
+    bonding: null,
+    restoration: null,
+  });
 
     setCompleted({
       // 해체
@@ -281,8 +312,17 @@ const [restorationChoice, setRestorationChoice] =
         checklist,
         setChecklist,
 
+        checklistCaution,
+        setChecklistCaution,
+
         tools,
         setTools,
+
+      toolsReason,
+      setToolsReason,
+
+      toolsPrecautions,
+      setToolsPrecautions,
 
       disassemblyMethod,
       setDisassemblyMethod,
@@ -356,7 +396,11 @@ const [restorationChoice, setRestorationChoice] =
       savingSteps,
       setStepSaving,
 
+      postRecords,
+      setPostRecord,
+
         resetCompleted,
+        resetGuideWorkflow: resetCompleted,
       }}
     >
       {children}

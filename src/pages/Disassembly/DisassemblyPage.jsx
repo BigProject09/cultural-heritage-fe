@@ -6,6 +6,7 @@ import "./DisassemblyPage.css";
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import {
   getNextStep,
+  getPreviousStep,
   moveToNextStep,
   moveToPreviousStep,
 } from "../../utils/flowNavigation";
@@ -89,6 +90,7 @@ function DisassemblyPage() {
         ...completed,
         post: true,
       });
+      ctx.setPostRecord("disassembly", { memo, photos });
 
       return true;
     } catch (error) {
@@ -120,7 +122,9 @@ function DisassemblyPage() {
     <div className="disassembly-page">
       <div className="top-bar">
         <button
-          className="nav-btn"
+          className={`nav-btn${
+            getPreviousStep(approvedFlow, "해체") ? "" : " invisible"
+          }`}
           onClick={() => moveToPreviousStep(navigate, approvedFlow, "해체")}
         >
           ← 이전

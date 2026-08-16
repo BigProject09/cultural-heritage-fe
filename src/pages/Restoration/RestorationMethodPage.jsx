@@ -16,9 +16,12 @@ function RestorationMethodPage({
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, setCompleted, setStepSaving } = ctx;
+  const { taskId, setCompleted, setStepSaving, savingSteps } = ctx;
 
-  const { steps: restorationSteps = [] } = ctx[guideField] || {};
+  const isSaving = savingSteps.has(completedKey);
+
+  const { steps: restorationSteps = [], overall_caution: overallCaution } =
+    ctx[guideField] || {};
 
   const [steps, setSteps] = useState(
     restorationSteps.map((step) => ({
@@ -90,7 +93,8 @@ function RestorationMethodPage({
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -107,10 +111,8 @@ function RestorationMethodPage({
     }
 
     setStepSaving(completedKey, true);
-    navigate(backPath);
 
-    (async () => {
-      try {
+    try {
         const result = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -124,14 +126,15 @@ function RestorationMethodPage({
 
           [completedKey]: true,
         }));
-      } catch (error) {
+
+      navigate(backPath);
+    } catch (error) {
         console.error(error);
 
         alert(`${title} 단계 저장 실패`);
-      } finally {
+    } finally {
         setStepSaving(completedKey, false);
-      }
-    })();
+    }
   };
 
   return (
@@ -146,12 +149,16 @@ function RestorationMethodPage({
         <h1 className="vora-logo">VORA</h1>
 
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" onClick={handleCheckAll}>
+          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택
           </button>
 
-          <button className="nav-btn" onClick={handleComplete}>
-            완료
+          <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
           </button>
         </div>
       </div>
@@ -161,6 +168,14 @@ function RestorationMethodPage({
       <div className="page-header">
         <h1>{title}</h1>
       </div>
+
+      {/* 주의사항 */}
+      {overallCaution && (
+        <div className="overall-caution">
+          <strong>주의사항</strong>
+          <p>{overallCaution}</p>
+        </div>
+      )}
 
       <div className="method-card">
         {steps.map((step, index) => (
@@ -195,7 +210,7 @@ function RestorationMethodPage({
                   );
                 }}
               >
-                {step.approved ? "✔ 완료됨" : "완료"}
+                {step.approved ? "✔ 완료" : "완료"}
               </button>
 
               <button className="edit-btn" onClick={() => handleEdit(step.id)}>

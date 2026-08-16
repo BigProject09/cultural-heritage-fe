@@ -13,13 +13,20 @@ import {
   markWorkspaceModule,
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
-import { getFinalReportRoute } from "../../utils/artifactRoutes";
+import {
+  getArtifactWorkflowRoute,
+  getFinalReportRoute,
+} from "../../utils/artifactRoutes";
+import { getCurrentStep } from "../../utils/flowNavigation";
+import { flowRoutes } from "../../data/flowData";
+import { useDisassembly } from "../../context/useDisassembly";
 import "./ProjectDetailPage.css";
 
 const PROGRESS_WIDTH_CLASSES = ["w-0", "w-1/3", "w-2/3", "w-full"];
 
 function ProjectDetailPage() {
   const navigate = useNavigate();
+  const disassemblyCtx = useDisassembly();
   const { artifactId, id } = useParams();
   const decodedId = decodeURIComponent(artifactId || id || "");
   const [project, setProject] = useState(null);
@@ -98,6 +105,51 @@ function ProjectDetailPage() {
       if (nextProject !== project) setProject(nextProject);
       const artifactInfo = selectWorkspaceProject(nextProject);
 
+      // 복원 가이드는 이미 진행하던 단계가 메모리(Context)에 남아있으면
+      // 단계를 새로 고르는 화면 대신 그 단계로 바로 이어서 들어간다. 이미 다
+      // 끝났으면(완료 상태거나, 승인된 단계 중 안 끝난 게 없으면) 결과 화면으로
+      // 보낸다. 새로고침하면 이 메모리가 초기화되어 다시 단계 선택 화면으로
+      // 돌아간다.
+      if (moduleKey === "guide") {
+        if (project.modules.guide === MODULE_STATUS.DONE) {
+          navigate(getArtifactWorkflowRoute(nextProject.artifactId, "result"), {
+            state: {
+              artifactId: nextProject.artifactId,
+              artifactInfo,
+              workspaceEntry: true,
+              workspaceModule: moduleKey,
+            },
+          });
+          return;
+        }
+
+        if (disassemblyCtx.taskId) {
+          const currentStep = getCurrentStep(
+            disassemblyCtx.approvedFlow,
+            disassemblyCtx.completed,
+          );
+
+          navigate(
+            currentStep
+              ? getArtifactWorkflowRoute(
+                  nextProject.artifactId,
+                  flowRoutes[currentStep.name],
+                )
+              : getArtifactWorkflowRoute(nextProject.artifactId, "result"),
+            {
+              state: {
+                artifactId: nextProject.artifactId,
+                artifactInfo,
+                workspaceEntry: true,
+                workspaceModule: moduleKey,
+                approvedFlow: disassemblyCtx.approvedFlow,
+              },
+            },
+          );
+          return;
+        }
+      }
+
       navigate(getModuleRoute(moduleKey, nextProject.artifactId), {
         state: {
           artifactId: nextProject.artifactId,
@@ -123,7 +175,7 @@ function ProjectDetailPage() {
 
   const handleDelete = async () => {
     const confirmed = window.confirm(
-      `"${project.name}" 프로젝트를 삭제하시겠습니까?\n\n대표 이미지와 이 프로젝트에서 저장한 보고서가 함께 삭제되며 복구할 수 없습니다.`,
+      `"${project.name}" 프로젝트를 삭제하시겠습니까?\n\n이 프로젝트의 X-Ray, 육안조사, 보존가이드, 보고서 및 관련 파일이 모두 삭제되며 복구할 수 없습니다.`,
     );
     if (!confirmed) return;
 
@@ -235,7 +287,7 @@ function ProjectDetailPage() {
         <section
           className={`heritage-final-report ${reportReady ? "ready" : ""}`}
         >
-          <div className="heritage-report-icon">PPT</div>
+          <div className="heritage-report-icon">Docx</div>
           <div>
             <span className="heritage-project-kicker">FINAL DELIVERABLE</span>
             <h2>최종 복원 결과 보고서</h2>

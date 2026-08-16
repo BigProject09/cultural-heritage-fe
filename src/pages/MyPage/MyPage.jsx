@@ -3,6 +3,7 @@ import "./MyPage.css";
 import "./AccountPages.css";
 import { useNavigate } from "react-router-dom";
 import HeritagePage from "../../components/workspace/HeritagePage";
+import { maskEmail, maskLoginId, maskName } from "../../utils/privacy";
 
 const DEFAULT_PROFILE_EXTRA = {
   role: "복원 전문가",
@@ -10,9 +11,8 @@ const DEFAULT_PROFILE_EXTRA = {
 };
 
 const NOTICE_ITEMS = [
-  "이름, 이메일, 연락처는 회원가입 시 등록한 정보로 표시됩니다.",
+  "이름, 이메일은 회원가입 시 등록한 정보로 표시됩니다.",
   "직무와 소개는 [프로필 수정]에서 언제든 바꿀 수 있습니다.",
-  "회원 탈퇴 시 저장된 계정 정보가 즉시 삭제되며 되돌릴 수 없습니다.",
 ];
 
 function readLoginUser() {
@@ -21,30 +21,6 @@ function readLoginUser() {
   } catch {
     return null;
   }
-}
-
-function readUsers() {
-  try {
-    return JSON.parse(localStorage.getItem("users") || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function formatDate(value, withTime = false) {
-  if (!value) return "-";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  const pad = (n) => String(n).padStart(2, "0");
-  const base = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
-  )}`;
-
-  if (!withTime) return base;
-
-  return `${base} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function MyPage() {
@@ -57,6 +33,7 @@ function MyPage() {
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showPersonalInfo, setShowPersonalInfo] = useState(false);
   const [draft, setDraft] = useState(profileExtra);
 
   const handleStartEdit = () => {
@@ -76,21 +53,7 @@ function MyPage() {
   };
 
   const handleWithdraw = () => {
-    if (!loginUser) return;
-
-    const confirmed = window.confirm(
-      "정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 정보가 삭제되며 복구할 수 없습니다."
-    );
-    if (!confirmed) return;
-
-    const remainingUsers = readUsers().filter(
-      (user) => user.email !== loginUser.email
-    );
-
-    localStorage.setItem("users", JSON.stringify(remainingUsers));
-    localStorage.removeItem("loginUser");
-    localStorage.removeItem("userProfileExtra");
-    navigate("/");
+    alert("준비 중인 기능입니다.");
   };
 
   if (!loginUser) {
@@ -184,21 +147,34 @@ function MyPage() {
         <div className="heritage-panel account-info-card">
           <div className="account-info-card-header">
             <h3 className="card-title">회원 정보</h3>
-            <span className="heritage-badge">정회원</span>
+            <div className="account-info-header-actions">
+              <span className="heritage-badge">정회원</span>
+              <button
+                type="button"
+                className="account-privacy-toggle"
+                onClick={() => setShowPersonalInfo((visible) => !visible)}
+              >
+                {showPersonalInfo ? "정보 숨기기" : "정보 보기"}
+              </button>
+            </div>
           </div>
 
           <dl className="account-info-list">
             <div className="account-info-row">
               <dt>이름</dt>
-              <dd>{loginUser.name}</dd>
+              <dd>{showPersonalInfo ? loginUser.name : maskName(loginUser.name)}</dd>
+            </div>
+            <div className="account-info-row">
+              <dt>아이디</dt>
+              <dd>{showPersonalInfo ? (loginUser.loginId || "-") : maskLoginId(loginUser.loginId)}</dd>
             </div>
             <div className="account-info-row">
               <dt>이메일</dt>
-              <dd>{loginUser.email}</dd>
+              <dd>{showPersonalInfo ? (loginUser.email || "-") : maskEmail(loginUser.email)}</dd>
             </div>
             <div className="account-info-row">
-              <dt>연락처</dt>
-              <dd>{loginUser.phone || "-"}</dd>
+              <dt>회원 등급</dt>
+              <dd>{loginUser.role === "ADMIN" ? "관리자" : "일반회원"}</dd>
             </div>
           </dl>
 
@@ -218,16 +194,8 @@ function MyPage() {
 
           <dl className="account-info-list">
             <div className="account-info-row">
-              <dt>가입일</dt>
-              <dd>{formatDate(loginUser.joinedAt)}</dd>
-            </div>
-            <div className="account-info-row">
-              <dt>마지막 로그인</dt>
-              <dd>{formatDate(loginUser.lastLoginAt, true)}</dd>
-            </div>
-            <div className="account-info-row">
               <dt>로그인 방식</dt>
-              <dd>이메일 로그인</dd>
+              <dd>아이디 로그인</dd>
             </div>
             <div className="account-info-row">
               <dt>계정 상태</dt>

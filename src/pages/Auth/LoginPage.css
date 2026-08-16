@@ -76,3 +76,56 @@
   }
 }
 }
+
+@layer components {
+.heritage-auth-card input.valid,
+.heritage-signup-grid input.valid {
+  border-color: #72886d;
+  box-shadow: 0 0 0 3px rgba(97, 115, 93, 0.1);
+}
+.heritage-auth-card input.invalid,
+.heritage-signup-grid input.invalid {
+  border-color: var(--heritage-danger);
+  box-shadow: 0 0 0 3px rgba(156, 91, 71, 0.1);
+}
+.heritage-field-message {
+  margin: -10px 0 14px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.heritage-field-message.error {
+  color: var(--heritage-danger);
+}
+.heritage-field-message.success {
+  color: #566b52;
+}
+.heritage-password-field {
+  position: relative;
+}
+.heritage-password-field input {
+  width: 100%;
+  padding-right: 58px;
+}
+.heritage-password-toggle {
+  position: absolute;
+  top: 0;
+  right: 7px;
+  height: 48px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--heritage-bronze-dark);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+.heritage-auth-security-note {
+  margin: 18px 0 0;
+  padding-top: 15px;
+  border-top: 1px solid rgba(202,188,168,0.6);
+  color: #827767;
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: center;
+}
+}

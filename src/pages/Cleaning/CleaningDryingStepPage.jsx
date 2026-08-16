@@ -9,7 +9,9 @@ function CleaningDryingStepPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, setCompleted, setStepSaving, dryingGuide } = ctx;
+  const { taskId, setCompleted, setStepSaving, savingSteps, dryingGuide } = ctx;
+
+  const isSaving = savingSteps.has("cleaningDryingStep");
 
   const [steps, setSteps] = useState(() =>
     (dryingGuide?.steps ?? []).map((step) => ({
@@ -56,7 +58,8 @@ function CleaningDryingStepPage() {
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (isSaving) return;
     const completedStepIds = steps
       .filter((step) => step.approved)
       .map((step) => step.id);
@@ -67,10 +70,8 @@ function CleaningDryingStepPage() {
     }
 
     setStepSaving("cleaningDryingStep", true);
-    navigate("/cleaning");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -83,13 +84,14 @@ function CleaningDryingStepPage() {
           ...prev,
           cleaningDryingStep: true,
         }));
-      } catch (error) {
+
+      navigate("/cleaning");
+    } catch (error) {
         console.error(error);
         alert("건조 단계 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("cleaningDryingStep", false);
-      }
-    })();
+    }
   };
 
   return (
@@ -103,12 +105,16 @@ function CleaningDryingStepPage() {
         <h1 className="vora-logo">VORA</h1>
 
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" onClick={handleCheckAll}>
+          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택
           </button>
 
-          <button className="nav-btn" onClick={handleComplete}>
-            완료
+          <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
           </button>
         </div>
       </div>
@@ -117,6 +123,14 @@ function CleaningDryingStepPage() {
       <div className="page-header">
         <h1>건조</h1>
       </div>
+
+      {/* 주의사항 */}
+      {dryingGuide?.overall_caution && (
+        <div className="overall-caution">
+          <strong>주의사항</strong>
+          <p>{dryingGuide.overall_caution}</p>
+        </div>
+      )}
 
       {/* 메인 카드 */}
       <div className="method-card">

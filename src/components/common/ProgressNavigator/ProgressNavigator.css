@@ -2,22 +2,34 @@
 
 @layer components {
 .progress-wrapper {
-  @apply w-[200px] shrink-0 bg-white shadow-[0_8px_20px_rgba(0,0,0,0.06)] box-border flex flex-col h-fit sticky px-6 py-[30px] rounded-[20px] top-[30px];
+  @apply w-[220px] shrink-0 bg-white shadow-[0_8px_20px_rgba(0,0,0,0.06)] box-border flex flex-col h-fit sticky px-6 py-[26px] rounded-[20px] top-[30px];
+}
+.progress-guide-copy {
+  @apply mb-6 pb-5 border-b border-solid border-[#e7ebf0];
+}
+.progress-guide-copy strong {
+  @apply block text-[15px] font-bold text-[#24354c] mb-1.5;
+}
+.progress-guide-copy span {
+  @apply block text-xs leading-relaxed text-[#7a8492];
+}
+.progress-steps {
+  @apply flex flex-col;
 }
 .progress-item {
-  @apply flex items-start gap-3.5 relative cursor-pointer pb-[34px] last:pb-0;
+  @apply flex items-start gap-3.5 relative pb-[34px] last:pb-0 cursor-default select-none;
 }
 .progress-circle {
-  @apply w-10 h-10 [background:#e8edf5] text-[#555] flex justify-center items-center text-base font-bold shrink-0 z-[2] transition-all duration-200 rounded-full;
+  @apply w-10 h-10 [background:#e8edf5] text-[#777] flex justify-center items-center text-base font-bold shrink-0 z-[2] rounded-full;
 }
-.progress-circle.active {
-  @apply bg-guide-primary text-white;
+.progress-item-copy {
+  @apply min-w-0 mt-[4px];
 }
 .progress-title {
-  @apply text-[15px] font-semibold text-[#666] text-left transition-all duration-200 mt-[9px];
+  @apply block text-[15px] font-semibold text-[#666] text-left;
 }
-.progress-title.active {
-  @apply text-guide-primary;
+.progress-status {
+  @apply block mt-1 text-[11px] leading-snug text-[#9aa2ad];
 }
 .progress-line {
   @apply absolute w-[3px] h-[calc(100%_-_40px)] [background:#d7dde7] z-[1] left-[19px] top-10;
@@ -26,30 +38,67 @@
   @apply hidden;
 }
 
-/* hover */
-.progress-item:hover .progress-circle {
-  @apply scale-[1.08];
+.progress-item.completed .progress-circle {
+  @apply [background:#dbeafe] text-[#2563eb];
 }
-.progress-item:hover .progress-title {
+.progress-item.completed .progress-title {
+  @apply text-[#2563eb];
+}
+.progress-item.completed .progress-line {
+  @apply [background:#bfdbfe];
+}
+.progress-item.current .progress-circle {
+  @apply bg-guide-primary text-white;
+}
+.progress-item.current .progress-title {
+  @apply text-guide-primary font-bold;
+}
+.progress-item.current .progress-status {
   @apply text-guide-primary;
 }
+.progress-item.upcoming .progress-circle {
+  @apply [background:#f0f2f5] text-[#9aa2ad];
+}
+.progress-item.upcoming .progress-title {
+  @apply text-[#8b929c];
+}
+.progress-restart-btn {
+  @apply mt-5 w-full rounded-lg border border-solid border-[#d7dde7] bg-white px-2.5 py-2 text-[11px] font-semibold leading-snug text-[#687386] transition-colors;
+}
+.progress-restart-btn:hover {
+  @apply border-guide-primary bg-[#fffaf4] text-guide-primary;
+}
+.progress-restart-copy {
+  @apply mt-2 text-[10px] leading-relaxed text-[#8b929c];
+}
 
-/* 반응형 */
 @media (max-width: 900px) {
   .progress-wrapper {
-    @apply static w-full flex-row overflow-x-auto;
+    @apply static w-full;
+  }
+  .progress-guide-copy {
+    @apply mb-5;
+  }
+  .progress-steps {
+    @apply flex-row overflow-x-auto pb-1;
   }
   .progress-item {
-    @apply flex-col items-center pr-[34px] pb-0;
+    @apply flex-col items-center min-w-[120px] pr-[26px] pb-0;
+  }
+  .progress-item-copy {
+    @apply mt-0 text-center;
   }
   .progress-title {
     @apply text-xs text-center mt-2;
+  }
+  .progress-status {
+    @apply max-w-[110px] text-center;
   }
   .progress-circle {
     @apply w-[38px] h-[38px] text-[15px];
   }
   .progress-line {
-    @apply w-[calc(100%_-_4px)] h-[3px] left-[38px] top-[19px];
+    @apply w-[calc(100%_-_12px)] h-[3px] left-[38px] top-[19px];
   }
 }
 }

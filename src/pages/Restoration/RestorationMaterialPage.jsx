@@ -20,21 +20,6 @@ const MATERIAL_OPTIONS = [
   },
 ];
 
-// AI 추천 이유(reason)는 추천된 재료 하나에 고정된 텍스트라, 드롭다운에서 다른
-// 재료를 선택해도 바뀌지 않는다. 선택한 재료가 무엇이든 일반적인 설명을 보여주기 위한 데이터.
-const MATERIAL_DESCRIPTIONS = {
-  "CDK-520":
-    "손으로 반죽해 성형하는 2액형 에폭시 퍼티입니다. 결손부를 채우고 원하는 형태로 조형한 뒤 경화시켜 사포로 다듬기 좋아, 형태 복원이 필요한 결손부 충전에 주로 사용합니다.",
-  "Araldite SV427+HV427":
-    "레진과 경화제를 섞어 쓰는 2액형 구조용 에폭시입니다. 작업 가능 시간이 길고 경화 후 강도가 높아, 크기가 큰 결손부나 구조적 강도가 필요한 충전에 적합합니다.",
-  "Epo-tec 301":
-    "점도가 매우 낮은 정밀 2액형 에폭시입니다. 미세한 틈까지 스며들고 투명도가 높아, 유리질 소재나 정밀한 마감이 필요한 부위에 주로 사용합니다.",
-  "XTR-311":
-    "표면 코팅 및 함침용 액상 수지입니다. 다공질 표면을 충전제 시공 전에 미리 안정화하거나 코팅하는 전처리 용도로 사용합니다.",
-  "Repairit Quik":
-    "속경화형 2액형 에폭시 퍼티입니다. 짧은 시간 안에 경화되어 작업 시간이 촉박하거나 임시 충전이 필요한 상황에 적합합니다.",
-};
-
 // AI 추천 이유가 "① ... ② ..." 또는 "1. ... 2. ..."처럼 번호 매겨진 여러 항목을
 // 줄바꿈 없이 하나의 문단으로 반환하는 경우가 있어, 항목별로 분리해서 보여주기 위한 헬퍼.
 function splitReasonPoints(text) {
@@ -93,35 +78,47 @@ function RestorationMaterialPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const {
-    taskId,
-    restorationMaterial,
-    setCompleted,
-    setStepSaving,
-  } = ctx;
+  const { taskId, restorationMaterial, setCompleted, setStepSaving, savingSteps } = ctx;
 
-  // AI 추천값을 드롭다운 초기값으로 사용 (사용자가 이후 자유롭게 변경 가능)
+  const isSaving = savingSteps.has("restorationMaterial");
+
+  // 실제로 확정(제출)할 복원제. AI 추천값을 초기값으로 사용.
   const [material, setMaterial] = useState(
     () => restorationMaterial?.recommended_material || "",
   );
 
-  const selectedOption = MATERIAL_OPTIONS.find(
-    (option) => option.name === material,
+  // 오른쪽 상세 영역에 어떤 복원제를 보여줄지만 담당하는 순수 화면 상태.
+  // 목록 클릭은 미리보기일 뿐, 확정은 오른쪽 "선택" 버튼에서만 한다.
+  const [activeMaterialName, setActiveMaterialName] = useState(
+    () => restorationMaterial?.recommended_material || "",
   );
 
-  const handleComplete = () => {
+  const activeOption =
+    MATERIAL_OPTIONS.find((option) => option.name === activeMaterialName) ||
+    MATERIAL_OPTIONS[0] ||
+    null;
 
+  const handleCardClick = (name) => {
+    setActiveMaterialName(name);
+  };
+
+  const handleCardKeyDown = (e, name) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleCardClick(name);
+    }
+  };
+
+  const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
     }
 
     setStepSaving("restorationMaterial", true);
-    navigate("/restoration");
 
-    (async () => {
-      try {
-
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             material,
@@ -137,143 +134,125 @@ function RestorationMaterialPage() {
           restorationMaterial: true,
         }));
 
-      } catch (error) {
-
+      navigate("/restoration");
+    } catch (error) {
         console.error(error);
         alert("복원 재료 저장 실패");
-
-      } finally {
-
+    } finally {
         setStepSaving("restorationMaterial", false);
-
-      }
-    })();
-
+    }
   };
 
   if (!restorationMaterial) {
     return <div>불러오는 중...</div>;
   }
 
+  const points = splitReasonPoints(restorationMaterial.reason);
+  const isActiveSelected = activeOption ? material === activeOption.name : false;
 
   return (
     <div className="restoration-material-page">
-
-
       <div className="detail-header">
-
-        <button
-          className="nav-btn"
-          onClick={() => navigate("/restoration")}
-        >
+        <button className="nav-btn" onClick={() => navigate("/restoration")}>
           ← 이전
         </button>
 
-
-        <h1 className="vora-logo">
-          VORA
-        </h1>
-
+        <h1 className="vora-logo">VORA</h1>
 
         <button
-          className="nav-btn"
-          onClick={handleComplete}
-        >
-          완료
-        </button>
-
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
+          </button>
       </div>
-
-
 
       <div className="material-container">
-
-
-        <div className="page-header">
-
-          <h1>
-            복원제
-          </h1>
-
-        </div>
-
-
-
-        <div className="material-card">
-
-
-          <div className="material-layout">
-            <div className="material-image-col">
-              <div className="material-image-box">
-                <MaterialThumbnail
-                  key={material}
-                  src={selectedOption?.image}
-                  alt={material}
-                />
-              </div>
-
-              <div className="material-select-item">
-                <label>복원제</label>
-
-                <select
-                  value={material}
-                  onChange={(e) => setMaterial(e.target.value)}
-                >
-                  {MATERIAL_OPTIONS.map((option) => (
-                    <option key={option.name} value={option.name}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {MATERIAL_DESCRIPTIONS[material] && (
-                <div className="material-info-box">
-                  <strong>
-                    <span className="material-info-box-icon" aria-hidden="true">
-                      📄
-                    </span>
-                    제품 정보
-                  </strong>
-                  <p>{MATERIAL_DESCRIPTIONS[material]}</p>
-                </div>
-              )}
+        {/* 좌우 2단 레이아웃 */}
+        <div className="material-layout">
+          {/* 왼쪽: 복원제 목록 */}
+          <aside className="material-list-panel">
+            <div className="material-list-panel-header">
+              <h2 className="material-list-title">복원제</h2>
             </div>
 
-            <div className="material-info-col">
-              {(() => {
-                const points = splitReasonPoints(restorationMaterial.reason);
+            <div className="material-list-items">
+              {MATERIAL_OPTIONS.map((option) => {
+                const isActive = activeOption?.name === option.name;
+                const isSelected = material === option.name;
+
                 return (
-                  <ul className="material-reason-list">
-                    {points.map((point, index) => {
-                      const { label, body } = parseReasonPoint(point);
-                      return (
-                        <li key={index}>
-                          {label && (
-                            <strong className="reason-item-label">
-                              {label}
-                            </strong>
-                          )}
-                          <span className="reason-item-body">{body}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  <div
+                    key={option.name}
+                    className={`material-list-row ${isActive ? "active" : ""}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleCardClick(option.name)}
+                    onKeyDown={(e) => handleCardKeyDown(e, option.name)}
+                  >
+                    <span>{option.name}</span>
+                    {isSelected && (
+                      <span className="material-list-row-badge">선택됨</span>
+                    )}
+                  </div>
                 );
-              })()}
+              })}
             </div>
-          </div>
+          </aside>
 
+          {/* 오른쪽: 선택된 복원제 상세 */}
+          <section className="material-detail-panel">
+            {activeOption ? (
+              <>
+                <div className="material-image-box">
+                  <MaterialThumbnail
+                    key={activeOption.name}
+                    src={activeOption.image}
+                    alt={activeOption.name}
+                  />
+                </div>
 
+                <h2 className="material-detail-name">{activeOption.name}</h2>
+
+                {points.length > 0 && (
+                  <div className="material-detail-block">
+                    <h3>추천 이유</h3>
+                    <ul className="material-reason-list">
+                      {points.map((point, index) => {
+                        const { label, body } = parseReasonPoint(point);
+                        return (
+                          <li key={index}>
+                            {label && (
+                              <strong className="reason-item-label">
+                                {label}
+                              </strong>
+                            )}
+                            <span className="reason-item-body">{body}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="material-detail-actions">
+                  <button
+                    className={`nav-btn ${isActiveSelected ? "" : "secondary"}`}
+                    onClick={() => setMaterial(activeOption.name)}
+                  >
+                    {isActiveSelected ? "선택됨" : "선택"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="material-detail-empty">표시할 복원제가 없습니다.</p>
+            )}
+          </section>
         </div>
-
-
       </div>
-
-
     </div>
   );
 }
-
 
 export default RestorationMaterialPage;

@@ -228,7 +228,7 @@ function ArtifactRegisterPage() {
               <p>
                 {localStorageMode
                   ? "대표 이미지를 압축된 Blob으로 변환해 IndexedDB에 저장합니다. S3 연동 전 임시 방식이며 브라우저 데이터 삭제 시 함께 사라집니다."
-                  : "저장 시 S3에 직접 업로드하고 서버에서 완료 여부를 검증합니다."}
+                  : "유물 정보 저장 후 대표 이미지를 서버에 전송하며, 서버가 S3 저장을 처리합니다."}
               </p>
             </div>
           </section>

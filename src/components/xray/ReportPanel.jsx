@@ -1,60 +1,37 @@
 /**
- * AI 1차 상태조사 문안 패널.
+ * AI 기반 X-ray 상태조사 문안 패널.
  *
- * 요약본만 지원한다.
- * PPT 삽입용, 1,500자 내외, 주요 영역 5건을 개별 서술한다.
- *
- * 문안은 전문가가 수정하는 초안이므로
- * 읽기 전용이 아니라 편집 가능한 textarea로 제공한다.
+ * 실서비스에서는 실무자용 요약 문안 하나만 사용한다.
+ * 최종 결합 X-ray와 전문가 검수 결과를 근거로 생성하며,
+ * 전문가는 생성 결과를 직접 수정한 뒤 최종 기록으로 확정한다.
  */
-
-const STYLES = [
-  {
-    value: "summary",
-    label: "요약본",
-    desc: "PPT 삽입용. 1,500자 내외, 주요 영역 5건",
-  },
-];
 
 export default function ReportPanel({
   report,
   meta,
-  style,
-  onStyleChange,
   loading,
   disabled,
   disabledReason,
   onGenerate,
   onChange,
 }) {
-  const current = STYLES.find((s) => s.value === style);
-
   return (
     <section className="panel">
-      <h2>4. AI 1차 상태조사 문안</h2>
+      <h2>4. AI 기반 X-ray 상태조사 문안</h2>
 
       <p className="sub">
-        검수표에서 오탐을 제외하고 검수 내용을 입력한 뒤 생성하면 그 결과가
-        문안에 반영됩니다. 신뢰도 상위 영역만 개별 서술하며 나머지는 통계로
-        요약됩니다.
+        최종 결합 X-ray와 전문가가 이상으로 포함한 검수 영역을 함께 분석해,
+        실제 확인 위치·결합 영향 가능성·추가 확인사항을 중심으로 실무자용
+        상태조사 초안을 생성합니다. 생성 후 직접 수정할 수 있습니다.
       </p>
 
-      {disabled && <div className="alert">{disabledReason}</div>}
+      {disabled && disabledReason && (
+        <div className="alert">{disabledReason}</div>
+      )}
 
-      <div className="style-picker">
-        {STYLES.map((s) => (
-          <button
-            key={s.value}
-            className={style === s.value ? "style-btn active" : "style-btn"}
-            onClick={() => onStyleChange(s.value)}
-            disabled={loading}
-          >
-            {s.label}
-          </button>
-        ))}
+      <div className="msg dim">
+        실무자용 요약 · 주요 검토 영역과 후속 확인 우선순위 중심
       </div>
-
-      {current && <div className="msg dim">{current.desc}</div>}
 
       <button
         className="primary"
@@ -70,12 +47,10 @@ export default function ReportPanel({
 
       {meta && (
         <div className="msg dim">
-          요약본
-          {" | "}
           {meta.charCount != null && (
             <>{meta.charCount.toLocaleString()}자 | </>
           )}
-          전체 {meta.totalRegionCount}건 중 개별 서술 {meta.detailCount}건 |
+          전체 {meta.totalRegionCount}건 중 개별 검토 {meta.detailCount}건 |
           모델 {meta.model}
         </div>
       )}
@@ -90,8 +65,8 @@ export default function ReportPanel({
           />
 
           <div className="msg dim">
-            문안은 직접 수정할 수 있습니다. 최종본은 JSON 저장 시 함께
-            포함됩니다.
+            AI가 작성한 초안입니다. 실제 상태조사 기록으로 확정하기 전에
+            전문가가 영상과 검수 결과를 대조해 수정·확인해주세요.
           </div>
         </>
       )}

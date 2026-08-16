@@ -8,10 +8,16 @@
   @apply items-center backdrop-blur-[18px] [background:rgba(246,242,233,0.92)] grid grid-cols-[1fr_auto_1fr] h-[76px] sticky z-40 px-[52px] py-0 border-b-[rgba(120,91,57,0.36)] border-b border-solid top-0;
 }
 .heritage-brand {
-  @apply items-center bg-transparent text-[color:var(--heritage-ink)] cursor-pointer flex [font-family:Georgia,"Noto_Serif_KR",serif] text-[22px] font-bold gap-[13px] justify-self-start tracking-[0.08em] text-left p-0 border-0;
+  @apply items-center bg-transparent text-[color:var(--heritage-ink)] cursor-pointer flex gap-[13px] justify-self-start text-left p-0 border-0;
 }
-.heritage-brand small {
-  @apply text-[#857562] block [font-family:Arial,sans-serif] text-[7px] tracking-[0.2em] mt-[3px];
+.heritage-brand-copy {
+  @apply flex flex-col gap-[4px] leading-none;
+}
+.heritage-brand-copy strong {
+  @apply [font-family:Georgia,"Noto_Serif_KR",serif] text-[23px] font-bold leading-none tracking-[0.08em];
+}
+.heritage-brand-copy small {
+  @apply text-[#857562] [font-family:Georgia,"Noto_Serif_KR",serif] text-[8px] font-semibold tracking-[0.045em] whitespace-nowrap;
 }
 .heritage-brand-mark {
   @apply items-center border border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)] flex text-[23px] h-[39px] justify-center w-[39px] rounded-full border-solid;
@@ -207,5 +213,45 @@
   .heritage-main-nav {
     @apply hidden;
   }
+  .heritage-brand-copy strong {
+    @apply text-xl;
+  }
+  .heritage-brand-copy small {
+    @apply text-[7px];
+  }
+}
+}
+
+@layer components {
+.heritage-profile-link {
+  padding: 7px 8px;
+  border-radius: 8px;
+  transition: background 0.16s ease;
+}
+.heritage-profile-link:hover,
+.heritage-profile-link:focus-visible {
+  background: rgba(150, 104, 61, 0.08);
+  outline: none;
+}
+.heritage-profile-link > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 58px;
+}
+.heritage-profile-link > span small {
+  color: #827767;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.heritage-profile-link > span strong {
+  color: var(--heritage-ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.heritage-profile-link.active > span strong {
+  color: var(--heritage-bronze-dark);
 }
 }

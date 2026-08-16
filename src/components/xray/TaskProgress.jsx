@@ -50,6 +50,7 @@ export default function TaskProgress({
   note,
   longNote,
   longAfterSeconds = 180,
+  showElapsed = true,
 }) {
   if (!active) return null;
 
@@ -62,6 +63,7 @@ export default function TaskProgress({
       note={note}
       longNote={longNote}
       longAfterSeconds={longAfterSeconds}
+      showElapsed={showElapsed}
     />
   );
 }
@@ -74,18 +76,21 @@ function ActiveTaskProgress({
   note,
   longNote,
   longAfterSeconds,
+  showElapsed,
 }) {
   const [elapsed, setElapsed] = useState(0);
   const startedAt = useRef(null);
 
   useEffect(() => {
+    if (!showElapsed && !longNote) return undefined;
+
     startedAt.current = Date.now();
     const timer = window.setInterval(() => {
       setElapsed(Math.floor((Date.now() - startedAt.current) / 1000));
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, []);
+  }, [longNote, showElapsed]);
 
   const currentIndex = steps.findIndex((step) => step.key === currentKey);
 
@@ -125,9 +130,11 @@ function ActiveTaskProgress({
         )}
 
         <div className="task-progress-meta">
-          <span className="task-progress-elapsed">
-            경과 {formatElapsed(elapsed)}
-          </span>
+          {showElapsed && (
+            <span className="task-progress-elapsed">
+              경과 {formatElapsed(elapsed)}
+            </span>
+          )}
 
           {currentNote && (
             <span className="task-progress-note">{currentNote}</span>

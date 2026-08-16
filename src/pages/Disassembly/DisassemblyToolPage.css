@@ -32,30 +32,90 @@
 }
 
 /* =========================
-   도구 목록
+   좌우 2단 레이아웃 (좌 30% / 우 70%)
 ========================= */
-.tool-list {
-    @apply flex flex-col gap-5;
+.tool-layout {
+    @apply flex items-start gap-8;
 }
-.tool-card {
-    @apply flex flex-col gap-1 bg-vora-surface border transition-colors duration-200 py-3.5 px-6 rounded-2xl border-vora-line border-solid cursor-pointer hover:border-vora-bronze;
+
+/* =========================
+   왼쪽: 선택한 도구 목록
+========================= */
+.tool-list-panel {
+    @apply w-[30%] shrink-0 bg-vora-surface border border-vora-line border-solid shadow-[0_10px_30px_rgba(63,52,38,0.06)] p-6 rounded-2xl;
 }
-.tool-card.selected {
-    @apply bg-vora-paper border-vora-bronze border-[1.5px];
+.tool-list-panel-header {
+    @apply mb-5;
 }
-.tool-card-header {
-    @apply flex items-center gap-3;
+.tool-list-panel-header--secondary {
+    @apply mt-7 pt-6 border-t border-vora-line border-solid;
 }
-.tool-card-radio {
-    @apply w-[18px] h-[18px] rounded-full border-2 border-solid border-vora-line shrink-0 transition-colors duration-200;
+.tool-list-title {
+    @apply text-lg font-bold text-vora-ink m-0;
 }
-.tool-card.selected .tool-card-radio {
-    @apply border-vora-bronze bg-vora-bronze;
+.tool-list-items {
+    @apply flex flex-col;
 }
-.tool-card h2 {
-    @apply text-lg font-semibold text-vora-ink m-0;
+.tool-list-empty {
+    @apply text-sm text-vora-muted py-2;
 }
-.tool-card p {
-    @apply text-sm text-vora-muted leading-[1.5] m-0 pl-[30px] line-clamp-2;
+.tool-list-row {
+    @apply flex items-center px-4 py-3.5 text-[15px] font-medium text-vora-bronze-dark leading-[1.4] cursor-pointer transition-colors duration-200 border-b border-vora-line/50 border-solid last:border-b-0 hover:[background:var(--color-vora-paper)];
+}
+.tool-list-row.active {
+    @apply [background:var(--color-vora-bronze)] text-white border-transparent hover:[background:var(--color-vora-bronze)];
+}
+.tool-list-row--static {
+    @apply cursor-default hover:[background:transparent];
+}
+
+/* =========================
+   오른쪽: 선택된 도구 상세
+========================= */
+.tool-detail-panel {
+    @apply w-[70%] min-w-0 bg-vora-surface border border-vora-line border-solid shadow-[0_10px_30px_rgba(63,52,38,0.06)] p-10 rounded-2xl transition-all duration-200;
+}
+.tool-detail-name {
+    @apply text-[32px] font-bold text-vora-ink mt-0 mb-3 mx-0;
+}
+.tool-detail-description {
+    @apply text-base text-vora-muted leading-[1.7] mb-8 mt-0 mx-0;
+}
+.tool-detail-block {
+    @apply mb-7;
+}
+.tool-detail-block h3 {
+    @apply text-sm font-bold text-vora-bronze-dark tracking-[0.04em] mb-3 mt-0 mx-0;
+}
+.tool-detail-block p {
+    @apply text-[15px] text-vora-ink leading-[1.6] m-0;
+}
+.tool-detail-block ul {
+    @apply flex flex-col gap-2 m-0 pl-5 list-disc;
+}
+.tool-detail-block li {
+    @apply text-[15px] text-vora-ink leading-[1.6];
+}
+.tool-detail-actions {
+    @apply flex justify-end gap-3 border-t border-vora-line border-solid pt-6;
+}
+.tool-detail-empty {
+    @apply text-vora-muted text-base;
+}
+
+/* =========================
+   반응형
+========================= */
+@media (max-width: 900px) {
+    .tool-layout {
+        @apply flex-col;
+    }
+    .tool-list-panel,
+    .tool-detail-panel {
+        @apply w-full;
+    }
+    .tool-detail-name {
+        @apply text-[26px];
+    }
 }
 }

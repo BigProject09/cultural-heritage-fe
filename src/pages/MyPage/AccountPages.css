@@ -95,3 +95,27 @@
   }
 }
 }
+
+@layer components {
+.account-info-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.account-privacy-toggle {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--heritage-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--heritage-bronze-dark);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+.account-privacy-toggle:hover,
+.account-privacy-toggle:focus-visible {
+  border-color: var(--heritage-bronze);
+  outline: none;
+}
+}

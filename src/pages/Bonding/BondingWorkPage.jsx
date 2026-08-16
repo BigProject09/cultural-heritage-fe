@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -7,6 +7,36 @@ import { uploadPhoto } from "../../services/photoUploadApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
 import "./BondingWorkPage.css";
+
+// 업로드 박스용 아이콘. 새 패키지 의존성 없이 인라인 SVG로 둔다.
+// (습윤 효과 테스트 페이지와 동일한 아이콘)
+function UploadDropIcon() {
+  return (
+    <svg
+      className="upload-dropzone-icon"
+      width="30"
+      height="30"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 15.5V4M12 4 7.8 8.2M12 4l4.2 4.2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 15.5v2.3A2.2 2.2 0 0 0 7.2 20h9.6a2.2 2.2 0 0 0 2.2-2.2v-2.3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 const ALIGNMENT_METRICS = [
   ["axis_alignment", "축 정렬"],
@@ -28,6 +58,8 @@ const SEVERITY_LABELS = {
 
 function BondingWorkPage() {
   const navigate = useNavigate();
+  const { artifactId: routeArtifactId = "" } = useParams();
+  const artifactId = decodeURIComponent(routeArtifactId);
 
   const ctx = useDisassembly();
   const {
@@ -36,7 +68,10 @@ function BondingWorkPage() {
     setBondingTempAnalysis,
     setCompleted,
     setStepSaving,
+    savingSteps,
   } = ctx;
+
+  const isSaving = savingSteps.has("bondingWork");
 
   const [beforePhoto, setBeforePhoto] = useState("");
   const [afterPhoto, setAfterPhoto] = useState("");
@@ -54,7 +89,7 @@ function BondingWorkPage() {
 
     setBeforeUploading(true);
     try {
-      const url = await uploadPhoto(file);
+      const url = await uploadPhoto(file, artifactId);
       setBeforePhoto(url);
     } catch (error) {
       console.error(error);
@@ -70,7 +105,7 @@ function BondingWorkPage() {
 
     setAfterUploading(true);
     try {
-      const url = await uploadPhoto(file);
+      const url = await uploadPhoto(file, artifactId);
       setAfterPhoto(url);
     } catch (error) {
       console.error(error);
@@ -130,12 +165,11 @@ function BondingWorkPage() {
   };
 
   // 검증 결과를 그대로 승인하고 다음(접합 방법 안내)으로 진행한다.
-  const handleProceed = () => {
+  const handleProceed = async () => {
+    if (isSaving) return;
     setStepSaving("bondingWork", true);
-    navigate("/bonding");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: { action: "proceed" },
         });
@@ -146,13 +180,14 @@ function BondingWorkPage() {
           ...prev,
           bondingWork: true,
         }));
-      } catch (error) {
+
+      navigate("/bonding");
+    } catch (error) {
         console.error(error);
         alert("임시접합 검증 결과 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("bondingWork", false);
-      }
-    })();
+    }
   };
 
   return (
@@ -187,10 +222,10 @@ function BondingWorkPage() {
 
           <button
             className={`nav-btn ${defaultAction === "retry" ? "secondary" : ""}`}
-            disabled={!bondingTempAnalysis}
+            disabled={!bondingTempAnalysis || isSaving}
             onClick={handleProceed}
           >
-            다음 →
+            {isSaving ? "완료 처리 중..." : "다음 →"}
           </button>
         </div>
       </div>
@@ -204,7 +239,7 @@ function BondingWorkPage() {
           <div
             className={`info-card photo-upload-zone ${
               bondingTempAnalysis || beforeUploading ? "is-disabled" : ""
-            }`}
+            } ${beforePhoto ? "has-photo" : ""}`}
           >
             <h2>임시접합 전</h2>
 
@@ -217,25 +252,39 @@ function BondingWorkPage() {
               onChange={handleBeforeFileChange}
             />
 
-            <p className="photo-upload-guide">
-              {beforeUploading
-                ? "사진을 업로드하고 있어요..."
-                : beforePhoto
-                  ? "다른 사진으로 바꾸려면 상자 안을 클릭하세요."
-                  : "상자 안을 클릭해 사진을 선택하세요."}
-            </p>
-
-            {beforePhoto && (
-              <div className="photo-preview">
-                <img src={beforePhoto} alt="임시접합 전" />
-              </div>
-            )}
+            <div className="upload-dropzone">
+              {beforeUploading ? (
+                <div className="upload-dropzone-status">
+                  <p className="photo-upload-guide">
+                    사진을 업로드하고 있어요...
+                  </p>
+                  <div className="upload-progress-track">
+                    <div className="upload-progress-fill" />
+                  </div>
+                </div>
+              ) : beforePhoto ? (
+                <>
+                  <div className="photo-preview">
+                    <img src={beforePhoto} alt="임시접합 전" />
+                  </div>
+                  <p className="photo-upload-guide">
+                    다른 사진으로 바꾸려면 상자 안을 클릭하세요.
+                  </p>
+                </>
+              ) : (
+                <div className="upload-dropzone-empty">
+                  <UploadDropIcon />
+                  <p className="upload-dropzone-title">사진을 업로드하세요</p>
+                  <p className="upload-dropzone-hint">이미지 파일 (JPG, PNG 등)</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div
             className={`info-card photo-upload-zone ${
               bondingTempAnalysis || afterUploading ? "is-disabled" : ""
-            }`}
+            } ${afterPhoto ? "has-photo" : ""}`}
           >
             <h2>임시접합 후</h2>
 
@@ -248,19 +297,33 @@ function BondingWorkPage() {
               onChange={handleAfterFileChange}
             />
 
-            <p className="photo-upload-guide">
-              {afterUploading
-                ? "사진을 업로드하고 있어요..."
-                : afterPhoto
-                  ? "다른 사진으로 바꾸려면 상자 안을 클릭하세요."
-                  : "상자 안을 클릭해 사진을 선택하세요."}
-            </p>
-
-            {afterPhoto && (
-              <div className="photo-preview">
-                <img src={afterPhoto} alt="임시접합 후" />
-              </div>
-            )}
+            <div className="upload-dropzone">
+              {afterUploading ? (
+                <div className="upload-dropzone-status">
+                  <p className="photo-upload-guide">
+                    사진을 업로드하고 있어요...
+                  </p>
+                  <div className="upload-progress-track">
+                    <div className="upload-progress-fill" />
+                  </div>
+                </div>
+              ) : afterPhoto ? (
+                <>
+                  <div className="photo-preview">
+                    <img src={afterPhoto} alt="임시접합 후" />
+                  </div>
+                  <p className="photo-upload-guide">
+                    다른 사진으로 바꾸려면 상자 안을 클릭하세요.
+                  </p>
+                </>
+              ) : (
+                <div className="upload-dropzone-empty">
+                  <UploadDropIcon />
+                  <p className="upload-dropzone-title">사진을 업로드하세요</p>
+                  <p className="upload-dropzone-hint">이미지 파일 (JPG, PNG 등)</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
