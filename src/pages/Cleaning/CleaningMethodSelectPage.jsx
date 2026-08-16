@@ -12,7 +12,13 @@ function CleaningMethodSelectPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, cleaningMethod, setCompleted, setStepSaving } = ctx;
+  const {
+    taskId,
+    cleaningMethod,
+    setCompleted,
+    setStepSaving,
+    savingSteps,
+  } = ctx;
 
   // AI 추천값을 기본 체크 상태로 사용 (사용자가 이후 자유롭게 토글 가능)
   const [usePhysical, setUsePhysical] = useState(
@@ -21,8 +27,23 @@ function CleaningMethodSelectPage() {
   const [useChemical, setUseChemical] = useState(
     () => !!cleaningMethod?.ai_analysis?.need_chemical_cleaning,
   );
+  const [selectionError, setSelectionError] = useState("");
 
-  const handleComplete = () => {
+  const isSaving = savingSteps.has("cleaningMethod");
+
+  const handleComplete = async () => {
+    if (isSaving) return;
+    if (!taskId) {
+      alert("복원가이드 작업 정보를 찾을 수 없습니다. 단계 선택 화면에서 다시 시작해주세요.");
+      return;
+    }
+
+    if (!usePhysical && !useChemical) {
+      setSelectionError("세척 방법을 하나 이상 선택해주세요.");
+      return;
+    }
+
+    setSelectionError("");
     const request = {
       resume: {
         use_physical: usePhysical,
@@ -31,27 +52,26 @@ function CleaningMethodSelectPage() {
     };
 
     setStepSaving("cleaningMethod", true);
-    navigate("/cleaning");
 
-    (async () => {
-      try {
-        const response = await resumeTask(taskId, request);
+    try {
+      const response = await resumeTask(taskId, request);
 
-        applyInterrupt(response.interrupt, ctx);
+      applyInterrupt(response.interrupt, ctx);
 
-        ctx.setCleaningSelection({ usePhysical, useChemical });
+      ctx.setCleaningSelection({ usePhysical, useChemical });
 
-        setCompleted((prev) => ({
-          ...prev,
-          cleaningMethod: true,
-        }));
-      } catch (error) {
-        console.error("❌ 에러:", error);
-        alert("세척 방법 저장 실패");
-      } finally {
-        setStepSaving("cleaningMethod", false);
-      }
-    })();
+      setCompleted((prev) => ({
+        ...prev,
+        cleaningMethod: true,
+      }));
+
+      navigate("/cleaning");
+    } catch (error) {
+      console.error("❌ 에러:", error);
+      alert("세척 방법 저장 실패");
+    } finally {
+      setStepSaving("cleaningMethod", false);
+    }
   };
 
   if (!cleaningMethod) {
@@ -66,8 +86,12 @@ function CleaningMethodSelectPage() {
         <button className="nav-btn" onClick={() => navigate("/cleaning")}>
           ← 이전
         </button>
-        <button className="nav-btn" onClick={handleComplete}>
-          완료
+        <button
+          className="nav-btn"
+          disabled={isSaving}
+          onClick={handleComplete}
+        >
+          {isSaving ? "완료 처리 중..." : "완료"}
         </button>
       </div>
 
@@ -103,7 +127,10 @@ function CleaningMethodSelectPage() {
               <input
                 type="checkbox"
                 checked={usePhysical}
-                onChange={(e) => setUsePhysical(e.target.checked)}
+                onChange={(e) => {
+                  setUsePhysical(e.target.checked);
+                  setSelectionError("");
+                }}
               />
             </label>
 
@@ -113,10 +140,19 @@ function CleaningMethodSelectPage() {
               <input
                 type="checkbox"
                 checked={useChemical}
-                onChange={(e) => setUseChemical(e.target.checked)}
+                onChange={(e) => {
+                  setUseChemical(e.target.checked);
+                  setSelectionError("");
+                }}
               />
             </label>
           </div>
+
+          {selectionError && (
+            <p className="method-selection-error" role="alert">
+              {selectionError}
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -12,7 +12,9 @@ function BondingMethodPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, bondingGuide, setCompleted, setStepSaving } = ctx;
+  const { taskId, bondingGuide, setCompleted, setStepSaving, savingSteps } = ctx;
+
+  const isSaving = savingSteps.has("bondingMethod");
 
   const {
     steps: bondingSteps = [],
@@ -85,7 +87,8 @@ function BondingMethodPage() {
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -102,10 +105,8 @@ function BondingMethodPage() {
     }
 
     setStepSaving("bondingMethod", true);
-    navigate("/bonding");
 
-    (async () => {
-      try {
+    try {
         const result = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -119,14 +120,15 @@ function BondingMethodPage() {
 
           bondingMethod: true,
         }));
-      } catch (error) {
+
+      navigate("/bonding");
+    } catch (error) {
         console.error(error);
 
         alert("접합 단계 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("bondingMethod", false);
-      }
-    })();
+    }
   };
 
   return (
@@ -138,12 +140,16 @@ function BondingMethodPage() {
           ← 이전
         </button>
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" onClick={handleCheckAll}>
+          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택
           </button>
 
-          <button className="nav-btn" onClick={handleComplete}>
-            완료
+          <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
           </button>
         </div>
       </div>

@@ -59,6 +59,32 @@
     @apply text-vora-muted text-[15px] leading-relaxed m-0;
 }
 
+
+.guide-result-actions {
+    @apply w-[min(760px,100%)] mx-auto mt-8 mb-12 flex items-center justify-between gap-6 bg-white border border-solid border-vora-line shadow-[0_10px_30px_rgba(63,52,38,0.06)] px-7 py-6 rounded-2xl;
+}
+.guide-result-actions > div {
+    @apply min-w-0;
+}
+.guide-result-actions strong {
+    @apply block text-base font-bold text-vora-ink mb-1;
+}
+.guide-result-actions span {
+    @apply block text-sm leading-relaxed text-vora-muted;
+}
+.guide-result-workspace-button {
+    @apply shrink-0 border-0 bg-vora-ink text-white text-sm font-bold px-5 py-3 rounded-xl cursor-pointer transition hover:opacity-90;
+}
+
+@media (max-width: 720px) {
+    .guide-result-actions {
+        @apply flex-col items-stretch;
+    }
+    .guide-result-workspace-button {
+        @apply w-full;
+    }
+}
+
 /* ================= 상세 팝업 ================= */
 .guide-result-modal-backdrop {
     @apply fixed inset-0 z-[100] flex items-center justify-center [background:rgba(23,32,29,0.48)] px-5;

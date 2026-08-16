@@ -30,7 +30,9 @@ function BondingMaterialPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, bondingAdhesive, setCompleted, setStepSaving } = ctx;
+  const { taskId, bondingAdhesive, setCompleted, setStepSaving, savingSteps } = ctx;
+
+  const isSaving = savingSteps.has("bondingMaterial");
 
   // 실제로 확정(제출)할 접합제. AI 추천값을 초기값으로 사용.
   const [adhesive, setAdhesive] = useState(
@@ -59,38 +61,38 @@ function BondingMaterialPage() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
     }
 
     setStepSaving("bondingMaterial", true);
-    navigate("/bonding");
 
-    (async () => {
-      try {
-        const response = await resumeTask(taskId, {
-          resume: {
-            adhesive,
-          },
-        });
+    try {
+      const response = await resumeTask(taskId, {
+        resume: {
+          adhesive,
+        },
+      });
 
-        applyInterrupt(response.interrupt, ctx);
+      applyInterrupt(response.interrupt, ctx);
 
-        ctx.setBondingChoice({ adhesive });
+      ctx.setBondingChoice({ adhesive });
 
-        setCompleted((prev) => ({
-          ...prev,
-          bondingMaterial: true,
-        }));
-      } catch (error) {
-        console.error(error);
-        alert("접합제 저장 실패");
-      } finally {
-        setStepSaving("bondingMaterial", false);
-      }
-    })();
+      setCompleted((prev) => ({
+        ...prev,
+        bondingMaterial: true,
+      }));
+
+      navigate("/bonding");
+    } catch (error) {
+      console.error(error);
+      alert("접합제 저장 실패");
+    } finally {
+      setStepSaving("bondingMaterial", false);
+    }
   };
 
   if (!bondingAdhesive) {
@@ -107,8 +109,12 @@ function BondingMaterialPage() {
         <button className="nav-btn" onClick={() => navigate("/bonding")}>
           ← 이전
         </button>
-        <button className="nav-btn" onClick={handleComplete}>
-          완료
+        <button
+          className="nav-btn"
+          disabled={isSaving}
+          onClick={handleComplete}
+        >
+          {isSaving ? "완료 처리 중..." : "완료"}
         </button>
       </div>
 

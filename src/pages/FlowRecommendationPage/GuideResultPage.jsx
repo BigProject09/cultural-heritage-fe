@@ -329,6 +329,20 @@ function GuideResultPage() {
         )}
       </div>
 
+      <div className="guide-result-actions">
+        <div>
+          <strong>복원 가이드 작업이 완료되었습니다.</strong>
+          <span>유물 워크스페이스로 돌아가 다른 분석 결과를 확인하거나 최종 보고서를 진행할 수 있습니다.</span>
+        </div>
+        <button
+          type="button"
+          className="guide-result-workspace-button"
+          onClick={() => navigate(getArtifactRoute(artifactId))}
+        >
+          유물 워크스페이스로 돌아가기
+        </button>
+      </div>
+
       {activeDetail && (
         <div
           className="guide-result-modal-backdrop"

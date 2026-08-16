@@ -10,7 +10,9 @@ function CleaningStepPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, setCompleted, setStepSaving, cleaningGuide } = ctx;
+  const { taskId, setCompleted, setStepSaving, savingSteps, cleaningGuide } = ctx;
+
+  const isSaving = savingSteps.has("cleaningStep");
 
   // 기존 UI: 각 세척 단계는 사용자가 완료 여부를 직접 표시한다.
   const [steps, setSteps] = useState(() =>
@@ -58,7 +60,8 @@ function CleaningStepPage() {
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (isSaving) return;
     const completedStepIds = steps
       .filter((step) => step.approved)
       .map((step) => step.id);
@@ -69,10 +72,8 @@ function CleaningStepPage() {
     }
 
     setStepSaving("cleaningStep", true);
-    navigate("/cleaning");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -85,13 +86,14 @@ function CleaningStepPage() {
           ...prev,
           cleaningStep: true,
         }));
-      } catch (error) {
+
+      navigate("/cleaning");
+    } catch (error) {
         console.error(error);
         alert("세척 단계 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("cleaningStep", false);
-      }
-    })();
+    }
   };
 
   return (
@@ -108,12 +110,16 @@ function CleaningStepPage() {
         </button>
 
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" onClick={handleCheckAll}>
+          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택
           </button>
 
-          <button className="nav-btn" onClick={handleComplete}>
-            완료
+          <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
           </button>
         </div>
       </div>

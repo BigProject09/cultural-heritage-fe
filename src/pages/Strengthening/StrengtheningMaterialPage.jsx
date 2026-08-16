@@ -63,7 +63,9 @@ function StrengtheningMaterialPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, strengtheningRecommendation, setCompleted, setStepSaving } = ctx;
+  const { taskId, strengtheningRecommendation, setCompleted, setStepSaving, savingSteps } = ctx;
+
+  const isSaving = savingSteps.has("strengtheningMaterial");
 
   // 실제로 확정(제출)할 강화제/용제. AI 추천값을 초기값으로 사용.
   const [agent, setAgent] = useState(
@@ -149,7 +151,9 @@ function StrengtheningMaterialPage() {
     setSolvent(name);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (isSaving) return;
+
     if (!agent || !solvent) {
       alert("강화제와 용제를 모두 선택해주세요.");
       return;
@@ -161,32 +165,31 @@ function StrengtheningMaterialPage() {
     }
 
     setStepSaving("strengtheningMaterial", true);
-    navigate("/strengthening");
 
-    (async () => {
-      try {
-        const response = await resumeTask(taskId, {
-          resume: {
-            agent,
-            solvent,
-          },
-        });
+    try {
+      const response = await resumeTask(taskId, {
+        resume: {
+          agent,
+          solvent,
+        },
+      });
 
-        applyInterrupt(response.interrupt, ctx);
+      applyInterrupt(response.interrupt, ctx);
 
-        ctx.setStrengtheningChoice({ agent, solvent });
+      ctx.setStrengtheningChoice({ agent, solvent });
 
-        setCompleted((prev) => ({
-          ...prev,
-          strengtheningMaterial: true,
-        }));
-      } catch (error) {
-        console.error(error);
-        alert("강화제 저장 실패");
-      } finally {
-        setStepSaving("strengtheningMaterial", false);
-      }
-    })();
+      setCompleted((prev) => ({
+        ...prev,
+        strengtheningMaterial: true,
+      }));
+
+      navigate("/strengthening");
+    } catch (error) {
+      console.error(error);
+      alert("강화제 저장 실패");
+    } finally {
+      setStepSaving("strengtheningMaterial", false);
+    }
   };
 
   if (!strengtheningRecommendation) {
@@ -201,8 +204,12 @@ function StrengtheningMaterialPage() {
         <button className="nav-btn" onClick={() => navigate("/strengthening")}>
           ← 이전
         </button>
-        <button className="nav-btn" onClick={handleComplete}>
-          선택 완료
+        <button
+          className="nav-btn"
+          disabled={isSaving}
+          onClick={handleComplete}
+        >
+          {isSaving ? "완료 처리 중..." : "선택 완료"}
         </button>
       </div>
 
@@ -336,11 +343,10 @@ function StrengtheningMaterialPage() {
 
                 <div className="material-detail-actions">
                   <button
-                    className={`nav-btn material-selection-btn ${
-                      agent === activeAgentOption.name
-                        ? "is-selected"
-                        : "is-unselected"
-                    }`}
+                    className={`nav-btn material-selection-btn ${agent === activeAgentOption.name
+                      ? "is-selected"
+                      : "is-unselected"
+                      }`}
                     onClick={() => confirmAgent(activeAgentOption.name)}
                   >
                     {agent === activeAgentOption.name ? "선택됨" : "미선택"}
@@ -370,11 +376,10 @@ function StrengtheningMaterialPage() {
 
                 <div className="material-detail-actions">
                   <button
-                    className={`nav-btn material-selection-btn ${
-                      solvent === activeSolventOption.name
-                        ? "is-selected"
-                        : "is-unselected"
-                    }`}
+                    className={`nav-btn material-selection-btn ${solvent === activeSolventOption.name
+                      ? "is-selected"
+                      : "is-unselected"
+                      }`}
                     onClick={() => confirmSolvent(activeSolventOption.name)}
                   >
                     {solvent === activeSolventOption.name ? "선택됨" : "미선택"}
@@ -387,7 +392,7 @@ function StrengtheningMaterialPage() {
           </section>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

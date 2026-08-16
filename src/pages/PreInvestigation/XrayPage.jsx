@@ -228,10 +228,33 @@ async function sourceToFile(source, index) {
     throw new Error("사전 등록된 2D 이미지 형식을 확인할 수 없습니다.");
   }
 
-  const response = await fetch(source);
-  if (!response.ok) {
+  let response = null;
+  let lastError = null;
+
+  // S3/네트워크 응답이 일시적으로 늦는 경우 바로 결합 전체를 실패시키지
+  // 않고 짧게 재시도한다. production origin CORS 자체가 잘못된 경우에는
+  // 재시도 후에도 실패하므로 별도 S3 CORS 설정 확인이 필요하다.
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    try {
+      response = await fetch(source, { cache: "no-store" });
+      if (response.ok) break;
+
+      lastError = new Error(
+        `사전 등록된 2D 이미지를 불러오지 못했습니다. (HTTP ${response.status})`,
+      );
+    } catch (error) {
+      lastError = error;
+    }
+
+    if (attempt < 4) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+  }
+
+  if (!response?.ok) {
     throw new Error(
-      `사전 등록된 2D 이미지를 불러오지 못했습니다. (HTTP ${response.status})`,
+      "사전 등록된 2D 이미지를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+      { cause: lastError },
     );
   }
 
@@ -315,7 +338,9 @@ function workflowDefectToRegions(defect, index) {
     areaRatioPercent: defect?.geometry?.areaRatioPercent ?? null,
     mappingStatus: defect?.geometry?.mappingStatus || originType,
     originType,
-    userNote: `${originLabel}. 최종 결합본의 표시 영역을 확인하세요.`,
+    userNote:
+      defect?.geometry?.userNote ||
+      `${originLabel}. 최종 결합본의 표시 영역을 확인하세요.`,
     reviewDecision,
   };
 
@@ -522,6 +547,10 @@ export default function XrayPage() {
   const [stitchStatus, setStitchStatus] = useState("IDLE");
   const [stitchMessage, setStitchMessage] = useState("");
   const [stitchJobId, setStitchJobId] = useState("");
+  const [uploadProgress, setUploadProgress] = useState({
+    completed: 0,
+    total: 0,
+  });
 
   /**
    * 조각별 배치 정보.
@@ -561,7 +590,6 @@ export default function XrayPage() {
   const [report, setReport] = useState("");
   const [reportMeta, setReportMeta] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
-  const [reportStyle, setReportStyle] = useState("summary");
   const [isDragging, setIsDragging] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   // 페이지 재진입 직후에는 아직 서버의 실제 진행 단계를 모른다.
@@ -1012,6 +1040,10 @@ export default function XrayPage() {
     setStitchJobId("");
     setStitchStatus("UPLOADING");
     setStitchMessage("입력 이미지를 준비하고 있습니다.");
+    setUploadProgress({
+      completed: 0,
+      total: fragmentFiles.length + (USE_MOCK ? 0 : colorSources.length),
+    });
     setAssembledFile(null);
 
     try {
@@ -1026,8 +1058,13 @@ export default function XrayPage() {
         artifactId,
         colorFiles,
         xrayFiles: fragmentFiles,
+        onUploadProgress: ({ completed, total }) => {
+          setUploadProgress({ completed, total });
+          setStitchMessage(`입력 이미지를 업로드하고 있습니다. (${completed}/${total})`);
+        },
       });
 
+      setStitchMessage("업로드를 완료했습니다. 결합 준비 상태를 확인하고 있습니다.");
       setStitchJobId(created.jobId);
       rememberXrayJob(artifactId, created.jobId, fragmentFiles.length);
       setStitchStatus(created.status || "STITCHING");
@@ -1336,6 +1373,24 @@ export default function XrayPage() {
     );
   }
 
+  async function persistReviewNote(region) {
+    if (USE_MOCK || !stitchJobId || region?.defectId == null) return;
+
+    try {
+      await updateWorkflowDefects(stitchJobId, [
+        {
+          id: region.defectId,
+          reviewDecision: String(region.reviewDecision || "damage").toUpperCase(),
+          userNote: region.userNote || "",
+        },
+      ]);
+      setReport("");
+      setReportMeta(null);
+    } catch (error) {
+      setInspectionMessage(`소견 저장 실패: ${error.message}`);
+    }
+  }
+
   async function persistReviewDecision(id, reviewDecision) {
     const selected = regions.find((region) => region.regionId === id);
     if (!selected) return;
@@ -1351,6 +1406,7 @@ export default function XrayPage() {
           {
             id: selected.defectId,
             reviewDecision: reviewDecision.toUpperCase(),
+            userNote: selected.userNote || "",
           },
         ]);
       } catch (error) {
@@ -1409,7 +1465,6 @@ export default function XrayPage() {
           rgbImages: [],
           artifactType,
           material,
-          reportStyle,
         });
         setReport(result.report || "");
         setReportMeta({
@@ -1423,12 +1478,11 @@ export default function XrayPage() {
         const result = await generateWorkflowReportText(stitchJobId, {
           artifactType,
           material,
-          reportStyle,
         });
         const text = result.reportText || "";
         setReport(text);
         setReportMeta({
-          style: reportStyle,
+          style: "summary",
           charCount: text.length,
           detailCount: includedCount,
           totalRegionCount: regions.length,
@@ -1873,7 +1927,13 @@ export default function XrayPage() {
                       fragmentFiles.length < 2 || stitchBusy || resultLoading
                     }
                   >
-                    {stitchBusy ? "조각 결합 중..." : "조각 결합 시작"}
+                    {stitchStatus === "UPLOADING"
+                      ? uploadProgress.total > 0
+                        ? `업로드 중 ${uploadProgress.completed}/${uploadProgress.total}`
+                        : "업로드 준비 중..."
+                      : stitchBusy
+                        ? "조각 결합 중..."
+                        : "조각 결합 시작"}
                     <span aria-hidden="true">→</span>
                   </button>
                 </div>
@@ -1889,7 +1949,11 @@ export default function XrayPage() {
                 <TaskProgress
                   active={stitchBusy}
                   headline={stitchMessage || "X-RAY 조각을 결합하고 있습니다"}
-                  detail={`조각 ${fragmentFiles.length}장 · 컬러 기준 ${colorSources.length}장`}
+                  detail={
+                    stitchStatus === "UPLOADING" && uploadProgress.total > 0
+                      ? `업로드 ${uploadProgress.completed}/${uploadProgress.total} · X-RAY ${fragmentFiles.length}장 · 컬러 기준 ${colorSources.length}장`
+                      : `조각 ${fragmentFiles.length}장 · 컬러 기준 ${colorSources.length}장`
+                  }
                   steps={STITCH_STEPS}
                   currentKey={stitchStatus}
                   note="결합 상태는 단계별로 자동 갱신됩니다."
@@ -2308,6 +2372,7 @@ export default function XrayPage() {
                               event.target.value,
                             )
                           }
+                          onBlur={() => void persistReviewNote(selectedRegion)}
                           placeholder="이미지에서 확인한 특징과 판단 근거를 입력하세요."
                         />
                       </label>
@@ -2371,8 +2436,6 @@ export default function XrayPage() {
                 <ReportPanel
                   report={report}
                   meta={reportMeta}
-                  style={reportStyle}
-                  onStyleChange={setReportStyle}
                   loading={reportLoading}
                   disabled={
                     health === null ||

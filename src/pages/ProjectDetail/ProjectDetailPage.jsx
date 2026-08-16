@@ -208,7 +208,7 @@ function ProjectDetailPage() {
 
   const handleDelete = async () => {
     const confirmed = window.confirm(
-      `"${project.name}" 프로젝트를 삭제하시겠습니까?\n\n대표 이미지와 이 프로젝트에서 저장한 보고서가 함께 삭제되며 복구할 수 없습니다.`,
+      `"${project.name}" 프로젝트를 삭제하시겠습니까?\n\n이 프로젝트의 X-Ray, 육안조사, 보존가이드, 보고서 및 관련 파일이 모두 삭제되며 복구할 수 없습니다.`,
     );
     if (!confirmed) return;
 

@@ -3,6 +3,7 @@ import "./MyPage.css";
 import "./AccountPages.css";
 import { useNavigate } from "react-router-dom";
 import HeritagePage from "../../components/workspace/HeritagePage";
+import { maskEmail, maskLoginId, maskName } from "../../utils/privacy";
 
 const DEFAULT_PROFILE_EXTRA = {
   role: "복원 전문가",
@@ -32,6 +33,7 @@ function MyPage() {
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showPersonalInfo, setShowPersonalInfo] = useState(false);
   const [draft, setDraft] = useState(profileExtra);
 
   const handleStartEdit = () => {
@@ -145,17 +147,30 @@ function MyPage() {
         <div className="heritage-panel account-info-card">
           <div className="account-info-card-header">
             <h3 className="card-title">회원 정보</h3>
-            <span className="heritage-badge">정회원</span>
+            <div className="account-info-header-actions">
+              <span className="heritage-badge">정회원</span>
+              <button
+                type="button"
+                className="account-privacy-toggle"
+                onClick={() => setShowPersonalInfo((visible) => !visible)}
+              >
+                {showPersonalInfo ? "정보 숨기기" : "정보 보기"}
+              </button>
+            </div>
           </div>
 
           <dl className="account-info-list">
             <div className="account-info-row">
               <dt>이름</dt>
-              <dd>{loginUser.name}</dd>
+              <dd>{showPersonalInfo ? loginUser.name : maskName(loginUser.name)}</dd>
+            </div>
+            <div className="account-info-row">
+              <dt>아이디</dt>
+              <dd>{showPersonalInfo ? (loginUser.loginId || "-") : maskLoginId(loginUser.loginId)}</dd>
             </div>
             <div className="account-info-row">
               <dt>이메일</dt>
-              <dd>{loginUser.email}</dd>
+              <dd>{showPersonalInfo ? (loginUser.email || "-") : maskEmail(loginUser.email)}</dd>
             </div>
             <div className="account-info-row">
               <dt>회원 등급</dt>
@@ -180,7 +195,7 @@ function MyPage() {
           <dl className="account-info-list">
             <div className="account-info-row">
               <dt>로그인 방식</dt>
-              <dd>이메일 로그인</dd>
+              <dd>아이디 로그인</dd>
             </div>
             <div className="account-info-row">
               <dt>계정 상태</dt>

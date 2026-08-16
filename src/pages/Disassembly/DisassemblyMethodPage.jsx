@@ -13,10 +13,13 @@ function DisassemblyMethodPage() {
     taskId,
     setCompleted,
     setStepSaving,
+    savingSteps,
     disassemblyMethod,
     methodWorkingSteps: steps,
     setMethodWorkingSteps: setSteps,
   } = ctx;
+
+  const isSaving = savingSteps.has("method");
 
   const handleCheckAll = () => {
     setSteps((prev) => prev.map((s) => ({ ...s, approved: true })));
@@ -81,7 +84,8 @@ function DisassemblyMethodPage() {
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -96,10 +100,8 @@ function DisassemblyMethodPage() {
     }
 
     setStepSaving("method", true);
-    navigate("/disassembly");
 
-    (async () => {
-      try {
+    try {
         const result = await resumeTask(taskId, {
           resume: {
             completed_step_ids: completedStepIds,
@@ -112,13 +114,14 @@ function DisassemblyMethodPage() {
           ...prev,
           method: true,
         }));
-      } catch (error) {
+
+      navigate("/disassembly");
+    } catch (error) {
         console.error(error);
         alert("해체 방법 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("method", false);
-      }
-    })();
+    }
   };
 
   return (
@@ -134,12 +137,16 @@ function DisassemblyMethodPage() {
           ← 이전
         </button>
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" onClick={handleCheckAll}>
+          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택
           </button>
 
-          <button className="nav-btn" onClick={handleComplete}>
-            완료
+          <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -60,9 +60,13 @@ const SEVERITY_LABELS = {
 
 function StrengtheningWettingPage() {
   const navigate = useNavigate();
+  const { artifactId: routeArtifactId = "" } = useParams();
+  const artifactId = decodeURIComponent(routeArtifactId);
 
   const ctx = useDisassembly();
-  const { taskId, colorChangeAnalysis, setCompleted, setStepSaving } = ctx;
+  const { taskId, colorChangeAnalysis, setCompleted, setStepSaving, savingSteps } = ctx;
+
+  const isSaving = savingSteps.has("strengtheningWetting");
 
   const [beforePhoto, setBeforePhoto] = useState("");
   const [afterPhoto, setAfterPhoto] = useState("");
@@ -77,7 +81,7 @@ function StrengtheningWettingPage() {
 
     setBeforeUploading(true);
     try {
-      const url = await uploadPhoto(file);
+      const url = await uploadPhoto(file, artifactId);
       setBeforePhoto(url);
     } catch (error) {
       console.error(error);
@@ -93,7 +97,7 @@ function StrengtheningWettingPage() {
 
     setAfterUploading(true);
     try {
-      const url = await uploadPhoto(file);
+      const url = await uploadPhoto(file, artifactId);
       setAfterPhoto(url);
     } catch (error) {
       console.error(error);
@@ -130,12 +134,11 @@ function StrengtheningWettingPage() {
     }
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
+    if (isSaving) return;
     setStepSaving("strengtheningWetting", true);
-    navigate("/strengthening");
 
-    (async () => {
-      try {
+    try {
         const response = await resumeTask(taskId, {
           resume: {
             action: "proceed",
@@ -148,13 +151,14 @@ function StrengtheningWettingPage() {
           ...prev,
           strengtheningWetting: true,
         }));
-      } catch (error) {
+
+      navigate("/strengthening");
+    } catch (error) {
         console.error(error);
         alert("습윤 테스트 결과 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("strengtheningWetting", false);
-      }
-    })();
+    }
   };
 
   return (
@@ -178,10 +182,10 @@ function StrengtheningWettingPage() {
 
           <button
             className="nav-btn"
-            disabled={!colorChangeAnalysis}
+            disabled={!colorChangeAnalysis || isSaving}
             onClick={handleProceed}
           >
-            다음 →
+            {isSaving ? "완료 처리 중..." : "다음 →"}
           </button>
         </div>
       </div>

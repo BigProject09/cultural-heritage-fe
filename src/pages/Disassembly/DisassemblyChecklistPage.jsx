@@ -14,6 +14,7 @@ function DisassemblyChecklistPage() {
   const {
     setCompleted,
     setStepSaving,
+    savingSteps,
     taskId,
     checklist: aiChecklist,
     checklistCaution,
@@ -21,23 +22,24 @@ function DisassemblyChecklistPage() {
     setChecklistSelection: setCheckedIds,
   } = ctx;
 
+  const isSaving = savingSteps.has("checklist");
+
   const handleCheckAll = () => {
     setCheckedIds(aiChecklist.map((item) => item.id));
   };
 
-  // 완료 버튼을 누르면 응답을 기다리지 않고 바로 메인 페이지로 이동하고,
-  // 저장 요청은 백그라운드에서 계속 진행한다 (메인 페이지가 로딩 스피너로 보여줌).
-  const handleComplete = () => {
+  // 저장 성공이 확인된 뒤에만 메인 페이지로 이동한다. 실패하면 현재 화면에 남아
+  // 사용자가 선택을 수정하거나 다시 시도할 수 있다.
+  const handleComplete = async () => {
+    if (isSaving) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
     }
 
     setStepSaving("checklist", true);
-    navigate("/disassembly");
 
-    (async () => {
-      try {
+    try {
         const result = await resumeTask(taskId, {
           resume: {
             checked_ids: checkedIds,
@@ -50,13 +52,14 @@ function DisassemblyChecklistPage() {
           ...prev,
           checklist: true,
         }));
-      } catch (error) {
+
+      navigate("/disassembly");
+    } catch (error) {
         console.error(error);
         alert("체크리스트 저장 실패");
-      } finally {
+    } finally {
         setStepSaving("checklist", false);
-      }
-    })();
+    }
   };
 
   const totalCount = aiChecklist.length;
@@ -73,12 +76,16 @@ function DisassemblyChecklistPage() {
           ← 이전
         </button>
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" onClick={handleCheckAll}>
+          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택
           </button>
 
-          <button className="nav-btn" onClick={handleComplete}>
-            완료
+          <button
+            className="nav-btn"
+            disabled={isSaving}
+            onClick={handleComplete}
+          >
+            {isSaving ? "완료 처리 중..." : "완료"}
           </button>
         </div>
       </div>

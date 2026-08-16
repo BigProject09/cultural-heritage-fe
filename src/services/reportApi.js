@@ -1,3 +1,5 @@
+import { authFetch } from "./authToken";
+
 /**
  * 최종 통합 보고서 생성 AI 서비스(report-ai) 호출.
  *
@@ -41,7 +43,7 @@ async function readError(response) {
  * @returns {Promise<Blob>} 다운로드 가능한 .docx Blob
  */
 export async function generateReportDocx(payload) {
-  const response = await fetch(`${REPORTS_BASE}/generate/docx`, {
+  const response = await authFetch(`${REPORTS_BASE}/generate/docx`, {
     method: "POST",
     headers: { "Content-Type": "application/json; charset=utf-8" },
     body: JSON.stringify(payload),
@@ -62,7 +64,7 @@ export async function generateReportDocx(payload) {
  * 온다 - 에러가 아니다.
  */
 export async function getPotterySource(artifactId) {
-  const response = await fetch(`${REPORTS_BASE}/${artifactId}/pottery-source`);
+  const response = await authFetch(`${REPORTS_BASE}/${artifactId}/pottery-source`);
 
   if (!response.ok) {
     const detail = await readError(response);
@@ -76,7 +78,7 @@ export async function getPotterySource(artifactId) {
  * report_json만 생성한다 (미리보기·재확인 등 docx가 필요 없는 경우).
  */
 export async function generateReportJson(payload) {
-  const response = await fetch(`${REPORTS_BASE}/generate`, {
+  const response = await authFetch(`${REPORTS_BASE}/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json; charset=utf-8" },
     body: JSON.stringify(payload),
@@ -96,7 +98,7 @@ export async function generateReportJson(payload) {
  * 엔드포인트가 있어 같이 노출해둔다.
  */
 export async function reportJsonToDocx({ artifactId, reportJson, photos }) {
-  const response = await fetch(`${REPORTS_BASE}/docx`, {
+  const response = await authFetch(`${REPORTS_BASE}/docx`, {
     method: "POST",
     headers: { "Content-Type": "application/json; charset=utf-8" },
     body: JSON.stringify({
@@ -112,6 +114,66 @@ export async function reportJsonToDocx({ artifactId, reportJson, photos }) {
   }
 
   return response.blob();
+}
+
+/** 생성된 report_json만 DB에 먼저 저장한다. */
+export async function saveReportJson(artifactId, reportJson) {
+  const response = await authFetch(
+    `${REPORTS_BASE}/${encodeURIComponent(artifactId)}/save-json`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ reportJson, photos: {} }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+  }
+
+  return response.json();
+}
+
+/** 이 유물의 가장 최근 저장 보고서를 조회한다. 저장본이 없으면 null. */
+export async function getLatestSavedReport(artifactId) {
+  const response = await authFetch(`${REPORTS_BASE}/${encodeURIComponent(artifactId)}`);
+
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+  }
+
+  return response.json();
+}
+
+/** 사진까지 포함한 최종 DOCX를 S3 + report_document에 저장한다. */
+export async function saveReportDocument({ artifactId, reportJson, photos }) {
+  const response = await authFetch(
+    `${REPORTS_BASE}/${encodeURIComponent(artifactId)}/save`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ reportJson, photos }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+  }
+
+  return response.json();
+}
+
+/** presigned DOCX URL을 기존 다운로드 UX로 저장한다. */
+export async function downloadReportFromUrl(url, filename) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`저장된 보고서를 불러오지 못했습니다 (HTTP ${response.status})`);
+  }
+  downloadBlob(await response.blob(), filename);
 }
 
 /** 브라우저에서 Blob을 파일로 즉시 다운로드한다. */

@@ -1,3 +1,5 @@
+import { authFetch } from "./authToken";
+
 /**
  * X-RAY AI 서비스 호출.
  *
@@ -110,8 +112,18 @@ async function readError(response) {
   }
 }
 
+function isSpringBackendUrl(url) {
+  return String(url).startsWith(SPRING_BASE);
+}
+
+function fetchApiOrExternal(url, options = {}) {
+  return isSpringBackendUrl(url)
+    ? authFetch(url, options)
+    : fetch(url, options);
+}
+
 async function requestJson(url, options) {
-  const response = await fetch(url, options);
+  const response = await fetchApiOrExternal(url, options);
 
   if (!response.ok) {
     const detail = await readError(response);
@@ -119,6 +131,50 @@ async function requestJson(url, options) {
   }
 
   return response.json();
+}
+
+/**
+ * S3/결합 결과가 상태 갱신 직후 잠깐 조회되지 않는 경우를 흡수한다.
+ * 네트워크/CORS 계열 fetch 실패와 404/409/425/503만 재시도하고,
+ * 그 외의 명확한 오류는 바로 사용자에게 전달한다.
+ */
+async function fetchImageWithRetry(
+  url,
+  { attempts = 5, intervalMs = 2000, label = "이미지" } = {},
+) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetchApiOrExternal(url, { cache: "no-store" });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        if (!blob.type.startsWith("image/")) {
+          throw new Error(`${label} 응답이 이미지가 아닙니다.`);
+        }
+        return blob;
+      }
+
+      const detail = await readError(response);
+      const error = new Error(
+        `${label} 조회 실패: HTTP ${response.status} ${detail}`,
+      );
+      const retryable = [404, 409, 425, 429, 502, 503, 504].includes(
+        response.status,
+      );
+
+      if (!retryable || attempt === attempts) throw error;
+      lastError = error;
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) throw error;
+    }
+
+    await delay(intervalMs);
+  }
+
+  throw lastError || new Error(`${label}을 불러오지 못했습니다.`);
 }
 
 async function getImageSize(file) {
@@ -167,7 +223,12 @@ function mockRegions(file, target, width, height, count = 2) {
  * 결합은 조각 수에 따라 수 분에서 수십 분이 걸린다. 결과를
  * 기다리지 않고 jobId 를 먼저 받은 뒤 상태를 폴링한다.
  */
-export async function createStitchJob({ artifactId, colorFiles, xrayFiles }) {
+export async function createStitchJob({
+  artifactId,
+  colorFiles,
+  xrayFiles,
+  onUploadProgress,
+}) {
   if (USE_MOCK) {
     await delay(500);
 
@@ -203,6 +264,17 @@ export async function createStitchJob({ artifactId, colorFiles, xrayFiles }) {
 
   const colorFile = colorFiles[0];
   const xrayFileNames = xrayFiles.map((file) => file.name);
+  const uploadTotal = colorFiles.length + xrayFiles.length;
+  let uploadCompleted = 0;
+
+  function reportUploadProgress(fileName) {
+    uploadCompleted += 1;
+    onUploadProgress?.({
+      completed: uploadCompleted,
+      total: uploadTotal,
+      fileName,
+    });
+  }
 
   // 1. Spring에서 Presigned PUT URL 발급
   const prepared = await requestJson(`${STITCH_JOBS_BASE}/prepare`, {
@@ -245,6 +317,8 @@ export async function createStitchJob({ artifactId, colorFiles, xrayFiles }) {
         }`,
       );
     }
+
+    reportUploadProgress(file.name);
   }
 
   // 2. 컬러 기준 이미지 S3 PUT
@@ -265,24 +339,48 @@ export async function createStitchJob({ artifactId, colorFiles, xrayFiles }) {
     xrayFiles.map((file, index) => uploadToS3(file, prepared.xrays[index])),
   );
 
-  // 4. 업로드 완료 후 Spring에 자동 결합 시작 요청
-  const started = await requestJson(
-    `${STITCH_JOBS_BASE}/${encodeURIComponent(prepared.jobId)}/start`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        colorFileName: prepared.color?.fileName || colorFile.name,
-        xrayFileNames: prepared.xrays.map(
-          (target, index) => target?.fileName || xrayFiles[index].name,
-        ),
-      }),
+  // 4. 모든 PUT 응답이 끝난 뒤에도 S3/Lambda 상태가 아주 짧게
+  // 늦게 보일 수 있다. 입력 미완료 계열 409만 짧게 재시도해
+  // 사용자가 다시 버튼을 누르지 않아도 결합을 시작한다.
+  const startUrl = `${STITCH_JOBS_BASE}/${encodeURIComponent(
+    prepared.jobId,
+  )}/start`;
+  const startOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({
+      colorFileName: prepared.color?.fileName || colorFile.name,
+      xrayFileNames: prepared.xrays.map(
+        (target, index) => target?.fileName || xrayFiles[index].name,
+      ),
+    }),
+  };
+  const startRetryDelays = [700, 1500, 2500, 3500];
+  let lastStartError = null;
 
-  return started;
+  for (let attempt = 0; attempt <= startRetryDelays.length; attempt += 1) {
+    const response = await fetchApiOrExternal(startUrl, startOptions);
+
+    if (response.ok) {
+      return response.json();
+    }
+
+    const detail = await readError(response);
+    const error = new Error(
+      `HTTP ${response.status}: ${detail.slice(0, 300)}`,
+    );
+
+    if (response.status !== 409 || attempt === startRetryDelays.length) {
+      throw error;
+    }
+
+    lastStartError = error;
+    await delay(startRetryDelays[attempt]);
+  }
+
+  throw lastStartError || new Error("결합 시작 요청에 실패했습니다.");
 }
 
 export function getStitchJob(jobId) {
@@ -306,7 +404,7 @@ export function getStitchJob(jobId) {
 export async function getStitchJobByArtifactId(artifactId) {
   if (USE_MOCK || !artifactId) return null;
 
-  const response = await fetch(
+  const response = await authFetch(
     `${STITCH_JOBS_BASE}/by-artifact/${encodeURIComponent(artifactId)}`,
   );
 
@@ -328,17 +426,11 @@ export async function downloadAvailableStitchResult(status, fileName) {
   const url = /^https?:\/\//i.test(status.resultUrl)
     ? status.resultUrl
     : `${SPRING_BASE}${status.resultUrl.startsWith("/") ? "" : "/"}${status.resultUrl}`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    const detail = await readError(response);
-    throw new Error(`결합 결과 조회 실패: HTTP ${response.status} ${detail}`);
-  }
-
-  const blob = await response.blob();
-  if (!blob.type.startsWith("image/")) {
-    throw new Error("결합 결과 응답이 이미지가 아닙니다.");
-  }
+  const blob = await fetchImageWithRetry(url, {
+    attempts: 5,
+    intervalMs: 2000,
+    label: "결합 결과",
+  });
 
   return new File([blob], fileName, { type: blob.type || "image/png" });
 }
@@ -360,8 +452,12 @@ export async function waitForStitchJob(
     const status = await getStitchJob(jobId);
     onUpdate?.(status);
 
-    if (status.status === "STITCHED" || status.status === "COMPLETED")
-      return status;
+    if (status.status === "STITCHED" || status.status === "COMPLETED") {
+      // DB 상태가 먼저 STITCHED가 되더라도 S3 결과 객체가 아직 준비되지
+      // 않았을 수 있다. 서버가 실제 결과를 확인해 resultUrl을 내려줄 때까지
+      // 조금 더 폴링한다.
+      if (status.resultUrl) return status;
+    }
 
     if (status.status === "FAILED") {
       throw new Error(status.errorMessage || "AI 결합 작업이 실패했습니다.");
@@ -388,20 +484,14 @@ export async function downloadStitchResult(jobId, fileName) {
     });
   }
 
-  const response = await fetch(
+  const blob = await fetchImageWithRetry(
     `${STITCH_JOBS_BASE}/${encodeURIComponent(jobId)}/result`,
+    {
+      attempts: 5,
+      intervalMs: 2000,
+      label: "결합 결과",
+    },
   );
-
-  if (!response.ok) {
-    const detail = await readError(response);
-    throw new Error(`결합 결과 조회 실패: HTTP ${response.status} ${detail}`);
-  }
-
-  const blob = await response.blob();
-
-  if (!blob.type.startsWith("image/")) {
-    throw new Error("결합 결과 응답이 이미지가 아닙니다.");
-  }
 
   return new File([blob], fileName, { type: blob.type || "image/png" });
 }
@@ -553,7 +643,7 @@ export async function downloadFinalStitchResult(jobId, fileName) {
     });
   }
 
-  const response = await fetch(
+  const response = await authFetch(
     `${STITCH_JOBS_BASE}/${encodeURIComponent(jobId)}/result/final`,
   );
   if (!response.ok) {
@@ -697,7 +787,6 @@ export async function generateReport({
   regions,
   artifactType = "",
   material = "",
-  reportStyle = "summary",
   assembled,
   fragments = [],
   rgbImages = [],
@@ -726,7 +815,7 @@ export async function generateReport({
 
     return {
       report,
-      style: reportStyle,
+      style: "summary",
       charCount: report.length,
       detailCount: Math.min(regions.length, 5),
       totalRegionCount: regions.length,
@@ -738,7 +827,6 @@ export async function generateReport({
   form.append("regions", JSON.stringify(regions));
   form.append("artifact_type", artifactType);
   form.append("material", material);
-  form.append("report_style", reportStyle);
 
   if (assembled) form.append("assembled", assembled);
 
@@ -793,14 +881,14 @@ export async function updateWorkflowDefects(jobId, defects) {
 /** 현재 DAMAGE 결함만 사용해 AI 상태조사 초안을 생성한다. */
 export async function generateWorkflowReportText(
   jobId,
-  { artifactType = "", material = "", reportStyle = "summary" } = {},
+  { artifactType = "", material = "" } = {},
 ) {
   return requestJson(
     `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/report-text/generate`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ artifactType, material, reportStyle }),
+      body: JSON.stringify({ artifactType, material }),
     },
   );
 }
