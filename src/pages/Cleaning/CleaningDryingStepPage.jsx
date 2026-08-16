@@ -1,6 +1,7 @@
 import { resumeTask } from "../../services/conservationGuideApi";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./CleaningDryingStepPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
@@ -94,14 +95,13 @@ function CleaningDryingStepPage() {
 
   return (
     <div className="method-page">
+      <GuideNavigation currentLabel="건조" />
+
       {/* 상단 */}
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/cleaning")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <div className="nav-btn-group">
           <button className="nav-btn secondary" onClick={handleCheckAll}>
             전체 선택
@@ -140,7 +140,7 @@ function CleaningDryingStepPage() {
             </div>
             <div className="step-actions">
               <button
-                className="approve-btn"
+                className={`approve-btn ${step.approved ? "is-complete" : "is-incomplete"}`}
                 onClick={() => {
                   setSteps((prev) =>
                     prev.map((s) =>
@@ -154,7 +154,7 @@ function CleaningDryingStepPage() {
                   );
                 }}
               >
-                {step.approved ? "✔ 완료" : "완료"}
+                {step.approved ? "✓ 완료" : "미완료"}
               </button>
 
               <button className="edit-btn" onClick={() => handleEdit(step.id)}>

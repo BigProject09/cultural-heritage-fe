@@ -27,11 +27,22 @@
 }
 
 /* hover */
-.progress-item:hover .progress-circle {
+.progress-item:not(.locked):hover .progress-circle {
   @apply scale-[1.08];
 }
-.progress-item:hover .progress-title {
+.progress-item:not(.locked):hover .progress-title {
   @apply text-guide-primary;
+}
+
+/* 이전 공정을 끝내기 전에는 이후 공정으로 선진입할 수 없다. */
+.progress-item.locked {
+  @apply cursor-not-allowed opacity-40;
+}
+.progress-item.locked .progress-circle {
+  @apply scale-100;
+}
+.progress-item.locked .progress-title {
+  @apply text-[#777];
 }
 
 /* 반응형 */

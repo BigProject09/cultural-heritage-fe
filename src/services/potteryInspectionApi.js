@@ -1,28 +1,19 @@
 /**
  * 도자기 육안조사 AI 서비스 호출.
  *
- * xrayApi.js와 같은 원칙을 따른다.
- * 운영 환경에서는 Spring Backend API를 통해 요청하고,
- * 개발 환경에서도 VITE_API_BASE_URL 값을 기준으로 요청한다.
- *
- * axios 대신 fetch를 사용하는 이유:
- * 파일 업로드(FormData) 요청에서는 브라우저가 multipart/form-data의
- * boundary를 포함한 Content-Type을 자동으로 생성하도록 두는 것이 안전하다.
+ * FE는 Spring만 호출한다. 진행 상태의 기준은 Spring/RDS의 assessment_run이며,
+ * FastAPI job_id를 브라우저 localStorage에 저장하지 않는다.
  */
 
-/**
- * Mock 모드 여부.
- * 백엔드/AI 서버 없이 화면만 확인할 때 사용한다.
- *
- * .env:
- * VITE_USE_POTTERY_MOCK=true
- */
 const USE_MOCK = import.meta.env.VITE_USE_POTTERY_MOCK === "true";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://api.vora-heritage.click";
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || "https://api.vora-heritage.click"
+).replace(/\/+$/, "");
 
 const MOCK_DELAY_MS = 900;
+const POLL_INTERVAL_MS = 1500;
+const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
 const MOCK_RESULT = {
   module_version: "mock",
@@ -34,18 +25,9 @@ const MOCK_RESULT = {
   summary: "(Mock) 형태: 완전 추정 / 시대 후보: 고려 / 문양: 매화문 계열",
   human_review_recommended: false,
   detail: {
-    completeness: {
-      prediction: "완전",
-      score: 0.99,
-    },
-    glaze: {
-      prediction: "낮음",
-      score: 0.8,
-    },
-    era: {
-      prediction: "고려",
-      score: 0.92,
-    },
+    completeness: { prediction: "완전", score: 0.99 },
+    glaze: { prediction: "낮음", score: 0.8 },
+    era: { prediction: "고려", score: 0.92 },
     pattern_era_color: {
       min_agreement_used: 2,
       patterns: [
@@ -55,102 +37,107 @@ const MOCK_RESULT = {
           pattern_name: "매화문",
           decision: "확정",
           agreement_count: 3,
-          bbox_percent: {
-            x1: 20,
-            y1: 25,
-            x2: 55,
-            y2: 55,
-          },
+          bbox_percent: { x1: 20, y1: 25, x2: 55, y2: 55 },
         },
       ],
     },
   },
 };
 
-/**
- * 다중 객체 감지(422 + code=MULTIPLE_OBJECTS_DETECTED) 전용 에러.
- * VisualPage.jsx가 이걸 잡아서 "하나의 유물이 깨진 조각들이에요" 재시도
- * 선택지를 보여줄지 판단한다 - 그냥 Error면 이 정보가 메시지 문자열에만
- * 남아서 구분이 어렵다.
- */
 export class MultipleObjectsDetectedError extends Error {
-  constructor(message, { detectedRegionCount, regionGroups } = {}) {
+  constructor(
+    message,
+    { detectedRegionCount, regionGroups, photoUrl, assessmentRunId } = {},
+  ) {
     super(message);
     this.name = "MultipleObjectsDetectedError";
     this.detectedRegionCount = detectedRegionCount;
     this.regionGroups = regionGroups;
+    this.photoUrl = photoUrl;
+    this.assessmentRunId = assessmentRunId;
   }
 }
 
-/**
- * 오류 응답에서 사용자에게 표시할 메시지를 추출한다.
- * detail이 문자열이 아니라 구조화된 객체(다중 객체 감지)면 그 신호를 살려서
- * MultipleObjectsDetectedError를 던진다.
- */
 async function readError(response) {
   const copy = response.clone();
-
   try {
     const data = await response.json();
-    const detail = data.detail;
-
-    if (detail && typeof detail === "object" && detail.code === "MULTIPLE_OBJECTS_DETECTED") {
-      throw new MultipleObjectsDetectedError(detail.message || "다중 객체가 감지되었습니다.", {
-        detectedRegionCount: detail.detected_region_count,
-        regionGroups: detail.region_groups,
-      });
-    }
-
-    return data.message || detail || JSON.stringify(data);
-  } catch (error) {
-    if (error instanceof MultipleObjectsDetectedError) throw error;
+    return data?.message || data?.detail || JSON.stringify(data);
+  } catch {
     return copy.text();
   }
 }
 
-/**
- * 도자기 육안 상태조사 AI 분석 요청.
- *
- * 내부적으로 "접수(POST /jobs) → 폴링(GET /jobs/{id})" 방식을 쓴다 - 문양이
- * 여러 개면 확정된 문양별 상태조사까지 순차로 이어져 60초를 넘기는 경우가
- * 있는데, 예전처럼 한 요청으로 끝까지 기다리면 ALB 유휴 타임아웃(기본
- * 60초)에 걸려 504가 났다. 접수/폴링 각각은 항상 순식간에 끝나므로 이
- * 문제가 없다. 호출하는 쪽(VisualPage.jsx)은 이 함수가 내부적으로 폴링을
- *하는지 몰라도 된다 - 여전히 "기다리면 결과가 오거나, 실패하면 던지는"
- * 함수 하나로 보인다.
- *
- * treatAsSingleArtifact: 이전 호출이 MultipleObjectsDetectedError로
- * 실패했고, 사용자가 "이건 하나의 유물이 깨진 조각들이다"라고 확인한 뒤
- * 재요청할 때만 true로 준다. 기본은 false.
- */
-export async function inspectPottery(
-  imageBlob,
-  { nCalls = 3, useVlmPattern = true, treatAsSingleArtifact = false } = {},
-) {
-  if (USE_MOCK) {
-    await new Promise((resolve) => window.setTimeout(resolve, MOCK_DELAY_MS));
-
-    return MOCK_RESULT;
+function normalizeDetail(detail) {
+  if (typeof detail !== "string") return detail;
+  try {
+    return JSON.parse(detail);
+  } catch {
+    return detail;
   }
-
-  const { jobId } = await createInspectionJob(imageBlob, {
-    nCalls,
-    useVlmPattern,
-    treatAsSingleArtifact,
-  });
-
-  return pollInspectionJob(jobId);
 }
 
-/** 분석을 접수만 하고 job_id를 즉시 받는다. */
-async function createInspectionJob(
+function throwIfFailed(job) {
+  if (!job || job.status !== "failed") return;
+
+  const detail = normalizeDetail(job.errorDetail);
+  if (
+    detail &&
+    typeof detail === "object" &&
+    detail.code === "MULTIPLE_OBJECTS_DETECTED"
+  ) {
+    throw new MultipleObjectsDetectedError(
+      detail.message || "다중 객체가 감지되었습니다.",
+      {
+        detectedRegionCount: detail.detected_region_count,
+        regionGroups: detail.region_groups,
+        photoUrl: job.photoUrl,
+        assessmentRunId: job.assessmentRunId,
+      },
+    );
+  }
+
+  const message =
+    (typeof detail === "string" && detail) ||
+    detail?.message ||
+    job.errorDetail ||
+    "육안조사 분석에 실패했습니다.";
+  const error = new Error(String(message));
+  error.status = job.errorStatus;
+  throw error;
+}
+
+/** Spring/RDS에 새 육안조사 작업을 접수한다. */
+export async function createInspectionJob(
   imageBlob,
-  { nCalls, useVlmPattern, treatAsSingleArtifact },
+  {
+    artifactId,
+    nCalls = 3,
+    useVlmPattern = true,
+    treatAsSingleArtifact = false,
+    signal,
+  } = {},
 ) {
+  if (!artifactId) {
+    throw new Error("artifactId가 없어 육안조사 작업을 시작할 수 없습니다.");
+  }
+
+  if (USE_MOCK) {
+    return {
+      assessmentRunId: `mock-${Date.now()}`,
+      artifactId,
+      status: "queued",
+      progressPercent: 5,
+      photoUrl: URL.createObjectURL(imageBlob),
+      result: null,
+    };
+  }
+
   const formData = new FormData();
-  formData.append("image", imageBlob, "artifact.jpg");
+  formData.append("image", imageBlob, imageBlob?.name || "artifact.jpg");
 
   const params = new URLSearchParams({
+    artifact_id: artifactId,
     n_calls: String(nCalls),
     use_vlm_pattern: String(useVlmPattern),
     treat_as_single_artifact: String(treatAsSingleArtifact),
@@ -158,48 +145,153 @@ async function createInspectionJob(
 
   const response = await fetch(
     `${API_BASE_URL}/pottery-inspection/jobs?${params.toString()}`,
-    { method: "POST", body: formData },
+    {
+      method: "POST",
+      body: formData,
+      signal,
+    },
   );
 
   if (!response.ok) {
     const detail = await readError(response);
-    throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+    throw new Error(`HTTP ${response.status}: ${String(detail).slice(0, 300)}`);
   }
 
-  const data = await response.json();
-  return { jobId: data.job_id };
+  const job = await response.json();
+  if (!job?.assessmentRunId) {
+    throw new Error("육안조사 작업 ID를 받지 못했습니다.");
+  }
+  throwIfFailed(job);
+  return job;
 }
 
-const POLL_INTERVAL_MS = 1500;
-// n_calls(최대 몇 번)와 확정 문양 수에 따라 오래 걸릴 수 있어 넉넉히 잡는다.
-// 이 값을 넘기면 이 폴링 함수만 포기하는 거고, 서버 쪽 작업 자체는 계속
-// 진행되다가 나중에 다시 조회하면 결과를 받을 수도 있다(막힌 게 아니다).
-const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+/** 특정 assessment_run의 현재 상태를 Spring에서 조회한다. */
+export async function getInspectionJob(artifactId, assessmentRunId, { signal } = {}) {
+  if (USE_MOCK && String(assessmentRunId).startsWith("mock-")) {
+    return {
+      assessmentRunId,
+      artifactId,
+      status: "done",
+      progressPercent: 100,
+      result: MOCK_RESULT,
+      photoUrl: null,
+    };
+  }
 
-/** job이 끝날 때까지 주기적으로 상태를 확인한다. */
-async function pollInspectionJob(jobId) {
+  const params = new URLSearchParams({ artifact_id: artifactId });
+  const response = await fetch(
+    `${API_BASE_URL}/pottery-inspection/jobs/${encodeURIComponent(assessmentRunId)}?${params.toString()}`,
+    { signal },
+  );
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${String(detail).slice(0, 300)}`);
+  }
+
+  const job = await response.json();
+  throwIfFailed(job);
+  return job;
+}
+
+/** artifactId만으로 가장 최근 서버 육안조사 작업/완료 결과를 찾는다. */
+export async function getLatestInspectionJob(artifactId, { signal } = {}) {
+  if (USE_MOCK) return null;
+
+  const params = new URLSearchParams({ artifact_id: artifactId });
+  const response = await fetch(
+    `${API_BASE_URL}/pottery-inspection/jobs/latest?${params.toString()}`,
+    { signal },
+  );
+
+  if (response.status === 404) return null;
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${String(detail).slice(0, 300)}`);
+  }
+
+  const job = await response.json();
+  throwIfFailed(job);
+  return job;
+}
+
+/** 진행 중 서버 job을 완료될 때까지 폴링한다. */
+export async function pollInspectionJob(
+  artifactId,
+  assessmentRunId,
+  { signal, onStatus, timeoutMs = POLL_TIMEOUT_MS } = {},
+) {
+  if (USE_MOCK && String(assessmentRunId).startsWith("mock-")) {
+    await new Promise((resolve, reject) => {
+      const timer = window.setTimeout(resolve, MOCK_DELAY_MS);
+      signal?.addEventListener(
+        "abort",
+        () => {
+          window.clearTimeout(timer);
+          reject(new DOMException("Aborted", "AbortError"));
+        },
+        { once: true },
+      );
+    });
+    return {
+      assessmentRunId,
+      artifactId,
+      status: "done",
+      progressPercent: 100,
+      result: MOCK_RESULT,
+    };
+  }
+
   const startedAt = Date.now();
 
-  while (Date.now() - startedAt < POLL_TIMEOUT_MS) {
-    const response = await fetch(`${API_BASE_URL}/pottery-inspection/jobs/${jobId}`);
+  while (Date.now() - startedAt < timeoutMs) {
+    const job = await getInspectionJob(artifactId, assessmentRunId, { signal });
+    onStatus?.(job);
 
-    if (response.ok) {
-      const data = await response.json();
-
-      if (data.status === "done") return data.result;
-
-      // queued | processing이면 계속 기다린다.
-    } else {
-      // 폴링 요청 자체가 실패 응답이면(404 등) 더 기다려도 의미가 없으니
-      // 바로 던진다. 분석 실패(422/500)도 여기로 온다.
-      const detail = await readError(response);
-      throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+    if (job.status === "done") {
+      return job;
     }
 
-    await new Promise((resolve) => window.setTimeout(resolve, POLL_INTERVAL_MS));
+    await new Promise((resolve, reject) => {
+      const timer = window.setTimeout(resolve, POLL_INTERVAL_MS);
+      signal?.addEventListener(
+        "abort",
+        () => {
+          window.clearTimeout(timer);
+          reject(new DOMException("Aborted", "AbortError"));
+        },
+        { once: true },
+      );
+    });
   }
 
   throw new Error(
-    "분석이 예상보다 오래 걸리고 있어요. 잠시 후 다시 시도해주세요.",
+    "분석이 예상보다 오래 걸리고 있어요. 페이지를 다시 열면 서버의 진행 중 작업을 이어서 확인합니다.",
   );
+}
+
+/** 기존 호출부 호환용. 신규 VisualPage는 create/poll을 직접 사용한다. */
+export async function inspectPottery(
+  imageBlob,
+  {
+    artifactId,
+    nCalls = 3,
+    useVlmPattern = true,
+    treatAsSingleArtifact = false,
+    signal,
+  } = {},
+) {
+  const created = await createInspectionJob(imageBlob, {
+    artifactId,
+    nCalls,
+    useVlmPattern,
+    treatAsSingleArtifact,
+    signal,
+  });
+
+  const completed = await pollInspectionJob(artifactId, created.assessmentRunId, {
+    signal,
+  });
+  return completed.result;
 }

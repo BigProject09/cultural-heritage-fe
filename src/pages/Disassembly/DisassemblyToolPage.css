@@ -60,13 +60,39 @@
     @apply text-sm text-vora-muted py-2;
 }
 .tool-list-row {
-    @apply flex items-center px-4 py-3.5 text-[15px] font-medium text-vora-bronze-dark leading-[1.4] cursor-pointer transition-colors duration-200 border-b border-vora-line/50 border-solid last:border-b-0 hover:[background:var(--color-vora-paper)];
+    @apply flex items-center justify-between gap-3 px-4 py-3.5 text-[15px] font-medium text-vora-bronze-dark leading-[1.4] cursor-pointer transition-colors duration-200 border-b border-vora-line/50 border-solid last:border-b-0 hover:[background:var(--color-vora-paper)];
 }
 .tool-list-row.active {
-    @apply [background:var(--color-vora-bronze)] text-white border-transparent hover:[background:var(--color-vora-bronze)];
+    @apply [background:#f5eee5] text-vora-bronze-dark border-l-4 border-l-vora-bronze;
 }
-.tool-list-row--static {
-    @apply cursor-default hover:[background:transparent];
+.tool-list-row.selected {
+    @apply font-semibold;
+}
+.tool-list-row-name {
+    @apply min-w-0;
+}
+.tool-list-status {
+    @apply shrink-0 text-xs font-bold text-vora-bronze-dark [background:#ead9c5] px-2.5 py-1 rounded-full;
+}
+
+/* 실제 선택 결과는 추천 목록과 시각적으로 완전히 분리한다. */
+.selected-tools-summary {
+    @apply mt-7 p-4 [background:#f6f3ee] border border-vora-line border-solid rounded-xl;
+}
+.selected-tools-summary-header {
+    @apply flex items-center justify-between gap-3 mb-3;
+}
+.selected-tools-count {
+    @apply shrink-0 text-xs font-bold text-vora-bronze-dark [background:#e9dfd2] px-2.5 py-1 rounded-full;
+}
+.selected-tool-chips {
+    @apply flex flex-wrap gap-2;
+}
+.selected-tool-chip {
+    @apply inline-flex items-center gap-2 [background:var(--color-vora-bronze)] text-white text-sm font-semibold pl-3 pr-2 py-2 rounded-lg;
+}
+.selected-tool-chip-remove {
+    @apply flex items-center justify-center w-5 h-5 p-0 border-0 rounded-full bg-white/20 text-white text-base leading-none cursor-pointer hover:bg-white/30;
 }
 
 /* =========================
@@ -98,6 +124,22 @@
 }
 .tool-detail-actions {
     @apply flex justify-end gap-3 border-t border-vora-line border-solid pt-6;
+}
+.selection-state-btn.is-unselected {
+    background: #ffffff !important;
+    color: #111111 !important;
+    border: 1px solid #d7d1c8 !important;
+}
+.selection-state-btn.is-unselected:hover {
+    background: #f7f4ef !important;
+}
+.selection-state-btn.is-selected {
+    background: var(--color-vora-bronze) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--color-vora-bronze) !important;
+}
+.selection-state-btn.is-selected:hover {
+    background: var(--color-vora-bronze-dark) !important;
 }
 .tool-detail-empty {
     @apply text-vora-muted text-base;

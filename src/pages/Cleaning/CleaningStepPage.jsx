@@ -1,6 +1,7 @@
 import { resumeTask } from "../../services/conservationGuideApi";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./CleaningStepPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
@@ -11,6 +12,7 @@ function CleaningStepPage() {
   const ctx = useDisassembly();
   const { taskId, setCompleted, setStepSaving, cleaningGuide } = ctx;
 
+  // 기존 UI: 각 세척 단계는 사용자가 완료 여부를 직접 표시한다.
   const [steps, setSteps] = useState(() =>
     (cleaningGuide?.steps ?? []).map((step) => ({
       ...step,
@@ -94,6 +96,8 @@ function CleaningStepPage() {
 
   return (
     <div className="method-page">
+      <GuideNavigation currentLabel="세척 단계" />
+
       {/* 상단 */}
       <div className="detail-header">
         <button
@@ -102,8 +106,6 @@ function CleaningStepPage() {
         >
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
 
         <div className="nav-btn-group">
           <button className="nav-btn secondary" onClick={handleCheckAll}>
@@ -121,19 +123,14 @@ function CleaningStepPage() {
         <h1>세척</h1>
       </div>
 
-      {/* 주의사항 */}
-      {cleaningGuide?.overall_caution && (
-        <div className="overall-caution">
-          <strong>주의사항</strong>
-          <p>{cleaningGuide.overall_caution}</p>
-        </div>
-      )}
-
       {/* 메인 카드 */}
       <div className="method-card">
         {/* 단계 목록 */}
         {steps?.map((step, index) => (
-          <div key={step.id} className="step-card">
+          <div
+            key={step.id}
+            className="step-card"
+          >
             <div className="step-number">{index + 1}</div>
 
             <div className="step-info">
@@ -157,7 +154,7 @@ function CleaningStepPage() {
             </div>
             <div className="step-actions">
               <button
-                className="approve-btn"
+                className={`approve-btn ${step.approved ? "is-complete" : "is-incomplete"}`}
                 onClick={() => {
                   setSteps((prev) =>
                     prev.map((s) =>
@@ -171,7 +168,7 @@ function CleaningStepPage() {
                   );
                 }}
               >
-                {step.approved ? "✔ 완료" : "완료"}
+                {step.approved ? "✓ 완료" : "미완료"}
               </button>
 
               <button className="edit-btn" onClick={() => handleEdit(step.id)}>

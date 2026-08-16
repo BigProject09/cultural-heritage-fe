@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./DisassemblyMethodPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -122,6 +123,8 @@ function DisassemblyMethodPage() {
 
   return (
     <div className="method-page">
+      <GuideNavigation currentLabel="해체 방법" />
+
       {/* 상단 */}
       <div className="detail-header">
         <button
@@ -130,9 +133,6 @@ function DisassemblyMethodPage() {
         >
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <div className="nav-btn-group">
           <button className="nav-btn secondary" onClick={handleCheckAll}>
             전체 선택
@@ -181,7 +181,7 @@ function DisassemblyMethodPage() {
             </div>
             <div className="step-actions">
               <button
-                className="approve-btn"
+                className={`approve-btn ${step.approved ? "is-complete" : "is-incomplete"}`}
                 onClick={() => {
                   setSteps((prev) =>
                     prev.map((s) =>
@@ -195,7 +195,7 @@ function DisassemblyMethodPage() {
                   );
                 }}
               >
-                {step.approved ? "✔ 완료" : "완료"}
+                {step.approved ? "✓ 완료" : "미완료"}
               </button>
 
               <button className="edit-btn" onClick={() => handleEdit(step.id)}>

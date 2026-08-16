@@ -14,6 +14,8 @@ export function DisassemblyProvider({
   // taskId처럼 context에 저장해 페이지 이동과 무관하게 유지한다.
   const [approvedFlow, setApprovedFlow] =
     useState(null);
+  // DB에서 기존 보존가이드 Task를 복구했을 때 사용자가 이어서 들어갈 정확한 경로.
+  const [guideResumeRoute, setGuideResumeRoute] = useState("");
   const [visualResult, setVisualResult] = useState(null);
 
   // X-RAY 분석/육안 상태 조사
@@ -208,6 +210,7 @@ const [restorationChoice, setRestorationChoice] =
   const resetCompleted = () => {
     setTaskId(null);
     setApprovedFlow(null);
+    setGuideResumeRoute("");
 
     setPreInvestigation({
       xray: false,
@@ -307,6 +310,9 @@ const [restorationChoice, setRestorationChoice] =
         
         approvedFlow,
         setApprovedFlow,
+
+        guideResumeRoute,
+        setGuideResumeRoute,
 
         preInvestigation,
         setPreInvestigation,

@@ -4,6 +4,7 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./BondingMaterialPage.css";
 
 const ADHESIVE_OPTIONS = [
@@ -100,13 +101,12 @@ function BondingMaterialPage() {
 
   return (
     <div className="bonding-material-page">
+      <GuideNavigation currentLabel="접합제 선택" />
+
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/bonding")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <button className="nav-btn" onClick={handleComplete}>
           완료
         </button>

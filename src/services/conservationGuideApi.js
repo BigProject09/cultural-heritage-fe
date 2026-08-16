@@ -86,3 +86,29 @@ export const getTask = async (taskId) => {
   const response = await api.get(`/tasks/${taskId}`);
   return response.data;
 };
+
+/**
+ * 유물 기준으로 가장 최근 보존가이드 Task를 조회한다.
+ * taskId를 잃은 새로고침/재접속 상황에서 artifactId로 기존 작업을 복구할 때 사용한다.
+ * 아직 시작한 Task가 없으면 null을 반환한다.
+ */
+export const getLatestTaskByArtifact = async (artifactId, options = {}) => {
+  if (!artifactId) return null;
+
+  if (USE_GUIDE_MOCK) {
+    await waitForMock();
+    console.info("[Guide Mock] getLatestTaskByArtifact", { artifactId });
+    return null;
+  }
+
+  try {
+    const response = await api.get(
+      `/api/artifacts/${encodeURIComponent(artifactId)}/conservation-guide-task`,
+      { signal: options.signal },
+    );
+    return response.data;
+  } catch (error) {
+    if (error?.response?.status === 404) return null;
+    throw error;
+  }
+};

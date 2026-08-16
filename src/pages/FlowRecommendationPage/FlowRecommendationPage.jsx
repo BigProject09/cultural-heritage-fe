@@ -4,12 +4,11 @@ import { useState } from "react";
 import { startTask } from "../../services/conservationGuideApi";
 import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
-import {
-  getArtifactRoute,
-  getArtifactWorkflowRoute,
-} from "../../utils/artifactRoutes";
+import { getArtifactWorkflowRoute } from "../../utils/artifactRoutes";
+import { getRecoveredGuideRoute } from "../../utils/guideTaskRecovery";
 import { getArtifactImageDataUrl } from "../../data/localArtifactAssets";
 import { DEFAULT_GUIDE_FLOW } from "../../data/flowData";
+import ModulePageHeader from "../../components/common/ModulePageHeader/ModulePageHeader";
 
 // 백엔드에 AI 추천 Flow API가 아직 없어서, 발표용으로 임시 하드코딩한 값.
 // 실제 추천 API가 생기면 이 상수 대신 서버 응답으로 교체해야 함.
@@ -20,11 +19,20 @@ function FlowRecommendationPage() {
   const { artifactId: routeArtifactId = "" } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
 
-  const [steps, setSteps] = useState(() =>
-    DEFAULT_GUIDE_FLOW.map((step) => ({ ...step, active: false })),
-  );
-
   const aiFlow = AI_RECOMMENDED_FLOW;
+
+  // AI가 추천한 Flow를 최초 화면에서 그대로 선택된 상태로 보여준다.
+  // 사용자는 추천값을 기준으로 필요한 단계만 해제/추가한 뒤 시작한다.
+  const [steps, setSteps] = useState(() => {
+    const recommendedNames = new Set(
+      AI_RECOMMENDED_FLOW.map((step) => step.name),
+    );
+
+    return DEFAULT_GUIDE_FLOW.map((step) => ({
+      ...step,
+      active: Boolean(step.mandatory) || recommendedNames.has(step.name),
+    }));
+  });
 
   const [loading, setLoading] = useState(false);
 
@@ -110,6 +118,7 @@ function FlowRecommendationPage() {
       }
 
       const result = await startTask(taskId, {
+        artifactId,
         taskName: "문화재 복원",
         taskManager: "오서하",
         relicInfo,
@@ -122,6 +131,12 @@ function FlowRecommendationPage() {
       });
 
       setTaskId(taskId);
+      ctx.setGuideResumeRoute(
+        getRecoveredGuideRoute(
+          { totalState: result.status, currentInterrupt: result.interrupt },
+          artifactId,
+        ),
+      );
 
       // 어느 단계가 flow에서 빠졌는지에 따라 이 응답에 실려오는 interrupt가 다를 수 있어서,
       // 들어있는 키에 맞는 context를 전부 채워주는 공통 함수로 처리한다.
@@ -146,38 +161,29 @@ function FlowRecommendationPage() {
   return (
     <div className="flow-page">
       <div className="guide-container">
-        <nav className="guide-breadcrumb" aria-label="현재 위치">
-          <button
-            type="button"
-            onClick={() => navigate(getArtifactRoute(artifactId))}
-          >
-            유물 워크스페이스
-          </button>
-          <span>/</span>
-          <strong>복원 가이드</strong>
-        </nav>
-
-        <header className="guide-header">
-          <div className="guide-heading">
-            <span className="guide-eyebrow">INDEPENDENT GUIDE MODULE</span>
-            <h1 className="guide-title">복원 가이드</h1>
-            <p>진행할 보존처리 단계를 선택하고 AI 작업을 시작합니다.</p>
-          </div>
-
-          <button
-            className="guide-start-btn"
-            disabled={loading}
-            onClick={handleNext}
-          >
-            시작하기 →
-          </button>
-        </header>
+        <ModulePageHeader
+          artifactId={artifactId}
+          currentLabel="복원 가이드"
+          eyebrow="INDEPENDENT GUIDE MODULE"
+          title="복원 가이드"
+          description="진행할 보존처리 단계를 선택하고 AI 작업을 시작합니다."
+          tone="bronze"
+          rightContent={
+            <button
+              className="guide-start-btn"
+              disabled={loading}
+              onClick={handleNext}
+            >
+              시작하기 →
+            </button>
+          }
+        />
       </div>
 
       <div className="flow-container">
         {/* Flow 수정 */}
         <div className="flow-box">
-          <h2>추천</h2>
+          <h2>AI 추천</h2>
 
           {aiFlow.map((step, index) => (
             <div key={step.id} className="flow-step">

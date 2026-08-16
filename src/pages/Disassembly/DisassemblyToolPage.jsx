@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./DisassemblyToolPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -105,14 +106,13 @@ function DisassemblyToolPage() {
 
   return (
     <div className="tool-page">
+      <GuideNavigation currentLabel="해체 도구 선택" />
+
       {/* 상단 */}
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/disassembly")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <div className="nav-btn-group">
           <button className="nav-btn secondary" onClick={handleSelectAll}>
             전체 선택
@@ -140,35 +140,55 @@ function DisassemblyToolPage() {
           <div className="tool-list-items">
             {tools.map((tool) => {
               const isActive = activeTool?.id === tool.id;
+              const isSelected = selectedTools.includes(tool.id);
 
               return (
                 <div
                   key={tool.id}
-                  className={`tool-list-row ${isActive ? "active" : ""}`}
+                  className={`tool-list-row ${isActive ? "active" : ""} ${
+                    isSelected ? "selected" : ""
+                  }`}
                   role="button"
                   tabIndex={0}
                   onClick={() => handleCardClick(tool.id)}
                   onKeyDown={(e) => handleCardKeyDown(e, tool.id)}
                 >
-                  {tool.name}
+                  <span className="tool-list-row-name">{tool.name}</span>
+                  {isSelected && (
+                    <span className="tool-list-status">선택됨</span>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          <div className="tool-list-panel-header tool-list-panel-header--secondary">
-            <h2 className="tool-list-title">선택한 도구</h2>
-          </div>
+          <div className="selected-tools-summary">
+            <div className="selected-tools-summary-header">
+              <h2 className="tool-list-title">선택한 도구</h2>
+              <span className="selected-tools-count">
+                {selectedToolItems.length}개
+              </span>
+            </div>
 
-          <div className="tool-list-items">
             {selectedToolItems.length > 0 ? (
-              selectedToolItems.map((tool) => (
-                <div key={tool.id} className="tool-list-row tool-list-row--static">
-                  {tool.name}
-                </div>
-              ))
+              <div className="selected-tool-chips">
+                {selectedToolItems.map((tool) => (
+                  <span key={tool.id} className="selected-tool-chip">
+                    <span>{tool.name}</span>
+                    <button
+                      type="button"
+                      className="selected-tool-chip-remove"
+                      onClick={() => handleSelect(tool.id)}
+                      aria-label={`${tool.name} 선택 해제`}
+                      title="선택 해제"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
             ) : (
-              <p className="tool-list-empty">선택한 도구가 없습니다.</p>
+              <p className="tool-list-empty">아직 선택한 도구가 없습니다.</p>
             )}
           </div>
         </aside>
@@ -203,10 +223,12 @@ function DisassemblyToolPage() {
 
               <div className="tool-detail-actions">
                 <button
-                  className={`nav-btn ${isActiveSelected ? "" : "secondary"}`}
+                  className={`nav-btn selection-state-btn ${
+                    isActiveSelected ? "is-selected" : "is-unselected"
+                  }`}
                   onClick={() => handleSelect(activeTool.id)}
                 >
-                  {isActiveSelected ? "선택됨" : "선택"}
+                  {isActiveSelected ? "선택됨" : "미선택"}
                 </button>
               </div>
             </>

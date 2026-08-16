@@ -11,6 +11,7 @@ import StitchEditor from "../../components/xray/StitchEditor";
 import ImageViewer from "../../components/xray/ImageViewer";
 import ReportPanel from "../../components/xray/ReportPanel";
 import TaskProgress from "../../components/xray/TaskProgress";
+import ModulePageHeader from "../../components/common/ModulePageHeader/ModulePageHeader";
 import useObjectUrl from "../../hooks/useObjectUrl";
 import {
   TARGET,
@@ -1666,32 +1667,20 @@ export default function XrayPage() {
   return (
     <div className="xray-page">
       <div className="xray-container">
-        <nav className="xray-breadcrumb" aria-label="현재 위치">
-          <button type="button" onClick={() => navigate("/")}>
-            홈
-          </button>
-          <span>/</span>
-          <button
-            type="button"
-            onClick={() => navigate(getArtifactRoute(artifactId))}
-          >
-            유물 워크스페이스
-          </button>
-          <span>/</span>
-          <strong>X-RAY 분석</strong>
-        </nav>
-
-        <header className="xray-header">
-          <div className="xray-heading">
-            <span className="xray-eyebrow">INDEPENDENT X-RAY MODULE</span>
-            <h1 className="xray-title">X-RAY 분석</h1>
-            <p>AI 분석 결과를 확인하고 전문가 판정을 기록합니다.</p>
-          </div>
-          <div className="save-status">
-            <span aria-hidden="true">✓</span>
-            현재 작업 내용은 이 단계에서 유지됩니다
-          </div>
-        </header>
+        <ModulePageHeader
+          artifactId={artifactId}
+          currentLabel="X-RAY 분석"
+          eyebrow="INDEPENDENT X-RAY MODULE"
+          title="X-RAY 분석"
+          description="AI 분석 결과를 확인하고 전문가 판정을 기록합니다."
+          tone="blue"
+          rightContent={
+            <div className="save-status">
+              <span aria-hidden="true">✓</span>
+              현재 작업 내용은 이 단계에서 유지됩니다
+            </div>
+          }
+        />
 
         <section className="artifact-summary">
           <div className="artifact-identity">

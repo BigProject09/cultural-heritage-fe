@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./CleaningMethodSelectPage.css";
 
 function CleaningMethodSelectPage() {
@@ -59,13 +60,12 @@ function CleaningMethodSelectPage() {
 
   return (
     <div className="cleaning-method-page">
+      <GuideNavigation currentLabel="세척법 선택" />
+
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/cleaning")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <button className="nav-btn" onClick={handleComplete}>
           완료
         </button>

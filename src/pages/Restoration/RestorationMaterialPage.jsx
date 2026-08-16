@@ -4,6 +4,7 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./RestorationMaterialPage.css";
 
 const MATERIAL_OPTIONS = [
@@ -150,13 +151,12 @@ function RestorationMaterialPage() {
 
   return (
     <div className="restoration-material-page">
+      <GuideNavigation currentLabel="복원제 선택" />
+
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/restoration")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <button className="nav-btn" onClick={handleComplete}>
           완료
         </button>
