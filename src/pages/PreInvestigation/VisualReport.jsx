@@ -1,7 +1,12 @@
+import { useRef, useState } from "react";
 import { getVcaPdfDownloadUrl } from "../../services/vcaApi";
 import VisualCandidateOverlay from "./VisualCandidateOverlay";
-import { CONCEPT_FAMILY_LABELS, SEVERITY_LABELS, translateDescriptor } from "./visualVcaLabels";
+import { CONCEPT_FAMILY_LABELS, SEVERITY_LABELS, isPotteryMaterial, translateDescriptor } from "./visualVcaLabels";
 import KoreanLabel from "./KoreanLabel";
+import { compareEra, parseInspectionSections } from "../../utils/inspectionText";
+
+const PHOTO_ZOOM_STEP = 0.25;
+const PHOTO_ZOOM_MAX = 3;
 
 const PDF_STATUS_LABELS = {
   QUEUED: "PDF 생성 대기",
@@ -195,15 +200,6 @@ function formatPotteryInspectionValue(value) {
   return String(value);
 }
 
-// 재질명에 도자기 관련 키워드가 있는지 문자열로 판별한다. ReportPotteryInspection이
-// 서버의 potteryInspectionStatus.applicable이 없을 때 폴백으로 쓴다.
-// 주의: 같은 판별 로직이 vcaApi.js의 mock 분기에도 독립적으로 있어,
-// 키워드를 바꾸려면 두 곳 모두 고쳐야 한다.
-function isPotteryMaterial(material = "") {
-  const normalized = material.toLowerCase();
-  return normalized.includes("도자") || normalized.includes("pottery") || normalized.includes("ceramic");
-}
-
 // 도자기 검사 버튼 문구를 진행/실패/완료 상태에 맞게 고른다. ReportPotteryInspection에서 쓴다.
 function potteryActionLabel(status, working) {
   if (working === "pottery") return "도자기 검사 실행 중";
@@ -212,15 +208,178 @@ function potteryActionLabel(status, working) {
   return "도자기 검사 실행";
 }
 
+// 도자기 검사 원본 이미지 위에 문양 후보 bbox를 그려 보여주는 줌/팬 뷰어.
+// pottery-inspection-ai가 detail.pattern_era_color.patterns로 내려주는
+// bbox_percent(0~100 상대좌표)를 실제 이미지 픽셀 크기에 맞춰 SVG로 그린다.
+// ReportPotteryInspection 전용 - 문양이 없으면(patterns.length === 0) 사진만
+// 확대해서 보여준다.
+function PotteryPatternPhoto({ imageUrl, patterns }) {
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [imageSize, setImageSize] = useState(null);
+  const dragStart = useRef({ x: 0, y: 0 });
+
+  function handleImageLoad(event) {
+    setImageSize({
+      width: event.target.naturalWidth,
+      height: event.target.naturalHeight,
+    });
+  }
+
+  function handleZoomIn() {
+    setZoom((current) => Math.min(current + PHOTO_ZOOM_STEP, PHOTO_ZOOM_MAX));
+  }
+
+  function handleZoomOut() {
+    setZoom((current) => {
+      const next = Math.max(current - PHOTO_ZOOM_STEP, 1);
+      if (next === 1) setPan({ x: 0, y: 0 });
+      return next;
+    });
+  }
+
+  function handleZoomReset() {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }
+
+  function handlePointerDown(event) {
+    if (zoom === 1) return;
+    setIsDragging(true);
+    dragStart.current = { x: event.clientX - pan.x, y: event.clientY - pan.y };
+  }
+
+  function handlePointerMove(event) {
+    if (!isDragging) return;
+    setPan({
+      x: event.clientX - dragStart.current.x,
+      y: event.clientY - dragStart.current.y,
+    });
+  }
+
+  function handlePointerUp() {
+    setIsDragging(false);
+  }
+
+  if (!imageUrl) return null;
+
+  return (
+    <div>
+      <div className="photo-toolbar">
+        <button type="button" onClick={handleZoomOut} disabled={zoom === 1} aria-label="축소">
+          −
+        </button>
+        <span className="photo-zoom-level">{Math.round(zoom * 100)}%</span>
+        <button type="button" onClick={handleZoomIn} disabled={zoom === PHOTO_ZOOM_MAX} aria-label="확대">
+          ＋
+        </button>
+        {zoom > 1 && (
+          <button type="button" className="photo-zoom-reset" onClick={handleZoomReset}>
+            원래 크기
+          </button>
+        )}
+      </div>
+      <div
+        className="photo-frame"
+        onMouseDown={handlePointerDown}
+        onMouseMove={handlePointerMove}
+        onMouseUp={handlePointerUp}
+        onMouseLeave={handlePointerUp}
+        style={{ cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default" }}
+      >
+        <div
+          className="photo-zoom-layer"
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transition: isDragging ? "none" : "transform 0.15s ease",
+          }}
+        >
+          <img src={imageUrl} alt="도자기 검사 대상 사진" onLoad={handleImageLoad} draggable={false} />
+          {imageSize && patterns.length > 0 && (
+            <svg
+              className="pattern-svg"
+              viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
+              preserveAspectRatio="xMidYMid meet"
+            >
+              {(() => {
+                const scale = Math.max(imageSize.width, imageSize.height);
+                const strokeWidth = Math.max(scale / 350, 2);
+                const fontSize = Math.max(scale / 45, 16);
+
+                return patterns.map((pattern, index) => {
+                  const box = pattern.bbox_percent;
+                  if (!box) return null;
+                  const x = (box.x1 / 100) * imageSize.width;
+                  const y = (box.y1 / 100) * imageSize.height;
+                  const w = ((box.x2 - box.x1) / 100) * imageSize.width;
+                  const h = ((box.y2 - box.y1) / 100) * imageSize.height;
+                  const label = pattern.display_name || pattern.pattern_name || "";
+                  const labelY = Math.max(y - fontSize * 0.4, fontSize);
+
+                  return (
+                    <g key={pattern.key || index}>
+                      <rect
+                        x={x}
+                        y={y}
+                        width={w}
+                        height={h}
+                        className="pattern-rect"
+                        style={{ strokeWidth }}
+                      />
+                      <text
+                        x={x}
+                        y={labelY}
+                        className="pattern-label-bg"
+                        style={{ fontSize, strokeWidth: fontSize / 5 }}
+                      >
+                        {label}
+                      </text>
+                      <text x={x} y={labelY} className="pattern-label" style={{ fontSize }}>
+                        {label}
+                      </text>
+                    </g>
+                  );
+                });
+              })()}
+            </svg>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // 도자기 재질 유물에 한해 자동 실행되는 보조 검사 결과 섹션. VisualReport에서
 // findings 다음에 렌더링하며, 대상 재질이 아니고 기존 검사 결과도 없으면
 // 아무것도 그리지 않는다(null).
-function ReportPotteryInspection({ artifactMaterial, onPotteryInspection, potteryInspection, potteryInspectionStatus, working }) {
+function ReportPotteryInspection({
+  artifactMaterial,
+  artifactPeriod,
+  imageUrl,
+  onPotteryInspection,
+  potteryInspection,
+  potteryInspectionStatus,
+  working,
+}) {
   const hasInspection = potteryInspection && typeof potteryInspection === "object" && !Array.isArray(potteryInspection);
   const applicable = Boolean(potteryInspectionStatus?.applicable || isPotteryMaterial(artifactMaterial));
   if (!applicable && !hasInspection) {
     return null;
   }
+
+  // pottery-inspection-ai가 detail.pattern_era_color/detail.era로 내려주는
+  // 문양 위치·시대 재판정 원본을, 등록된 사진 위 오버레이와 등록 시대 대조
+  // 배지로 다시 보여준다 - 이전 도자기 전용 조사 화면(VisualPage 구버전)이
+  // 쓰던 시각화를 그대로 가져왔다.
+  const inspectionDetail = hasInspection ? potteryInspection.detail || {} : {};
+  const patternInfo = inspectionDetail.pattern_era_color;
+  const minAgreement = patternInfo?.min_agreement_used ?? 2;
+  const visiblePatterns = (patternInfo?.patterns || []).filter(
+    (pattern) => (pattern.agreement_count ?? 0) >= minAgreement && pattern.decision !== "판정보류",
+  );
+  const eraComparison = compareEra(artifactPeriod, inspectionDetail.era?.prediction);
+  const sections = parseInspectionSections(potteryInspection?.inspectionText);
 
   const detailEntries = Object.entries(potteryInspection || {})
     .filter(([key]) => !["moduleVersion", "summary", "humanReviewRecommended", "inspectionText"].includes(key))
@@ -280,11 +439,46 @@ function ReportPotteryInspection({ artifactMaterial, onPotteryInspection, potter
           <dd>{formatPotteryInspectionValue(potteryInspection.humanReviewRecommended)}</dd>
         </div>
       </dl>
+      {eraComparison && (
+        <p className={`era-compare ${eraComparison.match ? "match" : "mismatch"}`}>
+          <span>등록 시대: {artifactPeriod}</span>
+          <span aria-hidden="true">→</span>
+          <span>
+            AI 재분석: {inspectionDetail.era?.prediction}
+            {typeof inspectionDetail.era?.score === "number" &&
+              ` (${Math.round(inspectionDetail.era.score * 100)}%)`}
+          </span>
+          <span className="era-compare-tag">
+            {eraComparison.match ? "일치" : "불일치 · 검토 권장"}
+          </span>
+        </p>
+      )}
+      <PotteryPatternPhoto imageUrl={imageUrl} patterns={visiblePatterns} />
       <div className="visual-vca-pottery-inspection-copy">
         <h4>요약</h4>
         <p>{formatPotteryInspectionValue(potteryInspection.summary)}</p>
         <h4>검사 기록</h4>
-        <p>{formatPotteryInspectionValue(potteryInspection.inspectionText)}</p>
+        {sections.length > 0 ? (
+          <div className="inspection-sections">
+            {sections.map((section, index) => (
+              <div key={index}>
+                {section.title && (
+                  <h5 className="visual-result-heading">
+                    {section.title}
+                    {section.caveat && (
+                      <span className="caveat-icon" data-tooltip={section.caveat}>
+                        !
+                      </span>
+                    )}
+                  </h5>
+                )}
+                <p className="section-body">{section.body}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>{formatPotteryInspectionValue(potteryInspection.inspectionText)}</p>
+        )}
       </div>
       {detailEntries.length > 0 && (
         <details className="visual-vca-pottery-inspection-details">
@@ -312,6 +506,7 @@ export default function VisualReport({
   artifactId,
   runId,
   artifactMaterial,
+  artifactPeriod,
   pdfJob,
   report,
   working,
@@ -330,6 +525,8 @@ export default function VisualReport({
         <ReportFindingsBrief summary={report.summary} findings={report.findings || []} />
         <ReportPotteryInspection
           artifactMaterial={artifactMaterial}
+          artifactPeriod={artifactPeriod}
+          imageUrl={report.images?.[0]?.imageUrl}
           onPotteryInspection={onPotteryInspection}
           potteryInspection={report.potteryInspection}
           potteryInspectionStatus={report.potteryInspectionStatus}

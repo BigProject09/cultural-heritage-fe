@@ -94,6 +94,15 @@ const DESCRIPTOR_TERM_LABELS = {
   localized: "국부적",
 };
 
+// 재질명에 도자기 관련 키워드가 있는지 문자열로 판별한다. VisualReport(도자기
+// 검사 섹션 표시 여부)와 VisualPage(도자기 단계 체크리스트 표시 여부)가 같이
+// 쓴다. 주의: 같은 판별 로직이 vcaApi.js의 mock 분기에도 독립적으로 있어,
+// 키워드를 바꾸려면 그쪽도 같이 고쳐야 한다.
+export function isPotteryMaterial(material = "") {
+  const normalized = material.toLowerCase();
+  return normalized.includes("도자") || normalized.includes("pottery") || normalized.includes("ceramic");
+}
+
 // descriptor는 공백으로 구분된 영문 단어 나열이라 단어 단위로
 // DESCRIPTOR_TERM_LABELS를 찾아 치환한다. VisualFindingDetailPage에서
 // 원문 옆 보조 설명(· 이후)으로 쓴다.

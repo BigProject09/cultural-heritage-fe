@@ -120,7 +120,7 @@ export default function VisualFindingDetailPage() {
   if (error) {
     return (
       <main className="visual-page visual-vca-page visual-state" role="alert">
-        <span className="visual-vca-kicker">VCA CONNECTION</span>
+        <span className="visual-eyebrow">VCA CONNECTION</span>
         <h1>특이점 정보를 불러오지 못했습니다</h1>
         <p>{error.message}</p>
         <button type="button" className="visual-primary-button" onClick={backToReport}>
@@ -137,7 +137,7 @@ export default function VisualFindingDetailPage() {
   if (!finding) {
     return (
       <main className="visual-page visual-vca-page visual-state" role="alert">
-        <span className="visual-vca-kicker">VCA CONNECTION</span>
+        <span className="visual-eyebrow">VCA CONNECTION</span>
         <h1>특이점을 찾을 수 없습니다</h1>
         <p>요청한 특이점 정보가 더 이상 존재하지 않습니다.</p>
         <button type="button" className="visual-primary-button" onClick={backToReport}>
@@ -181,8 +181,8 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
 
   return (
     <main className="visual-page visual-vca-page">
-      <div className="visual-container visual-vca-container">
-        <nav className="visual-vca-breadcrumb" aria-label="현재 위치">
+      <div className="visual-vca-container">
+        <nav className="visual-breadcrumb" aria-label="현재 위치">
           <button type="button" onClick={backToReport}>
             육안 상태 조사
           </button>
@@ -190,10 +190,10 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
           <strong>특이점 상세</strong>
         </nav>
 
-        <header className="visual-vca-header">
+        <header className="visual-header">
           <div>
-            <span className="visual-vca-kicker">VCA FINDING DETAIL</span>
-            <h1>
+            <span className="visual-eyebrow">VCA FINDING DETAIL</span>
+            <h1 className="visual-title">
               {number > 0 && <span className="visual-vca-finding-number visual-vca-finding-number-lg">{number}</span>}
               <KoreanLabel original={finding.conceptFamily} labelMap={CONCEPT_FAMILY_LABELS} fallback="특이점 상세" />
             </h1>
@@ -201,7 +201,7 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
           </div>
         </header>
 
-        <section className="visual-vca-card visual-vca-overlay" aria-labelledby="visual-finding-detail-title">
+        <section className="result-card visual-vca-overlay" aria-labelledby="visual-finding-detail-title">
           {image?.downloadUrl ? (
             <>
               {bbox && (
@@ -232,10 +232,10 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
           )}
         </section>
 
-        <section className="visual-vca-card" aria-labelledby="visual-finding-detail-body">
-          <div className="visual-vca-heading">
+        <section className="result-card" aria-labelledby="visual-finding-detail-body">
+          <div className="visual-section-heading">
             <div>
-              <span className="visual-vca-kicker">
+              <span>
                 <KoreanLabel original={finding.severity} labelMap={SEVERITY_LABELS} fallback="관찰" />
               </span>
               <h2 id="visual-finding-detail-body">
@@ -279,7 +279,8 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
           )}
         </section>
 
-        <footer className="visual-vca-complete">
+        <footer className="complete-area">
+          <p>사진 위 위치와 근거 문헌을 확인한 뒤 조사 보고서로 돌아가세요.</p>
           <button type="button" className="visual-primary-button" onClick={backToReport}>
             조사 보고서로 돌아가기
           </button>

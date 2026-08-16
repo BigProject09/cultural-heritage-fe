@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CONCEPT_FAMILY_LABELS, SEVERITY_LABELS, findingDescription } from "./visualVcaLabels";
 import { badgeRadiusFor, markerColorForNumber, placeMarkerBadges } from "./visualMarkerColors";
 import { BboxFigure, BboxMarker } from "./VisualBboxFigure";
 import KoreanLabel from "./KoreanLabel";
+
+const OVERLAY_ZOOM_STEP = 0.25;
+const OVERLAY_ZOOM_MAX = 3;
 
 // 이미지 한 장 + 그 위의 bbox 마커 전부 + 호버 상세 패널을 그린다.
 // VisualCandidateOverlay가 downloadUrl이 있는 이미지마다 하나씩 렌더링한다.
@@ -13,9 +16,48 @@ import KoreanLabel from "./KoreanLabel";
 // 한다.
 function ImageOverlay({ image, findings, findingNumbers, onSelectFinding, hoveredFindingId, onHoverFinding }) {
   const [size, setSize] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
 
   function handleLoad(event) {
     setSize({ width: event.target.naturalWidth, height: event.target.naturalHeight });
+  }
+
+  function handleZoomIn() {
+    setZoom((current) => Math.min(current + OVERLAY_ZOOM_STEP, OVERLAY_ZOOM_MAX));
+  }
+
+  function handleZoomOut() {
+    setZoom((current) => {
+      const next = Math.max(current - OVERLAY_ZOOM_STEP, 1);
+      if (next === 1) setPan({ x: 0, y: 0 });
+      return next;
+    });
+  }
+
+  function handleZoomReset() {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }
+
+  function handlePointerDown(event) {
+    if (zoom === 1) return;
+    setIsDragging(true);
+    dragStart.current = { x: event.clientX - pan.x, y: event.clientY - pan.y };
+  }
+
+  function handlePointerMove(event) {
+    if (!isDragging) return;
+    setPan({
+      x: event.clientX - dragStart.current.x,
+      y: event.clientY - dragStart.current.y,
+    });
+  }
+
+  function handlePointerUp() {
+    setIsDragging(false);
   }
 
   const withBbox = findings.filter((finding) => finding.bbox);
@@ -25,29 +67,60 @@ function ImageOverlay({ image, findings, findingNumbers, onSelectFinding, hovere
 
   return (
     <div className="visual-vca-overlay-item">
-      <BboxFigure image={image} size={size} onImageLoad={handleLoad}>
-        {withBbox.map((finding, index) => {
-          const number = findingNumbers.get(finding.findingId) ?? index + 1;
-          const isHovered = finding.findingId === hoveredFindingId;
-          return (
-            <BboxMarker
-              key={finding.findingId || index}
-              bbox={finding.bbox}
-              polygons={finding.polygons}
-              number={number}
-              color={markerColorForNumber(number)}
-              badgeRadius={badgeRadius}
-              badge={badgePositions[index]}
-              fillAlpha={isHovered ? 0.5 : 0.32}
-              isHovered={isHovered}
-              interactive
-              onClick={() => onSelectFinding(finding.findingId)}
-              onMouseEnter={() => onHoverFinding(finding.findingId)}
-              onMouseLeave={() => onHoverFinding(null)}
-            />
-          );
-        })}
-      </BboxFigure>
+      <div className="photo-toolbar">
+        <button type="button" onClick={handleZoomOut} disabled={zoom === 1} aria-label="축소">
+          −
+        </button>
+        <span className="photo-zoom-level">{Math.round(zoom * 100)}%</span>
+        <button type="button" onClick={handleZoomIn} disabled={zoom === OVERLAY_ZOOM_MAX} aria-label="확대">
+          ＋
+        </button>
+        {zoom > 1 && (
+          <button type="button" className="photo-zoom-reset" onClick={handleZoomReset}>
+            원래 크기
+          </button>
+        )}
+      </div>
+      <div
+        className="visual-vca-overlay-zoom-frame"
+        onMouseDown={handlePointerDown}
+        onMouseMove={handlePointerMove}
+        onMouseUp={handlePointerUp}
+        onMouseLeave={handlePointerUp}
+        style={{ cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default" }}
+      >
+        <div
+          className="visual-vca-overlay-zoom-layer"
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transition: isDragging ? "none" : "transform 0.15s ease",
+          }}
+        >
+          <BboxFigure image={image} size={size} onImageLoad={handleLoad}>
+            {withBbox.map((finding, index) => {
+              const number = findingNumbers.get(finding.findingId) ?? index + 1;
+              const isHovered = finding.findingId === hoveredFindingId;
+              return (
+                <BboxMarker
+                  key={finding.findingId || index}
+                  bbox={finding.bbox}
+                  polygons={finding.polygons}
+                  number={number}
+                  color={markerColorForNumber(number)}
+                  badgeRadius={badgeRadius}
+                  badge={badgePositions[index]}
+                  fillAlpha={isHovered ? 0.5 : 0.32}
+                  isHovered={isHovered}
+                  interactive
+                  onClick={() => onSelectFinding(finding.findingId)}
+                  onMouseEnter={() => onHoverFinding(finding.findingId)}
+                  onMouseLeave={() => onHoverFinding(null)}
+                />
+              );
+            })}
+          </BboxFigure>
+        </div>
+      </div>
       <div
         className={
           hoveredFinding

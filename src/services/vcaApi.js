@@ -1,3 +1,5 @@
+import { getAccessToken, withAuthHeaders } from "./authToken";
+
 const USE_VCA_MOCK = import.meta.env.VITE_USE_VCA_MOCK === "true";
 
 const API_BASE = (
@@ -29,10 +31,19 @@ function normalizeRun(run) {
 // 프런트가 실제로 받으려면 API_BASE를 붙이고, 게이트웨이 인증이 필요하면
 // vca_access_token 쿼리를 추가해야 한다. normalizeImage/normalizeArtifact/
 // normalizePdfJob이 공용으로 쓴다.
+//
+// /api/vca/**는 .authenticated()라 로그인 JWT도 필요한데, <img src>/PDF
+// 다운로드 링크는 Authorization 헤더를 붙일 수 없다 - BE의
+// JwtAuthenticationFilter가 이 두 GET 경로에 한해 access_token 쿼리로도
+// JWT를 받아주므로(VcaAccessTokenInterceptor의 vca_access_token 쿼리 예외와
+// 같은 패턴) 여기서 같이 붙인다. requestJson의 Authorization 헤더와
+// 별개이니 빠뜨리면 새로고침 후 이미지가 다시 403으로 깨진다.
 function gatewayUrl(url) {
   if (!url || !url.startsWith("/api/vca")) return url;
   const gateway = new URL(`${API_BASE}${url}`);
   if (VCA_ACCESS_TOKEN) gateway.searchParams.set("vca_access_token", VCA_ACCESS_TOKEN);
+  const jwt = getAccessToken();
+  if (jwt) gateway.searchParams.set("access_token", jwt);
   return gateway.toString();
 }
 
@@ -194,10 +205,12 @@ async function readError(response) {
 // 4xx/5xx 응답을 모두 status/code가 달린 Error로 통일해 던진다. 이 파일의
 // mock이 아닌 모든 API 함수가 거쳐 간다.
 async function requestJson(path, options = {}) {
-  const headers = {
-    ...(VCA_ACCESS_TOKEN ? { "X-VCA-Access-Token": VCA_ACCESS_TOKEN } : {}),
-    ...(options.headers || {}),
-  };
+  // /api/vca/** 는 WebSecurityConfig에서 .authenticated()로 막혀 있어
+  // 로그인 JWT(Authorization 헤더)도 같이 붙여야 한다 - X-VCA-Access-Token은
+  // vca-ai가 외부에 노출된 경우를 위한 별개의 공유 시크릿이라 JWT를
+  // 대신하지 않는다.
+  const headers = withAuthHeaders(options.headers);
+  if (VCA_ACCESS_TOKEN) headers.set("X-VCA-Access-Token", VCA_ACCESS_TOKEN);
   let response;
   try {
     response = await fetch(`${VCA_BASE}${path}`, { ...options, headers });
