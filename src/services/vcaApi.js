@@ -271,6 +271,33 @@ export async function getVcaArtifacts({ signal } = {}) {
   return { ...payload, items: (payload.items || []).map(normalizeArtifact) };
 }
 
+// 새 VCA 아티팩트 생성 - artifactId(UUID)는 서버가 만든다. FE의 워크스페이스
+// 프로젝트 ID(로컬 모드에서는 브라우저에서만 만든 값)와는 별개이므로,
+// useVisualInvestigation의 selectFiles가 첫 이미지 업로드 시 한 번 호출하고
+// 응답의 artifactId를 워크스페이스 프로젝트에 저장해 재사용한다.
+export async function createVcaArtifact(name) {
+  if (USE_VCA_MOCK) {
+    await delay(120);
+    const artifactId = `artifact-mock-${Date.now()}`;
+    const artifact = {
+      artifactId,
+      displayName: name || `Artifact ${artifactId}`,
+      status: "DRAFT",
+      uploadedImages: [],
+      runs: [],
+    };
+    mockArtifacts.set(artifactId, artifact);
+    return normalizeArtifact(artifact);
+  }
+  return normalizeArtifact(
+    await requestJson("", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
+  );
+}
+
 // artifact 단건 조회 - useVisualInvestigation의 loadArtifact가 초기 로드와
 // 활성 run 폴링 둘 다에 쓰는 핵심 조회 함수다.
 export async function getVcaArtifact(artifactId, { signal } = {}) {

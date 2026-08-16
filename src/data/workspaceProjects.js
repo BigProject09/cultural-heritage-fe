@@ -172,6 +172,11 @@ export function normalizeWorkspaceProject(project = {}) {
     treatmentPurpose: project.treatmentPurpose || "",
     image,
     imageKey: project.imageKey || project.localImageKey || "",
+    // VCA(/api/vca)가 서버에서 발급한 아티팩트 UUID. "local" 저장 모드의
+    // artifactId는 브라우저에서만 만든 값이라 BE의 VCA 공유 artifacts
+    // 테이블에는 없다 - VCA 쪽 호출은 반드시 이 필드를 대신 써야 한다.
+    // 처음 이미지를 업로드할 때 createVcaArtifact로 채워진다(setWorkspaceVcaArtifactId 참고).
+    vcaArtifactId: project.vcaArtifactId || "",
     updatedAt:
       project.updatedAt ||
       project.updated_at ||
@@ -483,6 +488,18 @@ export async function getWorkspaceProject(artifactId, { signal } = {}) {
   return normalizeWorkspaceProject(payload?.data || payload);
 }
 
+// 로컬 저장 모드에서, VCA가 방금 발급한 서버 아티팩트 UUID를 워크스페이스
+// 프로젝트에 영구 저장한다. useVisualInvestigation의 selectFiles가 첫
+// 업로드 시 createVcaArtifact 직후 호출한다. "api" 모드는 워크스페이스
+// artifactId 자체가 이미 서버 ID이므로 아무 것도 하지 않는다.
+export async function setWorkspaceVcaArtifactId(artifactId, vcaArtifactId) {
+  if (ARTIFACT_STORAGE_MODE !== "local") return;
+  const projects = await prepareLocalProjects();
+  const existing = getLocalProject(projects, artifactId);
+  if (!existing) return;
+  await saveLocalProject({ ...existing, vcaArtifactId }, projects);
+}
+
 async function uploadArtifactImage(artifactId, file, entryModule) {
   const presigned = await request(
     `${ARTIFACTS_PATH}/${encodeURIComponent(artifactId)}/files/presign`,
@@ -700,6 +717,7 @@ export function selectWorkspaceProject(project) {
   const normalized = normalizeWorkspaceProject(project);
   const artifactInfo = {
     artifactId: normalized.artifactId,
+    vcaArtifactId: normalized.vcaArtifactId,
     name: normalized.name,
     material: normalized.material,
     period: normalized.period,

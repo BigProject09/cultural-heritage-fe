@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getWorkspaceProject, selectWorkspaceProject } from "../../data/workspaceProjects";
+import {
+  getWorkspaceProject,
+  selectWorkspaceProject,
+  setWorkspaceVcaArtifactId,
+} from "../../data/workspaceProjects";
 import {
   cancelVcaRun,
+  createVcaArtifact,
   createVcaPdfJob,
   createVcaRun,
   deleteVcaImage,
@@ -65,6 +70,18 @@ function withPreviewUrl(image, previewUrls) {
 // run은 2초 간격으로 폴링하고, 완료되면 보고서를 자동으로 불러온다.
 export function useVisualInvestigation(artifactId) {
   const [workspaceArtifact, setWorkspaceArtifact] = useState({});
+  // 워크스페이스 프로젝트 ID(로컬 모드에서는 브라우저 전용 값)와는 다른,
+  // BE의 VCA 공유 artifacts 테이블에 실재하는 서버 발급 UUID. 첫 업로드
+  // 전에는 비어 있다(createVcaArtifact로 채워짐 - selectFiles 참고).
+  const [vcaArtifactId, setVcaArtifactId] = useState("");
+  // loadArtifact(useCallback, deps=[artifactId])가 폴링 시점에 최신
+  // vcaArtifactId를 stale closure 없이 읽기 위한 미러. state 자체를 deps에
+  // 넣으면 콜백이 매번 재생성돼 활성 run 폴링 interval effect가 다시
+  // 걸리므로 ref로 우회한다.
+  const vcaArtifactIdRef = useRef("");
+  useEffect(() => {
+    vcaArtifactIdRef.current = vcaArtifactId;
+  }, [vcaArtifactId]);
   const [artifact, setArtifact] = useState(null);
   const [selectedRunId, setSelectedRunId] = useState("");
   const [report, setReport] = useState(null);
@@ -88,9 +105,12 @@ export function useVisualInvestigation(artifactId) {
 
   // withPreviewUrl을 report.images 전체에 적용한 새 report를 만든다.
   // loadReport, handlePotteryInspection이 서버 응답을 state에 넣기 전에 쓴다.
+  // TEMP: conceptFamily가 "unknown"(미분류)인 특이점을 화면에서 잠깐
+  // 숨긴다 - 확인이 끝나면 이 필터는 지운다.
   const withPreviewReport = useCallback((nextReport) => ({
     ...nextReport,
     images: (nextReport.images || []).map((image) => withPreviewUrl(image, previewUrls)),
+    findings: (nextReport.findings || []).filter((finding) => finding.conceptFamily !== "unknown"),
   }), [previewUrls]);
 
   // 워크스페이스 정보와 VCA artifact를 함께 불러온다. 마운트 시 1회,
@@ -105,25 +125,52 @@ export function useVisualInvestigation(artifactId) {
     }
 
     if (!silent) setLoading(true);
-    setError(null);
-    const [workspaceResult, vcaResult] = await Promise.allSettled([
-      getWorkspaceProject(artifactId),
-      getVcaArtifact(artifactId),
-    ]);
-    if (workspaceResult.status === "fulfilled") {
-      setWorkspaceArtifact(selectWorkspaceProject(workspaceResult.value));
+    if (!silent) setError(null);
+    const workspaceResult = await getWorkspaceProject(artifactId).catch((workspaceError) => {
+      if (!silent) setError(workspaceError);
+      return null;
+    });
+    if (!workspaceResult && silent) {
+      // 활성 run을 2초마다 재조회하는 백그라운드 폴링 중에는, 워크스페이스
+      // 프로젝트 조회 한 번 실패했다고 화면을 통째로 에러/빈 상태로 덮어쓰지
+      // 않는다 - 이미 알고 있는 vcaArtifactId/진행 중인 run 표시를 그대로 두고
+      // 이번 폴링만 건너뛴다(다음 폴링에서 회복 가능). 예전에는 이게 없어서
+      // 실행 중인 분석이 화면에서 갑자기 사라지는 것처럼 보였다.
+      return;
     }
+    const workspaceValue = workspaceResult ? selectWorkspaceProject(workspaceResult) : {};
+    if (workspaceResult) setWorkspaceArtifact(workspaceValue);
+
+    // 서버 VCA 아티팩트가 아직 한 번도 만들어지지 않았으면(첫 업로드 전)
+    // 워크스페이스 프로젝트에 vcaArtifactId 자체가 없다 - 이 경우 404를
+    // 유발할 GET을 굳이 보내지 않고 바로 "새로 시작" 상태로 초기화한다.
+    // 이미 알고 있는 vcaArtifactId(state)가 있는데 이번 조회에서만 비어
+    // 왔다면(위와 같은 일시적 결함) 기존 값을 그대로 유지한다.
+    const resolvedVcaArtifactId = workspaceValue.vcaArtifactId || vcaArtifactIdRef.current || "";
+    setVcaArtifactId(resolvedVcaArtifactId);
+
+    if (!resolvedVcaArtifactId) {
+      setArtifact(emptyVcaArtifact(artifactId, workspaceValue));
+      setSelectedRunId("");
+      setNotice("이 유물의 VCA 조사를 새로 시작합니다. 이미지를 먼저 업로드하세요.");
+      if (!silent) setLoading(false);
+      return;
+    }
+
+    const vcaResult = await getVcaArtifact(resolvedVcaArtifactId).then(
+      (value) => ({ status: "fulfilled", value }),
+      (reason) => ({ status: "rejected", reason }),
+    );
     if (vcaResult.status === "rejected") {
-      const workspaceValue = workspaceResult.status === "fulfilled"
-        ? selectWorkspaceProject(workspaceResult.value)
-        : {};
       if (vcaResult.reason?.status === 404 && vcaResult.reason?.code === "ARTIFACT_NOT_FOUND") {
         setArtifact(emptyVcaArtifact(artifactId, workspaceValue));
         setSelectedRunId("");
         setNotice("이 유물의 VCA 조사를 새로 시작합니다. 이미지를 먼저 업로드하세요.");
-      } else {
+      } else if (!silent) {
         setError(vcaResult.reason);
       }
+      // silent 폴링 중 VCA 조회가 일시적으로 실패한 경우도 화면을 덮어쓰지
+      // 않는다 - 위 워크스페이스 실패와 같은 이유.
     } else {
       const nextArtifact = vcaResult.value;
       const nextLatestRun = latestRun(nextArtifact.runs);
@@ -162,7 +209,7 @@ export function useVisualInvestigation(artifactId) {
     setWorking("cancel");
     setNotice("");
     try {
-      const cancelledRun = await cancelVcaRun(artifactId, selectedRunId);
+      const cancelledRun = await cancelVcaRun(vcaArtifactId, selectedRunId);
       setArtifact((current) => ({
         ...current,
         runs: current.runs.map((run) =>
@@ -179,7 +226,7 @@ export function useVisualInvestigation(artifactId) {
     } finally {
       setWorking((current) => current === "cancel" ? "" : current);
     }
-  }, [artifactId, selectedRunId, runIsActive]);
+  }, [vcaArtifactId, selectedRunId, runIsActive]);
 
   // 파일 input의 onChange 핸들러. 선택한 이미지를 하나씩 업로드하고, 기존
   // report/PDF 상태를 초기화한다(새 이미지가 등록됐으니 이전 분석 결과는
@@ -197,15 +244,27 @@ export function useVisualInvestigation(artifactId) {
     setWorking("upload");
     setNotice("");
     try {
+      // 이 유물의 서버 VCA 아티팩트가 아직 없으면(첫 업로드) 여기서 만든다.
+      // state(vcaArtifactId) 갱신은 비동기라 이번 호출 안에서는 지역 변수로
+      // 즉시 써야 하고, 다음 로드부터 재사용하도록 워크스페이스 프로젝트에도
+      // 영구 저장한다.
+      let currentVcaArtifactId = vcaArtifactId;
+      if (!currentVcaArtifactId) {
+        const created = await createVcaArtifact(workspaceArtifact.name);
+        currentVcaArtifactId = created.artifactId;
+        await setWorkspaceVcaArtifactId(artifactId, currentVcaArtifactId);
+        setVcaArtifactId(currentVcaArtifactId);
+      }
+
       const uploaded = [];
       const nextPreviewUrls = {};
       for (const file of files) {
-        const image = await uploadVcaImage(artifactId, file);
+        const image = await uploadVcaImage(currentVcaArtifactId, file);
         uploaded.push(image);
         nextPreviewUrls[image.imageId] = URL.createObjectURL(file);
       }
       setPreviewUrls((current) => ({ ...current, ...nextPreviewUrls }));
-      setArtifact(await getVcaArtifact(artifactId));
+      setArtifact(await getVcaArtifact(currentVcaArtifactId));
       setReport(null);
       setReportRunId("");
       setPdfJob(null);
@@ -224,7 +283,7 @@ export function useVisualInvestigation(artifactId) {
     setWorking(operation);
     setNotice("");
     try {
-      await deleteVcaImage(artifactId, imageId);
+      await deleteVcaImage(vcaArtifactId, imageId);
       setArtifact((current) => ({ ...current, uploadedImages: current.uploadedImages.filter((image) => image.imageId !== imageId) }));
       setPreviewUrls((current) => {
         const next = { ...current };
@@ -248,11 +307,11 @@ export function useVisualInvestigation(artifactId) {
     setWorking("run");
     setNotice("");
     try {
-      const run = await createVcaRun(artifactId, {
+      const run = await createVcaRun(vcaArtifactId, {
         material: workspaceArtifact.material,
         resume,
       });
-      setArtifact(await getVcaArtifact(artifactId));
+      setArtifact(await getVcaArtifact(vcaArtifactId));
       setSelectedRunId(run.runId);
       setReport(null);
       setReportRunId("");
@@ -283,7 +342,7 @@ export function useVisualInvestigation(artifactId) {
     setWorking("report");
     setNotice("");
     try {
-      const result = await getVcaReport(artifactId, runId);
+      const result = await getVcaReport(vcaArtifactId, runId);
       const nextReport = result.report || result;
       setReport(withPreviewReport(nextReport));
       setReportRunId(runId);
@@ -310,7 +369,7 @@ export function useVisualInvestigation(artifactId) {
     } finally {
       setWorking((current) => current === "report" ? "" : current);
     }
-  }, [artifactId, selectedRunId, withPreviewReport]);
+  }, [vcaArtifactId, selectedRunId, withPreviewReport]);
 
   useEffect(() => {
     if (!selectedRun || !ACTIVE_RUN_STATUSES.has(selectedRun.status)) return undefined;
@@ -352,8 +411,8 @@ export function useVisualInvestigation(artifactId) {
     setNotice("");
     try {
       const job = pdfJob
-        ? await getVcaPdfJob(artifactId, pdfJob.jobId)
-        : await createVcaPdfJob(artifactId, selectedRunId);
+        ? await getVcaPdfJob(vcaArtifactId, pdfJob.jobId)
+        : await createVcaPdfJob(vcaArtifactId, selectedRunId);
       setPdfJob(job);
       setNotice(job.status === "COMPLETED" ? "PDF가 준비되었습니다. 다운로드를 열 수 있습니다." : "PDF 생성 작업을 접수했습니다. 상태 확인을 다시 선택하세요.");
     } catch (pdfError) {
@@ -371,7 +430,7 @@ export function useVisualInvestigation(artifactId) {
     setWorking("pottery");
     setNotice("");
     try {
-      const nextReport = await runVcaPotteryInspection(artifactId, selectedRunId, {
+      const nextReport = await runVcaPotteryInspection(vcaArtifactId, selectedRunId, {
         material: workspaceArtifact.material,
       });
       setReport(withPreviewReport(nextReport));
@@ -386,7 +445,7 @@ export function useVisualInvestigation(artifactId) {
     } finally {
       setWorking((current) => current === "pottery" ? "" : current);
     }
-  }, [artifactId, selectedRunId, withPreviewReport, workspaceArtifact.material]);
+  }, [vcaArtifactId, selectedRunId, withPreviewReport, workspaceArtifact.material]);
 
   // 도자기 검사 시작 요청 후 report가 NOT_STARTED로 갱신될 때까지는 지연이
   // 있어, 이 run에 대해 이미 자동 실행을 시도했는지 별도로 기억해 두지

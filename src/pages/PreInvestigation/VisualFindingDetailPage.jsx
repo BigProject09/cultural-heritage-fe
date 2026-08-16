@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getVcaReport } from "../../services/vcaApi";
+import { getWorkspaceProject } from "../../data/workspaceProjects";
 import { RagConceptCards, RagEvidenceRows, RagQueries, RagRetrievalResults } from "./VisualRagEvidence";
 import { BboxFigure, BboxMarker } from "./VisualBboxFigure";
 import { badgeRadiusFor, markerColorForNumber } from "./visualMarkerColors";
@@ -75,12 +76,18 @@ export default function VisualFindingDetailPage() {
     window.scrollTo(0, 0);
   }, [findingId]);
 
+  // 라우트의 artifactId는 워크스페이스 프로젝트의 로컬 ID다("local" 저장
+  // 모드에서는 BE의 VCA 공유 artifacts 테이블에 없는 값) - getVcaReport는
+  // 서버가 발급한 실제 vcaArtifactId가 필요하므로, 워크스페이스 프로젝트를
+  // 먼저 조회해 그 값으로 바꿔서 호출한다("api" 모드는 이미 같은 값이라
+  // project.vcaArtifactId가 비어 있으면 라우트 값을 그대로 쓴다).
   useEffect(() => {
     let cancelled = false;
     const timer = window.setTimeout(() => {
       setLoading(true);
       setError(null);
-      getVcaReport(artifactId, runId)
+      getWorkspaceProject(artifactId)
+        .then((project) => getVcaReport(project.vcaArtifactId || artifactId, runId))
         .then((result) => {
           if (cancelled) return;
           setReport(result.report || result);

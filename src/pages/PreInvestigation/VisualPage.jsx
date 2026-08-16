@@ -34,9 +34,10 @@ const STAGE_ORDER = [
   "rough_masking",
   "visual_cue_generation",
   "rag",
+  "anomaly_grouping",
   "prompt_generating",
   "mask_refining",
-  "anomaly_grouping",
+  "report_trace_assembly",
   "report_generating",
 ];
 const STAGE_LABELS = {
@@ -44,9 +45,10 @@ const STAGE_LABELS = {
   rough_masking: "특이점 후보 탐지",
   visual_cue_generation: "시각 단서 분석",
   rag: "문헌 근거 검색",
+  anomaly_grouping: "특이점 후보 취합",
   prompt_generating: "정밀 분석 준비",
   mask_refining: "특이점 영역 정밀화",
-  anomaly_grouping: "특이점 후보 취합",
+  report_trace_assembly: "보고서 근거 조립",
   report_generating: "보고서 생성",
 };
 const STAGE_STATUS_LABELS = {
