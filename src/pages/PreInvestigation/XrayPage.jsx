@@ -1660,9 +1660,14 @@ export default function XrayPage() {
     return Boolean(file) && inspectionFileForRegion(region) === file;
   }
 
-  // 지금 보고 있는 이미지의 영역만 화면에 그린다.
+  // 지금 보고 있는 이미지에서 DAMAGE로 포함된 영역만 bbox로 그린다.
+  // NORMAL 판정은 regions에는 남겨 두어 우측 검토 목록에서 다시 복원할 수 있다.
   const visibleRegions = viewFile
-    ? regions.filter((region) => regionBelongsToFile(region, viewFile))
+    ? regions.filter(
+        (region) =>
+          regionBelongsToFile(region, viewFile) &&
+          region.reviewDecision !== "normal",
+      )
     : [];
 
   const selectedRegion =
@@ -2214,8 +2219,10 @@ export default function XrayPage() {
                   </div>
                   <div className="image-tabs">
                     {allInspectionFiles.map((file, index) => {
-                      const count = regions.filter((region) =>
-                        regionBelongsToFile(region, file),
+                      const count = regions.filter(
+                        (region) =>
+                          regionBelongsToFile(region, file) &&
+                          region.reviewDecision !== "normal",
                       ).length;
 
                       return (

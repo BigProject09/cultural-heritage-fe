@@ -1,8 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import {
-  getActiveArtifactId,
-  getModuleRoute,
-} from "../../data/workspaceProjects";
+import { getActiveArtifactId } from "../../data/workspaceProjects";
 import { getArtifactRoute } from "../../utils/artifactRoutes";
 import "./GuideNavigation.css";
 
@@ -22,10 +19,6 @@ function GuideNavigation({ currentLabel }) {
     navigate(getArtifactRoute(artifactId));
   };
 
-  const goGuide = () => {
-    if (!hasArtifact) return;
-    navigate(getModuleRoute("guide", artifactId));
-  };
 
   return (
     <nav className="guide-breadcrumb" aria-label="현재 위치">
@@ -41,17 +34,9 @@ function GuideNavigation({ currentLabel }) {
 
       <span aria-hidden="true">/</span>
 
-      {currentLabel ? (
-        <>
-          <button type="button" onClick={goGuide} disabled={!hasArtifact}>
-            보존 가이드
-          </button>
-          <span aria-hidden="true">/</span>
-          <strong>{currentLabel}</strong>
-        </>
-      ) : (
-        <strong>보존 가이드</strong>
-      )}
+      <strong>
+        {currentLabel ? `보존 가이드 · ${currentLabel}` : "보존 가이드"}
+      </strong>
     </nav>
   );
 }

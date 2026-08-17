@@ -7,9 +7,7 @@ import "./CleaningPage.css";
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import {
   getNextStep,
-  getPreviousStep,
   moveToNextStep,
-  moveToPreviousStep,
 } from "../../utils/flowNavigation";
 
 import { useDisassembly } from "../../context/useDisassembly";
@@ -127,21 +125,7 @@ function CleaningPage() {
 
       <div className="top-bar">
         <button
-          className={`nav-btn${
-            getPreviousStep(approvedFlow, "세척") ? "" : " invisible"
-          }`}
-          onClick={() =>
-            moveToPreviousStep(
-              navigate,
-              approvedFlow,
-              "세척"
-            )
-          }
-        >
-          ← 이전
-        </button>
-        <button
-          className="nav-btn"
+          className="nav-btn ml-auto"
           disabled={!allCompleted || movingNext}
           onClick={handleNextStep}
         >

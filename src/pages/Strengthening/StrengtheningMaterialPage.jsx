@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./StrengtheningMaterialPage.css";
@@ -63,26 +64,28 @@ function StrengtheningMaterialPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, strengtheningRecommendation, setCompleted, setStepSaving, savingSteps } = ctx;
+  const { taskId, strengtheningRecommendation, setCompleted, setStepSaving } = ctx;
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("strengtheningMaterial");
 
-  const isSaving = savingSteps.has("strengtheningMaterial");
+  const initialAgent = isCompleted
+    ? ctx.strengtheningChoice?.agent || ""
+    : strengtheningRecommendation?.recommended_agent || "";
+  const initialSolvent = isCompleted
+    ? ctx.strengtheningChoice?.solvent || ""
+    : strengtheningRecommendation?.recommended_solvent || "";
 
-  // 실제로 확정(제출)할 강화제/용제. AI 추천값을 초기값으로 사용.
-  const [agent, setAgent] = useState(
-    () => strengtheningRecommendation?.recommended_agent || "",
-  );
-  const [solvent, setSolvent] = useState(
-    () => strengtheningRecommendation?.recommended_solvent || "",
-  );
+  // 완료 전에는 AI 추천값, 완료 후에는 실제 확정값을 표시한다.
+  const [agent, setAgent] = useState(() => initialAgent);
+  const [solvent, setSolvent] = useState(() => initialSolvent);
 
   // 오른쪽 상세 영역에 무엇을 보여줄지만 담당하는 순수 화면 상태.
   // 목록 클릭은 미리보기일 뿐, 확정은 오른쪽 "선택" 버튼에서만 한다.
   const [activeKind, setActiveKind] = useState("agent"); // "agent" | "solvent"
   const [activeAgentName, setActiveAgentName] = useState(
-    () => strengtheningRecommendation?.recommended_agent || "",
+    () => initialAgent || strengtheningRecommendation?.recommended_agent || "",
   );
   const [activeSolventName, setActiveSolventName] = useState(
-    () => strengtheningRecommendation?.recommended_solvent || "",
+    () => initialSolvent || strengtheningRecommendation?.recommended_solvent || "",
   );
 
   // strengtheningRecommendation이 이 컴포넌트가 마운트된 뒤에 뒤늦게 도착하면(백엔드
@@ -93,6 +96,7 @@ function StrengtheningMaterialPage() {
     strengtheningRecommendation,
   );
   if (
+    !isCompleted &&
     strengtheningRecommendation &&
     strengtheningRecommendation !== syncedRecommendation
   ) {
@@ -134,6 +138,7 @@ function StrengtheningMaterialPage() {
   };
 
   const confirmAgent = (name) => {
+    if (isLocked) return;
     setAgent(name);
 
     const allowedSolvents = AGENT_SOLVENT_MAP[name] || [];
@@ -148,11 +153,12 @@ function StrengtheningMaterialPage() {
   };
 
   const confirmSolvent = (name) => {
+    if (isLocked) return;
     setSolvent(name);
   };
 
   const handleComplete = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
 
     if (!agent || !solvent) {
       alert("강화제와 용제를 모두 선택해주세요.");
@@ -206,10 +212,10 @@ function StrengtheningMaterialPage() {
         </button>
         <button
           className="nav-btn"
-          disabled={isSaving}
+          disabled={isLocked}
           onClick={handleComplete}
         >
-          {isSaving ? "완료 처리 중..." : "선택 완료"}
+          {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "선택 완료"}
         </button>
       </div>
 
@@ -347,6 +353,7 @@ function StrengtheningMaterialPage() {
                       ? "is-selected"
                       : "is-unselected"
                       }`}
+                    disabled={isLocked}
                     onClick={() => confirmAgent(activeAgentOption.name)}
                   >
                     {agent === activeAgentOption.name ? "선택됨" : "미선택"}
@@ -380,6 +387,7 @@ function StrengtheningMaterialPage() {
                       ? "is-selected"
                       : "is-unselected"
                       }`}
+                    disabled={isLocked}
                     onClick={() => confirmSolvent(activeSolventOption.name)}
                   >
                     {solvent === activeSolventOption.name ? "선택됨" : "미선택"}

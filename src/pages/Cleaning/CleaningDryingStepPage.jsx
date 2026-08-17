@@ -5,14 +5,15 @@ import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./CleaningDryingStepPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 function CleaningDryingStepPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, setCompleted, setStepSaving, savingSteps, dryingGuide } = ctx;
+  const { taskId, setCompleted, setStepSaving, dryingGuide } = ctx;
 
-  const isSaving = savingSteps.has("cleaningDryingStep");
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("cleaningDryingStep");
 
   const [steps, setSteps] = useState(() =>
     (dryingGuide?.steps ?? []).map((step) => ({
@@ -21,11 +22,18 @@ function CleaningDryingStepPage() {
     })),
   );
 
+  const isAllSelected =
+    steps.length > 0 && steps.every((step) => step.approved);
+
   const handleCheckAll = () => {
-    setSteps((prev) => prev.map((s) => ({ ...s, approved: true })));
+    if (isLocked) return;
+    setSteps((prev) =>
+      prev.map((step) => ({ ...step, approved: !isAllSelected })),
+    );
   };
 
   const handleDelete = (stepId) => {
+    if (isLocked) return;
     const isDelete = window.confirm("이 단계를 삭제하시겠습니까?");
 
     if (!isDelete) return;
@@ -34,6 +42,7 @@ function CleaningDryingStepPage() {
   };
 
   const handleEdit = (stepId) => {
+    if (isLocked) return;
     const step = steps.find((s) => s.id === stepId);
 
     if (!step) return;
@@ -60,7 +69,7 @@ function CleaningDryingStepPage() {
   };
 
   const handleComplete = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
     const completedStepIds = steps
       .filter((step) => step.approved)
       .map((step) => step.id);
@@ -105,16 +114,16 @@ function CleaningDryingStepPage() {
           ← 이전
         </button>
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
-            전체 선택
+          <button className="nav-btn secondary" disabled={isLocked} onClick={handleCheckAll}>
+            {isAllSelected ? "전체 해제" : "전체 선택"}
           </button>
 
           <button
             className="nav-btn"
-            disabled={isSaving}
+            disabled={isLocked}
             onClick={handleComplete}
           >
-            {isSaving ? "완료 처리 중..." : "완료"}
+            {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "완료"}
           </button>
         </div>
       </div>
@@ -144,8 +153,9 @@ function CleaningDryingStepPage() {
 
               <p>{step.caution || step.description}</p>
             </div>
-            <div className="step-actions">
+            {!isCompleted && <div className="step-actions">
               <button
+                disabled={isLocked}
                 className={`approve-btn ${step.approved ? "is-complete" : "is-incomplete"}`}
                 onClick={() => {
                   setSteps((prev) =>
@@ -163,17 +173,18 @@ function CleaningDryingStepPage() {
                 {step.approved ? "✓ 완료" : "미완료"}
               </button>
 
-              <button className="edit-btn" onClick={() => handleEdit(step.id)}>
+              <button className="edit-btn" disabled={isLocked} onClick={() => handleEdit(step.id)}>
                 ✏ 수정
               </button>
 
               <button
                 className="delete-btn"
+                disabled={isLocked}
                 onClick={() => handleDelete(step.id)}
               >
                 🗑 삭제
               </button>
-            </div>
+            </div>}
           </div>
         ))}
       </div>

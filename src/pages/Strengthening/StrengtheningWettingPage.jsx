@@ -5,6 +5,7 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { uploadPhoto } from "../../services/photoUploadApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./StrengtheningWettingPage.css";
@@ -64,9 +65,9 @@ function StrengtheningWettingPage() {
   const artifactId = decodeURIComponent(routeArtifactId);
 
   const ctx = useDisassembly();
-  const { taskId, colorChangeAnalysis, setCompleted, setStepSaving, savingSteps } = ctx;
+  const { taskId, colorChangeAnalysis, setCompleted, setStepSaving } = ctx;
 
-  const isSaving = savingSteps.has("strengtheningWetting");
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("strengtheningWetting");
 
   const [beforePhoto, setBeforePhoto] = useState("");
   const [afterPhoto, setAfterPhoto] = useState("");
@@ -76,6 +77,7 @@ function StrengtheningWettingPage() {
   const [analyzing, setAnalyzing] = useState(false);
 
   const handleBeforeFileChange = async (e) => {
+    if (isLocked) return;
     const file = e.target.files[0];
     if (!file) return;
 
@@ -92,6 +94,7 @@ function StrengtheningWettingPage() {
   };
 
   const handleAfterFileChange = async (e) => {
+    if (isLocked) return;
     const file = e.target.files[0];
     if (!file) return;
 
@@ -108,6 +111,7 @@ function StrengtheningWettingPage() {
   };
 
   const handleAnalyze = async () => {
+    if (isLocked) return;
     if (!beforePhoto || !afterPhoto) {
       alert("습윤 테스트 전/후 사진을 입력해주세요.");
       return;
@@ -135,7 +139,7 @@ function StrengtheningWettingPage() {
   };
 
   const handleProceed = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
     setStepSaving("strengtheningWetting", true);
 
     try {
@@ -173,7 +177,7 @@ function StrengtheningWettingPage() {
           {!colorChangeAnalysis && (
             <button
               className="nav-btn"
-              disabled={analyzing}
+              disabled={analyzing || isLocked}
               onClick={handleAnalyze}
             >
               {analyzing ? "분석 중..." : "분석"}
@@ -182,10 +186,10 @@ function StrengtheningWettingPage() {
 
           <button
             className="nav-btn"
-            disabled={!colorChangeAnalysis || isSaving}
+            disabled={!colorChangeAnalysis || isLocked}
             onClick={handleProceed}
           >
-            {isSaving ? "완료 처리 중..." : "다음 →"}
+            {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "다음 →"}
           </button>
         </div>
       </div>
@@ -208,7 +212,7 @@ function StrengtheningWettingPage() {
               type="file"
               accept="image/*"
               aria-label="처리 전 사진 선택"
-              disabled={!!colorChangeAnalysis || beforeUploading}
+              disabled={isLocked || !!colorChangeAnalysis || beforeUploading}
               onChange={handleBeforeFileChange}
             />
 
@@ -253,7 +257,7 @@ function StrengtheningWettingPage() {
               type="file"
               accept="image/*"
               aria-label="처리 후 사진 선택"
-              disabled={!!colorChangeAnalysis || afterUploading}
+              disabled={isLocked || !!colorChangeAnalysis || afterUploading}
               onChange={handleAfterFileChange}
             />
 

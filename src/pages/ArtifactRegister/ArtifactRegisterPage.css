@@ -137,7 +137,10 @@
   @apply text-[color:var(--heritage-green)] font-bold;
 }
 .artifact-material-guide.unsupported {
-  @apply text-[#a73526] font-bold text-[10px] leading-[1.55] [background:#fff0ec] border-l-[3px] border-l-[#c84b38] px-[9px] py-[7px] rounded-r-md;
+  @apply text-[color:var(--heritage-muted)] text-[10px] leading-[1.55] [background:#fff0ec] border-l-[3px] border-l-[#c84b38] px-[9px] py-[7px] rounded-r-md;
+}
+.artifact-material-guide-keyword {
+  @apply text-[#a73526] font-bold;
 }
 .artifact-weight-field {
   @apply grid gap-2 grid-cols-[1fr_78px];

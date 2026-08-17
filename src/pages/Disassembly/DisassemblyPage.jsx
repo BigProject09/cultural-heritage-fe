@@ -7,9 +7,7 @@ import "./DisassemblyPage.css";
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
 import {
   getNextStep,
-  getPreviousStep,
   moveToNextStep,
-  moveToPreviousStep,
 } from "../../utils/flowNavigation";
 
 import { useDisassembly } from "../../context/useDisassembly";
@@ -125,15 +123,7 @@ function DisassemblyPage() {
 
       <div className="top-bar">
         <button
-          className={`nav-btn${
-            getPreviousStep(approvedFlow, "해체") ? "" : " invisible"
-          }`}
-          onClick={() => moveToPreviousStep(navigate, approvedFlow, "해체")}
-        >
-          ← 이전
-        </button>
-        <button
-          className="nav-btn"
+          className="nav-btn ml-auto"
           disabled={!allCompleted || movingNext}
           onClick={handleNextStep}
         >
