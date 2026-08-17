@@ -181,6 +181,12 @@ function ReportFindingsBrief({ summary, findings }) {
           {summarizeFindings(findings)}
         </p>
       )}
+      {summary?.overallCondition && (
+        <div className="visual-vca-overall-condition">
+          <strong>AI 종합 소견</strong>
+          <p>{summary.overallCondition}</p>
+        </div>
+      )}
     </section>
   );
 }

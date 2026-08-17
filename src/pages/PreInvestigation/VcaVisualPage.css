@@ -188,6 +188,9 @@
   .visual-vca-original-hint { @apply cursor-help [border-bottom:1px_dotted_currentColor]; }
   .visual-vca-findings-report { @apply col-span-full; }
   .visual-vca-findings-summary { @apply text-[14px] leading-[1.7] font-semibold text-[color:var(--workflow-ink)] [word-break:keep-all] mb-3; }
+  .visual-vca-overall-condition { @apply border-t border-[color:var(--workflow-line-soft)] mt-3 pt-3; }
+  .visual-vca-overall-condition strong { @apply block text-[color:var(--workflow-bronze-dark)] text-xs font-bold mb-1; }
+  .visual-vca-overall-condition p { @apply text-[14px] leading-[1.7] text-[color:var(--workflow-ink)] [word-break:keep-all]; }
   .visual-vca-stats-table-scroll { @apply w-full overflow-x-auto mb-4; }
   .visual-vca-stats-table { @apply w-auto border-collapse text-[13px]; }
   .visual-vca-stats-table th, .visual-vca-stats-table td { @apply border border-[color:var(--workflow-line-soft)] px-3 py-1.5 text-center whitespace-nowrap; }
