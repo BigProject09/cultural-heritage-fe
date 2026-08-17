@@ -124,17 +124,13 @@ export function useVisualInvestigation(artifactId) {
 
   // withPreviewUrl을 report.images 전체에 적용한 새 report를 만든다.
   // loadReport가 서버 응답을 state에 넣기 전에 쓴다.
-  // TEMP: conceptFamily가 "unknown"(미분류)인 특이점을 화면에서 잠깐
-  // 숨긴다 - 확인이 끝나면 이 필터는 지운다.
   const withPreviewReport = useCallback(
     (nextReport) => ({
       ...nextReport,
       images: (nextReport.images || []).map((image) =>
         withPreviewUrl(image, previewUrls),
       ),
-      findings: (nextReport.findings || []).filter(
-        (finding) => finding.conceptFamily !== "unknown",
-      ),
+      findings: nextReport.findings || [],
     }),
     [previewUrls],
   );

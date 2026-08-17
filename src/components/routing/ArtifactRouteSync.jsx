@@ -14,7 +14,10 @@ function ArtifactRouteSync() {
   const decodedArtifactId = decodeURIComponent(artifactId);
   const ctx = useDisassembly();
   const ctxRef = useRef(ctx);
-  ctxRef.current = ctx;
+
+  useEffect(() => {
+    ctxRef.current = ctx;
+  }, [ctx]);
 
   const [state, setState] = useState({
     artifactId: "",
@@ -39,7 +42,9 @@ function ArtifactRouteSync() {
       ctxRef.current.resetCompleted();
     }
 
-    setState({ artifactId: decodedArtifactId, loading: true, error: "" });
+    const stateTimer = window.setTimeout(() => {
+      setState({ artifactId: decodedArtifactId, loading: true, error: "" });
+    }, 0);
 
     (async () => {
       try {
@@ -91,10 +96,12 @@ function ArtifactRouteSync() {
       }
     })();
 
-    return () => controller.abort();
+    return () => {
+      window.clearTimeout(stateTimer);
+      controller.abort();
+    };
     // Context 객체는 각 state 변경 때마다 새 객체가 되므로 dependency에 넣으면
     // 복구 자체가 다시 실행된다. artifactId가 바뀔 때만 복구한다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decodedArtifactId]);
 
   if (state.loading || state.artifactId !== decodedArtifactId) {

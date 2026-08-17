@@ -1,3 +1,5 @@
+import { authFetch } from "./authToken";
+
 /**
  * 도자기 육안조사 AI 서비스 호출.
  *
@@ -143,7 +145,7 @@ export async function createInspectionJob(
     treat_as_single_artifact: String(treatAsSingleArtifact),
   });
 
-  const response = await fetch(
+  const response = await authFetch(
     `${API_BASE_URL}/pottery-inspection/jobs?${params.toString()}`,
     {
       method: "POST",
@@ -179,7 +181,7 @@ export async function getInspectionJob(artifactId, assessmentRunId, { signal } =
   }
 
   const params = new URLSearchParams({ artifact_id: artifactId });
-  const response = await fetch(
+  const response = await authFetch(
     `${API_BASE_URL}/pottery-inspection/jobs/${encodeURIComponent(assessmentRunId)}?${params.toString()}`,
     { signal },
   );
@@ -199,7 +201,7 @@ export async function getLatestInspectionJob(artifactId, { signal } = {}) {
   if (USE_MOCK) return null;
 
   const params = new URLSearchParams({ artifact_id: artifactId });
-  const response = await fetch(
+  const response = await authFetch(
     `${API_BASE_URL}/pottery-inspection/jobs/latest?${params.toString()}`,
     { signal },
   );

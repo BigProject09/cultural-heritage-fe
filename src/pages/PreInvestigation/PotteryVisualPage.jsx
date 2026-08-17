@@ -293,8 +293,8 @@ function PotteryVisualPage() {
   // 재진입은 브라우저 저장소가 아니라 artifactId -> assessment_run(RDS)로 복원한다.
   useEffect(() => {
     if (!artifactId) {
-      setStatus("idle");
-      return undefined;
+      const timer = window.setTimeout(() => setStatus("idle"), 0);
+      return () => window.clearTimeout(timer);
     }
 
     let cancelled = false;
@@ -444,7 +444,7 @@ function PotteryVisualPage() {
             const file = new File([blob], `annotated-${Date.now()}.png`, {
               type: "image/png",
             });
-            annotatedPhotoUrl = await uploadPhoto(file);
+            annotatedPhotoUrl = await uploadPhoto(file, artifactId);
           } catch (uploadError) {
             console.warn(
               "마스킹 사진 S3 업로드 실패 - base64로 대체합니다:",

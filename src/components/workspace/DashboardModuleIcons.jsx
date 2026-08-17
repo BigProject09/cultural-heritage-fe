@@ -1,5 +1,3 @@
-import React from "react";
-
 const commonProps = (size) => ({
   width: size,
   height: size,

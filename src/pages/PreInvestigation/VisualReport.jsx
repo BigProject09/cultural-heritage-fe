@@ -1,4 +1,3 @@
-import { useRef, useState } from "react";
 import { getVcaPdfDownloadUrl } from "../../services/vcaApi";
 import VisualCandidateOverlay from "./VisualCandidateOverlay";
 import {
@@ -7,11 +6,6 @@ import {
   translateDescriptor,
 } from "./visualVcaLabels";
 import KoreanLabel from "./KoreanLabel";
-import { parseInspectionSections } from "../../utils/inspectionText";
-
-const PHOTO_ZOOM_STEP = 0.25;
-const PHOTO_ZOOM_MAX = 3;
-
 const PDF_STATUS_LABELS = {
   QUEUED: "PDF 생성 대기",
   RUNNING: "PDF 생성 중",
