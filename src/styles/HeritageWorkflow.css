@@ -989,6 +989,11 @@
 ) .analyzing-bar-fill {
   @apply [background:var(--workflow-bronze)];
 }
+/* App.jsx 최상위(라우터 밖)에 고정으로 붙는 시스템 환경 정보 footer -
+   어느 페이지에 있든 화면 맨 아래에 작은 copyright 느낌으로 표시된다. */
+.app-system-info-footer {
+  @apply text-center text-[color:var(--workflow-muted)] text-[12px] leading-[1.6] opacity-60 [word-break:keep-all] [overflow-wrap:break-word] px-6 py-4 m-0;
+}
 @media (max-width: 1040px) {
   :is(
     .pre-page,

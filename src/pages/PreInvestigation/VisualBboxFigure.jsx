@@ -1,0 +1,126 @@
+// 사진 + bbox 표시는 오버레이 목록(VisualCandidateOverlay, 여러 개·클릭·호버)과
+// 특이점 상세 페이지(VisualFindingDetailPage, 하나·정적 강조)에서 각각 따로
+// 구현돼 있었다. 실제로 다른 부분은 마커 상호작용뿐이고 figure/frame/svg
+// viewBox/이미지 로드 처리는 완전히 같아서 여기로 합쳤다.
+import { hexWithAlpha } from "./visualMarkerColors";
+
+// 이미지 + 그 위에 겹치는 SVG 오버레이 레이어를 그린다. size가 아직 없으면
+// (이미지 로드 전) SVG는 생략한다. children으로 받은 BboxMarker들이
+// 실제 박스/배지를 그린다. VisualCandidateOverlay, VisualFindingDetailPage에서 쓴다.
+export function BboxFigure({ image, size, onImageLoad, children }) {
+  return (
+    <figure className="visual-vca-overlay-figure">
+      <div className="visual-vca-overlay-frame">
+        <img
+          src={image.downloadUrl}
+          alt={`${image.fileName || "분석 대상"} 이미지`}
+          onLoad={onImageLoad}
+        />
+        {size && (
+          <svg
+            className="visual-vca-overlay-svg"
+            viewBox={`0 0 ${size.width} ${size.height}`}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {children}
+          </svg>
+        )}
+      </div>
+      <figcaption>{image.fileName || "분석 대상 이미지"}</figcaption>
+    </figure>
+  );
+}
+
+// polygons(마스크 윤곽선을 벡터화한 좌표 배열의 배열, [[{x,y}, ...], ...] -
+// 마스크가 여러 조각으로 흩어진 경우 조각마다 폴리곤 하나씩)가 있으면 실제
+// 세그멘테이션 모양을, 없으면(예전 리포트나 조각이 너무 작아 벡터화가 안 된
+// 경우) bbox 사각형을 그린다. 배지 위치는 항상 bbox 기준으로 유지한다 -
+// placeMarkerBadges의 겹침 회피 계산이 사각형을 전제로 하고 있어, 임의의
+// 폴리곤 점보다 안정적이다.
+function ShapeOutline({ bbox, polygons, color, fillAlpha, isHovered }) {
+  const className = isHovered
+    ? "visual-vca-overlay-box visual-vca-overlay-box--hovered"
+    : "visual-vca-overlay-box";
+  const validPolygons = (polygons || []).filter((polygon) => polygon.length >= 3);
+  if (validPolygons.length > 0) {
+    return (
+      <>
+        {validPolygons.map((polygon, index) => (
+          <polygon
+            key={index}
+            points={polygon.map((point) => `${point.x},${point.y}`).join(" ")}
+            className={className}
+            style={{ stroke: color, fill: hexWithAlpha(color, fillAlpha) }}
+          />
+        ))}
+      </>
+    );
+  }
+  const { xMin, yMin, xMax, yMax } = bbox;
+  return (
+    <rect
+      x={xMin}
+      y={yMin}
+      width={xMax - xMin}
+      height={yMax - yMin}
+      className={className}
+      style={{ stroke: color, fill: hexWithAlpha(color, fillAlpha) }}
+    />
+  );
+}
+
+// interactive=false면 정적 강조용(상세 페이지의 단일 특이점): 클릭/호버 없이
+// 번호 배지가 달린 모양만 그린다.
+export function BboxMarker({
+  bbox,
+  polygons,
+  number,
+  color,
+  badgeRadius,
+  badge,
+  fillAlpha = 0.32,
+  isHovered = false,
+  interactive = false,
+  onClick,
+  onMouseEnter,
+  onMouseMove,
+  onMouseLeave,
+}) {
+  const { xMin, yMin } = bbox;
+  // badge가 안 주어지면(특이점 상세 페이지의 단일 정적 마커) bbox 모서리를
+  // 그대로 쓰지 않고 대각선 바깥쪽으로 밀어서 마스킹 위를 덮지 않게 한다 -
+  // placeMarkerBadges의 기본 위치 계산과 동일한 여백을 쓴다.
+  const badgeSpot = badge || { x: xMin - badgeRadius * 1.6, y: yMin - badgeRadius * 1.6 };
+  const isBadgeOffset = badgeSpot.x !== xMin || badgeSpot.y !== yMin;
+
+  return (
+    <g
+      className={interactive ? "visual-vca-overlay-marker" : undefined}
+      onClick={interactive ? onClick : undefined}
+      onMouseEnter={interactive ? onMouseEnter : undefined}
+      onMouseMove={interactive ? onMouseMove : undefined}
+      onMouseLeave={interactive ? onMouseLeave : undefined}
+    >
+      <ShapeOutline bbox={bbox} polygons={polygons} color={color} fillAlpha={fillAlpha} isHovered={isHovered} />
+      {isBadgeOffset && (
+        <line
+          x1={xMin}
+          y1={yMin}
+          x2={badgeSpot.x}
+          y2={badgeSpot.y}
+          className="visual-vca-overlay-leader"
+          style={{ stroke: color }}
+        />
+      )}
+      <circle cx={badgeSpot.x} cy={badgeSpot.y} r={badgeRadius} className="visual-vca-overlay-badge" style={{ fill: color }} />
+      <text
+        x={badgeSpot.x}
+        y={badgeSpot.y}
+        className="visual-vca-overlay-badge-text"
+        style={{ fontSize: badgeRadius * 1.15 }}
+      >
+        {number}
+      </text>
+    </g>
+  );
+}
