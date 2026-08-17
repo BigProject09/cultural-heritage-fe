@@ -19,7 +19,7 @@ function ProgressNavigator({ approvedFlow, currentStep }) {
 
   const handleRestartGuide = () => {
     const confirmed = window.confirm(
-      "보존처리 단계를 다시 선택하시겠습니까?\n\n현재 진행 중인 복원가이드 상태만 초기화됩니다. 유물 정보와 X-Ray·육안조사 결과는 유지됩니다.",
+      "보존처리 단계를 다시 선택하시겠습니까?\n\n현재 진행 중인 복원가이드 상태만 초기화됩니다. 유물 정보와 X-Ray·육안 상태 조사 결과는 유지됩니다.",
     );
 
     if (!confirmed) return;
@@ -84,7 +84,7 @@ function ProgressNavigator({ approvedFlow, currentStep }) {
         ↻ 보존처리 단계 다시 선택
       </button>
       <p className="progress-restart-copy">
-        가이드만 다시 시작하며 유물·X-Ray·육안조사 데이터는 유지됩니다.
+        가이드만 다시 시작하며 유물·X-Ray·육안 상태 조사 데이터는 유지됩니다.
       </p>
     </aside>
   );

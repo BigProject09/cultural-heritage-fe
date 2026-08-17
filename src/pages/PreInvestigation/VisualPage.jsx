@@ -35,22 +35,22 @@ export default function VisualPage() {
           className="visual-select-intro"
           aria-labelledby="visual-select-title"
         >
-          <span>육안조사 기능 선택</span>
+          <span>육안 상태 조사 기능 선택</span>
           <h2 id="visual-select-title">
             두 분석은 서로 독립적으로 진행할 수 있습니다.
           </h2>
           <p>
-            VCA 상태 조사와 도자기 정밀 검사는 순서와 관계없이 필요한 기능부터
+            육안 상태 조사와 문양 기반 상태 조사는 순서와 관계없이 필요한 기능부터
             선택해 진행할 수 있습니다.
           </p>
         </section>
 
-        <section className="visual-select-grid" aria-label="육안조사 기능">
+        <section className="visual-select-grid" aria-label="육안 상태 조사 기능">
           <article className="visual-select-card">
             <div className="visual-select-card-index">01</div>
             <div className="visual-select-card-body">
               <span className="visual-select-card-eyebrow">VCA</span>
-              <h3>AI 기반 상태 조사</h3>
+              <h3>육안 상태 조사</h3>
               <p>
                 다중 이미지 기반 특이점 탐지, 단계별 분석 진행상태, RAG 근거와
                 조사 보고서를 확인합니다.
@@ -66,7 +66,7 @@ export default function VisualPage() {
               className="visual-select-button"
               onClick={goToVca}
             >
-              VCA 상태 조사 시작
+              육안 상태 조사 시작
             </button>
           </article>
 
@@ -74,7 +74,7 @@ export default function VisualPage() {
             <div className="visual-select-card-index">02</div>
             <div className="visual-select-card-body">
               <span className="visual-select-card-eyebrow">POTTERY</span>
-              <h3>도자기 정밀 검사</h3>
+              <h3>문양 기반 상태 조사</h3>
               <p>
                 도자기 형태와 문양을 분석하고, 서버에 저장된 비동기 Job 상태와
                 결과를 재진입 시에도 이어서 확인합니다.
@@ -90,7 +90,7 @@ export default function VisualPage() {
               className="visual-select-button"
               onClick={goToPottery}
             >
-              도자기 정밀 검사 시작
+              문양 기반 상태 조사 시작
             </button>
           </article>
         </section>

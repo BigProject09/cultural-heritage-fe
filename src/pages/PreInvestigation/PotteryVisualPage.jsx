@@ -186,7 +186,7 @@ function PotteryVisualPage() {
 
   const applyCompletedJob = (job) => {
     if (!job?.result) {
-      throw new Error("완료된 육안조사 작업에 분석 결과가 없습니다.");
+      throw new Error("완료된 문양 기반 상태 조사 작업에 분석 결과가 없습니다.");
     }
 
     if (job.photoUrl) {
@@ -346,8 +346,8 @@ function PotteryVisualPage() {
           return;
         }
 
-        console.error("기존 육안조사 작업 복원 실패:", error);
-        setErrorMessage(`기존 육안조사 작업 복원 실패: ${error.message}`);
+        console.error("기존 문양 기반 상태 조사 작업 복원 실패:", error);
+        setErrorMessage(`기존 문양 기반 상태 조사 작업 복원 실패: ${error.message}`);
         setStatus("error");
       }
     };
@@ -487,7 +487,7 @@ function PotteryVisualPage() {
       try {
         await markWorkspaceModule(artifactId, "visual", MODULE_STATUS.DONE);
       } catch (error) {
-        window.alert(`육안 조사 상태 저장 실패: ${error.message}`);
+        window.alert(`문양 기반 상태 조사 저장 실패: ${error.message}`);
         return;
       }
     }
@@ -562,9 +562,9 @@ function PotteryVisualPage() {
       <div className="visual-container">
         <ModulePageHeader
           artifactId={artifactId}
-          currentLabel="문양 기반 육안 상태 조사"
+          currentLabel="문양 기반 상태 조사"
           eyebrow="AI PATTERN ANALYSIS"
-          title="문양 기반 육안 상태 조사"
+          title="문양 기반 상태 조사"
           description="토기·도자기 사진의 문양과 형태적 특징을 AI로 분석해 육안조사 초안을 만듭니다."
           tone="blue"
           rightContent={<span className="visual-status">{statusLabel}</span>}
@@ -775,7 +775,7 @@ function PotteryVisualPage() {
                           <span className="spinner" aria-hidden="true" />
                           <p>
                             {status === "restoring"
-                              ? "기존 육안조사 작업을 확인 중이에요…"
+                              ? "기존 문양 기반 상태 조사 작업을 확인 중이에요…"
                               : "AI가 문양과 형태적 특징을 분석 중이에요…"}
                           </p>
                         </div>
@@ -1059,14 +1059,14 @@ function PotteryVisualPage() {
                 </div>
                 <p className="status-note">
                   {status === "restoring"
-                    ? "기존 육안조사 작업과 저장된 결과를 서버에서 불러오고 있어요."
+                    ? "기존 문양 기반 상태 조사 작업과 저장된 결과를 서버에서 불러오고 있어요."
                     : "분석에는 1분 이상 걸릴 수 있어요. 화면을 벗어나도 서버 분석은 계속되며, 다시 들어오면 진행 중인 작업을 이어서 확인합니다."}
                 </p>
               </div>
             ) : (
               <p className="status-note">
                 {isPottery
-                  ? "문양 분석용 사진을 올리면 AI 육안조사가 시작됩니다."
+                  ? "문양 분석용 사진을 올리면 문양 기반 상태 조사가 시작됩니다."
                   : "아직 분석 결과가 없습니다."}
               </p>
             )}
@@ -1088,13 +1088,13 @@ function PotteryVisualPage() {
         </div>
 
         <footer className="complete-area">
-          <p>완료하면 현재 유물의 육안 조사 상태가 저장됩니다.</p>
+          <p>완료하면 현재 유물의 문양 기반 상태 조사 결과가 저장됩니다.</p>
           <button
             className="complete-btn"
             onClick={handleComplete}
             disabled={status === "loading" || status === "restoring"}
           >
-            육안 조사 완료
+            문양 기반 상태 조사 완료
           </button>
         </footer>
       </div>

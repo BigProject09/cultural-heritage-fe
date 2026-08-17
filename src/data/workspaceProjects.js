@@ -47,8 +47,8 @@ export const WORKSPACE_MODULES = [
     apiKey: "VISUAL",
     number: "03",
     eyebrow: "VISUAL INSPECTION",
-    title: "육안 조사",
-    shortTitle: "육안 조사",
+    title: "육안 상태 조사",
+    shortTitle: "육안 상태 조사",
     subtitle: "특이점 부위 기록 · 판정",
     description:
       "2D 컬러 이미지에서 특이점 위치와 유형을 기록하고 판정합니다.",

@@ -181,7 +181,7 @@ export default function VcaVisualPage() {
   const canStartRun = uploadedImages.length > 0 && !runIsActive && !pageBusy;
   const progressValue = runProgress(selectedRun);
 
-  // "육안 조사 완료" 버튼 핸들러. 워크스페이스에 완료 상태를 기록하고
+  // "육안 상태 조사 완료" 버튼 핸들러. 워크스페이스에 완료 상태를 기록하고
   // 유물 워크스페이스로 돌아간다. 보고서를 아직 못 열었으면(canComplete
   // false) 저장을 시도하지 않고 안내만 띄운다.
   async function handleComplete() {
@@ -196,7 +196,7 @@ export default function VcaVisualPage() {
       navigate(getArtifactRoute(artifactId));
     } catch (completionFailure) {
       setCompletionError(
-        `육안 조사 완료 상태 저장 실패: ${completionFailure.message}`,
+        `육안 상태 조사 완료 상태 저장 실패: ${completionFailure.message}`,
       );
     }
   }
@@ -218,7 +218,7 @@ export default function VcaVisualPage() {
       <main className="visual-page visual-vca-page visual-state" role="alert">
         <span className="visual-eyebrow">VCA CONNECTION</span>
         <h1>
-          {notReady ? "육안 조사 준비 중" : "조사 정보를 불러오지 못했습니다"}
+          {notReady ? "육안 상태 조사 준비 중" : "조사 정보를 불러오지 못했습니다"}
         </h1>
         <p>
           {notReady
@@ -259,7 +259,7 @@ export default function VcaVisualPage() {
             </p>
           </div>
           <span className="visual-status">
-            {isMock ? "육안 조사" : statusLabel(artifact.status)}
+            {isMock ? "육안 상태 조사" : statusLabel(artifact.status)}
           </span>
         </header>
 
@@ -570,7 +570,7 @@ export default function VcaVisualPage() {
 
         <footer className="complete-area">
           <p>
-            보고서를 확인한 뒤 완료하면 현재 유물의 육안 조사 상태가 저장됩니다.
+            보고서를 확인한 뒤 완료하면 현재 유물의 육안 상태 조사 결과가 저장됩니다.
           </p>
           <button
             type="button"
@@ -578,7 +578,7 @@ export default function VcaVisualPage() {
             onClick={handleComplete}
             disabled={!canComplete}
           >
-            육안 조사 완료
+            육안 상태 조사 완료
           </button>
         </footer>
       </div>

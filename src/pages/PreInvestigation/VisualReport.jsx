@@ -171,7 +171,7 @@ function FindingsStatsTable({ findings }) {
 function ReportFindingsBrief({ summary, findings }) {
   return (
     <section className="visual-vca-findings-report">
-      <h3>육안 조사 결과</h3>
+      <h3>육안 상태 조사 결과</h3>
       <FindingsStatsTable findings={findings} />
       <p>{summary?.description || "설명 정보가 없습니다."}</p>
       {findings.length === 0 ? (

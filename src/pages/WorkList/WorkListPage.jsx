@@ -178,7 +178,7 @@ function WorkListPage() {
 
   const handleDelete = async (project) => {
     const confirmed = window.confirm(
-      `"${project.name}" 프로젝트를 삭제하시겠습니까?\n\n이 프로젝트의 X-Ray, 육안조사, 보존가이드, 보고서 및 관련 파일이 모두 삭제되며 복구할 수 없습니다.`,
+      `"${project.name}" 프로젝트를 삭제하시겠습니까?\n\n이 프로젝트의 X-Ray, 육안 상태 조사, 보존가이드, 보고서 및 관련 파일이 모두 삭제되며 복구할 수 없습니다.`,
     );
 
     if (!confirmed) return;
@@ -308,7 +308,7 @@ function WorkListPage() {
 
             <span>
               유물명, 분류, 재질, 시대, 설명과 대표 이미지만 표시합니다. X-Ray,
-              육안조사, 보존가이드, 최종보고서 및 수정·삭제 기능은 소유자와
+              육안 상태 조사, 보존가이드, 최종보고서 및 수정·삭제 기능은 소유자와
               관리자만 접근할 수 있습니다.
             </span>
           </section>
