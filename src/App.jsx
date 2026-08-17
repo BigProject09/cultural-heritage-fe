@@ -15,6 +15,7 @@ import BoardWritePage from "./pages/Board/BoardWritePage";
 import ProjectDetailPage from "./pages/ProjectDetail/ProjectDetailPage";
 import LegacyArtifactRedirect from "./components/routing/LegacyArtifactRedirect";
 import ArtifactRouteSync from "./components/routing/ArtifactRouteSync";
+import GuideFlowGuard from "./components/routing/GuideFlowGuard";
 import Footer from "./components/common/Footer";
 
 //마이페이지
@@ -105,82 +106,85 @@ function App() {
             <Route path="visual" element={<VisualPage />} />
             <Route path="final-report" element={<FinalReportPage />} />
 
-            {/* 복원 가이드 세부 공정 */}
-            <Route path="guide/disassembly" element={<DisassemblyPage />} />
-            <Route
-              path="guide/disassembly/checklist"
-              element={<DisassemblyChecklistPage />}
-            />
-            <Route
-              path="guide/disassembly/tool"
-              element={<DisassemblyToolPage />}
-            />
-            <Route
-              path="guide/disassembly/method"
-              element={<DisassemblyMethodPage />}
-            />
-            <Route path="guide/cleaning" element={<CleaningPage />} />
-            <Route
-              path="guide/cleaning/method-select"
-              element={<CleaningMethodSelectPage />}
-            />
-            <Route
-              path="guide/cleaning/step"
-              element={<CleaningStepPage />}
-            />
-            <Route
-              path="guide/cleaning/drying"
-              element={<CleaningDryingStepPage />}
-            />
-            <Route
-              path="guide/strengthening"
-              element={<StrengtheningPage />}
-            />
-            <Route
-              path="guide/strengthening/material"
-              element={<StrengtheningMaterialPage />}
-            />
-            <Route
-              path="guide/strengthening/method"
-              element={<StrengtheningMethodPage />}
-            />
-            <Route
-              path="guide/strengthening/wetting"
-              element={<StrengtheningWettingPage />}
-            />
-            <Route path="guide/bonding" element={<BondingPage />} />
-            <Route
-              path="guide/bonding/method"
-              element={<BondingMethodPage />}
-            />
-            <Route
-              path="guide/bonding/material"
-              element={<BondingMaterialPage />}
-            />
-            <Route
-              path="guide/bonding/work"
-              element={<BondingWorkPage />}
-            />
-            <Route path="guide/restoration" element={<RestorationPage />} />
-            <Route
-              path="guide/restoration/method"
-              element={<RestorationMethodPage />}
-            />
-            <Route
-              path="guide/restoration/finishing"
-              element={
-                <RestorationMethodPage
-                  title="마감처리"
-                  guideField="restorationFinishingGuide"
-                  completedKey="restorationFinishing"
-                  backPath="/restoration"
-                />
-              }
-            />
-            <Route
-              path="guide/restoration/material"
-              element={<RestorationMaterialPage />}
-            />
+            {/* 복원 가이드 세부 공정: 이전 공정/세부단계 선진입 차단 */}
+            <Route element={<GuideFlowGuard />}>
+              <Route path="guide/disassembly" element={<DisassemblyPage />} />
+              <Route
+                path="guide/disassembly/checklist"
+                element={<DisassemblyChecklistPage />}
+              />
+              <Route
+                path="guide/disassembly/tool"
+                element={<DisassemblyToolPage />}
+              />
+              <Route
+                path="guide/disassembly/method"
+                element={<DisassemblyMethodPage />}
+              />
+              <Route path="guide/cleaning" element={<CleaningPage />} />
+              <Route
+                path="guide/cleaning/method-select"
+                element={<CleaningMethodSelectPage />}
+              />
+              <Route
+                path="guide/cleaning/step"
+                element={<CleaningStepPage />}
+              />
+              <Route
+                path="guide/cleaning/drying"
+                element={<CleaningDryingStepPage />}
+              />
+              <Route
+                path="guide/strengthening"
+                element={<StrengtheningPage />}
+              />
+              <Route
+                path="guide/strengthening/material"
+                element={<StrengtheningMaterialPage />}
+              />
+              <Route
+                path="guide/strengthening/method"
+                element={<StrengtheningMethodPage />}
+              />
+              <Route
+                path="guide/strengthening/wetting"
+                element={<StrengtheningWettingPage />}
+              />
+              <Route path="guide/bonding" element={<BondingPage />} />
+              <Route
+                path="guide/bonding/method"
+                element={<BondingMethodPage />}
+              />
+              <Route
+                path="guide/bonding/material"
+                element={<BondingMaterialPage />}
+              />
+              <Route
+                path="guide/bonding/work"
+                element={<BondingWorkPage />}
+              />
+              <Route path="guide/restoration" element={<RestorationPage />} />
+              <Route
+                path="guide/restoration/method"
+                element={<RestorationMethodPage />}
+              />
+              <Route
+                path="guide/restoration/finishing"
+                element={
+                  <RestorationMethodPage
+                    title="마감처리"
+                    guideField="restorationFinishingGuide"
+                    completedKey="restorationFinishing"
+                    backPath="/restoration"
+                  />
+                }
+              />
+              <Route
+                path="guide/restoration/material"
+                element={<RestorationMaterialPage />}
+              />
+            </Route>
+
             {/* 구 복원 가이드 보고서 URL은 유물 워크스페이스로 복귀 */}
             <Route
               path="guide/post-record"

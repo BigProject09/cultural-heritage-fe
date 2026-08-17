@@ -70,6 +70,60 @@
     @apply text-amber-600 text-[13px] mt-3 mb-0;
   }
 
+  .photo-upload-guide {
+    @apply px-1 pb-4;
+  }
+  .photo-upload-target {
+    @apply mt-2 mb-0 text-gray-500 text-[14px] font-bold leading-6;
+  }
+  .photo-upload-emphasis {
+    @apply mt-2 mb-0 text-red-700 text-[14px] font-extrabold leading-6;
+  }
+  .photo-upload-help {
+    @apply mt-1 mb-0 text-gray-500 text-[14px] leading-6;
+  }
+  .visual-photo-upload {
+    @apply flex min-h-[230px] items-center justify-center flex-col text-center cursor-pointer rounded-[14px] border-[1.5px] border-dashed border-[#c6b79f] [background:#fbf8f2] transition-colors;
+  }
+  .visual-photo-upload:hover,
+  .visual-photo-upload.dragging {
+    @apply border-amber-700 [background:#fff8ed];
+  }
+  .visual-photo-upload:focus-visible {
+    @apply outline-none ring-2 ring-amber-600 ring-offset-2;
+  }
+  .visual-photo-upload.disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
+  .visual-upload-icon {
+    @apply grid w-11 h-11 place-items-center mb-3.5 rounded-[13px] text-[22px] font-medium text-amber-800 [background:#f1e6d3];
+  }
+  .visual-photo-upload strong {
+    @apply text-gray-900 text-[15px] font-bold;
+  }
+  .visual-photo-upload p {
+    @apply text-amber-800 text-[13px] font-semibold mt-1.5 mb-3 mx-0;
+  }
+  .visual-photo-upload small {
+    @apply text-gray-500 text-xs;
+  }
+  .visual-file-input {
+    @apply absolute w-px h-px overflow-hidden whitespace-nowrap p-0 border-0;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+  }
+  .photo-replace-row {
+    @apply flex items-center justify-between gap-3 px-1 pb-3;
+  }
+  .photo-replace-row > span {
+    @apply text-gray-500 text-[13px] font-semibold;
+  }
+  .photo-replace-btn {
+    @apply inline-flex items-center justify-center px-3.5 py-2 rounded-lg border border-[#c6b79f] [background:#fbf8f2] text-amber-900 text-[13px] font-bold cursor-pointer;
+    @apply hover:enabled:border-amber-700 hover:enabled:[background:#fff8ed];
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
   .photo-card {
     @apply [background:white] border border-gray-200 rounded-2xl p-4 mb-6;
   }
@@ -88,6 +142,9 @@
     @apply !w-auto px-2.5 ml-1 !text-xs !font-semibold;
   }
 
+  .photo-frame.dragging-file {
+    @apply ring-2 ring-amber-600 ring-offset-2;
+  }
   .photo-frame {
     @apply relative w-full max-h-[460px] flex items-center justify-center rounded-[10px] overflow-hidden [background:#eef0f2] select-none;
   }

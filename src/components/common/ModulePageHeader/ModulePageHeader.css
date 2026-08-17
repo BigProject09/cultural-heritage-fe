@@ -1,0 +1,86 @@
+@reference "../../../index.css";
+
+@layer components {
+  .module-page-header-block {
+    --module-header-accent: #3182f6;
+    --module-header-accent-hover: #1b64da;
+    --module-header-text: #191f28;
+    --module-header-muted: #6b7684;
+  }
+
+  .module-page-header-blue {
+    --module-header-accent: #3182f6;
+    --module-header-accent-hover: #1b64da;
+    --module-header-text: #191f28;
+    --module-header-muted: #6b7684;
+  }
+
+  .module-page-header-bronze {
+    --module-header-accent: var(--color-vora-bronze-dark);
+    --module-header-accent-hover: var(--color-vora-bronze);
+    --module-header-text: var(--color-vora-ink);
+    --module-header-muted: var(--color-vora-muted);
+  }
+
+  .module-page-breadcrumb {
+    @apply flex items-center gap-2 text-[13px] mb-6;
+    color: var(--module-header-muted);
+  }
+
+  .module-page-header-block .module-page-breadcrumb button {
+    @apply min-h-0 border-0 bg-transparent p-0 cursor-pointer font-medium;
+    color: var(--module-header-muted);
+  }
+
+  .module-page-header-block .module-page-breadcrumb button:hover {
+    color: var(--module-header-accent-hover);
+  }
+
+  .module-page-breadcrumb strong {
+    @apply font-semibold;
+    color: var(--module-header-text);
+  }
+
+  .module-page-header {
+    @apply flex items-end justify-between gap-6 mb-7;
+  }
+
+  .module-page-heading {
+    @apply min-w-0;
+  }
+
+  .module-page-eyebrow {
+    @apply block text-[11px] font-extrabold tracking-widest mb-2;
+    color: var(--module-header-accent);
+  }
+
+  .module-page-title {
+    @apply text-[clamp(28px,3vw,36px)] font-bold leading-tight tracking-[-0.04em] m-0;
+    color: var(--module-header-text);
+  }
+
+  .module-page-description {
+    @apply text-[15px] mt-2.5 mb-0 mx-0;
+    color: var(--module-header-muted);
+  }
+
+  .module-page-header-action {
+    @apply shrink-0;
+  }
+}
+
+@media (max-width: 760px) {
+  @layer components {
+    .module-page-breadcrumb {
+      @apply flex-wrap mb-5;
+    }
+
+    .module-page-header {
+      @apply items-start flex-col gap-4 mb-6;
+    }
+
+    .module-page-header-action {
+      @apply self-start;
+    }
+  }
+}

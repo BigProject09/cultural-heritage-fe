@@ -4,6 +4,7 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./BondingMaterialPage.css";
 
 const ADHESIVE_OPTIONS = [
@@ -70,27 +71,27 @@ function BondingMaterialPage() {
     setStepSaving("bondingMaterial", true);
 
     try {
-        const response = await resumeTask(taskId, {
-          resume: {
-            adhesive,
-          },
-        });
+      const response = await resumeTask(taskId, {
+        resume: {
+          adhesive,
+        },
+      });
 
-        applyInterrupt(response.interrupt, ctx);
+      applyInterrupt(response.interrupt, ctx);
 
-        ctx.setBondingChoice({ adhesive });
+      ctx.setBondingChoice({ adhesive });
 
-        setCompleted((prev) => ({
-          ...prev,
-          bondingMaterial: true,
-        }));
+      setCompleted((prev) => ({
+        ...prev,
+        bondingMaterial: true,
+      }));
 
       navigate("/bonding");
     } catch (error) {
-        console.error(error);
-        alert("접합제 저장 실패");
+      console.error(error);
+      alert("접합제 저장 실패");
     } finally {
-        setStepSaving("bondingMaterial", false);
+      setStepSaving("bondingMaterial", false);
     }
   };
 
@@ -102,20 +103,19 @@ function BondingMaterialPage() {
 
   return (
     <div className="bonding-material-page">
+      <GuideNavigation currentLabel="접합제 선택" />
+
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/bonding")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <button
-            className="nav-btn"
-            disabled={isSaving}
-            onClick={handleComplete}
-          >
-            {isSaving ? "완료 처리 중..." : "완료"}
-          </button>
+          className="nav-btn"
+          disabled={isSaving}
+          onClick={handleComplete}
+        >
+          {isSaving ? "완료 처리 중..." : "완료"}
+        </button>
       </div>
 
       <div className="material-container">

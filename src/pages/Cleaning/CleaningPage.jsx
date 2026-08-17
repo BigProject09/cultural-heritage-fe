@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./CleaningPage.css";
 
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
@@ -122,6 +123,8 @@ function CleaningPage() {
 
   return (
     <div className="cleaning-page">
+      <GuideNavigation currentLabel="세척" />
+
       <div className="top-bar">
         <button
           className={`nav-btn${
@@ -137,11 +140,6 @@ function CleaningPage() {
         >
           ← 이전
         </button>
-
-        <button className="top-bar-logo" onClick={() => navigate("/")}>
-          VORA
-        </button>
-
         <button
           className="nav-btn"
           disabled={!allCompleted || movingNext}

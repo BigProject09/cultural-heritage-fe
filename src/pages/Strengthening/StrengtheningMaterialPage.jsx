@@ -4,6 +4,7 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./StrengtheningMaterialPage.css";
 
 const AGENT_OPTIONS = [
@@ -136,6 +137,9 @@ function StrengtheningMaterialPage() {
     setAgent(name);
 
     const allowedSolvents = AGENT_SOLVENT_MAP[name] || [];
+
+    // 강화제를 바꿨을 때 기존 용제가 호환되지 않으면
+    // 해당 강화제의 기본 용제(목록 첫 번째)를 기존 방식대로 선택한다.
     if (!allowedSolvents.includes(solvent)) {
       const nextSolvent = allowedSolvents[0] || "";
       setSolvent(nextSolvent);
@@ -149,6 +153,12 @@ function StrengtheningMaterialPage() {
 
   const handleComplete = async () => {
     if (isSaving) return;
+
+    if (!agent || !solvent) {
+      alert("강화제와 용제를 모두 선택해주세요.");
+      return;
+    }
+
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -157,28 +167,28 @@ function StrengtheningMaterialPage() {
     setStepSaving("strengtheningMaterial", true);
 
     try {
-        const response = await resumeTask(taskId, {
-          resume: {
-            agent,
-            solvent,
-          },
-        });
+      const response = await resumeTask(taskId, {
+        resume: {
+          agent,
+          solvent,
+        },
+      });
 
-        applyInterrupt(response.interrupt, ctx);
+      applyInterrupt(response.interrupt, ctx);
 
-        ctx.setStrengtheningChoice({ agent, solvent });
+      ctx.setStrengtheningChoice({ agent, solvent });
 
-        setCompleted((prev) => ({
-          ...prev,
-          strengtheningMaterial: true,
-        }));
+      setCompleted((prev) => ({
+        ...prev,
+        strengtheningMaterial: true,
+      }));
 
       navigate("/strengthening");
     } catch (error) {
-        console.error(error);
-        alert("강화제 저장 실패");
+      console.error(error);
+      alert("강화제 저장 실패");
     } finally {
-        setStepSaving("strengtheningMaterial", false);
+      setStepSaving("strengtheningMaterial", false);
     }
   };
 
@@ -188,29 +198,41 @@ function StrengtheningMaterialPage() {
 
   return (
     <div className="strengthening-material-page">
+      <GuideNavigation currentLabel="강화제·용제 선택" />
+
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/strengthening")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <button
-            className="nav-btn"
-            disabled={isSaving}
-            onClick={handleComplete}
-          >
-            {isSaving ? "완료 처리 중..." : "완료"}
-          </button>
+          className="nav-btn"
+          disabled={isSaving}
+          onClick={handleComplete}
+        >
+          {isSaving ? "완료 처리 중..." : "선택 완료"}
+        </button>
       </div>
 
       <div className="material-container">
+        <div className="material-selection-intro">
+          <h1>강화 재료 선택</h1>
+          <p>
+            AI 추천값이 기본으로 선택되어 있습니다. 아래에서
+            <strong> ① 강화제</strong>와 <strong>② 용제</strong>를 각각
+            확인하고 필요하면 변경하세요.
+          </p>
+        </div>
+
         {/* 좌우 2단 레이아웃 */}
         <div className="material-layout">
           {/* 왼쪽: 강화제 목록 + 용제 목록 */}
           <aside className="material-list-panel">
-            <div className="material-list-panel-header">
-              <h2 className="material-list-title">강화제</h2>
+            <div className="material-step-header">
+              <span className="material-step-number">1</span>
+              <div>
+                <h2 className="material-list-title">강화제 선택</h2>
+                <p className="material-step-help">사용할 강화제를 선택하세요.</p>
+              </div>
             </div>
 
             <div className="material-list-items">
@@ -222,7 +244,7 @@ function StrengtheningMaterialPage() {
                 return (
                   <div
                     key={option.name}
-                    className={`material-list-row ${isActive ? "active" : ""}`}
+                    className={`material-list-row ${isActive ? "active" : ""} ${isSelected ? "selected" : ""}`}
                     role="button"
                     tabIndex={0}
                     onClick={() => handleAgentCardClick(option.name)}
@@ -232,15 +254,21 @@ function StrengtheningMaterialPage() {
                   >
                     <span>{option.name}</span>
                     {isSelected && (
-                      <span className="material-list-row-badge">선택됨</span>
+                      <span className="material-list-row-badge is-selected">
+                        선택됨
+                      </span>
                     )}
                   </div>
                 );
               })}
             </div>
 
-            <div className="material-list-panel-header material-list-panel-header--secondary">
-              <h2 className="material-list-title">용제</h2>
+            <div className="material-step-header material-step-header--secondary">
+              <span className="material-step-number">2</span>
+              <div>
+                <h2 className="material-list-title">용제 선택</h2>
+                <p className="material-step-help">사용할 용제를 선택하세요.</p>
+              </div>
             </div>
 
             <div className="material-list-items">
@@ -253,7 +281,7 @@ function StrengtheningMaterialPage() {
                   return (
                     <div
                       key={name}
-                      className={`material-list-row ${isActive ? "active" : ""}`}
+                      className={`material-list-row ${isActive ? "active" : ""} ${isSelected ? "selected" : ""}`}
                       role="button"
                       tabIndex={0}
                       onClick={() => handleSolventCardClick(name)}
@@ -263,7 +291,9 @@ function StrengtheningMaterialPage() {
                     >
                       <span>{name}</span>
                       {isSelected && (
-                        <span className="material-list-row-badge">선택됨</span>
+                        <span className="material-list-row-badge is-selected">
+                          선택됨
+                        </span>
                       )}
                     </div>
                   );
@@ -273,6 +303,18 @@ function StrengtheningMaterialPage() {
                   강화제를 먼저 선택해주세요.
                 </p>
               )}
+            </div>
+
+            <div className="material-choice-summary">
+              <h3>현재 선택</h3>
+              <div className="material-choice-summary-row">
+                <span>강화제</span>
+                <strong>{agent || "미선택"}</strong>
+              </div>
+              <div className="material-choice-summary-row">
+                <span>용제</span>
+                <strong>{solvent || "미선택"}</strong>
+              </div>
             </div>
           </aside>
 
@@ -301,10 +343,13 @@ function StrengtheningMaterialPage() {
 
                 <div className="material-detail-actions">
                   <button
-                    className={`nav-btn ${agent === activeAgentOption.name ? "" : "secondary"}`}
+                    className={`nav-btn material-selection-btn ${agent === activeAgentOption.name
+                      ? "is-selected"
+                      : "is-unselected"
+                      }`}
                     onClick={() => confirmAgent(activeAgentOption.name)}
                   >
-                    {agent === activeAgentOption.name ? "선택됨" : "선택"}
+                    {agent === activeAgentOption.name ? "선택됨" : "미선택"}
                   </button>
                 </div>
               </>
@@ -331,10 +376,13 @@ function StrengtheningMaterialPage() {
 
                 <div className="material-detail-actions">
                   <button
-                    className={`nav-btn ${solvent === activeSolventOption.name ? "" : "secondary"}`}
+                    className={`nav-btn material-selection-btn ${solvent === activeSolventOption.name
+                      ? "is-selected"
+                      : "is-unselected"
+                      }`}
                     onClick={() => confirmSolvent(activeSolventOption.name)}
                   >
-                    {solvent === activeSolventOption.name ? "선택됨" : "선택"}
+                    {solvent === activeSolventOption.name ? "선택됨" : "미선택"}
                   </button>
                 </div>
               </>
@@ -344,7 +392,7 @@ function StrengtheningMaterialPage() {
           </section>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

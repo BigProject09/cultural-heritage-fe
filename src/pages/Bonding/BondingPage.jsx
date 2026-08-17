@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./BondingPage.css";
 
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
@@ -122,6 +123,8 @@ function BondingPage() {
 
   return (
     <div className="bonding-page">
+      <GuideNavigation currentLabel="접합" />
+
       <div className="top-bar">
         <button
           className={`nav-btn${
@@ -137,11 +140,6 @@ function BondingPage() {
         >
           ← 이전
         </button>
-
-        <button className="top-bar-logo" onClick={() => navigate("/")}>
-          VORA
-        </button>
-
         <button
           className="nav-btn"
           disabled={!allCompleted || movingNext}

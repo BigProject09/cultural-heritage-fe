@@ -6,6 +6,7 @@ import { resumeTask } from "../../services/conservationGuideApi";
 import { uploadPhoto } from "../../services/photoUploadApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./BondingWorkPage.css";
 
 // 업로드 박스용 아이콘. 새 패키지 의존성 없이 인라인 SVG로 둔다.
@@ -192,13 +193,12 @@ function BondingWorkPage() {
 
   return (
     <div className="bonding-work-page">
+      <GuideNavigation currentLabel="임시접합 검증" />
+
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/bonding")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <div className="nav-btn-group">
           {!bondingTempAnalysis && (
             <button

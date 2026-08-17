@@ -20,6 +20,8 @@ import {
 import { getCurrentStep } from "../../utils/flowNavigation";
 import { flowRoutes } from "../../data/flowData";
 import { useDisassembly } from "../../context/useDisassembly";
+import { getLatestTaskByArtifact } from "../../services/conservationGuideApi";
+import { restoreGuideTaskContext } from "../../utils/guideTaskRecovery";
 import "./ProjectDetailPage.css";
 
 const PROGRESS_WIDTH_CLASSES = ["w-0", "w-1/3", "w-2/3", "w-full"];
@@ -105,11 +107,9 @@ function ProjectDetailPage() {
       if (nextProject !== project) setProject(nextProject);
       const artifactInfo = selectWorkspaceProject(nextProject);
 
-      // 복원 가이드는 이미 진행하던 단계가 메모리(Context)에 남아있으면
-      // 단계를 새로 고르는 화면 대신 그 단계로 바로 이어서 들어간다. 이미 다
-      // 끝났으면(완료 상태거나, 승인된 단계 중 안 끝난 게 없으면) 결과 화면으로
-      // 보낸다. 새로고침하면 이 메모리가 초기화되어 다시 단계 선택 화면으로
-      // 돌아간다.
+      // 복원 가이드는 React 메모리만 신뢰하지 않는다. 새로고침/재접속으로
+      // Context가 비어 있어도 artifactId로 DB의 최신 Task를 다시 찾고, 마지막
+      // LangGraph interrupt를 기준으로 정확한 하위 단계까지 복구해 이어서 연다.
       if (moduleKey === "guide") {
         if (project.modules.guide === MODULE_STATUS.DONE) {
           navigate(getArtifactWorkflowRoute(nextProject.artifactId, "result"), {
@@ -123,6 +123,39 @@ function ProjectDetailPage() {
           return;
         }
 
+        let recovered = null;
+
+        // 같은 SPA 세션에서도 가장 최근 interrupt가 Context의 오래된 값보다
+        // 앞서 있을 수 있으므로, "이어서 작업"을 누를 때마다 DB를 기준으로 갱신한다.
+        const latestTask = await getLatestTaskByArtifact(nextProject.artifactId);
+        if (latestTask) {
+          recovered = restoreGuideTaskContext(
+            latestTask,
+            nextProject.artifactId,
+            disassemblyCtx,
+          );
+        }
+
+        const resumeRoute =
+          recovered?.resumeRoute || disassemblyCtx.guideResumeRoute;
+        const resumeFlow =
+          recovered?.approvedFlow || disassemblyCtx.approvedFlow;
+
+        if (resumeRoute) {
+          navigate(resumeRoute, {
+            state: {
+              artifactId: nextProject.artifactId,
+              artifactInfo,
+              workspaceEntry: true,
+              workspaceModule: moduleKey,
+              approvedFlow: resumeFlow,
+            },
+          });
+          return;
+        }
+
+        // 구 세션 데이터처럼 taskId는 있으나 interrupt 기반 경로가 없는 경우에만
+        // 기존 큰 공정 단위 복구 로직을 fallback으로 사용한다.
         if (disassemblyCtx.taskId) {
           const currentStep = getCurrentStep(
             disassemblyCtx.approvedFlow,

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
-import { getArtifactRoute } from "../../utils/artifactRoutes";
 import { sanitizeGuideFlow } from "../../data/flowData";
+import ModulePageHeader from "../../components/common/ModulePageHeader/ModulePageHeader";
 
 import "./GuideResultPage.css";
 import "./FlowRecommendationPage.css";
@@ -247,24 +247,14 @@ function GuideResultPage() {
   return (
     <div className="flow-page guide-result-page">
       <div className="guide-container">
-        <nav className="guide-breadcrumb" aria-label="현재 위치">
-          <button
-            type="button"
-            onClick={() => navigate(getArtifactRoute(artifactId))}
-          >
-            유물 워크스페이스
-          </button>
-          <span>/</span>
-          <strong>복원 가이드 결과</strong>
-        </nav>
-
-        <header className="guide-header">
-          <div className="guide-heading">
-            <span className="guide-eyebrow">INDEPENDENT GUIDE MODULE</span>
-            <h1 className="guide-title">복원 가이드 결과</h1>
-            <p>진행한 보존처리 단계와 세부 단계별 선택값을 순서대로 확인합니다.</p>
-          </div>
-        </header>
+        <ModulePageHeader
+          artifactId={artifactId}
+          currentLabel="복원 가이드 결과"
+          eyebrow="INDEPENDENT GUIDE MODULE"
+          title="복원 가이드 결과"
+          description="진행한 보존처리 단계와 세부 단계별 선택값을 순서대로 확인합니다."
+          tone="bronze"
+        />
       </div>
 
       <div className="guide-result-container">

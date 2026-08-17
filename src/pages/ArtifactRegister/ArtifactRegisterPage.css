@@ -127,6 +127,18 @@
 .artifact-field textarea:focus {
   @apply border-[color:var(--heritage-bronze)] shadow-[0_0_0_3px_rgba(150,104,61,0.1)] outline-none;
 }
+.artifact-material-guide {
+  @apply text-[9px] leading-[1.5] mt-0 mb-0 mx-0;
+}
+.artifact-material-guide.unselected {
+  @apply text-[color:var(--heritage-muted)];
+}
+.artifact-material-guide.supported {
+  @apply text-[color:var(--heritage-green)] font-bold;
+}
+.artifact-material-guide.unsupported {
+  @apply text-[#a73526] font-bold text-[10px] leading-[1.55] [background:#fff0ec] border-l-[3px] border-l-[#c84b38] px-[9px] py-[7px] rounded-r-md;
+}
 .artifact-weight-field {
   @apply grid gap-2 grid-cols-[1fr_78px];
 }

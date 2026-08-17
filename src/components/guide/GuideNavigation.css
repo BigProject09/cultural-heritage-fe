@@ -1,0 +1,42 @@
+.guide-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 22px;
+  color: #7a817e;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.guide-breadcrumb button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 2px 0;
+  color: #68716d;
+  font: inherit;
+  cursor: pointer;
+}
+
+.guide-breadcrumb button:hover:not(:disabled) {
+  color: #283c34;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.guide-breadcrumb button:focus-visible {
+  outline: 2px solid #8c6541;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.guide-breadcrumb button:disabled {
+  color: #b1b6b3;
+  cursor: default;
+}
+
+.guide-breadcrumb strong {
+  color: #283c34;
+  font-weight: 700;
+}

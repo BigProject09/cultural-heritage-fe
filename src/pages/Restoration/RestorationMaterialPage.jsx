@@ -4,6 +4,7 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./RestorationMaterialPage.css";
 
 const MATERIAL_OPTIONS = [
@@ -119,27 +120,27 @@ function RestorationMaterialPage() {
     setStepSaving("restorationMaterial", true);
 
     try {
-        const response = await resumeTask(taskId, {
-          resume: {
-            material,
-          },
-        });
+      const response = await resumeTask(taskId, {
+        resume: {
+          material,
+        },
+      });
 
-        applyInterrupt(response.interrupt, ctx);
+      applyInterrupt(response.interrupt, ctx);
 
-        ctx.setRestorationChoice({ material });
+      ctx.setRestorationChoice({ material });
 
-        setCompleted((prev) => ({
-          ...prev,
-          restorationMaterial: true,
-        }));
+      setCompleted((prev) => ({
+        ...prev,
+        restorationMaterial: true,
+      }));
 
       navigate("/restoration");
     } catch (error) {
-        console.error(error);
-        alert("복원 재료 저장 실패");
+      console.error(error);
+      alert("복원 재료 저장 실패");
     } finally {
-        setStepSaving("restorationMaterial", false);
+      setStepSaving("restorationMaterial", false);
     }
   };
 
@@ -152,20 +153,19 @@ function RestorationMaterialPage() {
 
   return (
     <div className="restoration-material-page">
+      <GuideNavigation currentLabel="복원제 선택" />
+
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/restoration")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <button
-            className="nav-btn"
-            disabled={isSaving}
-            onClick={handleComplete}
-          >
-            {isSaving ? "완료 처리 중..." : "완료"}
-          </button>
+          className="nav-btn"
+          disabled={isSaving}
+          onClick={handleComplete}
+        >
+          {isSaving ? "완료 처리 중..." : "완료"}
+        </button>
       </div>
 
       <div className="material-container">

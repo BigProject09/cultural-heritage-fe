@@ -3,14 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./VisualPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import {
-  inspectPottery,
+  createInspectionJob,
+  getLatestInspectionJob,
+  pollInspectionJob,
   MultipleObjectsDetectedError,
 } from "../../services/potteryInspectionApi";
 import { uploadPhoto } from "../../services/photoUploadApi";
-import {
-  getOrCreateAssessmentRun,
-  savePotteryInspectionResult,
-} from "../../services/vcaApi";
 import { parseInspectionSections, compareEra } from "../../utils/inspectionText";
 import {
   MODULE_STATUS,
@@ -19,6 +17,7 @@ import {
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
 import { getArtifactRoute } from "../../utils/artifactRoutes";
+import ModulePageHeader from "../../components/common/ModulePageHeader/ModulePageHeader";
 
 const POTTERY_MATERIAL_KEYWORDS = [
   "연질토기",
@@ -124,19 +123,20 @@ function VisualPage() {
   // 아니다 - 조사용 사진은 이 화면에서 사용자가 별도로 새로 올린다.
   const [artifactInfo, setArtifactInfo] = useState(() => readStoredArtifactInfo());
 
-  // idle | uploading | done | error | unsupported
-  const [status, setStatus] = useState("idle");
+  // restoring | idle | loading | done | error | unsupported
+  const [status, setStatus] = useState("restoring");
   const [errorMessage, setErrorMessage] = useState("");
-  const [uploadWarning, setUploadWarning] = useState(false);
   const [multiObjectPrompt, setMultiObjectPrompt] = useState(null);
-  const [saveWarning, setSaveWarning] = useState(false);
   const [imageSize, setImageSize] = useState(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploadDragging, setIsUploadDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const imgRef = useRef(null);
   const fileInputRef = useRef(null);
+  const pollAbortRef = useRef(null);
+  const previewObjectUrlRef = useRef(null);
 
   // 사용자가 이 화면에서 새로 고른 육안조사용 사진(즉시 미리보기용 로컬 object URL).
   // S3 업로드가 끝난 뒤의 실제 URL은 visualResult.__photoUrl로 그대로
@@ -163,110 +163,113 @@ function VisualPage() {
     return () => controller.abort();
   }, [artifactId]);
 
-  // 컴포넌트가 사라질 때 로컬 미리보기용 object URL을 정리한다(메모리 누수 방지).
+  // 페이지를 벗어나면 브라우저 폴링만 중단한다. 실제 분석 상태는 Spring/RDS와
+  // FastAPI에 남아 있고, Spring 서버 폴러가 완료 결과를 계속 저장한다.
   useEffect(() => {
     return () => {
-      if (inspectionPhotoUrl) URL.revokeObjectURL(inspectionPhotoUrl);
+      pollAbortRef.current?.abort();
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+        previewObjectUrlRef.current = null;
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
-  const runInspection = async (file) => {
-    setStatus("loading");
-    setErrorMessage("");
-    setUploadWarning(false);
-    setSaveWarning(false);
-    setMultiObjectPrompt(null);
-
-    // S3 업로드와 AI 분석은 서로 의존하지 않으므로 동시에 진행한다.
-    // 업로드가 실패해도 분석 자체는 보여줄 수 있어야 하므로(반대도 마찬가지),
-    // Promise.all 대신 allSettled로 각각 따로 처리한다.
-    const [analysisSettled, uploadSettled] = await Promise.allSettled([
-      inspectPottery(file),
-      uploadPhoto(file, artifactId),
-    ]);
-
-    const uploadedUrl =
-      uploadSettled.status === "fulfilled" ? uploadSettled.value : null;
-    if (uploadSettled.status === "rejected") {
-      console.error("사진 S3 업로드 실패:", uploadSettled.reason);
-      setUploadWarning(true);
+  const applyCompletedJob = (job) => {
+    if (!job?.result) {
+      throw new Error("완료된 육안조사 작업에 분석 결과가 없습니다.");
     }
 
-    if (analysisSettled.status === "rejected") {
-      if (analysisSettled.reason instanceof MultipleObjectsDetectedError) {
-        // 사진에서 서로 떨어진 영역이 여러 개 감지된 상태 - 마스크가 안
-        // 닿아있다고 반드시 "서로 다른 유물"인 건 아니다(깨진 조각들일
-        // 수도 있음). 사진만으로는 이걸 확정할 수 없으니 자동 판단 대신
-        // 사용자에게 확인받는다.
+    if (job.photoUrl) {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+        previewObjectUrlRef.current = null;
+      }
+      setInspectionPhotoUrl(job.photoUrl);
+    }
+    setVisualResult({
+      ...job.result,
+      __artifactId: artifactId,
+      __photoUrl: job.photoUrl || null,
+      __assessmentRunId: job.assessmentRunId,
+    });
+    setStatus("done");
+  };
+
+  /** 새 사진으로 서버 영속 육안조사 job을 시작하고 완료될 때까지 폴링한다. */
+  const runInspection = async (file, { treatAsSingleArtifact = false } = {}) => {
+    setStatus("loading");
+    setErrorMessage("");
+    setMultiObjectPrompt(null);
+
+    pollAbortRef.current?.abort();
+    const controller = new AbortController();
+    pollAbortRef.current = controller;
+
+    try {
+      const created = await createInspectionJob(file, {
+        artifactId,
+        treatAsSingleArtifact,
+      });
+
+      // SPA 이동 중에도 짧은 접수 POST 자체는 끝까지 보내고, 화면을 이미
+      // 벗어났다면 이후 UI 갱신/브라우저 폴링만 중단한다.
+      if (controller.signal.aborted) return;
+
+      if (created.photoUrl) {
+        if (previewObjectUrlRef.current) {
+          URL.revokeObjectURL(previewObjectUrlRef.current);
+          previewObjectUrlRef.current = null;
+        }
+        setInspectionPhotoUrl(created.photoUrl);
+      }
+
+      const completed =
+        created.status === "done"
+          ? created
+          : await pollInspectionJob(artifactId, created.assessmentRunId, {
+              signal: controller.signal,
+            });
+
+      applyCompletedJob(completed);
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+
+      if (error instanceof MultipleObjectsDetectedError) {
         setMultiObjectPrompt({
           file,
-          message: analysisSettled.reason.message,
-          detectedRegionCount: analysisSettled.reason.detectedRegionCount,
-          uploadedUrl,
+          message: error.message,
+          detectedRegionCount: error.detectedRegionCount,
+          photoUrl: error.photoUrl || null,
         });
+        if (error.photoUrl) {
+          setInspectionPhotoUrl(error.photoUrl);
+        }
         setStatus("idle");
         return;
       }
 
       setErrorMessage(
-        analysisSettled.reason?.message ||
-          "분석 요청 중 오류가 발생했습니다. 다시 시도해주세요.",
+        error?.message || "분석 요청 중 오류가 발생했습니다. 다시 시도해주세요.",
       );
       setStatus("error");
+    }
+  };
+
+  /** "하나의 유물이 깨진 조각들이에요" 확인 후 새 서버 run으로 재분석한다. */
+  const handleConfirmSingleArtifact = async () => {
+    if (!multiObjectPrompt?.file) {
+      setMultiObjectPrompt(null);
+      fileInputRef.current?.click();
       return;
     }
 
-    await finishInspection(analysisSettled.value, uploadedUrl);
-  };
-
-  /**
-   * 분석 성공 이후 공통 처리(화면 반영 + DB 저장). 정상 분석 경로와,
-   * "하나의 유물이 깨진 조각들" 확인 후 재분석 경로가 이 부분을 공유한다.
-   */
-  const finishInspection = async (analysisResult, uploadedUrl) => {
-    setVisualResult({
-      ...analysisResult,
-      __artifactId: artifactId,
-      __photoUrl: uploadedUrl,
-    });
-    setStatus("done");
-
-    // 분석 결과를 DB(VCA 실행 + 육안조사 결과)에 저장한다. 저장이 실패해도
-    // 화면에 이미 보여준 분석 결과는 그대로 유효하므로 상태를 되돌리지 않고
-    // 경고만 띄운다 - 위 사진 업로드 실패 처리와 같은 방식이다.
-    try {
-      const run = await getOrCreateAssessmentRun(artifactId);
-      await savePotteryInspectionResult(artifactId, run.id, analysisResult);
-    } catch (saveError) {
-      console.error("육안조사 결과 저장 실패:", saveError);
-      setSaveWarning(true);
-    }
-  };
-
-  /** "하나의 유물이 깨진 조각들이에요" 확인 후 같은 사진으로 재분석한다. */
-  const handleConfirmSingleArtifact = async () => {
-    if (!multiObjectPrompt) return;
-    const { file, uploadedUrl } = multiObjectPrompt;
-
-    setStatus("loading");
+    const { file } = multiObjectPrompt;
     setMultiObjectPrompt(null);
-
-    try {
-      const analysisResult = await inspectPottery(file, {
-        treatAsSingleArtifact: true,
-      });
-      await finishInspection(analysisResult, uploadedUrl);
-    } catch (retryError) {
-      setErrorMessage(
-        retryError?.message || "분석 요청 중 오류가 발생했습니다. 다시 시도해주세요.",
-      );
-      setStatus("error");
-    }
+    await runInspection(file, { treatAsSingleArtifact: true });
   };
 
-  /** "서로 다른 유물이에요" - 재촬영을 안내하고 그냥 에러 상태로 보여준다. */
+  /** "서로 다른 유물이에요" - 재촬영을 안내하고 에러 상태로 보여준다. */
   const handleRejectSingleArtifact = () => {
     if (!multiObjectPrompt) return;
     setErrorMessage(multiObjectPrompt.message);
@@ -274,12 +277,90 @@ function VisualPage() {
     setStatus("error");
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // 재진입은 브라우저 저장소가 아니라 artifactId -> assessment_run(RDS)로 복원한다.
+  useEffect(() => {
+    if (!artifactId) {
+      setStatus("idle");
+      return undefined;
+    }
 
-    if (inspectionPhotoUrl) URL.revokeObjectURL(inspectionPhotoUrl);
+    let cancelled = false;
+    const controller = new AbortController();
+    pollAbortRef.current?.abort();
+    pollAbortRef.current = controller;
+
+    const restore = async () => {
+      setStatus("restoring");
+      setErrorMessage("");
+
+      try {
+        const latest = await getLatestInspectionJob(artifactId, {
+          signal: controller.signal,
+        });
+        if (cancelled) return;
+
+        if (!latest) {
+          setStatus("idle");
+          return;
+        }
+
+        if (latest.photoUrl) {
+          setInspectionPhotoUrl(latest.photoUrl);
+        }
+
+        if (latest.status === "done") {
+          applyCompletedJob(latest);
+          return;
+        }
+
+        setStatus("loading");
+        const completed = await pollInspectionJob(
+          artifactId,
+          latest.assessmentRunId,
+          { signal: controller.signal },
+        );
+        if (cancelled) return;
+        applyCompletedJob(completed);
+      } catch (error) {
+        if (cancelled || error?.name === "AbortError") return;
+
+        if (error instanceof MultipleObjectsDetectedError) {
+          if (error.photoUrl) setInspectionPhotoUrl(error.photoUrl);
+          setErrorMessage(`${error.message} 다시 분석하려면 사진을 선택해주세요.`);
+          setStatus("error");
+          return;
+        }
+
+        console.error("기존 육안조사 작업 복원 실패:", error);
+        setErrorMessage(`기존 육안조사 작업 복원 실패: ${error.message}`);
+        setStatus("error");
+      }
+    };
+
+    void restore();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+    // artifactId가 바뀔 때만 해당 유물의 서버 작업을 새로 복원한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artifactId]);
+
+  const selectInspectionFile = (file) => {
+    if (!file || status === "loading" || status === "restoring") return;
+
+    if (!file.type?.startsWith("image/")) {
+      setErrorMessage("이미지 파일을 선택해 주세요.");
+      setStatus("error");
+      return;
+    }
+
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+    }
     const previewUrl = URL.createObjectURL(file);
+    previewObjectUrlRef.current = previewUrl;
 
     setInspectionPhotoUrl(previewUrl);
     setImageSize(null);
@@ -288,9 +369,33 @@ function VisualPage() {
     setVisualResult(null);
 
     void runInspection(file);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) selectInspectionFile(file);
 
     // 같은 파일을 다시 선택해도 change 이벤트가 발생하도록 값을 비워둔다.
     e.target.value = "";
+  };
+
+  const handleUploadDrop = (e) => {
+    e.preventDefault();
+    setIsUploadDragging(false);
+
+    if (status === "loading" || status === "restoring") return;
+
+    const file = Array.from(e.dataTransfer.files || []).find((item) =>
+      item.type?.startsWith("image/"),
+    );
+
+    if (!file) {
+      setErrorMessage("이미지 파일을 끌어다 놓아 주세요.");
+      setStatus("error");
+      return;
+    }
+
+    selectInspectionFile(file);
   };
 
   const handleRetry = () => {
@@ -321,7 +426,7 @@ function VisualPage() {
             const file = new File([blob], `annotated-${Date.now()}.png`, {
               type: "image/png",
             });
-            annotatedPhotoUrl = await uploadPhoto(file, artifactId);
+            annotatedPhotoUrl = await uploadPhoto(file);
           } catch (uploadError) {
             console.warn(
               "마스킹 사진 S3 업로드 실패 - base64로 대체합니다:",
@@ -425,34 +530,26 @@ function VisualPage() {
     : [];
 
   const statusLabel =
-    status === "loading"
-      ? "분석 중"
-      : status === "done"
-        ? "AI 분석 완료"
-        : "AI 분석 초안";
+    status === "restoring"
+      ? "기존 분석 확인 중"
+      : status === "loading"
+        ? "분석 중"
+        : status === "done"
+          ? "AI 분석 완료"
+          : "AI 분석 초안";
 
   return (
     <div className="visual-page">
       <div className="visual-container">
-        <nav className="visual-breadcrumb" aria-label="현재 위치">
-          <button
-            type="button"
-            onClick={() => navigate(getArtifactRoute(artifactId))}
-          >
-            유물 워크스페이스
-          </button>
-          <span>/</span>
-          <strong>육안 상태 조사</strong>
-        </nav>
-
-        <header className="visual-header">
-          <div>
-            <span className="visual-eyebrow">INDEPENDENT VISUAL MODULE</span>
-            <h1 className="visual-title">육안 상태 조사</h1>
-            <p>육안조사용 사진을 새로 올리면 형태·유약·시대·문양을 함께 분석합니다.</p>
-          </div>
-          <span className="visual-status">{statusLabel}</span>
-        </header>
+        <ModulePageHeader
+          artifactId={artifactId}
+          currentLabel="문양 기반 육안 상태 조사"
+          eyebrow="AI PATTERN ANALYSIS"
+          title="문양 기반 육안 상태 조사"
+          description="토기·도자기 사진의 문양과 형태적 특징을 AI로 분석해 육안조사 초안을 만듭니다."
+          tone="blue"
+          rightContent={<span className="visual-status">{statusLabel}</span>}
+        />
 
         <section className="visual-artifact-summary">
           <div>
@@ -466,6 +563,16 @@ function VisualPage() {
           <div>
             <span>재질</span>
             <strong>{artifactInfo.material || "정보 없음"}</strong>
+            <small
+              style={{
+                display: "block",
+                marginTop: "4px",
+                color: isPottery ? "#4b6b57" : "#9b3a32",
+                fontWeight: 700,
+              }}
+            >
+              {isPottery ? "문양 분석 지원" : "문양 분석 미지원"}
+            </small>
           </div>
           <div>
             <span>시대</span>
@@ -478,27 +585,89 @@ function VisualPage() {
         {!isPottery ? (
           <section className="visual-notice">
             <p>
-              현재는 연질토기·경질토기(도자기류)만 AI 육안조사를 지원합니다.
-              다른 재질은 준비 중입니다.
+              이 재질은 문양 기반 육안 상태 조사 대상이 아닙니다. 현재는
+              <strong style={{ color: "#c2410c" }}> 연질토기·경질토기·도자기류</strong>만 지원합니다.
             </p>
           </section>
         ) : (
-          <section className="photo-card">
-            <div className="photo-upload-row">
-              <div>
-                <h3 className="photo-upload-title">육안조사용 사진</h3>
+          <>
+            <section className="photo-card">
+              <div className="photo-upload-guide">
+                <h3 className="photo-upload-title">문양 분석용 사진</h3>
+                <p className="photo-upload-target">
+                  분석 대상: 연질토기 · 경질토기 · 도자기류
+                </p>
+                <p className="photo-upload-emphasis">
+                  ※ 문양과 표면이 선명하게 보이도록 유물 1점을 크게 촬영한 사진을 업로드해 주세요.
+                </p>
+                <p className="photo-upload-help">
+                  축척자·색상표·라벨·손 등 유물 외 물체는 가능하면 화면에서 제외해 주세요.
+                </p>
               </div>
-              <label className="photo-upload-btn">
-                {inspectionPhotoUrl ? "다른 사진 선택" : "사진 선택"}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  hidden
-                />
-              </label>
-            </div>
+
+              {!inspectionPhotoUrl ? (
+                <div
+                  className={`visual-photo-upload ${isUploadDragging ? "dragging" : ""} ${
+                    status === "loading" || status === "restoring" ? "disabled" : ""
+                  }`}
+                  role="button"
+                  tabIndex={status === "loading" || status === "restoring" ? -1 : 0}
+                  aria-disabled={status === "loading" || status === "restoring"}
+                  aria-label="문양 분석용 사진 업로드"
+                  onClick={() => {
+                    if (status !== "loading" && status !== "restoring") {
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      status !== "loading" &&
+                      status !== "restoring" &&
+                      (event.key === "Enter" || event.key === " ")
+                    ) {
+                      event.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  onDragEnter={(event) => {
+                    event.preventDefault();
+                    if (status !== "loading" && status !== "restoring") {
+                      setIsUploadDragging(true);
+                    }
+                  }}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDragLeave={() => setIsUploadDragging(false)}
+                  onDrop={handleUploadDrop}
+                >
+                  <span className="visual-upload-icon" aria-hidden="true">
+                    ↑
+                  </span>
+                  <strong>이미지를 끌어다 놓으세요</strong>
+                  <p>또는 클릭하여 파일 선택</p>
+                  <small>PNG, JPG, WEBP 권장 · 파일당 최대 20MB 권장</small>
+                </div>
+              ) : (
+                <div className="photo-replace-row">
+                  <span>선택한 사진</span>
+                  <button
+                    type="button"
+                    className="photo-replace-btn"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={status === "loading" || status === "restoring"}
+                  >
+                    사진 변경
+                  </button>
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                className="visual-file-input"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                disabled={status === "loading" || status === "restoring"}
+              />
 
             {inspectionPhotoUrl && (
               <>
@@ -533,11 +702,20 @@ function VisualPage() {
                   )}
                 </div>
                 <div
-                  className="photo-frame"
+                  className={`photo-frame ${isUploadDragging ? "dragging-file" : ""}`}
                   onMouseDown={handlePointerDown}
                   onMouseMove={handlePointerMove}
                   onMouseUp={handlePointerUp}
                   onMouseLeave={handlePointerUp}
+                  onDragEnter={(event) => {
+                    event.preventDefault();
+                    if (status !== "loading" && status !== "restoring") {
+                      setIsUploadDragging(true);
+                    }
+                  }}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDragLeave={() => setIsUploadDragging(false)}
+                  onDrop={handleUploadDrop}
                   style={{
                     cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default",
                   }}
@@ -552,14 +730,18 @@ function VisualPage() {
                     <img
                       ref={imgRef}
                       src={inspectionPhotoUrl}
-                      alt="육안조사용으로 새로 올린 사진"
+                      alt="문양 분석용으로 새로 올린 사진"
                       onLoad={handleImageLoad}
                       draggable={false}
                     />
-                    {status === "loading" && (
+                    {(status === "loading" || status === "restoring") && (
                       <div className="photo-loading-overlay">
                         <span className="spinner" aria-hidden="true" />
-                        <p>AI가 분석 중이에요…</p>
+                        <p>
+                          {status === "restoring"
+                            ? "기존 육안조사 작업을 확인 중이에요…"
+                            : "AI가 문양과 형태적 특징을 분석 중이에요…"}
+                        </p>
                       </div>
                     )}
                     {imageSize && (
@@ -618,21 +800,10 @@ function VisualPage() {
                     )}
                   </div>
                 </div>
-                {uploadWarning && (
-                  <p className="photo-upload-warning">
-                    ⚠ 분석은 완료됐지만, 사진을 S3에 저장하는 데는 실패했습니다.
-                    새로고침하면 이 사진을 다시 불러올 수 없으니 참고해주세요.
-                  </p>
-                )}
-                {saveWarning && (
-                  <p className="photo-upload-warning">
-                    ⚠ 분석은 완료됐지만, 결과를 DB에 저장하는 데는 실패했습니다.
-                    새로고침하면 이 결과가 사라질 수 있으니 참고해주세요.
-                  </p>
-                )}
               </>
             )}
-          </section>
+            </section>
+          </>
         )}
 
         {status === "error" && (
@@ -724,7 +895,7 @@ function VisualPage() {
                   </div>
                 ))}
               </div>
-            ) : status === "loading" ? (
+            ) : status === "loading" || status === "restoring" ? (
               <div className="pottery-loading">
                 <div className="pottery-track">
                   <div className="pottery-runner">
@@ -802,14 +973,15 @@ function VisualPage() {
                   </div>
                 </div>
                 <p className="status-note">
-                  AI가 형태·유약·시대·문양을 하나씩 살펴보고 있어요. 문양까지
-                  확인하는 경우 최대 1분 정도 걸릴 수 있어요.
+                  {status === "restoring"
+                    ? "기존 육안조사 작업과 저장된 결과를 서버에서 불러오고 있어요."
+                    : "분석에는 1분 이상 걸릴 수 있어요. 화면을 벗어나도 서버 분석은 계속되며, 다시 들어오면 진행 중인 작업을 이어서 확인합니다."}
                 </p>
               </div>
             ) : (
               <p className="status-note">
                 {isPottery
-                  ? "육안조사용 사진을 올리면 분석이 시작됩니다."
+                  ? "문양 분석용 사진을 올리면 AI 육안조사가 시작됩니다."
                   : "아직 분석 결과가 없습니다."}
               </p>
             )}
@@ -835,7 +1007,7 @@ function VisualPage() {
           <button
             className="complete-btn"
             onClick={handleComplete}
-            disabled={status === "loading"}
+            disabled={status === "loading" || status === "restoring"}
           >
             육안 조사 완료
           </button>
