@@ -13,6 +13,7 @@ import {
 } from "../../data/workspaceProjects";
 import { getArtifactRoute } from "../../utils/artifactRoutes";
 import { getMyReports } from "../../utils/myReports";
+import { getAccessToken } from "../../services/authToken";
 import "./WorkListPage.css";
 
 function getReportArtifactId(report) {
@@ -44,6 +45,7 @@ function WorkListPage() {
   const [publicDetail, setPublicDetail] = useState(null);
 
   const isMine = scope === "mine";
+  const isLoggedIn = Boolean(getAccessToken());
 
   const currentProjectReports = useMemo(() => {
     if (!isMine) return [];
@@ -88,6 +90,13 @@ function WorkListPage() {
   }, [currentProjectReports.length, isMine, projects]);
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      setProjects([]);
+      setError("");
+      setLoading(false);
+      return undefined;
+    }
+
     const controller = new AbortController();
 
     const loader = isMine ? getMyWorkspaceProjects : getPublicWorkspaceProjects;
@@ -111,7 +120,7 @@ function WorkListPage() {
       });
 
     return () => controller.abort();
-  }, [isMine, reloadKey]);
+  }, [isLoggedIn, isMine, reloadKey]);
 
   const filteredProjects = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -218,7 +227,7 @@ function WorkListPage() {
             </p>
           </div>
 
-          {isMine && (
+          {isMine && isLoggedIn && (
             <button
               onClick={() =>
                 navigate("/artifacts/new", {
@@ -234,6 +243,19 @@ function WorkListPage() {
           )}
         </section>
 
+        {!isLoggedIn ? (
+          <section className="heritage-worklist-login-required" aria-live="polite">
+            <span>MEMBER ACCESS</span>
+            <h2>로그인이 필요합니다.</h2>
+            <p>
+              로그인 후 내가 등록한 프로젝트와 전체 프로젝트를 확인할 수 있습니다.
+            </p>
+            <button type="button" onClick={() => navigate("/login")}>
+              로그인
+            </button>
+          </section>
+        ) : (
+          <>
         <section
           className="heritage-worklist-scope"
           aria-label="프로젝트 조회 범위"
@@ -487,6 +509,8 @@ function WorkListPage() {
             );
           })}
         </section>
+          </>
+        )}
       </main>
 
       {publicDetail && (

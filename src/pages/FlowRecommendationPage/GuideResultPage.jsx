@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
 import { sanitizeGuideFlow } from "../../data/flowData";
 import ModulePageHeader from "../../components/common/ModulePageHeader/ModulePageHeader";
+import { getArtifactRoute } from "../../utils/artifactRoutes";
 
 import "./GuideResultPage.css";
 import "./FlowRecommendationPage.css";

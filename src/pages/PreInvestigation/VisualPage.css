@@ -2,27 +2,27 @@
 
 @layer components {
   .visual-select-page {
-    @apply min-h-screen bg-guide-canvas flex flex-col items-center px-5 py-[60px];
+    @apply min-h-screen bg-vora-paper text-vora-ink flex flex-col items-center px-5 py-[60px];
   }
 
   .visual-select-container {
-    @apply w-full max-w-[960px];
+    @apply w-full max-w-[1100px];
   }
 
   .visual-select-intro {
-    @apply mt-6 mb-6 rounded-2xl border border-gray-200 bg-white p-6;
+    @apply mt-6 mb-6 rounded-2xl border border-vora-line bg-vora-surface p-6;
   }
 
   .visual-select-intro > span {
-    @apply block text-blue-600 text-[11px] font-extrabold tracking-widest mb-2;
+    @apply block text-vora-bronze text-[11px] font-extrabold tracking-widest mb-2;
   }
 
   .visual-select-intro h2 {
-    @apply m-0 text-[24px] leading-tight font-bold text-gray-800;
+    @apply m-0 font-serif text-[24px] leading-tight font-semibold text-vora-ink;
   }
 
   .visual-select-intro p {
-    @apply mt-3 mb-0 text-[14px] leading-6 text-gray-500;
+    @apply mt-3 mb-0 text-[14px] leading-6 text-vora-muted;
   }
 
   .visual-select-grid {
@@ -30,15 +30,15 @@
   }
 
   .visual-select-card {
-    @apply relative flex min-h-[360px] flex-col rounded-2xl border border-gray-200 bg-white p-6;
+    @apply relative flex min-h-[340px] flex-col rounded-2xl border border-vora-line bg-vora-surface p-6 shadow-[0_10px_30px_rgba(68,52,35,0.05)];
   }
 
   .visual-select-card:hover {
-    @apply border-amber-400;
+    @apply border-vora-bronze;
   }
 
   .visual-select-card-index {
-    @apply absolute right-5 top-5 text-[34px] font-extrabold text-gray-100;
+    @apply absolute right-5 top-5 font-serif text-[34px] font-semibold text-[#ece4d8];
   }
 
   .visual-select-card-body {
@@ -46,32 +46,32 @@
   }
 
   .visual-select-card-eyebrow {
-    @apply block mb-2 text-[11px] font-extrabold tracking-widest text-amber-700;
+    @apply block mb-2 text-[10px] font-extrabold tracking-[0.16em] text-vora-bronze;
   }
 
   .visual-select-card h3 {
-    @apply m-0 pr-12 text-[25px] font-bold text-gray-800;
+    @apply m-0 pr-12 font-serif text-[24px] font-semibold text-vora-ink;
   }
 
   .visual-select-card p {
-    @apply mt-4 mb-0 text-[14px] leading-6 text-gray-500;
+    @apply mt-4 mb-0 text-[14px] leading-6 text-vora-muted;
   }
 
   .visual-select-card ul {
-    @apply mt-5 mb-0 space-y-2 pl-5 text-[13px] leading-5 text-gray-600;
+    @apply mt-5 mb-0 space-y-2 pl-5 text-[13px] leading-5 text-vora-muted;
   }
 
   .visual-select-button {
     @apply mt-7 inline-flex w-full items-center justify-center rounded-xl border-0 px-4 py-3 text-[14px] font-bold text-white cursor-pointer;
-    background: var(--heritage-bronze, #f59f00);
+    background: var(--color-vora-bronze, #96683d);
   }
 
   .visual-select-button:hover {
-    background: var(--heritage-bronze-dark, #c97f00);
+    background: var(--color-vora-bronze-dark, #704821);
   }
 
   .visual-select-note {
-    @apply mt-5 text-center text-[13px] text-gray-500;
+    @apply mt-5 text-center text-[13px] text-vora-muted;
   }
 
   @media (max-width: 760px) {

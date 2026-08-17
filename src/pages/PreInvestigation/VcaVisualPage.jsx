@@ -9,6 +9,7 @@ import VisualReport from "./VisualReport";
 import { useVisualInvestigation } from "./useVisualInvestigation";
 import { isPotteryMaterial } from "./visualVcaLabels";
 import SystemInfoFooter from "../../components/common/SystemInfoFooter";
+import ModulePageHeader from "../../components/common/ModulePageHeader/ModulePageHeader";
 import "./VcaVisualPage.css";
 
 const IMAGE_TYPES = "image/png,image/jpeg,image/webp";
@@ -239,29 +240,19 @@ export default function VcaVisualPage() {
   return (
     <main className="visual-page visual-vca-page">
       <div className="visual-vca-container">
-        <nav className="visual-breadcrumb" aria-label="현재 위치">
-          <button
-            type="button"
-            onClick={() => navigate(getArtifactRoute(artifactId))}
-          >
-            유물 워크스페이스
-          </button>
-          <span aria-hidden="true">/</span>
-          <strong>육안 상태 조사</strong>
-        </nav>
-
-        <header className="visual-header">
-          <div>
-            <span className="visual-eyebrow">VISUAL CONDITION ANALYSIS</span>
-            <h1 className="visual-title">육안 상태 조사</h1>
-            <p>
-              등록 이미지를 바탕으로 AI 초안을 검토하고 조사 기록을 준비합니다.
-            </p>
-          </div>
-          <span className="visual-status">
-            {isMock ? "육안 상태 조사" : statusLabel(artifact.status)}
-          </span>
-        </header>
+        <ModulePageHeader
+          artifactId={artifactId}
+          currentLabel="육안 상태 조사"
+          eyebrow="VISUAL CONDITION ANALYSIS"
+          title="육안 상태 조사"
+          description="등록 이미지를 바탕으로 AI 초안을 검토하고 조사 기록을 준비합니다."
+          tone="bronze"
+          rightContent={
+            <span className="visual-status">
+              {isMock ? "육안 상태 조사" : statusLabel(artifact.status)}
+            </span>
+          }
+        />
 
         <section
           className="visual-artifact-summary"

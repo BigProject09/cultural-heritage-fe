@@ -25,10 +25,12 @@ export default function VisualPage() {
     <main className="visual-select-page">
       <div className="visual-select-container">
         <ModulePageHeader
+          artifactId={artifactId}
+          currentLabel="육안 상태 조사"
           eyebrow="VISUAL INVESTIGATION"
           title="육안 상태 조사"
           description="조사 목적에 맞는 분석 기능을 선택해 진행하세요."
-          onBack={goToWorkspace}
+          tone="bronze"
         />
 
         <section

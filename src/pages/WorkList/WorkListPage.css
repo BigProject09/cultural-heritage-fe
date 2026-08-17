@@ -22,6 +22,26 @@
 .heritage-worklist-heading > button {
   @apply [background:var(--heritage-bronze)] text-white cursor-pointer min-h-11 px-5 py-0 rounded-[9px] border-0;
 }
+
+.heritage-worklist-login-required {
+  @apply min-h-[360px] mt-8 border border-[color:var(--heritage-line)] [background:rgba(255,253,247,0.72)] flex flex-col items-center justify-center text-center px-8 py-14 rounded-[16px] border-solid;
+}
+.heritage-worklist-login-required > span {
+  @apply text-[color:var(--heritage-bronze)] text-[10px] font-bold tracking-[0.18em] mb-3;
+}
+.heritage-worklist-login-required h2 {
+  @apply font-serif text-[28px] font-medium tracking-[-0.03em] m-0;
+}
+.heritage-worklist-login-required p {
+  @apply max-w-[520px] text-[color:var(--heritage-muted)] text-sm leading-[1.7] mt-3 mb-0;
+}
+.heritage-worklist-login-required button {
+  @apply min-h-11 [background:var(--heritage-bronze)] text-white text-sm font-bold cursor-pointer mt-6 px-7 py-0 rounded-lg border-0;
+}
+.heritage-worklist-login-required button:hover {
+  @apply [background:var(--heritage-bronze-dark)];
+}
+
 .heritage-worklist-summary {
   @apply border border-[color:var(--heritage-line)] grid grid-cols-4 mt-8 overflow-hidden rounded-[14px] border-solid;
 }

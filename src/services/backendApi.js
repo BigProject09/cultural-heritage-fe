@@ -31,13 +31,35 @@ function resolveErrorMessage(status, payload, fallback500Message) {
     ? payload.errors[0]?.defaultMessage
     : null;
 
-  return (
+  const nestedErrorMessage =
+    payload?.error && typeof payload.error === "object"
+      ? payload.error.message
+      : null;
+
+  const stringPayload =
+    typeof payload === "string" && payload.trim() ? payload.trim() : null;
+
+  const serverMessage =
     validationMessage ||
     payload?.message ||
-    (status === 500
-      ? fallback500Message || "서버 오류가 발생했습니다."
-      : STATUS_FALLBACK_MESSAGE[status]) ||
-    `요청에 실패했습니다. (HTTP ${status})`
+    payload?.detail ||
+    nestedErrorMessage ||
+    stringPayload;
+
+  if (serverMessage) {
+    return serverMessage;
+  }
+
+  if (status === 409) {
+    return "이미 사용 중인 아이디 또는 이메일입니다.";
+  }
+
+  if (status === 500) {
+    return fallback500Message || "서버 오류가 발생했습니다.";
+  }
+
+  return (
+    STATUS_FALLBACK_MESSAGE[status] || `요청에 실패했습니다. (HTTP ${status})`
   );
 }
 

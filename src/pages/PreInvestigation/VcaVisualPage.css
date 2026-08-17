@@ -12,54 +12,54 @@
 
 @layer components {
   .visual-page.visual-vca-page {
-    --workflow-paper: #f5f7fb;
-    --workflow-surface: #ffffff;
-    --workflow-surface-soft: #f9fafb;
-    --workflow-ink: #1f2937;
-    --workflow-ink-soft: #374151;
-    --workflow-muted: #6b7280;
-    --workflow-bronze: #f59f00;
-    --workflow-bronze-dark: #c97f00;
-    --workflow-bronze-soft: #fff7ed;
-    --workflow-line: #e5e7eb;
-    --workflow-line-soft: #e5e7eb;
+    --workflow-paper: #f4f0e7;
+    --workflow-surface: #fffdf8;
+    --workflow-surface-soft: #faf6ee;
+    --workflow-ink: #17201d;
+    --workflow-ink-soft: #3f4742;
+    --workflow-muted: #687069;
+    --workflow-bronze: #96683d;
+    --workflow-bronze-dark: #704821;
+    --workflow-bronze-soft: #f1e7da;
+    --workflow-line: #cabca8;
+    --workflow-line-soft: #ded3c4;
     --workflow-green: #16a34a;
     --workflow-green-dark: #15803d;
     --workflow-danger: #ef4444;
     --workflow-shadow: none;
-    @apply min-h-screen bg-guide-canvas flex flex-col items-center px-5 py-[60px];
+    @apply min-h-screen bg-vora-paper text-vora-ink flex flex-col items-center px-5 py-[60px];
   }
-  .visual-vca-container { @apply w-full max-w-[900px]; }
+  .visual-vca-container { @apply w-full max-w-[1100px]; }
 
   /* ── main 기본 틀: breadcrumb / header / artifact summary ── */
-  .visual-breadcrumb { @apply flex items-center gap-2 mb-4 text-gray-500 text-[13px]; }
-  .visual-breadcrumb button { @apply border-0 [background:transparent] text-gray-500 cursor-pointer p-0; }
-  .visual-breadcrumb strong { @apply text-gray-800; }
+  .visual-breadcrumb { @apply flex items-center gap-2 mb-4 text-vora-muted text-[13px]; }
+  .visual-breadcrumb button { @apply border-0 [background:transparent] text-vora-muted cursor-pointer p-0; }
+  .visual-breadcrumb strong { @apply text-vora-ink; }
 
   .visual-header { @apply flex items-start justify-between gap-4 mb-6; }
-  .visual-eyebrow { @apply block mb-2 text-blue-600 text-[11px] font-extrabold tracking-widest; }
-  .visual-title { @apply text-[38px] font-bold text-gray-800 mb-2 leading-tight; }
-  .visual-header p { @apply text-gray-500 text-[15px] m-0; }
-  .visual-status { @apply text-xs font-bold text-blue-600 [background:#eef4ff] px-3 py-1.5 rounded-full whitespace-nowrap; }
+  .visual-eyebrow { @apply block mb-2 text-vora-bronze text-[11px] font-extrabold tracking-widest; }
+  .visual-title { @apply font-serif text-[36px] font-semibold text-vora-ink mb-2 leading-tight; }
+  .visual-header p { @apply text-vora-muted text-[15px] m-0; }
+  .visual-status { @apply text-xs font-bold text-vora-bronze-dark [background:#f1e7da] border border-vora-line px-3 py-1.5 rounded-full whitespace-nowrap; }
 
-  .visual-artifact-summary { @apply grid grid-cols-4 [background:white] border border-gray-200 rounded-2xl overflow-hidden mb-6; }
-  .visual-artifact-summary > div { @apply flex flex-col justify-center gap-1 p-5 border-r border-gray-200 last:border-r-0 min-w-0; }
-  .visual-artifact-summary span { @apply text-gray-400 text-xs; }
-  .visual-artifact-summary strong { @apply text-gray-800 text-[15px] font-bold overflow-hidden text-ellipsis whitespace-nowrap; }
+  .visual-artifact-summary { @apply grid grid-cols-4 bg-vora-surface border border-vora-line rounded-2xl overflow-hidden mb-6; }
+  .visual-artifact-summary > div { @apply flex flex-col justify-center gap-1 p-5 border-r border-vora-line last:border-r-0 min-w-0; }
+  .visual-artifact-summary span { @apply text-vora-muted text-xs; }
+  .visual-artifact-summary strong { @apply text-vora-ink text-[15px] font-bold overflow-hidden text-ellipsis whitespace-nowrap; }
 
   /* ── main 기본 틀: 카드형 pane 공통 ── */
-  .photo-card { @apply [background:white] border border-gray-200 rounded-2xl p-4 mb-6; }
+  .photo-card { @apply bg-vora-surface border border-vora-line rounded-2xl p-4 mb-6; }
   .photo-upload-row { @apply flex items-center justify-between gap-4 px-1 pb-3; }
-  .photo-upload-title { @apply text-gray-800 text-[15px] font-bold m-0; }
-  .photo-upload-btn { @apply inline-flex items-center px-4 py-2.5 rounded-lg text-white text-sm font-bold cursor-pointer whitespace-nowrap; background: var(--heritage-bronze, #f59f00); }
-  .photo-upload-btn:hover { background: var(--heritage-bronze-dark, #c97f00); }
+  .photo-upload-title { @apply text-vora-ink text-[15px] font-bold m-0; }
+  .photo-upload-btn { @apply inline-flex items-center px-4 py-2.5 rounded-lg text-white text-sm font-bold cursor-pointer whitespace-nowrap; background: var(--color-vora-bronze, #96683d); }
+  .photo-upload-btn:hover { background: var(--color-vora-bronze-dark, #704821); }
   .photo-upload-btn[aria-disabled="true"] { @apply cursor-not-allowed opacity-50; }
   .photo-upload-warning { @apply text-amber-600 text-[13px] mt-3 mb-0; }
 
-  .result-card { @apply [background:white] border border-gray-200 rounded-2xl p-6 mb-6; }
+  .result-card { @apply bg-vora-surface border border-vora-line rounded-2xl p-6 mb-6; }
   .visual-section-heading { @apply flex items-start justify-between gap-3 mb-4; }
-  .visual-section-heading span { @apply block text-blue-600 text-xs font-extrabold tracking-widest mb-1; }
-  .visual-section-heading h2 { @apply text-2xl font-bold text-gray-800 m-0; }
+  .visual-section-heading span { @apply block text-vora-bronze text-xs font-extrabold tracking-widest mb-1; }
+  .visual-section-heading h2 { @apply font-serif text-2xl font-semibold text-vora-ink m-0; }
   .review-badge { @apply px-3 py-1.5 border rounded-full text-[13px] font-bold whitespace-nowrap; border-color: #fde68a; background: #fffbeb; color: #b45309; }
 
   /* STEP 01(업로드)과 STEP 02(분석 실행) pane을 나란히 둔다 - main에는
@@ -70,58 +70,58 @@
   /* ── STEP 01: 조사 이미지(다중 업로드) - photo-card 안에 그리드로 얹는다 ── */
   .visual-vca-hidden { @apply absolute w-px h-px overflow-hidden [clip:rect(0,0,0,0)] whitespace-nowrap; }
   .visual-vca-image-grid { @apply grid grid-cols-2 gap-3 [list-style:none] mt-1 mb-0 p-0; }
-  .visual-vca-image-grid li { @apply overflow-hidden border border-gray-200 [background:#f9fafb] rounded-xl; }
-  .visual-vca-image-grid img { @apply block w-full h-40 object-contain [background:white] p-3; }
-  .visual-vca-image-placeholder { @apply grid h-40 place-items-center border border-dashed border-gray-300 [background:#f9fafb] text-gray-400 text-[10px] font-bold tracking-[0.18em] p-3; }
+  .visual-vca-image-grid li { @apply overflow-hidden border border-vora-line [background:#faf6ee] rounded-xl; }
+  .visual-vca-image-grid img { @apply block w-full h-40 object-contain bg-vora-surface p-3; }
+  .visual-vca-image-placeholder { @apply grid h-40 place-items-center border border-dashed border-[#d8ccbb] [background:#faf6ee] text-vora-muted text-[10px] font-bold tracking-[0.18em] p-3; }
   .visual-vca-image-grid li > div { @apply flex items-center justify-between gap-3 p-3; }
   .visual-vca-image-grid strong { @apply min-w-0 overflow-hidden text-xs text-ellipsis whitespace-nowrap; }
   .visual-vca-image-grid button { @apply flex-none [background:transparent] text-red-500 text-xs font-bold cursor-pointer p-0 border-0; }
 
   /* ── STEP 02: AI 분석 실행(상태/진행률/스테이지) - result-card 안에 얹는다 ── */
-  .visual-vca-status-panel { @apply grid gap-4 border border-gray-200 [background:#f9fafb] mt-1 p-4 rounded-xl; }
-  .visual-vca-status-panel > strong { @apply text-gray-800 text-sm leading-[1.65] [word-break:keep-all] [overflow-wrap:break-word]; }
-  .visual-vca-status-state { @apply inline-flex w-fit border border-gray-200 [background:white] text-gray-500 text-[11px] font-bold px-3 py-1.5 rounded-full; }
+  .visual-vca-status-panel { @apply grid gap-4 border border-vora-line [background:#faf6ee] mt-1 p-4 rounded-xl; }
+  .visual-vca-status-panel > strong { @apply text-vora-ink text-sm leading-[1.65] [word-break:keep-all] [overflow-wrap:break-word]; }
+  .visual-vca-status-state { @apply inline-flex w-fit border border-vora-line bg-vora-surface text-vora-muted text-[11px] font-bold px-3 py-1.5 rounded-full; }
   .visual-vca-status-state.running, .visual-vca-status-state.queued { @apply text-amber-700 border-amber-300; }
   .visual-vca-status-state.completed { @apply text-green-700 border-green-300; }
   .visual-vca-status-state.failed { @apply text-red-600 border-red-300; }
   .visual-vca-progress { @apply h-2 overflow-hidden [background:#e5e7eb] rounded-full; }
-  .visual-vca-progress > span { @apply block h-full transition-[width] duration-200 rounded-full; background: var(--heritage-bronze, #f59f00); }
+  .visual-vca-progress > span { @apply block h-full transition-[width] duration-200 rounded-full; background: var(--color-vora-bronze, #96683d); }
   .visual-vca-stage-list { @apply grid gap-1.5 m-0 p-0 list-none; }
-  .visual-vca-stage-item { @apply flex items-center justify-between gap-3 border-b border-gray-200 pb-1.5 text-xs; }
+  .visual-vca-stage-item { @apply flex items-center justify-between gap-3 border-b border-vora-line pb-1.5 text-xs; }
   .visual-vca-stage-item:last-child { @apply border-b-0 pb-0; }
-  .visual-vca-stage-name { @apply text-gray-700; }
-  .visual-vca-stage-status { @apply text-gray-500 font-bold; }
-  .visual-vca-stage-item.running .visual-vca-stage-status { color: var(--heritage-bronze-dark, #c97f00); }
+  .visual-vca-stage-name { @apply text-vora-ink; }
+  .visual-vca-stage-status { @apply text-vora-muted font-bold; }
+  .visual-vca-stage-item.running .visual-vca-stage-status { color: var(--color-vora-bronze-dark, #704821); }
   .visual-vca-stage-item.completed .visual-vca-stage-status,
   .visual-vca-stage-item.skipped .visual-vca-stage-status { @apply text-green-700; }
   .visual-vca-stage-item.failed .visual-vca-stage-status { @apply text-red-600; }
-  .visual-vca-stage-group { @apply text-gray-400 text-[10px] font-bold tracking-[0.12em] pt-1 pb-0.5; }
-  .visual-vca-stage-group:not(:first-child) { @apply border-t border-gray-200 mt-1 pt-2.5; }
+  .visual-vca-stage-group { @apply text-vora-muted text-[10px] font-bold tracking-[0.12em] pt-1 pb-0.5; }
+  .visual-vca-stage-group:not(:first-child) { @apply border-t border-vora-line mt-1 pt-2.5; }
   .visual-vca-status-meta { @apply grid grid-cols-1 gap-2 m-0; }
-  .visual-vca-status-meta > div { @apply flex items-center justify-between gap-3 border-t border-gray-200 pt-2; }
-  .visual-vca-status-meta dt { @apply text-gray-400 text-[10px]; }
-  .visual-vca-status-meta dd { @apply text-gray-700 text-xs font-bold text-right m-0; }
+  .visual-vca-status-meta > div { @apply flex items-center justify-between gap-3 border-t border-vora-line pt-2; }
+  .visual-vca-status-meta dt { @apply text-vora-muted text-[10px]; }
+  .visual-vca-status-meta dd { @apply text-vora-ink text-xs font-bold text-right m-0; }
   .visual-vca-status-actions { @apply grid gap-2 mt-4; }
 
   .visual-primary-button, .visual-secondary-button { @apply inline-flex min-h-11 items-center justify-center cursor-pointer text-[13px] font-bold transition-[background,border-color,color,transform] duration-[160ms] rounded-lg px-5 py-0 border; }
-  .visual-primary-button { color: white; border-color: var(--heritage-bronze, #f59f00); background: var(--heritage-bronze, #f59f00); }
-  .visual-primary-button:hover:enabled { border-color: var(--heritage-bronze-dark, #c97f00); background: var(--heritage-bronze-dark, #c97f00); transform: translateY(-1px); }
-  .visual-secondary-button { @apply [background:transparent] border-gray-200 text-gray-800; }
-  .visual-secondary-button:hover:enabled { @apply [background:#f9fafb]; border-color: var(--heritage-bronze, #f59f00); }
+  .visual-primary-button { color: white; border-color: var(--color-vora-bronze, #96683d); background: var(--color-vora-bronze, #96683d); }
+  .visual-primary-button:hover:enabled { border-color: var(--color-vora-bronze-dark, #704821); background: var(--color-vora-bronze-dark, #704821); transform: translateY(-1px); }
+  .visual-secondary-button { @apply [background:transparent] border-vora-line text-vora-ink; }
+  .visual-secondary-button:hover:enabled { @apply [background:#faf6ee]; border-color: var(--color-vora-bronze, #96683d); }
   .visual-primary-button:disabled, .visual-secondary-button:disabled { @apply cursor-not-allowed opacity-50 hover:transform-none; }
-  .visual-vca-empty { @apply grid min-h-32 place-items-center border border-dashed border-gray-300 text-gray-500 text-[13px] leading-[1.7] text-center [word-break:keep-all] [overflow-wrap:break-word] mt-1 px-5 py-6 rounded-xl; }
+  .visual-vca-empty { @apply grid min-h-32 place-items-center border border-dashed border-[#d8ccbb] text-vora-muted text-[13px] leading-[1.7] text-center [word-break:keep-all] [overflow-wrap:break-word] mt-1 px-5 py-6 rounded-xl; }
 
   /* ── main 기본 틀: 알림/에러 ── */
-  .visual-notice { @apply [background:white] border border-gray-200 rounded-2xl p-6 mb-6 text-gray-500 text-[15px]; }
+  .visual-notice { @apply bg-vora-surface border border-vora-line rounded-2xl p-6 mb-6 text-vora-muted text-[15px]; }
   .visual-notice--error { @apply border-red-200 text-red-600; }
-  .visual-notice--confirm { @apply border-amber-300 text-gray-700; }
+  .visual-notice--confirm { @apply border-amber-300 text-vora-ink; }
 
   /* ── main 기본 틀: 도자기 검사 - 줌/팬 사진 + 문양 오버레이 ── */
   .photo-toolbar { @apply flex items-center gap-2 px-1 pb-3; }
-  .photo-toolbar button { @apply w-[30px] h-[30px] border border-gray-200 rounded-lg [background:white] text-gray-800 text-base font-bold cursor-pointer; }
-  .photo-toolbar button:disabled { @apply text-gray-300 cursor-not-allowed; }
+  .photo-toolbar button { @apply w-[30px] h-[30px] border border-vora-line rounded-lg bg-vora-surface text-vora-ink text-base font-bold cursor-pointer; }
+  .photo-toolbar button:disabled { @apply text-[#b9b0a4] cursor-not-allowed; }
   .photo-toolbar button:not(:disabled):hover { @apply border-blue-600 text-blue-600; }
-  .photo-zoom-level { @apply min-w-[44px] text-center text-gray-500 text-[13px] font-semibold; }
+  .photo-zoom-level { @apply min-w-[44px] text-center text-vora-muted text-[13px] font-semibold; }
   .photo-zoom-reset { @apply !w-auto px-2.5 ml-1 !text-xs !font-semibold; }
   .photo-frame { @apply relative w-full max-h-[460px] flex items-center justify-center rounded-[10px] overflow-hidden [background:#eef0f2] select-none; }
   .photo-zoom-layer { @apply relative w-full h-full flex items-center justify-center; transform-origin: center center; }
@@ -140,8 +140,8 @@
   .era-compare-tag { @apply ml-auto px-2.5 py-1 rounded-full text-xs; background: rgba(0, 0, 0, 0.06); }
 
   .inspection-sections { @apply flex flex-col gap-4; }
-  .visual-result-heading { @apply flex items-center mb-2 text-gray-800 text-[17px] font-bold; }
-  .section-body { @apply m-0 text-gray-500 [line-height:1.7] text-[15px]; }
+  .visual-result-heading { @apply flex items-center mb-2 text-vora-ink text-[17px] font-bold; }
+  .section-body { @apply m-0 text-vora-muted [line-height:1.7] text-[15px]; }
   .caveat-icon { @apply inline-flex items-center justify-center w-[18px] h-[18px] ml-2 rounded-full text-white text-xs font-bold cursor-help relative; background: #f59f00; }
   .caveat-icon::after {
     content: attr(data-tooltip);
@@ -165,7 +165,7 @@
   }
   .caveat-icon:hover::after,
   .caveat-icon:focus::after { opacity: 1; visibility: visible; }
-  .status-note { @apply text-gray-500 text-[15px]; }
+  .status-note { @apply text-vora-muted text-[15px]; }
 
   /* ── 조사 보고서(VisualReport) 내부는 main에 없던 pane이라 새로 얹지만,
      팔레트는 위 --workflow-* 재정의를 그대로 물려받는다(파일 안 건드림). ── */
@@ -278,30 +278,30 @@
   .visual-vca-pdf > div:last-child { @apply flex flex-wrap gap-2; }
 
   /* ── main 기본 틀: 전문가 검수 안내 + 완료 footer ── */
-  .visual-review-card { @apply [background:white] border border-gray-200 rounded-2xl p-6; }
+  .visual-review-card { @apply bg-vora-surface border border-vora-line rounded-2xl p-6; }
   .visual-review-index { @apply block text-xs font-extrabold tracking-widest mb-2; color: #b45309; }
-  .visual-review-card h2 { @apply text-lg font-bold text-gray-800 mb-3; }
-  .visual-review-card p { @apply text-gray-500 text-sm [line-height:1.6] mb-4; }
-  .visual-review-card ul { @apply list-disc pl-5 text-gray-600 text-sm space-y-2; }
+  .visual-review-card h2 { @apply text-lg font-bold text-vora-ink mb-3; }
+  .visual-review-card p { @apply text-vora-muted text-sm [line-height:1.6] mb-4; }
+  .visual-review-card ul { @apply list-disc pl-5 text-vora-muted text-sm space-y-2; }
 
   .visual-result-layout { @apply grid [grid-template-columns:2fr_1fr] gap-6 mb-6; }
 
-  .complete-area { @apply flex items-center justify-between [background:white] border border-gray-200 rounded-2xl p-6; }
-  .complete-area p { @apply m-0 text-gray-500 text-sm [word-break:keep-all] [overflow-wrap:break-word]; }
-  .complete-btn { @apply w-[220px] h-[58px] text-white text-xl font-bold cursor-pointer transition-[0.2s] rounded-[14px] border-[none]; background: var(--heritage-bronze, #f59f00); }
-  .complete-btn:hover:enabled { background: var(--heritage-bronze-dark, #c97f00); transform: translateY(-2px); }
-  .complete-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+  .complete-area { @apply flex items-center justify-between bg-vora-surface border border-vora-line rounded-2xl p-6; }
+  .complete-area p { @apply m-0 text-vora-muted text-sm [word-break:keep-all] [overflow-wrap:break-word]; }
+  .complete-btn { @apply w-[220px] h-[58px] text-white text-xl font-bold cursor-pointer transition-[0.2s] rounded-[14px] border-[none]; background: var(--color-vora-bronze, #96683d); }
+  .complete-btn:hover:enabled { background: var(--color-vora-bronze-dark, #704821); transform: translateY(-2px); }
+  .complete-btn:disabled { background: #c8b9a8; cursor: not-allowed; }
 
   .visual-state { @apply grid place-items-center content-center text-center px-6; }
-  .visual-state p { @apply max-w-lg text-gray-500 text-sm leading-[1.7] mt-4 mb-6; }
-  .visual-state h1 { @apply text-[38px] font-bold text-gray-800 mb-2 leading-tight; }
-  .visual-vca-page button:focus-visible, .visual-vca-page a:focus-visible, .visual-vca-page input:focus-visible, .visual-vca-page summary:focus-visible { @apply outline-2 outline-offset-2; outline-color: var(--heritage-bronze, #f59f00); }
+  .visual-state p { @apply max-w-lg text-vora-muted text-sm leading-[1.7] mt-4 mb-6; }
+  .visual-state h1 { @apply text-[38px] font-bold text-vora-ink mb-2 leading-tight; }
+  .visual-vca-page button:focus-visible, .visual-vca-page a:focus-visible, .visual-vca-page input:focus-visible, .visual-vca-page summary:focus-visible { @apply outline-2 outline-offset-2; outline-color: var(--color-vora-bronze, #96683d); }
 
   @media (max-width: 760px) {
     .visual-page.visual-vca-page { @apply px-4 py-8; }
     .visual-header, .visual-vca-status-actions, .complete-area { @apply items-stretch flex-col; }
     .visual-artifact-summary, .visual-result-layout, .visual-vca-report-body, .visual-vca-layout { @apply grid-cols-1; }
-    .visual-artifact-summary > div { @apply border-r-0 border-t border-gray-200 first:border-t-0; }
+    .visual-artifact-summary > div { @apply border-r-0 border-t border-vora-line first:border-t-0; }
     .visual-vca-report-body section:first-child, .visual-vca-report-body section:last-child { @apply col-span-1; }
     .visual-vca-pottery-inspection-actions { @apply items-stretch flex-col; }
     .visual-vca-rag-concepts { @apply grid-cols-1; }
