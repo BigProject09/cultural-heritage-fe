@@ -444,7 +444,7 @@ function PotteryVisualPage() {
             const file = new File([blob], `annotated-${Date.now()}.png`, {
               type: "image/png",
             });
-            annotatedPhotoUrl = await uploadPhoto(file);
+            annotatedPhotoUrl = await uploadPhoto(file, artifactId);
           } catch (uploadError) {
             console.warn(
               "마스킹 사진 S3 업로드 실패 - base64로 대체합니다:",

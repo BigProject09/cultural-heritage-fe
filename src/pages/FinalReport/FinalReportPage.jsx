@@ -10,10 +10,14 @@ import {
 import { addMyReport } from "../../utils/myReports";
 import { getArtifactRoute } from "../../utils/artifactRoutes";
 import { useDisassembly } from "../../context/useDisassembly";
-import { getTask } from "../../services/conservationGuideApi";
+import {
+  getLatestTaskByArtifact,
+  getTask,
+} from "../../services/conservationGuideApi";
 import {
   downloadFinalStitchResult,
   getRememberedXrayJob,
+  getStitchJobByArtifactId,
   getWorkflowDefects,
   getWorkflowReportText,
 } from "../../services/xrayApi";
@@ -22,6 +26,7 @@ import {
   generateReportJson,
   getLatestSavedReport,
   getPotterySource,
+  getVcaSource,
   saveReportDocument,
   saveReportJson,
 } from "../../services/reportApi";
@@ -328,20 +333,25 @@ function FinalReportPage() {
     setSaved(false);
 
     try {
-      // 보존가이드: 이 세션에서 작업한 taskId가 context에 남아있을 때만 조회된다
-      // (페이지를 새로고침하면 taskId가 초기화되므로, 그 경우 guide_result 없이
-      // 나머지 결과만으로 생성한다 - report-ai가 없는 항목은 알아서 건너뛴다).
-      const task = taskId ? await getTask(taskId).catch(() => null) : null;
+      // 보존가이드: 현재 세션의 taskId가 있으면 우선 사용하고, 새로고침/다른
+      // 브라우저처럼 Context가 비어 있으면 artifactId 기준 최신 Task를 RDS에서 복구한다.
+      const task = taskId
+        ? await getTask(taskId).catch(() => null)
+        : await getLatestTaskByArtifact(project.artifactId).catch(() => null);
       const guideResult = task?.results ?? {};
 
-      // X-ray: artifactId로 기억해둔 job이 있을 때만 조회한다.
+      // X-ray: localStorage의 기억값을 우선 사용하되, 없으면 artifactId로 서버 작업을
+      // 복구한다. 최종보고서는 브라우저 저장소가 아니라 서버 영속 상태를 기준으로 해야 한다.
       const rememberedXray = getRememberedXrayJob(project.artifactId);
+      const xrayJob = rememberedXray?.jobId
+        ? rememberedXray
+        : await getStitchJobByArtifactId(project.artifactId).catch(() => null);
       let xrayReportText = null;
       let xrayRegions = [];
-      if (rememberedXray?.jobId) {
+      if (xrayJob?.jobId) {
         const [defectResult, reportResult] = await Promise.all([
-          getWorkflowDefects(rememberedXray.jobId).catch(() => null),
-          getWorkflowReportText(rememberedXray.jobId).catch(() => null),
+          getWorkflowDefects(xrayJob.jobId).catch(() => null),
+          getWorkflowReportText(xrayJob.jobId).catch(() => null),
         ]);
         xrayReportText = reportResult?.reportText || null;
         xrayRegions = (defectResult?.defects || []).map(toReportXrayRegion);
@@ -366,8 +376,18 @@ function FinalReportPage() {
             potteryInspection = source;
           }
         } catch (sourceError) {
-          console.error("저장된 육안조사 결과 조회 실패:", sourceError);
+          console.error("저장된 문양 기반 육안조사 결과 조회 실패:", sourceError);
         }
+      }
+
+      let vcaAssessment = null;
+      try {
+        const source = await getVcaSource(project.artifactId);
+        if (source && Object.keys(source).length > 0) {
+          vcaAssessment = source;
+        }
+      } catch (sourceError) {
+        console.error("저장된 VCA 상태조사 결과 조회 실패:", sourceError);
       }
 
       // 미리보기 단계에서는 사진을 안 붙인다 - report-ai의 /generate는 어차피
@@ -389,6 +409,7 @@ function FinalReportPage() {
         xray_report_text: xrayReportText,
         xray_regions: xrayRegions,
         pottery_inspection: potteryInspection,
+        vca_assessment: vcaAssessment,
         photos: {},
       };
 
@@ -407,8 +428,9 @@ function FinalReportPage() {
 
       setReportSources({
         hasGuide: Boolean(guideResult && Object.keys(guideResult).length),
-        hasXray: Boolean(xrayReportText),
+        hasXray: Boolean(xrayReportText || xrayRegions.length),
         hasPottery: Boolean(potteryInspection),
+        hasVca: Boolean(vcaAssessment),
         potteryDetail: potteryInspection?.detail || null,
         xrayDamageCount: xrayRegions.filter(
           (r) => r.review_decision === "damage",
@@ -484,10 +506,13 @@ function FinalReportPage() {
     }
 
     const rememberedXray = getRememberedXrayJob(project.artifactId);
-    if (rememberedXray?.jobId) {
+    const xrayJob = rememberedXray?.jobId
+      ? rememberedXray
+      : await getStitchJobByArtifactId(project.artifactId).catch(() => null);
+    if (xrayJob?.jobId) {
       try {
         const file = await downloadFinalStitchResult(
-          rememberedXray.jobId,
+          xrayJob.jobId,
           "assembled_final.png",
         );
         const base64 = await blobToBase64(file);
@@ -497,9 +522,11 @@ function FinalReportPage() {
       }
     }
 
-    if (taskId) {
+    {
       try {
-        const task = await getTask(taskId);
+        const task = taskId
+          ? await getTask(taskId).catch(() => null)
+          : await getLatestTaskByArtifact(project.artifactId).catch(() => null);
         const results = task?.results || {};
         for (const [stageKey, stageResult] of Object.entries(results)) {
           const urls = stageResult?.photo;
@@ -560,7 +587,7 @@ function FinalReportPage() {
           reportSources?.hasXray
             ? "X-RAY 파편 결합 및 결함 조사 결과 연결 완료"
             : "X-RAY 결과 없이 생성됨",
-          reportSources?.hasPottery
+          reportSources?.hasVca || reportSources?.hasPottery
             ? "육안 상태 조사 결과 연결 완료"
             : "육안조사 결과 없이 생성됨",
         ],

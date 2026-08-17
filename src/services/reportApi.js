@@ -74,6 +74,18 @@ export async function getPotterySource(artifactId) {
   return response.json();
 }
 
+/** DB에 저장된 최신 VCA v2 assessment_report를 최종보고서 입력으로 가져온다. */
+export async function getVcaSource(artifactId) {
+  const response = await authFetch(`${REPORTS_BASE}/${artifactId}/vca-source`);
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${detail.slice(0, 300)}`);
+  }
+
+  return response.json();
+}
+
 /**
  * report_json만 생성한다 (미리보기·재확인 등 docx가 필요 없는 경우).
  */
