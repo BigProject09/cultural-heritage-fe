@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  getArtifactStorageMode,
   getWorkspaceProject,
   selectWorkspaceProject,
   setWorkspaceVcaArtifactId,
@@ -19,6 +20,12 @@ import {
 
 const IMAGE_TYPES = "image/png,image/jpeg,image/webp";
 const ACTIVE_RUN_STATUSES = new Set(["QUEUED", "RUNNING"]);
+// "api" 저장 모드에서는 워크스페이스 artifactId 자체가 이미 BE의 공유
+// artifacts 테이블 UUID다(VcaArtifactEntity와 Artifact가 같은 테이블을
+// 매핑) - VCA용으로 별도 UUID를 새로 만들 필요가 없다. "local" 모드(유물이
+// 브라우저에만 있는 경우)만 createVcaArtifact로 VCA 전용 서버 레코드를
+// 새로 만들어야 한다.
+const IS_API_ARTIFACT_STORAGE = getArtifactStorageMode() === "api";
 
 // API 에러를 사용자용 안내 문구로 바꾼다. 409는 원인이 서로 다른 두 가지를
 // 구분해야 한다 - "다른 분석이 지금 돌고 있어 기다려야 함"(ACTIVE_RUN_EXISTS)과
@@ -170,11 +177,14 @@ export function useVisualInvestigation(artifactId) {
         setWorkspaceArtifact(workspaceValue);
       }
 
-      // 서버 VCA 아티팩트가 아직 한 번도 만들어지지 않았으면(첫 업로드 전)
-      // 워크스페이스 프로젝트에 vcaArtifactId 자체가 없다. 이 경우 404를
-      // 유발할 GET을 보내지 않고 바로 "새로 시작" 상태로 초기화한다.
-      const resolvedVcaArtifactId =
-        workspaceValue.vcaArtifactId || vcaArtifactIdRef.current || "";
+      // "api" 모드는 워크스페이스 artifactId 자체가 이미 서버 UUID라 항상
+      // 곧바로 조회 가능하다. "local" 모드만 서버 VCA 아티팩트가 아직 한
+      // 번도 안 만들어졌을 수 있다(첫 업로드 전) - 이때는 워크스페이스
+      // 프로젝트에 vcaArtifactId 자체가 없으므로, 404를 유발할 GET을
+      // 보내지 않고 바로 "새로 시작" 상태로 초기화한다.
+      const resolvedVcaArtifactId = IS_API_ARTIFACT_STORAGE
+        ? artifactId
+        : workspaceValue.vcaArtifactId || vcaArtifactIdRef.current || "";
 
       setVcaArtifactId(resolvedVcaArtifactId);
 
@@ -297,12 +307,14 @@ export function useVisualInvestigation(artifactId) {
     setNotice("");
 
     try {
-      // 이 유물의 서버 VCA artifact가 아직 없으면 첫 업로드 시 생성한다.
-      // state 갱신은 비동기이므로 이번 호출 안에서는 지역 변수를 사용하고,
-      // 다음 진입부터 재사용할 수 있도록 워크스페이스에도 저장한다.
+      // "api" 모드는 워크스페이스 artifactId가 이미 서버 UUID이므로 VCA
+      // 전용 레코드를 따로 만들 필요가 없다("local" 모드에서만, 이 유물의
+      // 서버 VCA artifact가 아직 없으면 첫 업로드 시 생성한다). state
+      // 갱신은 비동기이므로 이번 호출 안에서는 지역 변수를 사용하고, 다음
+      // 진입부터 재사용할 수 있도록 워크스페이스에도 저장한다.
       let currentVcaArtifactId = vcaArtifactId;
 
-      if (!currentVcaArtifactId) {
+      if (!currentVcaArtifactId && !IS_API_ARTIFACT_STORAGE) {
         const created = await createVcaArtifact(workspaceArtifact.name);
 
         currentVcaArtifactId = created.artifactId;
