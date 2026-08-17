@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getVcaReport } from "../../services/vcaApi";
 import { getWorkspaceProject } from "../../data/workspaceProjects";
-import { RagConceptCards, RagEvidenceRows, RagQueries, RagRetrievalResults } from "./VisualRagEvidence";
+import {
+  RagConceptCards,
+  RagEvidenceRows,
+  RagQueries,
+  RagRetrievalResults,
+} from "./VisualRagEvidence";
 import { BboxFigure, BboxMarker } from "./VisualBboxFigure";
 import { badgeRadiusFor, markerColorForNumber } from "./visualMarkerColors";
 import {
@@ -24,28 +29,52 @@ import "./VisualPage.css";
 function correlateEvidence(finding, ragArtifacts) {
   if (!ragArtifacts || typeof ragArtifacts !== "object") return null;
 
-  const citationIds = new Set((finding.citations || []).map((citation) => citation.citationId).filter(Boolean));
-  const queries = Array.isArray(ragArtifacts.queries) ? ragArtifacts.queries : [];
-  const retrievalResults = Array.isArray(ragArtifacts.retrievalResults) ? ragArtifacts.retrievalResults : [];
-  const evidenceRows = Array.isArray(ragArtifacts.evidenceRows) ? ragArtifacts.evidenceRows : [];
-  const visualConceptCards = Array.isArray(ragArtifacts.visualConceptCards) ? ragArtifacts.visualConceptCards : [];
-
-  const matchedRetrievalResults = citationIds.size > 0
-    ? retrievalResults.filter((result) => citationIds.has(result.citationId))
+  const citationIds = new Set(
+    (finding.citations || [])
+      .map((citation) => citation.citationId)
+      .filter(Boolean),
+  );
+  const queries = Array.isArray(ragArtifacts.queries)
+    ? ragArtifacts.queries
     : [];
-  const matchedEvidenceRows = citationIds.size > 0
-    ? evidenceRows.filter((row) =>
-      citationIds.has(row.topCitationId) || (row.matchedCitationIds || []).some((id) => citationIds.has(id)))
+  const retrievalResults = Array.isArray(ragArtifacts.retrievalResults)
+    ? ragArtifacts.retrievalResults
     : [];
-  const matchedConceptCards = visualConceptCards.filter((card) =>
-    (citationIds.size > 0 && (card.sourceCitationIds || []).some((id) => citationIds.has(id)))
-    || (finding.conceptFamily && card.conceptFamily === finding.conceptFamily));
+  const evidenceRows = Array.isArray(ragArtifacts.evidenceRows)
+    ? ragArtifacts.evidenceRows
+    : [];
+  const visualConceptCards = Array.isArray(ragArtifacts.visualConceptCards)
+    ? ragArtifacts.visualConceptCards
+    : [];
 
-  const relevantQueryIds = new Set([
-    ...matchedRetrievalResults.map((result) => result.queryId),
-    ...matchedEvidenceRows.map((row) => row.queryId),
-  ].filter(Boolean));
-  const matchedQueries = queries.filter((query) => relevantQueryIds.has(query.queryId));
+  const matchedRetrievalResults =
+    citationIds.size > 0
+      ? retrievalResults.filter((result) => citationIds.has(result.citationId))
+      : [];
+  const matchedEvidenceRows =
+    citationIds.size > 0
+      ? evidenceRows.filter(
+          (row) =>
+            citationIds.has(row.topCitationId) ||
+            (row.matchedCitationIds || []).some((id) => citationIds.has(id)),
+        )
+      : [];
+  const matchedConceptCards = visualConceptCards.filter(
+    (card) =>
+      (citationIds.size > 0 &&
+        (card.sourceCitationIds || []).some((id) => citationIds.has(id))) ||
+      (finding.conceptFamily && card.conceptFamily === finding.conceptFamily),
+  );
+
+  const relevantQueryIds = new Set(
+    [
+      ...matchedRetrievalResults.map((result) => result.queryId),
+      ...matchedEvidenceRows.map((row) => row.queryId),
+    ].filter(Boolean),
+  );
+  const matchedQueries = queries.filter((query) =>
+    relevantQueryIds.has(query.queryId),
+  );
 
   return {
     queries: matchedQueries,
@@ -60,7 +89,11 @@ function correlateEvidence(finding, ragArtifacts) {
 // 다시 불러온다. VisualReport/VisualCandidateOverlay의 항목 클릭으로 이동한다.
 export default function VisualFindingDetailPage() {
   const navigate = useNavigate();
-  const { artifactId: routeArtifactId = "", runId: routeRunId = "", findingId: routeFindingId = "" } = useParams();
+  const {
+    artifactId: routeArtifactId = "",
+    runId: routeRunId = "",
+    findingId: routeFindingId = "",
+  } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
   const runId = decodeURIComponent(routeRunId);
   const findingId = decodeURIComponent(routeFindingId);
@@ -87,7 +120,9 @@ export default function VisualFindingDetailPage() {
       setLoading(true);
       setError(null);
       getWorkspaceProject(artifactId)
-        .then((project) => getVcaReport(project.vcaArtifactId || artifactId, runId))
+        .then((project) =>
+          getVcaReport(project.vcaArtifactId || artifactId, runId),
+        )
         .then((result) => {
           if (cancelled) return;
           setReport(result.report || result);
@@ -106,12 +141,15 @@ export default function VisualFindingDetailPage() {
   }, [artifactId, runId]);
 
   function backToReport() {
-    navigate(`/artifacts/${encodeURIComponent(artifactId)}/visual`);
+    navigate(`/artifacts/${encodeURIComponent(artifactId)}/visual/vca`);
   }
 
   if (loading) {
     return (
-      <main className="visual-page visual-vca-page visual-state" aria-live="polite">
+      <main
+        className="visual-page visual-vca-page visual-state"
+        aria-live="polite"
+      >
         특이점 정보를 불러오는 중입니다.
       </main>
     );
@@ -123,7 +161,11 @@ export default function VisualFindingDetailPage() {
         <span className="visual-eyebrow">VCA CONNECTION</span>
         <h1>특이점 정보를 불러오지 못했습니다</h1>
         <p>{error.message}</p>
-        <button type="button" className="visual-primary-button" onClick={backToReport}>
+        <button
+          type="button"
+          className="visual-primary-button"
+          onClick={backToReport}
+        >
           조사 보고서로 돌아가기
         </button>
       </main>
@@ -132,7 +174,9 @@ export default function VisualFindingDetailPage() {
 
   const findings = report?.findings || [];
   const images = report?.images || [];
-  const finding = findings.find((candidate) => candidate.findingId === findingId);
+  const finding = findings.find(
+    (candidate) => candidate.findingId === findingId,
+  );
 
   if (!finding) {
     return (
@@ -140,19 +184,26 @@ export default function VisualFindingDetailPage() {
         <span className="visual-eyebrow">VCA CONNECTION</span>
         <h1>특이점을 찾을 수 없습니다</h1>
         <p>요청한 특이점 정보가 더 이상 존재하지 않습니다.</p>
-        <button type="button" className="visual-primary-button" onClick={backToReport}>
+        <button
+          type="button"
+          className="visual-primary-button"
+          onClick={backToReport}
+        >
           조사 보고서로 돌아가기
         </button>
       </main>
     );
   }
 
-  const image = images.find((candidate) => candidate.imageId === finding.imageId);
+  const image = images.find(
+    (candidate) => candidate.imageId === finding.imageId,
+  );
   const bbox = finding.bbox;
   const evidence = correlateEvidence(finding, report?.ragArtifacts);
   // 목록/오버레이 배지 번호와 맞추려면 findings 원본 순서의 index+1이어야
   // 한다 (VisualCandidateOverlay 참고).
-  const number = findings.findIndex((candidate) => candidate.findingId === findingId) + 1;
+  const number =
+    findings.findIndex((candidate) => candidate.findingId === findingId) + 1;
 
   return (
     <VisualFindingDetailLayout
@@ -171,12 +222,23 @@ export default function VisualFindingDetailPage() {
 // 조건부 반환이 모두 끝난 뒤에만 렌더링되는 별도 컴포넌트로 분리했다 -
 // 그래야 여기 있는 useState(imageSize)가 조건부 반환 이전에 호출되는
 // 문제(rules of hooks)가 생기지 않는다.
-function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox, images, evidence }) {
+function VisualFindingDetailLayout({
+  backToReport,
+  finding,
+  number,
+  image,
+  bbox,
+  images,
+  evidence,
+}) {
   const [imageSize, setImageSize] = useState(null);
   const [showOverlay, setShowOverlay] = useState(true);
 
   function handleImageLoad(event) {
-    setImageSize({ width: event.target.naturalWidth, height: event.target.naturalHeight });
+    setImageSize({
+      width: event.target.naturalWidth,
+      height: event.target.naturalHeight,
+    });
   }
 
   return (
@@ -194,25 +256,43 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
           <div>
             <span className="visual-eyebrow">VCA FINDING DETAIL</span>
             <h1 className="visual-title">
-              {number > 0 && <span className="visual-vca-finding-number visual-vca-finding-number-lg">{number}</span>}
-              <KoreanLabel original={finding.conceptFamily} labelMap={CONCEPT_FAMILY_LABELS} fallback="특이점 상세" />
+              {number > 0 && (
+                <span className="visual-vca-finding-number visual-vca-finding-number-lg">
+                  {number}
+                </span>
+              )}
+              <KoreanLabel
+                original={finding.conceptFamily}
+                labelMap={CONCEPT_FAMILY_LABELS}
+                fallback="특이점 상세"
+              />
             </h1>
             <p>사진에서 표시된 위치와 근거 문헌을 함께 확인합니다.</p>
           </div>
         </header>
 
-        <section className="result-card visual-vca-overlay" aria-labelledby="visual-finding-detail-title">
+        <section
+          className="result-card visual-vca-overlay"
+          aria-labelledby="visual-finding-detail-title"
+        >
           {image?.downloadUrl ? (
             <>
               {bbox && (
                 <div className="visual-vca-overlay-toggle">
-                  <button type="button" onClick={() => setShowOverlay((current) => !current)}>
+                  <button
+                    type="button"
+                    onClick={() => setShowOverlay((current) => !current)}
+                  >
                     {showOverlay ? "오버레이 끄기" : "오버레이 켜기"}
                   </button>
                 </div>
               )}
               <div className="visual-vca-overlay-grid visual-vca-overlay-grid-single">
-                <BboxFigure image={image} size={imageSize} onImageLoad={handleImageLoad}>
+                <BboxFigure
+                  image={image}
+                  size={imageSize}
+                  onImageLoad={handleImageLoad}
+                >
                   {bbox && showOverlay && (
                     <BboxMarker
                       bbox={bbox}
@@ -232,19 +312,37 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
           )}
         </section>
 
-        <section className="result-card" aria-labelledby="visual-finding-detail-body">
+        <section
+          className="result-card"
+          aria-labelledby="visual-finding-detail-body"
+        >
           <div className="visual-section-heading">
             <div>
               <span>
-                <KoreanLabel original={finding.severity} labelMap={SEVERITY_LABELS} fallback="관찰" />
+                <KoreanLabel
+                  original={finding.severity}
+                  labelMap={SEVERITY_LABELS}
+                  fallback="관찰"
+                />
               </span>
               <h2 id="visual-finding-detail-body">
-                <KoreanLabel original={finding.category} labelMap={CATEGORY_LABELS} fallback="분류 없음" />
+                <KoreanLabel
+                  original={finding.category}
+                  labelMap={CATEGORY_LABELS}
+                  fallback="분류 없음"
+                />
               </h2>
               <p>
-                <KoreanLabel original={finding.conceptFamily} labelMap={CONCEPT_FAMILY_LABELS} fallback="관찰 항목" />
+                <KoreanLabel
+                  original={finding.conceptFamily}
+                  labelMap={CONCEPT_FAMILY_LABELS}
+                  fallback="관찰 항목"
+                />
                 {finding.descriptor && finding.descriptor !== "unknown" && (
-                  <span className="visual-vca-original-hint" title={`원문: ${finding.descriptor}`}>
+                  <span
+                    className="visual-vca-original-hint"
+                    title={`원문: ${finding.descriptor}`}
+                  >
                     {" "}
                     · {translateDescriptor(finding.descriptor)}
                   </span>
@@ -254,7 +352,9 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
           </div>
           <p>{findingDescription(finding)}</p>
           {findingImageLabel(finding.imageId, images) && (
-            <small>대상 이미지: {findingImageLabel(finding.imageId, images)}</small>
+            <small>
+              대상 이미지: {findingImageLabel(finding.imageId, images)}
+            </small>
           )}
           {finding.citations?.length > 0 && (
             <details className="visual-vca-finding-citations" open>
@@ -263,7 +363,9 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
                 {finding.citations.map((citation, citationIndex) => (
                   <li key={citation.citationId || citationIndex}>
                     {citation.sourceCitation || "출처 미상"}
-                    {citation.pageNumber != null ? ` (p.${citation.pageNumber})` : ""}
+                    {citation.pageNumber != null
+                      ? ` (p.${citation.pageNumber})`
+                      : ""}
                   </li>
                 ))}
               </ul>
@@ -281,7 +383,11 @@ function VisualFindingDetailLayout({ backToReport, finding, number, image, bbox,
 
         <footer className="complete-area">
           <p>사진 위 위치와 근거 문헌을 확인한 뒤 조사 보고서로 돌아가세요.</p>
-          <button type="button" className="visual-primary-button" onClick={backToReport}>
+          <button
+            type="button"
+            className="visual-primary-button"
+            onClick={backToReport}
+          >
             조사 보고서로 돌아가기
           </button>
         </footer>

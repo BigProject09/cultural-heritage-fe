@@ -34,6 +34,8 @@ import XrayPage from "./pages/PreInvestigation/XrayPage";
 
 // 해체
 import VisualPage from "./pages/PreInvestigation/VisualPage";
+import VcaVisualPage from "./pages/PreInvestigation/VcaVisualPage";
+import PotteryVisualPage from "./pages/PreInvestigation/PotteryVisualPage";
 import VisualFindingDetailPage from "./pages/PreInvestigation/VisualFindingDetailPage";
 import DisassemblyPage from "./pages/Disassembly/DisassemblyPage";
 import DisassemblyChecklistPage from "./pages/Disassembly/DisassemblyChecklistPage";
@@ -105,7 +107,12 @@ function App() {
             <Route path="guide/result" element={<GuideResultPage />} />
             <Route path="xray" element={<XrayPage />} />
             <Route path="visual" element={<VisualPage />} />
-            <Route path="visual/findings/:runId/:findingId" element={<VisualFindingDetailPage />} />
+            <Route path="visual/vca" element={<VcaVisualPage />} />
+            <Route path="visual/pottery" element={<PotteryVisualPage />} />
+            <Route
+              path="visual/findings/:runId/:findingId"
+              element={<VisualFindingDetailPage />}
+            />
             <Route path="final-report" element={<FinalReportPage />} />
 
             {/* 복원 가이드 세부 공정: 이전 공정/세부단계 선진입 차단 */}
@@ -161,10 +168,7 @@ function App() {
                 path="guide/bonding/material"
                 element={<BondingMaterialPage />}
               />
-              <Route
-                path="guide/bonding/work"
-                element={<BondingWorkPage />}
-              />
+              <Route path="guide/bonding/work" element={<BondingWorkPage />} />
               <Route path="guide/restoration" element={<RestorationPage />} />
               <Route
                 path="guide/restoration/method"
@@ -252,9 +256,7 @@ function App() {
 
           <Route
             path="/disassembly-checklist"
-            element={
-              <LegacyArtifactRedirect stepKey="disassembly/checklist" />
-            }
+            element={<LegacyArtifactRedirect stepKey="disassembly/checklist" />}
           />
 
           <Route
@@ -305,16 +307,12 @@ function App() {
 
           <Route
             path="/strengthening-method"
-            element={
-              <LegacyArtifactRedirect stepKey="strengthening/method" />
-            }
+            element={<LegacyArtifactRedirect stepKey="strengthening/method" />}
           />
 
           <Route
             path="/strengthening-wetting"
-            element={
-              <LegacyArtifactRedirect stepKey="strengthening/wetting" />
-            }
+            element={<LegacyArtifactRedirect stepKey="strengthening/wetting" />}
           />
 
           {/* 접합 */}
@@ -351,23 +349,17 @@ function App() {
 
           <Route
             path="/restoration-method"
-            element={
-              <LegacyArtifactRedirect stepKey="restoration/method" />
-            }
+            element={<LegacyArtifactRedirect stepKey="restoration/method" />}
           />
 
           <Route
             path="/restoration-material"
-            element={
-              <LegacyArtifactRedirect stepKey="restoration/material" />
-            }
+            element={<LegacyArtifactRedirect stepKey="restoration/material" />}
           />
 
           <Route
             path="/restoration-finishing"
-            element={
-              <LegacyArtifactRedirect stepKey="restoration/finishing" />
-            }
+            element={<LegacyArtifactRedirect stepKey="restoration/finishing" />}
           />
 
           {/* 구 복원 가이드 보고서 URL */}
