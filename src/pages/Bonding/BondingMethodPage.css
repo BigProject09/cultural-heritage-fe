@@ -27,7 +27,7 @@
     @apply max-w-[1200px] mt-0 mb-10 mx-auto;
 }
 .page-header h1 {
-    @apply text-[42px] text-gray-800 mt-0 mb-3 mx-0;
+    @apply text-[34px] font-bold text-gray-800 mt-0 mb-3 mx-0;
 }
 .page-header p {
     @apply text-lg text-gray-500;
@@ -54,7 +54,7 @@
     @apply flex justify-between items-center mb-[25px];
 }
 .step-title span {
-    @apply text-3xl font-bold;
+    @apply text-xl font-bold;
 }
 .method-badge {
     @apply inline-block [background:#e8f0ff] text-blue-600 text-[13px] font-semibold align-middle ml-3 px-3 py-1 rounded-[20px];
@@ -67,7 +67,7 @@
 
 /* 번호 */
 .step-number {
-    @apply w-[55px] h-[55px] bg-guide-navy text-white flex justify-center items-center text-[23px] font-bold shrink-0 rounded-full;
+    @apply w-11 h-11 bg-guide-navy text-white flex justify-center items-center text-lg font-bold shrink-0 rounded-full;
 }
 
 /* 내용 */
@@ -75,10 +75,10 @@
     @apply flex-1;
 }
 .step-info h3 {
-    @apply text-[27px] mb-2.5;
+    @apply text-lg font-bold mb-2;
 }
 .step-info p {
-    @apply text-lg text-[#666] leading-[1.6];
+    @apply text-sm text-[#666] leading-[1.65];
 }
 
 /* ================= 버튼 ================= */
@@ -86,7 +86,7 @@
     @apply flex items-center gap-3;
 }
 .step-actions button {
-    @apply cursor-pointer font-bold px-[18px] py-[11px] rounded-[40px] border-0;
+    @apply cursor-pointer text-[13px] font-bold px-4 py-2.5 rounded-[40px] border-0;
 }
 .edit-btn {
     @apply bg-guide-primary-soft text-[#1e63d5] hover:[background:#ddebff];

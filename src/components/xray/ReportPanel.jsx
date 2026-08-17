@@ -33,17 +33,17 @@ export default function ReportPanel({
         실무자용 요약 · 주요 검토 영역과 후속 확인 우선순위 중심
       </div>
 
-      <button
-        className="primary"
-        onClick={onGenerate}
-        disabled={loading || disabled}
-      >
-        {loading
-          ? "문안 생성 중... (30초~2분)"
-          : report
-            ? "문안 다시 생성"
-            : "AI 문안 생성"}
-      </button>
+      {!report && (
+        <div className="report-action-row">
+          <button
+            className="primary"
+            onClick={onGenerate}
+            disabled={loading || disabled}
+          >
+            {loading ? "문안 생성 중... (30초~2분)" : "AI 문안 생성"}
+          </button>
+        </div>
+      )}
 
       {meta && (
         <div className="msg dim">
@@ -64,9 +64,18 @@ export default function ReportPanel({
             spellCheck={false}
           />
 
-          <div className="msg dim">
-            AI가 작성한 초안입니다. 실제 상태조사 기록으로 확정하기 전에
-            전문가가 영상과 검수 결과를 대조해 수정·확인해주세요.
+          <div className="report-footer-row">
+            <div className="msg dim">
+              AI가 작성한 초안입니다. 실제 상태조사 기록으로 확정하기 전에
+              전문가가 영상과 검수 결과를 대조해 수정·확인해주세요.
+            </div>
+            <button
+              className="primary report-regenerate-button"
+              onClick={onGenerate}
+              disabled={loading || disabled}
+            >
+              {loading ? "문안 생성 중..." : "문안 다시 생성"}
+            </button>
           </div>
         </>
       )}

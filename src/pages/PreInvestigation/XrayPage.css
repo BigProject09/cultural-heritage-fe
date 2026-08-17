@@ -640,7 +640,19 @@
   @apply border-[color:var(--xray-primary)] [background:var(--xray-primary-soft)] text-[color:var(--xray-primary-hover)];
 }
 .xray-page .report-section .primary {
-  @apply min-h-11 [background:var(--xray-primary)] text-white mt-3.5;
+  @apply min-h-11 [background:var(--xray-primary)] text-white;
+}
+.xray-page .report-action-row {
+  @apply flex justify-end mt-3.5;
+}
+.xray-page .report-footer-row {
+  @apply flex items-center justify-between gap-4 mt-3;
+}
+.xray-page .report-footer-row .msg {
+  @apply mt-0 flex-1;
+}
+.xray-page .report-regenerate-button {
+  @apply flex-none min-h-9 px-4 text-[12px];
 }
 .xray-page .msg {
   @apply text-[11px] mt-2;
