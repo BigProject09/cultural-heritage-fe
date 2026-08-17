@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./CleaningMethodSelectPage.css";
 
 function CleaningMethodSelectPage() {
@@ -53,23 +54,23 @@ function CleaningMethodSelectPage() {
     setStepSaving("cleaningMethod", true);
 
     try {
-        const response = await resumeTask(taskId, request);
+      const response = await resumeTask(taskId, request);
 
-        applyInterrupt(response.interrupt, ctx);
+      applyInterrupt(response.interrupt, ctx);
 
-        ctx.setCleaningSelection({ usePhysical, useChemical });
+      ctx.setCleaningSelection({ usePhysical, useChemical });
 
-        setCompleted((prev) => ({
-          ...prev,
-          cleaningMethod: true,
-        }));
+      setCompleted((prev) => ({
+        ...prev,
+        cleaningMethod: true,
+      }));
 
       navigate("/cleaning");
     } catch (error) {
-        console.error("❌ 에러:", error);
-        alert("세척 방법 저장 실패");
+      console.error("❌ 에러:", error);
+      alert("세척 방법 저장 실패");
     } finally {
-        setStepSaving("cleaningMethod", false);
+      setStepSaving("cleaningMethod", false);
     }
   };
 
@@ -79,13 +80,12 @@ function CleaningMethodSelectPage() {
 
   return (
     <div className="cleaning-method-page">
+      <GuideNavigation currentLabel="세척법 선택" />
+
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/cleaning")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <button
           className="nav-btn"
           disabled={isSaving}

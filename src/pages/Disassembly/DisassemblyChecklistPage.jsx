@@ -4,6 +4,7 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./DisassemblyChecklistPage.css";
 
 function DisassemblyChecklistPage() {
@@ -67,14 +68,13 @@ function DisassemblyChecklistPage() {
 
   return (
     <div className="checklist-page">
+      <GuideNavigation currentLabel="해체 전 조사" />
+
       {/* 상단 */}
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate("/disassembly")}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <div className="nav-btn-group">
           <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택

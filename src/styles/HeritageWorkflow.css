@@ -2,7 +2,7 @@
 
 @layer components {
 :root {
-  @apply [--workflow-paper:#f4f0e7] [--workflow-paper-deep:#e9e1d4] [--workflow-surface:#fffdf8] [--workflow-surface-soft:#faf6ee] [--workflow-ink:#17201d] [--workflow-ink-soft:#3f4741] [--workflow-muted:#687069] [--workflow-bronze:#96683d] [--workflow-bronze-dark:#704821] [--workflow-bronze-soft:#eee3d2] [--workflow-line:#cabca8] [--workflow-line-soft:rgba(202,188,168,0.56)] [--workflow-green:#61735d] [--workflow-green-dark:#455643] [--workflow-danger:#9c5b47] [--workflow-shadow:0_18px_48px_rgba(63,52,38,0.08)];
+  @apply [--workflow-paper:#f4f0e7] [--workflow-paper-deep:#e9e1d4] [--workflow-surface:#fffdf8] [--workflow-surface-soft:#faf6ee] [--workflow-ink:#17201d] [--workflow-ink-soft:#3f4741] [--workflow-muted:#687069] [--workflow-bronze:#96683d] [--workflow-bronze-dark:#704821] [--workflow-bronze-soft:#eee3d2] [--workflow-line:#cabca8] [--workflow-line-soft:rgba(202,188,168,0.56)] [--workflow-green:#61735d] [--workflow-green-dark:#455643] [--workflow-status-incomplete-bg:#ffffff] [--workflow-status-incomplete-hover:#f7f4ef] [--workflow-status-incomplete-text:#111111] [--workflow-status-incomplete-border:#d7d1c8] [--workflow-status-complete-bg:#61735d] [--workflow-status-complete-hover:#556750] [--workflow-danger:#9c5b47] [--workflow-shadow:0_18px_48px_rgba(63,52,38,0.08)];
 }
 :is(
   .flow-page,
@@ -556,11 +556,91 @@
   .bonding-work-page,
   .restoration-material-page
 ) :is(
-  .approve-btn,
   .select-btn,
   .complete-btn
 ) {
   @apply border border-[color:var(--workflow-green)] [background:var(--workflow-green)] text-white border-solid;
+}
+
+/* 작업 단계 상태 버튼 공통 규칙
+   이 파일이 approve-btn 상태 스타일의 단일 source of truth다.
+   앞으로 색상 변경은 위 --workflow-status-* 변수만 수정한다. */
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .approve-btn {
+  min-width: 95px;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .approve-btn.is-incomplete {
+  background: var(--workflow-status-incomplete-bg) !important;
+  color: var(--workflow-status-incomplete-text) !important;
+  border: 1px solid var(--workflow-status-incomplete-border) !important;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .approve-btn.is-incomplete:hover {
+  background: var(--workflow-status-incomplete-hover) !important;
+  color: var(--workflow-status-incomplete-text) !important;
+  border-color: var(--workflow-status-incomplete-border) !important;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .approve-btn.is-complete {
+  background: var(--workflow-status-complete-bg) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--workflow-status-complete-bg) !important;
+}
+:is(
+  .checklist-page,
+  .tool-page,
+  .method-page,
+  .cleaning-method-page,
+  .strengthening-material-page,
+  .strengthening-wetting-page,
+  .bonding-material-page,
+  .bonding-work-page,
+  .restoration-material-page
+) .approve-btn.is-complete:hover {
+  background: var(--workflow-status-complete-hover) !important;
+  color: #ffffff !important;
+  border-color: var(--workflow-status-complete-hover) !important;
 }
 :is(
   .checklist-page,

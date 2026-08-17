@@ -85,9 +85,6 @@
 .step-actions button {
     @apply cursor-pointer font-bold px-[18px] py-[11px] rounded-[40px] border-0;
 }
-.approve-btn {
-    @apply bg-guide-success text-white min-w-[95px] hover:[background:#227047];
-}
 .edit-btn {
     @apply bg-guide-primary-soft text-[#1e63d5] hover:[background:#ddebff];
 }

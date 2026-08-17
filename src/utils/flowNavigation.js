@@ -28,12 +28,30 @@ export const getNextStep = (approvedFlow, currentStep) => {
   return guideFlow[currentIndex + 1];
 };
 
-const STAGE_COMPLETE_KEY = {
+export const STAGE_COMPLETE_KEY = {
   해체: "post",
   세척: "cleaningPost",
   강화: "strengtheningPost",
   접합: "bondingPost",
   복원: "restorationPost",
+};
+
+// 선택된 Flow에서 해당 공정보다 앞선 모든 공정이 끝났을 때만 진입 가능.
+export const canAccessGuideStage = (
+  approvedFlow,
+  completed = {},
+  targetStepName,
+) => {
+  const guideFlow = sanitizeGuideFlow(approvedFlow);
+  const targetIndex = guideFlow.findIndex(
+    (step) => step.name === targetStepName,
+  );
+
+  if (targetIndex < 0) return false;
+
+  return guideFlow
+    .slice(0, targetIndex)
+    .every((step) => Boolean(completed[STAGE_COMPLETE_KEY[step.name]]));
 };
 
 // approvedFlow 중 아직 끝나지 않은 첫 단계. 전부 끝났으면 null.

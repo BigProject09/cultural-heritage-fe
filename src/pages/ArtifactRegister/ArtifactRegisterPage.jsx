@@ -10,6 +10,17 @@ import {
 } from "../../data/workspaceProjects";
 import "./ArtifactRegisterPage.css";
 
+const VISUAL_SUPPORTED_MATERIALS = new Set([
+  "연질토기",
+  "경질토기",
+  "도자기 · 백자",
+]);
+
+function getVisualMaterialSupport(material) {
+  if (!material) return "unselected";
+  return VISUAL_SUPPORTED_MATERIALS.has(material) ? "supported" : "unsupported";
+}
+
 function readSavedArtifact(editMode) {
   if (!editMode) return {};
 
@@ -36,6 +47,7 @@ function ArtifactRegisterPage() {
   const [imageFile, setImageFile] = useState(null);
   const [name, setName] = useState(savedArtifact.name || "");
   const [material, setMaterial] = useState(savedArtifact.material || "");
+  const visualMaterialSupport = getVisualMaterialSupport(material);
   const [period, setPeriod] = useState(savedArtifact.period || "");
   const [condition, setCondition] = useState(savedArtifact.condition || "");
   const [weightValue, setWeightValue] = useState(
@@ -186,7 +198,11 @@ function ArtifactRegisterPage() {
               <span>01</span>
               <div>
                 <h2>대표 컬러 이미지</h2>
-                <p>X-RAY 조각 결합과 육안 조사의 기준 이미지입니다.</p>
+                <p>
+                  유물 워크스페이스와 X-RAY 조각 결합에 사용하는 대표
+                  이미지입니다. 문양 분석용 사진은 육안조사 단계에서 별도로
+                  등록합니다.
+                </p>
               </div>
             </div>
 
@@ -274,6 +290,15 @@ function ArtifactRegisterPage() {
                   <option>지류</option>
                   <option>직물</option>
                 </select>
+                <p
+                  className={`artifact-material-guide ${visualMaterialSupport}`}
+                >
+                  {visualMaterialSupport === "supported"
+                    ? "문양 기반 육안조사 AI 지원 · 분석 시 문양이 선명하게 보이는 사진이 필요합니다."
+                    : visualMaterialSupport === "unsupported"
+                      ? "문양 기반 육안조사 AI 미지원 · X-RAY 분석 및 보존 가이드는 사용할 수 있습니다."
+                      : "문양 기반 육안조사 AI는 연질토기·경질토기·도자기·백자 재질만 지원합니다."}
+                </p>
               </label>
 
               <label className="artifact-field">

@@ -1,3 +1,4 @@
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./StrengtheningPage.css";
 
 import { useEffect, useState } from "react";
@@ -121,6 +122,8 @@ function StrengtheningPage() {
 
   return (
     <div className="strengthening-page">
+      <GuideNavigation currentLabel="강화" />
+
 
       <div className="top-bar">
 
@@ -139,11 +142,6 @@ function StrengtheningPage() {
         >
           ← 이전
         </button>
-
-        <button className="top-bar-logo" onClick={() => navigate("/")}>
-          VORA
-        </button>
-
         <button
           className="nav-btn"
           disabled={!allCompleted || movingNext}

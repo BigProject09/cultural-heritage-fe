@@ -22,6 +22,18 @@
 .material-container {
     @apply max-w-[1000px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] mx-auto my-[60px] p-[45px] rounded-[20px];
 }
+.material-selection-intro {
+    @apply mb-8 pb-7 border-b border-solid border-vora-line;
+}
+.material-selection-intro h1 {
+    @apply text-[30px] font-bold text-vora-ink mt-0 mb-3;
+}
+.material-selection-intro p {
+    @apply m-0 text-[15px] text-vora-muted leading-[1.7];
+}
+.material-selection-intro strong {
+    @apply text-vora-bronze-dark;
+}
 
 /* ================= 카드 ================= */
 .material-card {
@@ -47,29 +59,69 @@
 .material-list-panel {
     @apply w-[30%] shrink-0 bg-vora-surface border border-solid border-vora-line shadow-[0_10px_30px_rgba(63,52,38,0.06)] p-6 rounded-2xl;
 }
-.material-list-panel-header {
-    @apply mb-5;
+.material-step-header {
+    @apply flex items-start gap-3 mb-5;
 }
-.material-list-panel-header--secondary {
+.material-step-header--secondary {
     @apply mt-7 pt-6 border-t border-solid border-vora-line;
+}
+.material-step-number {
+    @apply flex items-center justify-center shrink-0 w-7 h-7 rounded-full [background:var(--color-vora-bronze)] text-white text-sm font-bold;
 }
 .material-list-title {
     @apply text-lg font-bold text-vora-ink m-0;
+}
+.material-step-help {
+    @apply text-[12px] text-vora-muted leading-[1.55] mt-1.5 mb-0;
 }
 .material-list-items {
     @apply flex flex-col;
 }
 .material-list-row {
-    @apply flex items-center justify-between gap-2 px-4 py-3.5 text-[15px] font-medium text-vora-bronze-dark leading-[1.4] cursor-pointer transition-colors duration-200 border-b border-solid border-vora-line/50 last:border-b-0 hover:[background:var(--color-vora-paper)];
+    @apply flex items-center justify-between gap-2 px-4 py-3.5 text-[15px] font-medium text-vora-bronze-dark leading-[1.4] cursor-pointer transition-all duration-200 border-b border-solid border-vora-line/50 last:border-b-0 hover:[background:var(--color-vora-paper)];
 }
+/* 클릭해서 현재 상세를 보고 있는 항목만 갈색 배경으로 표시한다.
+   실제 선택 여부는 "선택됨" 배지로 별도 표시한다. */
 .material-list-row.active {
-    @apply [background:var(--color-vora-bronze)] text-white border-transparent hover:[background:var(--color-vora-bronze)];
+    background: var(--color-vora-bronze) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+}
+.material-list-row.active:hover {
+    background: var(--color-vora-bronze-dark) !important;
+}
+.material-list-row.selected:not(.active) {
+    background: transparent !important;
+    color: var(--color-vora-bronze-dark) !important;
 }
 .material-list-row-badge {
-    @apply text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/25;
+    @apply shrink-0 text-[11px] font-bold px-2 py-1 rounded-full transition-colors duration-200;
+}
+.material-list-row-badge.is-selected {
+    background: transparent;
+    color: var(--color-vora-bronze-dark);
+}
+.material-list-row.active .material-list-row-badge.is-selected {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
 }
 .material-list-empty {
     @apply text-sm text-gray-400 py-2;
+}
+.material-choice-summary {
+    @apply mt-7 pt-6 border-t border-solid border-vora-line;
+}
+.material-choice-summary h3 {
+    @apply text-sm font-bold text-vora-ink mt-0 mb-3;
+}
+.material-choice-summary-row {
+    @apply flex items-center justify-between gap-3 py-2 text-[13px];
+}
+.material-choice-summary-row span {
+    @apply text-vora-muted;
+}
+.material-choice-summary-row strong {
+    @apply text-vora-bronze-dark text-right;
 }
 
 /* ================= 오른쪽: 상세 ================= */
@@ -87,6 +139,23 @@
 }
 .material-detail-actions {
     @apply flex justify-end gap-3 border-t border-solid border-vora-line pt-6;
+}
+/* 선택 상태 버튼: 보존가이드 전 화면과 동일한 색/hover 규칙 */
+.material-selection-btn.is-unselected {
+    background: #ffffff !important;
+    color: #111111 !important;
+    border: 1px solid #d7d1c8 !important;
+}
+.material-selection-btn.is-unselected:hover {
+    background: #f7f4ef !important;
+}
+.material-selection-btn.is-selected {
+    background: var(--color-vora-bronze) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--color-vora-bronze) !important;
+}
+.material-selection-btn.is-selected:hover {
+    background: var(--color-vora-bronze-dark) !important;
 }
 .material-detail-empty {
     @apply text-gray-400 text-base;

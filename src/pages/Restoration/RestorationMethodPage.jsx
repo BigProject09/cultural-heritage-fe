@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./RestorationMethodPage.css";
 
 import { useDisassembly } from "../../context/useDisassembly";
@@ -139,15 +140,14 @@ function RestorationMethodPage({
 
   return (
     <div className="method-page">
+      <GuideNavigation currentLabel={title} />
+
       {/* 상단 */}
 
       <div className="detail-header">
         <button className="nav-btn" onClick={() => navigate(backPath)}>
           ← 이전
         </button>
-
-        <h1 className="vora-logo">VORA</h1>
-
         <div className="nav-btn-group">
           <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
             전체 선택
@@ -196,7 +196,7 @@ function RestorationMethodPage({
 
             <div className="step-actions">
               <button
-                className="approve-btn"
+                className={`approve-btn ${step.approved ? "is-complete" : "is-incomplete"}`}
                 onClick={() => {
                   setSteps((prev) =>
                     prev.map((s) =>
@@ -210,7 +210,7 @@ function RestorationMethodPage({
                   );
                 }}
               >
-                {step.approved ? "✔ 완료" : "완료"}
+                {step.approved ? "✓ 완료" : "미완료"}
               </button>
 
               <button className="edit-btn" onClick={() => handleEdit(step.id)}>
