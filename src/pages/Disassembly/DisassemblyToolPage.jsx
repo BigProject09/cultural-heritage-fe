@@ -5,6 +5,7 @@ import "./DisassemblyToolPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 function DisassemblyToolPage() {
   const navigate = useNavigate();
@@ -17,18 +18,18 @@ function DisassemblyToolPage() {
     toolsPrecautions,
     setCompleted,
     setStepSaving,
-    savingSteps,
     toolSelection: selectedTools,
     setToolSelection: setSelectedTools,
   } = ctx;
 
-  const isSaving = savingSteps.has("tool");
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("tool");
 
   // 오른쪽 상세 영역에 어떤 도구를 보여줄지만 담당하는 순수 화면 상태.
   // 선택(체크) 로직인 selectedTools/handleSelect와는 별개다.
   const [activeToolId, setActiveToolId] = useState(null);
 
   const handleSelect = (toolId) => {
+    if (isLocked) return;
     if (selectedTools.includes(toolId)) {
       setSelectedTools(selectedTools.filter((id) => id !== toolId));
     } else {
@@ -36,12 +37,16 @@ function DisassemblyToolPage() {
     }
   };
 
+  const isAllSelected =
+    tools.length > 0 && selectedTools.length === tools.length;
+
   const handleSelectAll = () => {
-    setSelectedTools(tools.map((tool) => tool.id));
+    if (isLocked) return;
+    setSelectedTools(isAllSelected ? [] : tools.map((tool) => tool.id));
   };
 
   const handleComplete = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -117,16 +122,16 @@ function DisassemblyToolPage() {
           ← 이전
         </button>
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" disabled={isSaving} onClick={handleSelectAll}>
-            전체 선택
+          <button className="nav-btn secondary" disabled={isLocked} onClick={handleSelectAll}>
+            {isAllSelected ? "전체 해제" : "전체 선택"}
           </button>
 
           <button
             className="nav-btn"
-            disabled={isSaving}
+            disabled={isLocked}
             onClick={handleComplete}
           >
-            {isSaving ? "완료 처리 중..." : "완료"}
+            {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "완료"}
           </button>
         </div>
       </div>
@@ -185,6 +190,7 @@ function DisassemblyToolPage() {
                     <button
                       type="button"
                       className="selected-tool-chip-remove"
+                      disabled={isLocked}
                       onClick={() => handleSelect(tool.id)}
                       aria-label={`${tool.name} 선택 해제`}
                       title="선택 해제"
@@ -230,6 +236,7 @@ function DisassemblyToolPage() {
 
               <div className="tool-detail-actions">
                 <button
+                  disabled={isLocked}
                   className={`nav-btn selection-state-btn ${
                     isActiveSelected ? "is-selected" : "is-unselected"
                   }`}

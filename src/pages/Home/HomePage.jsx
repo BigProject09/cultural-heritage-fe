@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 import HeritageHeader from "../../components/workspace/HeritageHeader";
 import ArtifactThumb from "../../components/workspace/ArtifactThumb";
 import {
+  ConservationGuideIcon,
+  VisualInspectionIcon,
+  XrayAnalysisIcon,
+} from "../../components/workspace/DashboardModuleIcons";
+import {
   MODULE_STATUS,
   STATUS_LABEL,
   WORKSPACE_MODULES,
@@ -17,9 +22,9 @@ import { getAccessToken } from "../../services/authToken";
 import "./HomePage.css";
 
 const MODULE_ICONS = {
-  guide: "⌑",
-  xray: "⌗",
-  visual: "⌕",
+  guide: ConservationGuideIcon,
+  xray: XrayAnalysisIcon,
+  visual: VisualInspectionIcon,
 };
 
 function HomePage() {
@@ -212,7 +217,10 @@ function HomePage() {
           className="heritage-quick-grid"
           aria-label="AI 복원 기능 빠른 메뉴"
         >
-          {WORKSPACE_MODULES.map((module) => (
+          {WORKSPACE_MODULES.map((module) => {
+            const ModuleIcon = MODULE_ICONS[module.key];
+
+            return (
             <button
               className={`heritage-quick-card ${module.key}`}
               key={module.key}
@@ -221,7 +229,7 @@ function HomePage() {
               <span className="heritage-card-number">{module.number}</span>
 
               <span className="heritage-card-icon" aria-hidden="true">
-                {MODULE_ICONS[module.key]}
+                <ModuleIcon />
               </span>
 
               <span className="heritage-eyebrow">{module.eyebrow}</span>
@@ -238,7 +246,8 @@ function HomePage() {
                 작업 선택 <b>→</b>
               </span>
             </button>
-          ))}
+            );
+          })}
         </section>
 
         <section className="heritage-recent">
@@ -324,15 +333,12 @@ function HomePage() {
 
                       return (
                         <div className="heritage-track-item" key={module.key}>
-                          <button
+                          <span
                             className={`heritage-status-node ${status.toLowerCase()}`}
-                            onClick={() =>
-                              enterProjectModule(project, module.key)
-                            }
-                            aria-label={`${module.title} ${STATUS_LABEL[status]}`}
+                            title={`${module.title} ${STATUS_LABEL[status]}`}
                           >
                             {status === MODULE_STATUS.DONE ? "✓" : index + 1}
-                          </button>
+                          </span>
 
                           <span>{module.shortTitle}</span>
 

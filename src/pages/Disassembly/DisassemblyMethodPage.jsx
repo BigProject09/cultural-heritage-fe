@@ -4,6 +4,7 @@ import "./DisassemblyMethodPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 function DisassemblyMethodPage() {
   const navigate = useNavigate();
@@ -13,20 +14,26 @@ function DisassemblyMethodPage() {
     taskId,
     setCompleted,
     setStepSaving,
-    savingSteps,
     disassemblyMethod,
     methodWorkingSteps: steps,
     setMethodWorkingSteps: setSteps,
   } = ctx;
 
-  const isSaving = savingSteps.has("method");
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("method");
+
+  const isAllSelected =
+    steps.length > 0 && steps.every((step) => step.approved);
 
   const handleCheckAll = () => {
-    setSteps((prev) => prev.map((s) => ({ ...s, approved: true })));
+    if (isLocked) return;
+    setSteps((prev) =>
+      prev.map((step) => ({ ...step, approved: !isAllSelected })),
+    );
   };
 
   // 단계 삭제
   const handleDelete = (stepId) => {
+    if (isLocked) return;
     const isDelete = window.confirm("이 단계를 삭제하시겠습니까?");
 
     if (!isDelete) return;
@@ -36,6 +43,7 @@ function DisassemblyMethodPage() {
 
   // 단계 추가
   const handleAddStep = () => {
+    if (isLocked) return;
     const title = window.prompt("단계명을 입력하세요.");
 
     if (!title || title.trim() === "") return;
@@ -59,6 +67,7 @@ function DisassemblyMethodPage() {
 
   // 단계 수정
   const handleEdit = (stepId) => {
+    if (isLocked) return;
     const step = steps.find((s) => s.id === stepId);
 
     if (!step) return;
@@ -85,7 +94,7 @@ function DisassemblyMethodPage() {
   };
 
   const handleComplete = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -137,16 +146,16 @@ function DisassemblyMethodPage() {
           ← 이전
         </button>
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
-            전체 선택
+          <button className="nav-btn secondary" disabled={isLocked} onClick={handleCheckAll}>
+            {isAllSelected ? "전체 해제" : "전체 선택"}
           </button>
 
           <button
             className="nav-btn"
-            disabled={isSaving}
+            disabled={isLocked}
             onClick={handleComplete}
           >
-            {isSaving ? "완료 처리 중..." : "완료"}
+            {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "완료"}
           </button>
         </div>
       </div>
@@ -186,8 +195,9 @@ function DisassemblyMethodPage() {
                 {step.caution}
               </p>
             </div>
-            <div className="step-actions">
+            {!isCompleted && <div className="step-actions">
               <button
+                disabled={isLocked}
                 className={`approve-btn ${step.approved ? "is-complete" : "is-incomplete"}`}
                 onClick={() => {
                   setSteps((prev) =>
@@ -205,23 +215,24 @@ function DisassemblyMethodPage() {
                 {step.approved ? "✓ 완료" : "미완료"}
               </button>
 
-              <button className="edit-btn" onClick={() => handleEdit(step.id)}>
+              <button className="edit-btn" disabled={isLocked} onClick={() => handleEdit(step.id)}>
                 ✏ 수정
               </button>
 
               <button
                 className="delete-btn"
+                disabled={isLocked}
                 onClick={() => handleDelete(step.id)}
               >
                 🗑 삭제
               </button>
-            </div>
+            </div>}
           </div>
         ))}
 
-        <button className="add-step-btn" onClick={handleAddStep}>
+        {!isCompleted && <button className="add-step-btn" disabled={isLocked} onClick={handleAddStep}>
           + 단계 추가
-        </button>
+        </button>}
       </div>
     </div>
   );

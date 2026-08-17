@@ -5,11 +5,7 @@ import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./RestorationPage.css";
 
 import ProgressNavigator from "../../components/common/ProgressNavigator/ProgressNavigator";
-import {
-  getPreviousStep,
-  moveToNextStep,
-  moveToPreviousStep,
-} from "../../utils/flowNavigation";
+import { moveToNextStep } from "../../utils/flowNavigation";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -123,15 +119,7 @@ function RestorationPage() {
 
       <div className="top-bar">
         <button
-          className={`nav-btn${
-            getPreviousStep(approvedFlow, "복원") ? "" : " invisible"
-          }`}
-          onClick={() => moveToPreviousStep(navigate, approvedFlow, "복원")}
-        >
-          ← 이전
-        </button>
-        <button
-          className="nav-btn"
+          className="nav-btn ml-auto"
           disabled={!allCompleted || movingNext}
           onClick={handleNextStep}
         >

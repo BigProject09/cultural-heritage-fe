@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./DisassemblyChecklistPage.css";
@@ -14,7 +15,6 @@ function DisassemblyChecklistPage() {
   const {
     setCompleted,
     setStepSaving,
-    savingSteps,
     taskId,
     checklist: aiChecklist,
     checklistCaution,
@@ -22,16 +22,19 @@ function DisassemblyChecklistPage() {
     setChecklistSelection: setCheckedIds,
   } = ctx;
 
-  const isSaving = savingSteps.has("checklist");
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("checklist");
+  const isAllSelected =
+    aiChecklist.length > 0 && checkedIds.length === aiChecklist.length;
 
   const handleCheckAll = () => {
-    setCheckedIds(aiChecklist.map((item) => item.id));
+    if (isLocked) return;
+    setCheckedIds(isAllSelected ? [] : aiChecklist.map((item) => item.id));
   };
 
   // 저장 성공이 확인된 뒤에만 메인 페이지로 이동한다. 실패하면 현재 화면에 남아
   // 사용자가 선택을 수정하거나 다시 시도할 수 있다.
   const handleComplete = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -76,16 +79,16 @@ function DisassemblyChecklistPage() {
           ← 이전
         </button>
         <div className="nav-btn-group">
-          <button className="nav-btn secondary" disabled={isSaving} onClick={handleCheckAll}>
-            전체 선택
+          <button className="nav-btn secondary" disabled={isLocked} onClick={handleCheckAll}>
+            {isAllSelected ? "전체 해제" : "전체 선택"}
           </button>
 
           <button
             className="nav-btn"
-            disabled={isSaving}
+            disabled={isLocked}
             onClick={handleComplete}
           >
-            {isSaving ? "완료 처리 중..." : "완료"}
+            {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "완료"}
           </button>
         </div>
       </div>
@@ -140,6 +143,7 @@ function DisassemblyChecklistPage() {
                 <input
                   type="checkbox"
                   checked={isChecked}
+                  disabled={isLocked}
                   onChange={(e) => {
                     if (e.target.checked) {
                       setCheckedIds([...checkedIds, item.id]);

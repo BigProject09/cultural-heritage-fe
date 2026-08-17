@@ -5,6 +5,7 @@ import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { uploadPhoto } from "../../services/photoUploadApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./BondingWorkPage.css";
@@ -69,10 +70,9 @@ function BondingWorkPage() {
     setBondingTempAnalysis,
     setCompleted,
     setStepSaving,
-    savingSteps,
   } = ctx;
 
-  const isSaving = savingSteps.has("bondingWork");
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("bondingWork");
 
   const [beforePhoto, setBeforePhoto] = useState("");
   const [afterPhoto, setAfterPhoto] = useState("");
@@ -85,6 +85,7 @@ function BondingWorkPage() {
   const defaultAction = bondingTempAnalysis?.default_action || "proceed";
 
   const handleBeforeFileChange = async (e) => {
+    if (isLocked) return;
     const file = e.target.files[0];
     if (!file) return;
 
@@ -101,6 +102,7 @@ function BondingWorkPage() {
   };
 
   const handleAfterFileChange = async (e) => {
+    if (isLocked) return;
     const file = e.target.files[0];
     if (!file) return;
 
@@ -119,6 +121,7 @@ function BondingWorkPage() {
   // 사진을 넣어 임시접합 검증(VLM) 결과를 받는다. 여기서는 완료 처리하지 않고,
   // 결과를 보고 사용자가 진행/재입력을 선택해야 한다.
   const handleAnalyze = async () => {
+    if (isLocked) return;
     if (!beforePhoto || !afterPhoto) {
       alert("임시접합 전/후 사진을 입력해주세요.");
       return;
@@ -147,6 +150,7 @@ function BondingWorkPage() {
 
   // 검증 결과가 마음에 들지 않으면 사진을 다시 올려 재검증한다.
   const handleRetry = async () => {
+    if (isLocked) return;
     setAnalyzing(true);
     try {
       const response = await resumeTask(taskId, {
@@ -167,7 +171,7 @@ function BondingWorkPage() {
 
   // 검증 결과를 그대로 승인하고 다음(접합 방법 안내)으로 진행한다.
   const handleProceed = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
     setStepSaving("bondingWork", true);
 
     try {
@@ -203,7 +207,7 @@ function BondingWorkPage() {
           {!bondingTempAnalysis && (
             <button
               className="nav-btn"
-              disabled={analyzing}
+              disabled={analyzing || isLocked}
               onClick={handleAnalyze}
             >
               {analyzing ? "분석 중..." : "분석"}
@@ -213,7 +217,7 @@ function BondingWorkPage() {
           {bondingTempAnalysis && (
             <button
               className={`nav-btn ${defaultAction === "retry" ? "" : "secondary"}`}
-              disabled={analyzing}
+              disabled={analyzing || isLocked}
               onClick={handleRetry}
             >
               다시 촬영
@@ -222,10 +226,10 @@ function BondingWorkPage() {
 
           <button
             className={`nav-btn ${defaultAction === "retry" ? "secondary" : ""}`}
-            disabled={!bondingTempAnalysis || isSaving}
+            disabled={!bondingTempAnalysis || isLocked}
             onClick={handleProceed}
           >
-            {isSaving ? "완료 처리 중..." : "다음 →"}
+            {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "다음 →"}
           </button>
         </div>
       </div>
@@ -248,7 +252,7 @@ function BondingWorkPage() {
               type="file"
               accept="image/*"
               aria-label="임시접합 전 사진 선택"
-              disabled={!!bondingTempAnalysis || beforeUploading}
+              disabled={isLocked || !!bondingTempAnalysis || beforeUploading}
               onChange={handleBeforeFileChange}
             />
 
@@ -293,7 +297,7 @@ function BondingWorkPage() {
               type="file"
               accept="image/*"
               aria-label="임시접합 후 사진 선택"
-              disabled={!!bondingTempAnalysis || afterUploading}
+              disabled={isLocked || !!bondingTempAnalysis || afterUploading}
               onChange={handleAfterFileChange}
             />
 

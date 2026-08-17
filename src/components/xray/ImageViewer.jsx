@@ -98,6 +98,17 @@ function BoxShape({ region, imageWidth, selected, onSelect }) {
       className="cursor-pointer"
       onClick={() => onSelect(region.regionId)}
     >
+      {/* bbox 내부 전체를 클릭 가능한 hit-area로 사용한다. */}
+      <rect
+        x={x1}
+        y={y1}
+        width={x2 - x1}
+        height={y2 - y1}
+        fill="transparent"
+        stroke="none"
+        pointerEvents="all"
+      />
+
       <rect
         x={x1}
         y={y1}
@@ -107,6 +118,7 @@ function BoxShape({ region, imageWidth, selected, onSelect }) {
         fillOpacity={selected ? 0.2 : 0}
         stroke={color}
         strokeWidth={selected ? stroke * 2 : stroke}
+        pointerEvents="none"
       />
 
       <rect
@@ -115,6 +127,7 @@ function BoxShape({ region, imageWidth, selected, onSelect }) {
         width={fontSize * 6}
         height={fontSize * 1.4}
         fill="rgba(0,0,0,0.75)"
+        pointerEvents="none"
       />
 
       <text
@@ -123,6 +136,7 @@ function BoxShape({ region, imageWidth, selected, onSelect }) {
         fill="#fff"
         fontSize={fontSize}
         fontFamily="monospace"
+        pointerEvents="none"
       >
         {region.regionId} {region.confidence != null ? region.confidence.toFixed(2) : ""}
       </text>

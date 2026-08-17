@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./CleaningMethodSelectPage.css";
@@ -17,22 +18,27 @@ function CleaningMethodSelectPage() {
     cleaningMethod,
     setCompleted,
     setStepSaving,
-    savingSteps,
   } = ctx;
 
-  // AI 추천값을 기본 체크 상태로 사용 (사용자가 이후 자유롭게 토글 가능)
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("cleaningMethod");
+
+  // 완료 전에는 AI 추천값, 완료 후 재조회 시에는 실제 확정값을 표시한다.
   const [usePhysical, setUsePhysical] = useState(
-    () => !!cleaningMethod?.ai_analysis?.need_physical_cleaning,
+    () =>
+      isCompleted
+        ? Boolean(ctx.cleaningSelection?.usePhysical)
+        : Boolean(cleaningMethod?.ai_analysis?.need_physical_cleaning),
   );
   const [useChemical, setUseChemical] = useState(
-    () => !!cleaningMethod?.ai_analysis?.need_chemical_cleaning,
+    () =>
+      isCompleted
+        ? Boolean(ctx.cleaningSelection?.useChemical)
+        : Boolean(cleaningMethod?.ai_analysis?.need_chemical_cleaning),
   );
   const [selectionError, setSelectionError] = useState("");
 
-  const isSaving = savingSteps.has("cleaningMethod");
-
   const handleComplete = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
     if (!taskId) {
       alert("복원가이드 작업 정보를 찾을 수 없습니다. 단계 선택 화면에서 다시 시작해주세요.");
       return;
@@ -88,10 +94,10 @@ function CleaningMethodSelectPage() {
         </button>
         <button
           className="nav-btn"
-          disabled={isSaving}
+          disabled={isLocked}
           onClick={handleComplete}
         >
-          {isSaving ? "완료 처리 중..." : "완료"}
+          {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "완료"}
         </button>
       </div>
 
@@ -127,6 +133,7 @@ function CleaningMethodSelectPage() {
               <input
                 type="checkbox"
                 checked={usePhysical}
+                disabled={isLocked}
                 onChange={(e) => {
                   setUsePhysical(e.target.checked);
                   setSelectionError("");
@@ -140,6 +147,7 @@ function CleaningMethodSelectPage() {
               <input
                 type="checkbox"
                 checked={useChemical}
+                disabled={isLocked}
                 onChange={(e) => {
                   setUseChemical(e.target.checked);
                   setSelectionError("");

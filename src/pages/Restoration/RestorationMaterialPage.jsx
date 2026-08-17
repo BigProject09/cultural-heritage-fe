@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./RestorationMaterialPage.css";
@@ -79,19 +80,20 @@ function RestorationMaterialPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, restorationMaterial, setCompleted, setStepSaving, savingSteps } = ctx;
+  const { taskId, restorationMaterial, setCompleted, setStepSaving } = ctx;
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("restorationMaterial");
 
-  const isSaving = savingSteps.has("restorationMaterial");
+  const initialMaterial = isCompleted
+    ? ctx.restorationChoice?.material || ""
+    : restorationMaterial?.recommended_material || "";
 
-  // 실제로 확정(제출)할 복원제. AI 추천값을 초기값으로 사용.
-  const [material, setMaterial] = useState(
-    () => restorationMaterial?.recommended_material || "",
-  );
+  // 완료 전에는 AI 추천값, 완료 후에는 실제 확정값을 표시한다.
+  const [material, setMaterial] = useState(() => initialMaterial);
 
   // 오른쪽 상세 영역에 어떤 복원제를 보여줄지만 담당하는 순수 화면 상태.
   // 목록 클릭은 미리보기일 뿐, 확정은 오른쪽 "선택" 버튼에서만 한다.
   const [activeMaterialName, setActiveMaterialName] = useState(
-    () => restorationMaterial?.recommended_material || "",
+    () => initialMaterial || restorationMaterial?.recommended_material || "",
   );
 
   const activeOption =
@@ -111,7 +113,7 @@ function RestorationMaterialPage() {
   };
 
   const handleComplete = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -161,10 +163,10 @@ function RestorationMaterialPage() {
         </button>
         <button
           className="nav-btn"
-          disabled={isSaving}
+          disabled={isLocked}
           onClick={handleComplete}
         >
-          {isSaving ? "완료 처리 중..." : "완료"}
+          {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "완료"}
         </button>
       </div>
 
@@ -239,6 +241,7 @@ function RestorationMaterialPage() {
                 <div className="material-detail-actions">
                   <button
                     className={`nav-btn ${isActiveSelected ? "" : "secondary"}`}
+                    disabled={isLocked}
                     onClick={() => setMaterial(activeOption.name)}
                   >
                     {isActiveSelected ? "선택됨" : "선택"}

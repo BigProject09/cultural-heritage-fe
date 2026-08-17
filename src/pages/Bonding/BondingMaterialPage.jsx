@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./BondingMaterialPage.css";
@@ -30,19 +31,20 @@ function BondingMaterialPage() {
   const navigate = useNavigate();
 
   const ctx = useDisassembly();
-  const { taskId, bondingAdhesive, setCompleted, setStepSaving, savingSteps } = ctx;
+  const { taskId, bondingAdhesive, setCompleted, setStepSaving } = ctx;
+  const { isCompleted, isSaving, isLocked } = useGuideStepLock("bondingMaterial");
 
-  const isSaving = savingSteps.has("bondingMaterial");
+  const initialAdhesive = isCompleted
+    ? ctx.bondingChoice?.adhesive || ""
+    : bondingAdhesive?.recommended_adhesive || "";
 
-  // 실제로 확정(제출)할 접합제. AI 추천값을 초기값으로 사용.
-  const [adhesive, setAdhesive] = useState(
-    () => bondingAdhesive?.recommended_adhesive || "",
-  );
+  // 완료 전에는 AI 추천값, 완료 후에는 실제 확정값을 표시한다.
+  const [adhesive, setAdhesive] = useState(() => initialAdhesive);
 
   // 오른쪽 상세 영역에 어떤 접합제를 보여줄지만 담당하는 순수 화면 상태.
   // 목록 클릭은 미리보기일 뿐, 확정은 오른쪽 "선택" 버튼에서만 한다.
   const [activeAdhesiveName, setActiveAdhesiveName] = useState(
-    () => bondingAdhesive?.recommended_adhesive || "",
+    () => initialAdhesive || bondingAdhesive?.recommended_adhesive || "",
   );
 
   const activeOption =
@@ -62,7 +64,7 @@ function BondingMaterialPage() {
   };
 
   const handleComplete = async () => {
-    if (isSaving) return;
+    if (isLocked) return;
     if (!taskId) {
       alert("taskId가 없습니다.");
       return;
@@ -111,10 +113,10 @@ function BondingMaterialPage() {
         </button>
         <button
           className="nav-btn"
-          disabled={isSaving}
+          disabled={isLocked}
           onClick={handleComplete}
         >
-          {isSaving ? "완료 처리 중..." : "완료"}
+          {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "완료"}
         </button>
       </div>
 
@@ -188,6 +190,7 @@ function BondingMaterialPage() {
                 <div className="material-detail-actions">
                   <button
                     className={`nav-btn ${isActiveSelected ? "" : "secondary"}`}
+                    disabled={isLocked}
                     onClick={() => setAdhesive(activeOption.name)}
                   >
                     {isActiveSelected ? "선택됨" : "선택"}

@@ -290,15 +290,15 @@ function ArtifactRegisterPage() {
                   <option>지류</option>
                   <option>직물</option>
                 </select>
-                <p
-                  className={`artifact-material-guide ${visualMaterialSupport}`}
-                >
-                  {visualMaterialSupport === "supported"
-                    ? "문양 기반 육안조사 AI 지원 · 분석 시 문양이 선명하게 보이는 사진이 필요합니다."
-                    : visualMaterialSupport === "unsupported"
-                      ? "문양 기반 육안조사 AI 미지원 · X-RAY 분석 및 보존 가이드는 사용할 수 있습니다."
-                      : "문양 기반 육안조사 AI는 연질토기·경질토기·도자기·백자 재질만 지원합니다."}
-                </p>
+                {visualMaterialSupport === "unsupported" && (
+                  <p className="artifact-material-guide unsupported">
+                    이 재질은{" "}
+                    <span className="artifact-material-guide-keyword">
+                      문양 기반 육안조사 AI
+                    </span>
+                    를 지원하지 않습니다.
+                  </p>
+                )}
               </label>
 
               <label className="artifact-field">
