@@ -50,8 +50,7 @@ export const WORKSPACE_MODULES = [
     title: "육안 상태 조사",
     shortTitle: "육안 상태 조사",
     subtitle: "특이점 부위 기록 · 판정",
-    description:
-      "2D 컬러 이미지에서 특이점 위치와 유형을 기록하고 판정합니다.",
+    description: "2D 컬러 이미지에서 특이점 위치와 유형을 기록하고 판정합니다.",
   },
 ];
 
@@ -786,16 +785,29 @@ export function formatWorkspaceDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value || "-";
 
-  const now = new Date();
-  if (date.toDateString() === now.toDateString()) {
+  const timeZone = "Asia/Seoul";
+
+  const dateKeyFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const dateKey = dateKeyFormatter.format(date);
+  const todayKey = dateKeyFormatter.format(new Date());
+
+  if (dateKey === todayKey) {
     return `오늘 ${date.toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
+      timeZone,
+      hour: "numeric",
       minute: "2-digit",
-      hour12: false,
+      hour12: true,
     })}`;
   }
 
   return date.toLocaleDateString("ko-KR", {
+    timeZone,
     month: "long",
     day: "numeric",
   });
