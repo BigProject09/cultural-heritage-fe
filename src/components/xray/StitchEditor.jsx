@@ -121,8 +121,10 @@ function useSourceImages(sources) {
     const validSources = (sources || []).filter((source) => source?.url);
 
     if (validSources.length === 0) {
-      setLoadedState({ signature, images: {} });
-      return undefined;
+      const timer = window.setTimeout(() => {
+        setLoadedState({ signature, images: {} });
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
 
     let cancelled = false;

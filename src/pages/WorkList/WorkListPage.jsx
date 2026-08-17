@@ -91,10 +91,12 @@ function WorkListPage() {
 
   useEffect(() => {
     if (!isLoggedIn) {
-      setProjects([]);
-      setError("");
-      setLoading(false);
-      return undefined;
+      const timer = window.setTimeout(() => {
+        setProjects([]);
+        setError("");
+        setLoading(false);
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
 
     const controller = new AbortController();

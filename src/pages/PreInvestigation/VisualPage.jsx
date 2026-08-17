@@ -1,17 +1,12 @@
 import { useNavigate, useParams } from "react-router-dom";
 import ModulePageHeader from "../../components/common/ModulePageHeader/ModulePageHeader";
 import SystemInfoFooter from "../../components/common/SystemInfoFooter";
-import { getArtifactRoute } from "../../utils/artifactRoutes";
 import "./VisualPage.css";
 
 export default function VisualPage() {
   const navigate = useNavigate();
   const { artifactId: routeArtifactId = "" } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
-
-  const goToWorkspace = () => {
-    navigate(getArtifactRoute(artifactId));
-  };
 
   const goToVca = () => {
     navigate(`/artifacts/${encodeURIComponent(artifactId)}/visual/vca`);

@@ -293,8 +293,8 @@ function PotteryVisualPage() {
   // 재진입은 브라우저 저장소가 아니라 artifactId -> assessment_run(RDS)로 복원한다.
   useEffect(() => {
     if (!artifactId) {
-      setStatus("idle");
-      return undefined;
+      const timer = window.setTimeout(() => setStatus("idle"), 0);
+      return () => window.clearTimeout(timer);
     }
 
     let cancelled = false;

@@ -901,7 +901,6 @@ export default function XrayPage() {
           setInspectionDone(true);
           setReport(savedReport);
           setReportMeta(null);
-          setReportStyle("summary");
 
           if (status.status === "COMPLETED") {
             setRestoredCompleted(true);

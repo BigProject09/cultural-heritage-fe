@@ -283,7 +283,9 @@ function FinalReportPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setSavedReportLoading(true);
+    const loadingTimer = window.setTimeout(() => {
+      if (!cancelled) setSavedReportLoading(true);
+    }, 0);
 
     getLatestSavedReport(decodedArtifactId)
       .then((document) => {
@@ -298,6 +300,7 @@ function FinalReportPage() {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(loadingTimer);
     };
   }, [decodedArtifactId]);
 
