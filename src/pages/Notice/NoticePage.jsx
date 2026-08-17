@@ -1,10 +1,30 @@
 import "./NoticePage.css";
-import "../Board/BoardPage.css";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { findAllNotices } from "../../services/noticeApi";
 import HeritagePage from "../../components/workspace/HeritagePage";
 import { isAdminUser, readLoginUser } from "../../utils/auth";
+
+function formatNoticeDate(value) {
+  if (!value) return "";
+
+  const normalizedValue =
+    typeof value === "string" &&
+    !value.endsWith("Z") &&
+    !/[+-]\d{2}:\d{2}$/.test(value)
+      ? `${value}Z`
+      : value;
+
+  const date = new Date(normalizedValue);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
 
 function NoticePage() {
   const navigate = useNavigate();
@@ -20,7 +40,7 @@ function NoticePage() {
 
     findAllNotices({ signal: controller.signal })
       .then((data) => {
-        setNotices(data);
+        setNotices(Array.isArray(data) ? data : []);
         setError("");
       })
       .catch((err) => {
@@ -42,66 +62,96 @@ function NoticePage() {
       action={
         isAdmin && (
           <button
-            className="heritage-button"
+            className="heritage-button notice-create-button"
             type="button"
             onClick={() => navigate("/notice/write")}
           >
+            <span aria-hidden="true">✎</span>
             공지 등록
           </button>
         )
       }
     >
       <section className="heritage-panel notice-panel">
-        <p className="heritage-count">
-          총 공지 <strong>{notices.length}</strong>건
-        </p>
+        <div className="notice-panel-header">
+          <p className="notice-count">
+            총 공지 <strong>{notices.length}</strong>건
+          </p>
+        </div>
 
-        {loading && <p className="heritage-empty-cell">공지사항을 불러오는 중입니다.</p>}
+        {loading && (
+          <div className="notice-state">공지사항을 불러오는 중입니다.</div>
+        )}
 
         {!loading && error && (
           <div className="heritage-project-state error">
             <strong>공지사항을 불러오지 못했습니다.</strong>
             <span>{error}</span>
-            <button onClick={() => setReloadKey((prev) => prev + 1)}>다시 시도</button>
+            <button
+              onClick={() => {
+                setLoading(true);
+                setReloadKey((prev) => prev + 1);
+              }}
+            >
+              다시 시도
+            </button>
           </div>
         )}
 
-        {!loading && !error && (
-          <div className="heritage-table-wrap">
-            <table className="heritage-table notice-table">
-              <thead>
-                <tr>
-                  <th>제목</th>
-                </tr>
-              </thead>
+        {!loading && !error && notices.length === 0 && (
+          <div className="notice-state">등록된 공지사항이 없습니다.</div>
+        )}
 
-              <tbody>
-                {notices.map((notice, index) => (
-                  <tr
-                    key={notice.id}
-                    data-clickable="true"
-                    tabIndex={0}
-                    onClick={() => navigate(`/notice/${notice.id}`)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        navigate(`/notice/${notice.id}`);
-                      }
-                    }}
-                  >
-                    <td>
-                      <span className="board-post-number">
-                        {String(notices.length - index).padStart(2, "0")}
-                      </span>
-                      {notice.pinned && <span className="heritage-badge">고정</span>}
-                      {index === 0 && !notice.pinned && (
-                        <span className="heritage-badge">NEW</span>
-                      )}
-                      <strong>{notice.title}</strong>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {!loading && !error && notices.length > 0 && (
+          <div className="notice-list" role="list">
+            <div className="notice-list-head" aria-hidden="true">
+              <span>번호</span>
+              <span>제목</span>
+              <span>등록일</span>
+            </div>
+
+            {notices.map((notice, index) => {
+              const number = String(notices.length - index).padStart(2, "0");
+              const createdAt =
+                notice.createdAt ??
+                notice.created_at ??
+                notice.updatedAt ??
+                notice.updated_at;
+
+              return (
+                <button
+                  key={notice.id}
+                  type="button"
+                  className={`notice-list-row${notice.pinned ? " is-pinned" : ""}`}
+                  onClick={() => navigate(`/notice/${notice.id}`)}
+                  role="listitem"
+                >
+                  <span className="notice-number-wrap">
+                    <span
+                      className={`notice-pin-icon${notice.pinned ? " visible" : ""}`}
+                      aria-hidden="true"
+                    >
+                      ★
+                    </span>
+                    <span className="notice-number">{number}</span>
+                  </span>
+
+                  <span className="notice-title-wrap">
+                    {notice.pinned && (
+                      <span className="notice-pin-badge">고정</span>
+                    )}
+                    {index === 0 && !notice.pinned && (
+                      <span className="notice-new-badge">NEW</span>
+                    )}
+                    <strong className="notice-title">{notice.title}</strong>
+                  </span>
+
+                  <span className="notice-date">
+                    {formatNoticeDate(createdAt)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </section>
