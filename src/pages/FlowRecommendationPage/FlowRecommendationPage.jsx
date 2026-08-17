@@ -4,6 +4,7 @@ import { useState } from "react";
 import { startTask } from "../../services/conservationGuideApi";
 import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
+import { readLoginUser } from "../../utils/auth";
 import { getArtifactWorkflowRoute } from "../../utils/artifactRoutes";
 import { getRecoveredGuideRoute } from "../../utils/guideTaskRecovery";
 import { getArtifactImageDataUrl } from "../../data/localArtifactAssets";
@@ -119,10 +120,15 @@ function FlowRecommendationPage() {
         );
       }
 
+      const loginUser = readLoginUser();
+
+      const taskManager =
+        loginUser?.name || loginUser?.loginId || "담당자 미지정";
+
       const result = await startTask(taskId, {
         artifactId,
         taskName: "문화재 복원",
-        taskManager: "오서하",
+        taskManager,
         relicInfo,
 
         // Base64는 localStorage에 다시 저장하지 않고 이 요청 메모리에서만 사용한다.
