@@ -1,0 +1,317 @@
+@reference "../../index.css";
+
+/*
+  main(origin/main)의 VisualPage 기본 틀(레이아웃 + 스타일)을 그대로
+  가져오고, 우리 VCA 파이프라인에 필요한 pane만 그 위에 얹은 버전이다.
+  --workflow-*는 이 페이지 하위 컴포넌트(VisualReport/VisualCandidateOverlay
+  등)가 계속 쓰는 토큰이라 이름은 유지하되, 값만 main과 동일한 팔레트
+  (gray-200/gray-500/gray-800 + heritage-bronze)로 다시 잡았다 - 그래서
+  이 파일만 바꾸면 하위 컴포넌트 쪽 className은 손대지 않아도 시각적으로
+  main과 같아진다.
+*/
+
+@layer components {
+  .visual-page.visual-vca-page {
+    --workflow-paper: #f5f7fb;
+    --workflow-surface: #ffffff;
+    --workflow-surface-soft: #f9fafb;
+    --workflow-ink: #1f2937;
+    --workflow-ink-soft: #374151;
+    --workflow-muted: #6b7280;
+    --workflow-bronze: #f59f00;
+    --workflow-bronze-dark: #c97f00;
+    --workflow-bronze-soft: #fff7ed;
+    --workflow-line: #e5e7eb;
+    --workflow-line-soft: #e5e7eb;
+    --workflow-green: #16a34a;
+    --workflow-green-dark: #15803d;
+    --workflow-danger: #ef4444;
+    --workflow-shadow: none;
+    @apply min-h-screen bg-guide-canvas flex flex-col items-center px-5 py-[60px];
+  }
+  .visual-vca-container { @apply w-full max-w-[900px]; }
+
+  /* ── main 기본 틀: breadcrumb / header / artifact summary ── */
+  .visual-breadcrumb { @apply flex items-center gap-2 mb-4 text-gray-500 text-[13px]; }
+  .visual-breadcrumb button { @apply border-0 [background:transparent] text-gray-500 cursor-pointer p-0; }
+  .visual-breadcrumb strong { @apply text-gray-800; }
+
+  .visual-header { @apply flex items-start justify-between gap-4 mb-6; }
+  .visual-eyebrow { @apply block mb-2 text-blue-600 text-[11px] font-extrabold tracking-widest; }
+  .visual-title { @apply text-[38px] font-bold text-gray-800 mb-2 leading-tight; }
+  .visual-header p { @apply text-gray-500 text-[15px] m-0; }
+  .visual-status { @apply text-xs font-bold text-blue-600 [background:#eef4ff] px-3 py-1.5 rounded-full whitespace-nowrap; }
+
+  .visual-artifact-summary { @apply grid grid-cols-4 [background:white] border border-gray-200 rounded-2xl overflow-hidden mb-6; }
+  .visual-artifact-summary > div { @apply flex flex-col justify-center gap-1 p-5 border-r border-gray-200 last:border-r-0 min-w-0; }
+  .visual-artifact-summary span { @apply text-gray-400 text-xs; }
+  .visual-artifact-summary strong { @apply text-gray-800 text-[15px] font-bold overflow-hidden text-ellipsis whitespace-nowrap; }
+
+  /* ── main 기본 틀: 카드형 pane 공통 ── */
+  .photo-card { @apply [background:white] border border-gray-200 rounded-2xl p-4 mb-6; }
+  .photo-upload-row { @apply flex items-center justify-between gap-4 px-1 pb-3; }
+  .photo-upload-title { @apply text-gray-800 text-[15px] font-bold m-0; }
+  .photo-upload-btn { @apply inline-flex items-center px-4 py-2.5 rounded-lg text-white text-sm font-bold cursor-pointer whitespace-nowrap; background: var(--heritage-bronze, #f59f00); }
+  .photo-upload-btn:hover { background: var(--heritage-bronze-dark, #c97f00); }
+  .photo-upload-btn[aria-disabled="true"] { @apply cursor-not-allowed opacity-50; }
+  .photo-upload-warning { @apply text-amber-600 text-[13px] mt-3 mb-0; }
+
+  .result-card { @apply [background:white] border border-gray-200 rounded-2xl p-6 mb-6; }
+  .visual-section-heading { @apply flex items-start justify-between gap-3 mb-4; }
+  .visual-section-heading span { @apply block text-blue-600 text-xs font-extrabold tracking-widest mb-1; }
+  .visual-section-heading h2 { @apply text-2xl font-bold text-gray-800 m-0; }
+  .review-badge { @apply px-3 py-1.5 border rounded-full text-[13px] font-bold whitespace-nowrap; border-color: #fde68a; background: #fffbeb; color: #b45309; }
+
+  /* STEP 01(업로드)과 STEP 02(분석 실행) pane을 나란히 둔다 - main에는
+     없던 배치라 main의 2fr/1fr 결과 레이아웃과 같은 비율로 새로 얹는다. */
+  .visual-vca-layout { @apply grid grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)] items-start gap-6 mb-6; }
+  .visual-vca-layout-main, .visual-vca-layout-aside { @apply mb-0; }
+
+  /* ── STEP 01: 조사 이미지(다중 업로드) - photo-card 안에 그리드로 얹는다 ── */
+  .visual-vca-hidden { @apply absolute w-px h-px overflow-hidden [clip:rect(0,0,0,0)] whitespace-nowrap; }
+  .visual-vca-image-grid { @apply grid grid-cols-2 gap-3 [list-style:none] mt-1 mb-0 p-0; }
+  .visual-vca-image-grid li { @apply overflow-hidden border border-gray-200 [background:#f9fafb] rounded-xl; }
+  .visual-vca-image-grid img { @apply block w-full h-40 object-contain [background:white] p-3; }
+  .visual-vca-image-placeholder { @apply grid h-40 place-items-center border border-dashed border-gray-300 [background:#f9fafb] text-gray-400 text-[10px] font-bold tracking-[0.18em] p-3; }
+  .visual-vca-image-grid li > div { @apply flex items-center justify-between gap-3 p-3; }
+  .visual-vca-image-grid strong { @apply min-w-0 overflow-hidden text-xs text-ellipsis whitespace-nowrap; }
+  .visual-vca-image-grid button { @apply flex-none [background:transparent] text-red-500 text-xs font-bold cursor-pointer p-0 border-0; }
+
+  /* ── STEP 02: AI 분석 실행(상태/진행률/스테이지) - result-card 안에 얹는다 ── */
+  .visual-vca-status-panel { @apply grid gap-4 border border-gray-200 [background:#f9fafb] mt-1 p-4 rounded-xl; }
+  .visual-vca-status-panel > strong { @apply text-gray-800 text-sm leading-[1.65] [word-break:keep-all] [overflow-wrap:break-word]; }
+  .visual-vca-status-state { @apply inline-flex w-fit border border-gray-200 [background:white] text-gray-500 text-[11px] font-bold px-3 py-1.5 rounded-full; }
+  .visual-vca-status-state.running, .visual-vca-status-state.queued { @apply text-amber-700 border-amber-300; }
+  .visual-vca-status-state.completed { @apply text-green-700 border-green-300; }
+  .visual-vca-status-state.failed { @apply text-red-600 border-red-300; }
+  .visual-vca-progress { @apply h-2 overflow-hidden [background:#e5e7eb] rounded-full; }
+  .visual-vca-progress > span { @apply block h-full transition-[width] duration-200 rounded-full; background: var(--heritage-bronze, #f59f00); }
+  .visual-vca-stage-list { @apply grid gap-1.5 m-0 p-0 list-none; }
+  .visual-vca-stage-item { @apply flex items-center justify-between gap-3 border-b border-gray-200 pb-1.5 text-xs; }
+  .visual-vca-stage-item:last-child { @apply border-b-0 pb-0; }
+  .visual-vca-stage-name { @apply text-gray-700; }
+  .visual-vca-stage-status { @apply text-gray-500 font-bold; }
+  .visual-vca-stage-item.running .visual-vca-stage-status { color: var(--heritage-bronze-dark, #c97f00); }
+  .visual-vca-stage-item.completed .visual-vca-stage-status,
+  .visual-vca-stage-item.skipped .visual-vca-stage-status { @apply text-green-700; }
+  .visual-vca-stage-item.failed .visual-vca-stage-status { @apply text-red-600; }
+  .visual-vca-stage-group { @apply text-gray-400 text-[10px] font-bold tracking-[0.12em] pt-1 pb-0.5; }
+  .visual-vca-stage-group:not(:first-child) { @apply border-t border-gray-200 mt-1 pt-2.5; }
+  .visual-vca-status-meta { @apply grid grid-cols-1 gap-2 m-0; }
+  .visual-vca-status-meta > div { @apply flex items-center justify-between gap-3 border-t border-gray-200 pt-2; }
+  .visual-vca-status-meta dt { @apply text-gray-400 text-[10px]; }
+  .visual-vca-status-meta dd { @apply text-gray-700 text-xs font-bold text-right m-0; }
+  .visual-vca-status-actions { @apply grid gap-2 mt-4; }
+
+  .visual-primary-button, .visual-secondary-button { @apply inline-flex min-h-11 items-center justify-center cursor-pointer text-[13px] font-bold transition-[background,border-color,color,transform] duration-[160ms] rounded-lg px-5 py-0 border; }
+  .visual-primary-button { color: white; border-color: var(--heritage-bronze, #f59f00); background: var(--heritage-bronze, #f59f00); }
+  .visual-primary-button:hover:enabled { border-color: var(--heritage-bronze-dark, #c97f00); background: var(--heritage-bronze-dark, #c97f00); transform: translateY(-1px); }
+  .visual-secondary-button { @apply [background:transparent] border-gray-200 text-gray-800; }
+  .visual-secondary-button:hover:enabled { @apply [background:#f9fafb]; border-color: var(--heritage-bronze, #f59f00); }
+  .visual-primary-button:disabled, .visual-secondary-button:disabled { @apply cursor-not-allowed opacity-50 hover:transform-none; }
+  .visual-vca-empty { @apply grid min-h-32 place-items-center border border-dashed border-gray-300 text-gray-500 text-[13px] leading-[1.7] text-center [word-break:keep-all] [overflow-wrap:break-word] mt-1 px-5 py-6 rounded-xl; }
+
+  /* ── main 기본 틀: 알림/에러 ── */
+  .visual-notice { @apply [background:white] border border-gray-200 rounded-2xl p-6 mb-6 text-gray-500 text-[15px]; }
+  .visual-notice--error { @apply border-red-200 text-red-600; }
+  .visual-notice--confirm { @apply border-amber-300 text-gray-700; }
+
+  /* ── main 기본 틀: 도자기 검사 - 줌/팬 사진 + 문양 오버레이 ── */
+  .photo-toolbar { @apply flex items-center gap-2 px-1 pb-3; }
+  .photo-toolbar button { @apply w-[30px] h-[30px] border border-gray-200 rounded-lg [background:white] text-gray-800 text-base font-bold cursor-pointer; }
+  .photo-toolbar button:disabled { @apply text-gray-300 cursor-not-allowed; }
+  .photo-toolbar button:not(:disabled):hover { @apply border-blue-600 text-blue-600; }
+  .photo-zoom-level { @apply min-w-[44px] text-center text-gray-500 text-[13px] font-semibold; }
+  .photo-zoom-reset { @apply !w-auto px-2.5 ml-1 !text-xs !font-semibold; }
+  .photo-frame { @apply relative w-full max-h-[460px] flex items-center justify-center rounded-[10px] overflow-hidden [background:#eef0f2] select-none; }
+  .photo-zoom-layer { @apply relative w-full h-full flex items-center justify-center; transform-origin: center center; }
+  .photo-zoom-layer img { @apply w-full h-[460px] object-contain block pointer-events-none; }
+  .photo-loading-overlay { @apply absolute inset-0 flex flex-col items-center justify-center gap-3.5 text-white; background: rgba(25, 31, 40, 0.55); }
+  .photo-loading-overlay p { @apply m-0 text-sm font-semibold; }
+  .spinner { @apply w-[34px] h-[34px] rounded-full; border: 3px solid rgba(255, 255, 255, 0.35); border-top-color: #ffffff; animation: visual-spin 0.8s linear infinite; }
+  .pattern-svg { @apply absolute inset-0 w-full h-full; }
+  .pattern-rect { fill: rgba(245, 159, 0, 0.12); stroke: #f59f00; }
+  .pattern-label-bg { fill: none; stroke: #191f28; stroke-linejoin: round; font-weight: 700; }
+  .pattern-label { fill: #ffffff; font-weight: 700; }
+
+  .era-compare { @apply flex flex-wrap items-center gap-2.5 px-4 py-3.5 rounded-xl mb-4 text-sm font-semibold; }
+  .era-compare.match { @apply border; border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
+  .era-compare.mismatch { @apply border; border-color: #fde68a; background: #fffbeb; color: #b45309; }
+  .era-compare-tag { @apply ml-auto px-2.5 py-1 rounded-full text-xs; background: rgba(0, 0, 0, 0.06); }
+
+  .inspection-sections { @apply flex flex-col gap-4; }
+  .visual-result-heading { @apply flex items-center mb-2 text-gray-800 text-[17px] font-bold; }
+  .section-body { @apply m-0 text-gray-500 [line-height:1.7] text-[15px]; }
+  .caveat-icon { @apply inline-flex items-center justify-center w-[18px] h-[18px] ml-2 rounded-full text-white text-xs font-bold cursor-help relative; background: #f59f00; }
+  .caveat-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 130%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #191f28;
+    color: white;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease;
+    z-index: 10;
+  }
+  .caveat-icon:hover::after,
+  .caveat-icon:focus::after { opacity: 1; visibility: visible; }
+  .status-note { @apply text-gray-500 text-[15px]; }
+
+  /* ── 조사 보고서(VisualReport) 내부는 main에 없던 pane이라 새로 얹지만,
+     팔레트는 위 --workflow-* 재정의를 그대로 물려받는다(파일 안 건드림). ── */
+  .visual-vca-report-body { @apply grid grid-cols-[1fr_1fr] gap-4; }
+  .visual-vca-report-body section { @apply border border-[color:var(--workflow-line-soft)] [background:var(--workflow-surface-soft)] text-[color:var(--workflow-ink-soft)] text-[13px] leading-[1.75] [word-break:keep-all] [overflow-wrap:break-word] p-5 rounded-xl; }
+  .visual-vca-report-body section:first-child, .visual-vca-report-body section:last-child { @apply col-span-full; }
+  .visual-vca-report-body h3 { @apply text-[color:var(--workflow-bronze-dark)] text-lg font-semibold m-0; }
+  .visual-vca-report-body p { @apply m-0 mt-3; }
+  .visual-vca-report-body ul, .visual-vca-report-body ol { @apply grid gap-3 mt-3 mb-0 pl-5; }
+  .visual-vca-report-body li strong { @apply inline-block [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[11px] mr-2 px-2 py-0.5 rounded-full; }
+  .visual-vca-report-body li span { @apply text-[color:var(--workflow-muted)] text-xs font-bold; }
+  .visual-vca-report-body li p { @apply text-xs mt-1.5; }
+  .visual-vca-report-body li small { @apply block text-[color:var(--workflow-muted)] text-[11px] mt-1.5; }
+  .visual-vca-finding-citations { @apply mt-1.5 text-[color:var(--workflow-muted)] text-[11px]; }
+  .visual-vca-finding-citations summary { @apply w-fit cursor-pointer text-[color:var(--workflow-bronze-dark)] font-bold; }
+  .visual-vca-finding-citations ul { @apply grid gap-1 mt-1.5 mb-0 pl-4; }
+  .visual-vca-recommendations-note strong { @apply block text-[color:var(--workflow-bronze-dark)] text-xs font-bold; }
+  .visual-vca-recommendations-note ul { @apply grid gap-1.5 mt-2 mb-0 pl-4 list-disc; }
+  .visual-vca-recommendations-note li em { @apply not-italic text-[color:var(--workflow-muted)] font-bold; }
+  .visual-vca-original-hint { @apply cursor-help [border-bottom:1px_dotted_currentColor]; }
+  .visual-vca-findings-report { @apply col-span-full; }
+  .visual-vca-findings-summary { @apply text-[14px] leading-[1.7] font-semibold text-[color:var(--workflow-ink)] [word-break:keep-all] mb-3; }
+  .visual-vca-stats-table-scroll { @apply w-full overflow-x-auto mb-4; }
+  .visual-vca-stats-table { @apply w-auto border-collapse text-[13px]; }
+  .visual-vca-stats-table th, .visual-vca-stats-table td { @apply border border-[color:var(--workflow-line-soft)] px-3 py-1.5 text-center whitespace-nowrap; }
+  .visual-vca-stats-table thead th { @apply [background:var(--workflow-surface-soft)] text-[color:var(--workflow-ink)] font-bold; }
+  .visual-vca-stats-table td { @apply [font-variant-numeric:tabular-nums] text-[color:var(--workflow-bronze-dark)] font-bold text-[15px]; }
+  .visual-vca-finding-number { @apply inline-flex flex-none items-center justify-center w-5 h-5 [background:var(--workflow-danger)] text-white text-[10px] font-bold rounded-full mr-2 align-middle; }
+  .visual-vca-finding-number-lg { @apply w-7 h-7 text-sm mr-2.5; }
+  .visual-vca-findings-evidence { @apply border-t border-[color:var(--workflow-line-soft)] mt-4 pt-4; }
+  .visual-vca-rag-group { @apply mt-4; }
+  .visual-vca-rag-group h4 { @apply text-[color:var(--workflow-bronze-dark)] text-xs font-bold m-0; }
+  .visual-vca-rag-queries { @apply grid gap-2 mt-2 mb-0 pl-5; }
+  .visual-vca-rag-queries li { @apply text-[13px] leading-[1.65] [word-break:keep-all] [overflow-wrap:break-word] pl-0; }
+  .visual-vca-rag-evidence-rows, .visual-vca-rag-retrievals { @apply grid gap-2 [list-style:none] mt-2 mb-0 p-0; }
+  .visual-vca-rag-evidence-rows > li, .visual-vca-rag-retrievals > li, .visual-vca-rag-concepts article { @apply border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] p-3 rounded-lg; }
+  .visual-vca-rag-evidence-rows > li > strong, .visual-vca-rag-retrievals strong { @apply [background:transparent] text-[color:var(--workflow-ink)] text-[13px] leading-[1.6] [word-break:keep-all] [overflow-wrap:break-word] mr-0 p-0 rounded-none; }
+  .visual-vca-rag-details { @apply grid gap-2 mt-2 mb-0; }
+  .visual-vca-rag-details > div { @apply grid grid-cols-[80px_minmax(0,1fr)] gap-2 border-t border-[color:var(--workflow-line-soft)] pt-2; }
+  .visual-vca-rag-details dd { @apply text-[color:var(--workflow-ink-soft)] text-xs leading-[1.65] [overflow-wrap:anywhere] m-0; }
+  .visual-vca-rag-meta { @apply border-t border-[color:var(--workflow-line-soft)] mt-3 pt-3; }
+  .visual-vca-rag-meta summary { @apply w-fit cursor-pointer text-[color:var(--workflow-bronze-dark)] text-xs font-bold; }
+  .visual-vca-rag-meta .visual-vca-rag-details { @apply mt-3; }
+  .visual-vca-rag-retrievals > li > div { @apply flex items-start justify-between gap-3; }
+  .visual-vca-rag-retrievals span { @apply flex-none text-[color:var(--workflow-muted)] text-xs font-bold; }
+  .visual-vca-rag-retrievals p { @apply text-[13px] leading-[1.7] [word-break:keep-all] [overflow-wrap:break-word] mt-1.5; }
+  .visual-vca-rag-concepts { @apply grid grid-cols-2 gap-2 mt-2; }
+  .visual-vca-rag-concepts > article:only-child { @apply col-span-full; }
+  .visual-vca-rag-concepts h5 { @apply text-[color:var(--workflow-ink)] text-[13px] font-bold m-0; }
+  .visual-vca-rag-concepts p { @apply text-[13px] leading-[1.7] [word-break:keep-all] [overflow-wrap:break-word] mt-1.5; }
+  .visual-vca-rag-concepts article > ul { @apply flex flex-wrap gap-1.5 [list-style:none] mt-3 mb-0 p-0; }
+  .visual-vca-rag-concepts article > ul > li { @apply [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[10px] font-bold px-2 py-0.5 rounded-full; }
+
+  .visual-vca-pottery-inspection { @apply col-span-full; }
+  .visual-vca-pottery-inspection > header { @apply border-b border-[color:var(--workflow-line-soft)] pb-3; }
+  .visual-vca-pottery-inspection > header span { @apply block text-[color:var(--workflow-bronze)] text-[10px] font-bold tracking-[0.14em]; }
+  .visual-vca-pottery-inspection > header h3 { @apply mt-1; }
+  .visual-vca-pottery-inspection-actions { @apply flex items-center justify-between gap-4 border-b border-[color:var(--workflow-line-soft)] py-4; }
+  .visual-vca-pottery-inspection-actions p { @apply text-xs leading-[1.7] mt-0; }
+  .visual-vca-pottery-inspection-empty { @apply border border-dashed border-[color:var(--workflow-line)] [background:var(--workflow-paper)] text-[color:var(--workflow-muted)] text-xs text-center mt-4 px-4 py-3 rounded-lg; }
+  .visual-vca-pottery-inspection-meta { @apply grid grid-cols-2 gap-2 mt-4 mb-0; }
+  .visual-vca-pottery-inspection-meta > div, .visual-vca-pottery-inspection-details dl > div { @apply min-w-0 border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] p-2.5 rounded-lg; }
+  .visual-vca-pottery-inspection-meta dt, .visual-vca-pottery-inspection-details dt { @apply text-[color:var(--workflow-muted)] text-[10px]; }
+  .visual-vca-pottery-inspection-meta dd, .visual-vca-pottery-inspection-details dd { @apply text-[color:var(--workflow-ink-soft)] text-xs leading-[1.65] mt-1 m-0; }
+  .visual-vca-pottery-inspection-copy, .visual-vca-pottery-inspection-details { @apply mt-4; }
+  .visual-vca-pottery-inspection-details summary { @apply w-fit cursor-pointer text-[color:var(--workflow-bronze-dark)] text-xs font-bold; }
+  .visual-vca-pottery-inspection h4 { @apply text-[color:var(--workflow-bronze-dark)] text-xs font-bold mt-4 mb-0 first:mt-0; }
+  .visual-vca-pottery-inspection-copy p, .visual-vca-pottery-inspection-details > p { @apply text-xs leading-[1.7] mt-1.5; }
+  .visual-vca-pottery-inspection-details dl { @apply grid grid-cols-2 gap-2 mt-3 mb-0; }
+
+  .visual-vca-overlay { @apply col-span-full; }
+  .visual-vca-overlay-toggle { @apply flex justify-end; }
+  .visual-vca-overlay-toggle button { @apply inline-flex min-h-8 items-center cursor-pointer text-[12px] font-bold px-3 py-0 rounded-md border border-[color:var(--workflow-line)] [background:var(--workflow-surface-soft)] text-[color:var(--workflow-ink)] hover:[background:var(--workflow-surface)] hover:border-[color:var(--workflow-bronze)]; }
+  .visual-vca-overlay-grid { @apply grid grid-cols-1 gap-4 mt-2; }
+  .visual-vca-overlay-grid-single { @apply grid-cols-1; }
+  .visual-vca-overlay-grid .visual-vca-image-placeholder { @apply w-full aspect-[4/3] object-contain border border-[color:var(--workflow-line-soft)] [background:var(--workflow-paper)] p-3 rounded-lg; }
+  .visual-vca-overlay-item { @apply flex flex-col gap-2; }
+  .visual-vca-overlay-zoom-frame { @apply relative w-full overflow-hidden select-none rounded-lg; }
+  .visual-vca-overlay-zoom-layer { @apply relative w-full; transform-origin: center center; }
+  .visual-vca-overlay-figure { @apply m-0; }
+  .visual-vca-overlay-frame { @apply relative block w-full overflow-hidden border border-[color:var(--workflow-line-soft)] [background:var(--workflow-paper)] leading-[0] rounded-lg; }
+  .visual-vca-overlay-frame img { @apply block w-full h-auto pointer-events-none; }
+  .visual-vca-overlay-svg { @apply absolute inset-0 w-full h-full; }
+  /* 박스/배지 색상(stroke·fill)은 특이점 번호별로 겹치지 않게 JS에서
+     순환 팔레트로 계산해 inline style로 준다 (visualMarkerColors.js) -
+     CSS에서는 굵기·도형·타이포만 담당한다. */
+  .visual-vca-overlay-box { @apply cursor-pointer [stroke-width:2.5px] opacity-90; }
+  .visual-vca-overlay-box--hovered { @apply [stroke-width:4px] opacity-100 [filter:drop-shadow(0_0_4px_rgba(0,0,0,0.5))]; }
+  .visual-vca-overlay-marker { @apply cursor-pointer; }
+  .visual-vca-overlay-leader { @apply [stroke-width:1.5px] [stroke-dasharray:3,3] opacity-70; }
+  .visual-vca-overlay-badge { @apply [stroke:white] [stroke-width:1.5px]; }
+  .visual-vca-overlay-badge-text { @apply [fill:white] font-bold [text-anchor:middle] [dominant-baseline:central] pointer-events-none select-none; }
+  .visual-vca-overlay-figure figcaption { @apply text-[color:var(--workflow-muted)] text-[11px] mt-1.5; }
+  /* 예전엔 마우스 좌표를 따라다니는 fixed 팝업이었는데, 오프셋을 줘도
+     결국 커서가 있는 마스킹 위를 가리는 경우가 많았다. 대신 사진 아래
+     고정된 자리에 패널을 두고, 아무것도 안 가리키는 동안은
+     invisible로 숨기되 자리(min-height)는 그대로 남겨서 마우스를 올릴
+     때 그리드가 들썩이지 않게 한다. */
+  .visual-vca-finding-popup { @apply mt-2 min-h-[92px] border border-[color:var(--workflow-line)] [background:var(--workflow-surface)] text-[13px] leading-[1.6] [word-break:keep-all] [overflow-wrap:break-word] p-3 rounded-lg; }
+  .visual-vca-finding-popup--empty { @apply invisible; }
+  .visual-vca-finding-popup strong { @apply inline-block [background:var(--workflow-bronze-soft)] text-[color:var(--workflow-bronze-dark)] text-[11px] mr-2 px-2 py-0.5 rounded-full; }
+  .visual-vca-finding-popup .visual-vca-finding-popup-number { @apply inline-flex items-center justify-center w-5 h-5 text-white p-0 rounded-full; }
+  .visual-vca-finding-popup span { @apply text-[color:var(--workflow-muted)] text-xs font-bold; }
+  .visual-vca-finding-popup p { @apply text-xs mt-1.5 mb-0; }
+
+  .visual-vca-pdf { @apply flex items-center justify-between gap-5 border-t border-[color:var(--workflow-line-soft)] mt-6 pt-5; }
+  .visual-vca-pdf > div:first-child { @apply flex flex-col gap-1; }
+  .visual-vca-pdf strong { @apply text-sm; }
+  .visual-vca-pdf span { @apply text-[color:var(--workflow-muted)] text-xs; }
+  .visual-vca-pdf > div:last-child { @apply flex flex-wrap gap-2; }
+
+  /* ── main 기본 틀: 전문가 검수 안내 + 완료 footer ── */
+  .visual-review-card { @apply [background:white] border border-gray-200 rounded-2xl p-6; }
+  .visual-review-index { @apply block text-xs font-extrabold tracking-widest mb-2; color: #b45309; }
+  .visual-review-card h2 { @apply text-lg font-bold text-gray-800 mb-3; }
+  .visual-review-card p { @apply text-gray-500 text-sm [line-height:1.6] mb-4; }
+  .visual-review-card ul { @apply list-disc pl-5 text-gray-600 text-sm space-y-2; }
+
+  .visual-result-layout { @apply grid [grid-template-columns:2fr_1fr] gap-6 mb-6; }
+
+  .complete-area { @apply flex items-center justify-between [background:white] border border-gray-200 rounded-2xl p-6; }
+  .complete-area p { @apply m-0 text-gray-500 text-sm [word-break:keep-all] [overflow-wrap:break-word]; }
+  .complete-btn { @apply w-[220px] h-[58px] text-white text-xl font-bold cursor-pointer transition-[0.2s] rounded-[14px] border-[none]; background: var(--heritage-bronze, #f59f00); }
+  .complete-btn:hover:enabled { background: var(--heritage-bronze-dark, #c97f00); transform: translateY(-2px); }
+  .complete-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+  .visual-state { @apply grid place-items-center content-center text-center px-6; }
+  .visual-state p { @apply max-w-lg text-gray-500 text-sm leading-[1.7] mt-4 mb-6; }
+  .visual-state h1 { @apply text-[38px] font-bold text-gray-800 mb-2 leading-tight; }
+  .visual-vca-page button:focus-visible, .visual-vca-page a:focus-visible, .visual-vca-page input:focus-visible, .visual-vca-page summary:focus-visible { @apply outline-2 outline-offset-2; outline-color: var(--heritage-bronze, #f59f00); }
+
+  @media (max-width: 760px) {
+    .visual-page.visual-vca-page { @apply px-4 py-8; }
+    .visual-header, .visual-vca-status-actions, .complete-area { @apply items-stretch flex-col; }
+    .visual-artifact-summary, .visual-result-layout, .visual-vca-report-body, .visual-vca-layout { @apply grid-cols-1; }
+    .visual-artifact-summary > div { @apply border-r-0 border-t border-gray-200 first:border-t-0; }
+    .visual-vca-report-body section:first-child, .visual-vca-report-body section:last-child { @apply col-span-1; }
+    .visual-vca-pottery-inspection-actions { @apply items-stretch flex-col; }
+    .visual-vca-rag-concepts { @apply grid-cols-1; }
+    .visual-vca-rag-details > div { @apply grid-cols-1 gap-1; }
+    .visual-vca-pottery-inspection-meta, .visual-vca-pottery-inspection-details dl { @apply grid-cols-1; }
+    .visual-vca-image-grid { @apply grid-cols-1; }
+  }
+  @media (prefers-reduced-motion: reduce) { .visual-vca-page * { @apply transition-none; } }
+}
+
+@keyframes visual-spin {
+  to { transform: rotate(360deg); }
+}
