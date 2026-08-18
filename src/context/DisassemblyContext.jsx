@@ -104,6 +104,12 @@ const [strengtheningGuide, setStrengtheningGuide] =
 const [colorChangeAnalysis, setColorChangeAnalysis] =
   useState(null);
 
+// 강화 - 습윤 효과 테스트에 사용한 전/후 사진.
+// 분석 결과가 나온 뒤에도 화면에 유지하고, Task.currentInterrupt 복구 시
+// 페이지 재진입에서도 같은 입력 이미지를 다시 보여주기 위해 Context에 둔다.
+const [strengtheningWettingPhotos, setStrengtheningWettingPhotos] =
+  useState({ before: "", after: "", beforeKey: "", afterKey: "" });
+
 // 강화 - 사용자가 실제로 선택한 강화제/용제 (보고서용)
 const [strengtheningChoice, setStrengtheningChoice] =
   useState({ agent: "", solvent: "" });
@@ -123,6 +129,12 @@ const [bondingChoice, setBondingChoice] =
 // 접합 - 임시접합(가조립) 사진 VLM 검증 결과
 const [bondingTempAnalysis, setBondingTempAnalysis] =
   useState(null);
+
+// 접합 - 임시접합 검증에 사용한 전/후 사진 URL.
+// 분석 결과가 나온 뒤에도 사진을 유지하고, Task.currentInterrupt 복구 시
+// 페이지 재진입에서도 동일한 입력 이미지를 다시 보여주기 위해 Context에 둔다.
+const [bondingTempPhotos, setBondingTempPhotos] =
+  useState({ before: "", after: "", beforeKey: "", afterKey: "" });
 
 // 복원 재료 추천
 const [restorationMaterial, setRestorationMaterial] =
@@ -242,11 +254,13 @@ const [restorationChoice, setRestorationChoice] =
   setStrengtheningRecommendation(null);
   setStrengtheningGuide(null);
   setColorChangeAnalysis(null);
+  setStrengtheningWettingPhotos({ before: "", after: "", beforeKey: "", afterKey: "" });
   setStrengtheningChoice({ agent: "", solvent: "" });
   setBondingAdhesive(null);
   setBondingGuide(null);
   setBondingChoice({ adhesive: "" });
   setBondingTempAnalysis(null);
+  setBondingTempPhotos({ before: "", after: "", beforeKey: "", afterKey: "" });
   setRestorationMaterial(null);
   setRestorationGuide(null);
   setRestorationFinishingGuide(null);
@@ -369,6 +383,9 @@ const [restorationChoice, setRestorationChoice] =
       colorChangeAnalysis,
       setColorChangeAnalysis,
 
+      strengtheningWettingPhotos,
+      setStrengtheningWettingPhotos,
+
       strengtheningChoice,
       setStrengtheningChoice,
 
@@ -383,6 +400,9 @@ const [restorationChoice, setRestorationChoice] =
 
       bondingTempAnalysis,
       setBondingTempAnalysis,
+
+      bondingTempPhotos,
+      setBondingTempPhotos,
 
       restorationMaterial,
       setRestorationMaterial,

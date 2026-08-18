@@ -82,6 +82,17 @@ export function applyInterrupt(interrupt, ctx) {
   if (interrupt.ai_recommendation) {
     ctx.setStrengtheningRecommendation(interrupt.ai_recommendation);
   }
+  if (
+    stage.startsWith("강화처리") &&
+    (interrupt.before_photo_urls || interrupt.after_photo_urls)
+  ) {
+    ctx.setStrengtheningWettingPhotos({
+      before: interrupt.before_photo_urls?.[0] || "",
+      after: interrupt.after_photo_urls?.[0] || "",
+      beforeKey: interrupt.before_photo_keys?.[0] || "",
+      afterKey: interrupt.after_photo_keys?.[0] || "",
+    });
+  }
   if (interrupt.ai_color_analysis) {
     ctx.setColorChangeAnalysis({
       ...interrupt.ai_color_analysis,
@@ -95,6 +106,17 @@ export function applyInterrupt(interrupt, ctx) {
   // 접합
   if (interrupt.ai_adhesive) {
     ctx.setBondingAdhesive(interrupt.ai_adhesive);
+  }
+  if (
+    stage.startsWith("접합") &&
+    (interrupt.before_photo_urls || interrupt.after_photo_urls)
+  ) {
+    ctx.setBondingTempPhotos({
+      before: interrupt.before_photo_urls?.[0] || "",
+      after: interrupt.after_photo_urls?.[0] || "",
+      beforeKey: interrupt.before_photo_keys?.[0] || "",
+      afterKey: interrupt.after_photo_keys?.[0] || "",
+    });
   }
   if (interrupt.ai_temp_analysis) {
     ctx.setBondingTempAnalysis({

@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
-import { uploadPhoto } from "../../services/photoUploadApi";
+import { refreshPhotoUrl, uploadPhotoAsset } from "../../services/photoUploadApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
 import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
@@ -70,21 +70,68 @@ function BondingWorkPage() {
     taskId,
     bondingTempAnalysis,
     setBondingTempAnalysis,
+    bondingTempPhotos,
+    setBondingTempPhotos,
     setCompleted,
     setStepSaving,
   } = ctx;
 
   const { isCompleted, isSaving, isLocked } = useGuideStepLock("bondingWork");
 
-  const [beforePhoto, setBeforePhoto] = useState("");
-  const [afterPhoto, setAfterPhoto] = useState("");
+  const beforePhoto = bondingTempPhotos?.before || "";
+  const afterPhoto = bondingTempPhotos?.after || "";
+  const beforePhotoKey = bondingTempPhotos?.beforeKey || "";
+  const afterPhotoKey = bondingTempPhotos?.afterKey || "";
   const [beforeUploading, setBeforeUploading] = useState(false);
   const [afterUploading, setAfterUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [photosDirty, setPhotosDirty] = useState(false);
 
-  // 백엔드가 추천하는 기본 선택값. 항상 "proceed"로 오지만, 실제 진행 여부는
-  // 아래 severity/recommendation을 보고 작업자가 최종 판단한다 — 자동 진행 아님.
+  // 보존가이드 사진 URL은 presigned URL이라 만료될 수 있다. LangGraph/Task에
+  // 함께 저장한 S3 key가 있으면 페이지 진입 때마다 새 URL을 발급해 미리보기를
+  // 복원한다. key가 없는 구버전 task는 기존 URL을 그대로 사용한다.
+  useEffect(() => {
+    if (!artifactId || (!beforePhotoKey && !afterPhotoKey)) return undefined;
+
+    let cancelled = false;
+
+    async function refreshStoredPhotos() {
+      try {
+        const [freshBefore, freshAfter] = await Promise.all([
+          beforePhotoKey
+            ? refreshPhotoUrl(artifactId, beforePhotoKey)
+            : Promise.resolve(""),
+          afterPhotoKey
+            ? refreshPhotoUrl(artifactId, afterPhotoKey)
+            : Promise.resolve(""),
+        ]);
+
+        if (cancelled) return;
+        setBondingTempPhotos((current) => ({
+          ...(current || {}),
+          before: freshBefore || current?.before || "",
+          after: freshAfter || current?.after || "",
+        }));
+      } catch (error) {
+        // URL 갱신 실패가 전체 단계 진입을 막으면 안 된다. 기존 URL을 유지하고
+        // 사용자가 필요하면 사진을 다시 업로드할 수 있게 둔다.
+        console.error("임시접합 사진 URL 갱신 실패", error);
+      }
+    }
+
+    refreshStoredPhotos();
+    return () => {
+      cancelled = true;
+    };
+  }, [artifactId, beforePhotoKey, afterPhotoKey, setBondingTempPhotos]);
+
+  // 분석 결과에 따라 백엔드가 proceed/retry를 기본 권고한다. 최종 진행 여부는
+  // 작업자가 직접 결정하므로 두 버튼은 모두 유지한다.
   const defaultAction = bondingTempAnalysis?.default_action || "proceed";
+
+  // 파일 선택/업로드 자체는 workflow 상태를 변경하지 않는다. 결과 화면에서
+  // 사진을 바꾸면 FE에 dirty 상태만 남기고, 실제 LangGraph retry는 사용자가
+  // "재분석" 또는 "다시 촬영"을 명시적으로 실행했을 때만 수행한다.
 
   const handleBeforeFileChange = async (e) => {
     if (isLocked) return;
@@ -93,8 +140,13 @@ function BondingWorkPage() {
 
     setBeforeUploading(true);
     try {
-      const url = await uploadPhoto(file, artifactId);
-      setBeforePhoto(url);
+      const asset = await uploadPhotoAsset(file, artifactId);
+      setBondingTempPhotos((current) => ({
+        ...(current || {}),
+        before: asset.url,
+        beforeKey: asset.key,
+      }));
+      if (bondingTempAnalysis) setPhotosDirty(true);
     } catch (error) {
       console.error(error);
       alert("임시접합 전 사진 업로드 실패");
@@ -110,8 +162,13 @@ function BondingWorkPage() {
 
     setAfterUploading(true);
     try {
-      const url = await uploadPhoto(file, artifactId);
-      setAfterPhoto(url);
+      const asset = await uploadPhotoAsset(file, artifactId);
+      setBondingTempPhotos((current) => ({
+        ...(current || {}),
+        after: asset.url,
+        afterKey: asset.key,
+      }));
+      if (bondingTempAnalysis) setPhotosDirty(true);
     } catch (error) {
       console.error(error);
       alert("임시접합 후 사진 업로드 실패");
@@ -129,22 +186,43 @@ function BondingWorkPage() {
       return;
     }
 
-    const request = {
-      resume: {
-        before_photo_urls: [beforePhoto],
-        after_photo_urls: [afterPhoto],
-      },
-    };
-
     setAnalyzing(true);
     try {
-      const response = await resumeTask(taskId, request, {
+      const [analysisBeforePhoto, analysisAfterPhoto] = await Promise.all([
+        beforePhotoKey ? refreshPhotoUrl(artifactId, beforePhotoKey) : beforePhoto,
+        afterPhotoKey ? refreshPhotoUrl(artifactId, afterPhotoKey) : afterPhoto,
+      ]);
+
+      setBondingTempPhotos((current) => ({
+        ...(current || {}),
+        before: analysisBeforePhoto || current?.before || "",
+        after: analysisAfterPhoto || current?.after || "",
+      }));
+
+      // 기존 검증 결과를 본 뒤 사진을 교체한 경우에만 이 시점에서 retry한다.
+      // 사진 업로드만으로는 checkpoint가 변하지 않는다.
+      if (bondingTempAnalysis && photosDirty) {
+        await resumeTask(taskId, {
+          resume: { action: "retry" },
+        });
+      }
+
+      const response = await resumeTask(taskId, {
+        resume: {
+          before_photo_urls: [analysisBeforePhoto],
+          after_photo_urls: [analysisAfterPhoto],
+          before_photo_keys: beforePhotoKey ? [beforePhotoKey] : [],
+          after_photo_keys: afterPhotoKey ? [afterPhotoKey] : [],
+        },
+      }, {
         mockStage: "bonding-temp",
       });
+
+      setPhotosDirty(false);
       applyInterrupt(response.interrupt, ctx);
     } catch (error) {
       console.error(error);
-      alert("임시접합 사진 저장 실패");
+      alert(bondingTempAnalysis ? "임시접합 재분석 실패" : "임시접합 사진 저장 실패");
     } finally {
       setAnalyzing(false);
     }
@@ -159,9 +237,10 @@ function BondingWorkPage() {
         resume: { action: "retry" },
       });
 
+      // 기존 사진은 지우지 않는다. 결과가 부적합해도 작업자는 어떤 사진으로
+      // 검증했는지 확인한 상태에서 필요한 한쪽만 교체할 수 있어야 한다.
       setBondingTempAnalysis(null);
-      setBeforePhoto("");
-      setAfterPhoto("");
+      setPhotosDirty(false);
       applyInterrupt(response.interrupt, ctx);
     } catch (error) {
       console.error(error);
@@ -208,17 +287,17 @@ function BondingWorkPage() {
           ← 이전
         </button>
         <div className="nav-btn-group">
-          {!bondingTempAnalysis && (
+          {(!bondingTempAnalysis || photosDirty) && (
             <button
               className="nav-btn"
-              disabled={analyzing || isLocked}
+              disabled={analyzing || beforeUploading || afterUploading || isLocked || !beforePhoto || !afterPhoto}
               onClick={handleAnalyze}
             >
-              {analyzing ? "분석 중..." : "분석"}
+              {analyzing ? "분석 중..." : bondingTempAnalysis ? "재분석" : "분석"}
             </button>
           )}
 
-          {bondingTempAnalysis && (
+          {bondingTempAnalysis && !photosDirty && (
             <button
               className={`nav-btn ${defaultAction === "retry" ? "" : "secondary"}`}
               disabled={analyzing || isLocked}
@@ -230,7 +309,7 @@ function BondingWorkPage() {
 
           <button
             className={`nav-btn ${defaultAction === "retry" ? "secondary" : ""}`}
-            disabled={!bondingTempAnalysis || isLocked}
+            disabled={!bondingTempAnalysis || photosDirty || analyzing || isLocked}
             onClick={handleProceed}
           >
             {isSaving ? "완료 처리 중..." : isCompleted ? "완료됨" : "다음 →"}
@@ -243,8 +322,7 @@ function BondingWorkPage() {
           <h1>임시접합 검증</h1>
         </div>
 
-        {!bondingTempAnalysis && (
-          <div className="photo-row">
+        <div className="photo-row">
           <div
             className={`info-card photo-upload-zone ${
               beforeUploading ? "is-disabled" : ""
@@ -257,7 +335,7 @@ function BondingWorkPage() {
               type="file"
               accept="image/*"
               aria-label="임시접합 전 사진 선택"
-              disabled={isLocked || beforeUploading}
+              disabled={isLocked || beforeUploading || analyzing}
               onChange={handleBeforeFileChange}
             />
 
@@ -302,7 +380,7 @@ function BondingWorkPage() {
               type="file"
               accept="image/*"
               aria-label="임시접합 후 사진 선택"
-              disabled={isLocked || afterUploading}
+              disabled={isLocked || afterUploading || analyzing}
               onChange={handleAfterFileChange}
             />
 
@@ -335,10 +413,14 @@ function BondingWorkPage() {
             </div>
           </div>
           </div>
-        )}
 
         {bondingTempAnalysis && (
           <div className="info-card temp-analysis-card">
+            {photosDirty && (
+              <p className="temp-analysis-warning">
+                사진이 변경되었습니다. 새 사진 기준으로 재분석해주세요.
+              </p>
+            )}
             {!bondingTempAnalysis.is_analyzable && (
               <p className="temp-analysis-warning">
                 사진으로 판단이 어렵습니다. 다시 촬영해주세요.
