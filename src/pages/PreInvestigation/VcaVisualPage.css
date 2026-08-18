@@ -318,3 +318,7 @@
 @keyframes visual-spin {
   to { transform: rotate(360deg); }
 }
+
+@layer components {
+  .visual-vca-error-actions { @apply flex flex-wrap items-center justify-center gap-2 mt-4; }
+}

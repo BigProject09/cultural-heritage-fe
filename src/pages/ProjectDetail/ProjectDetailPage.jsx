@@ -21,6 +21,7 @@ import { getCurrentStep } from "../../utils/flowNavigation";
 import { flowRoutes } from "../../data/flowData";
 import { useDisassembly } from "../../context/useDisassembly";
 import { getLatestTaskByArtifact } from "../../services/conservationGuideApi";
+import { getLatestSavedReport } from "../../services/reportApi";
 import { restoreGuideTaskContext } from "../../utils/guideTaskRecovery";
 import "./ProjectDetailPage.css";
 
@@ -36,6 +37,7 @@ function ProjectDetailPage() {
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [hasSavedFinalReport, setHasSavedFinalReport] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,6 +55,21 @@ function ProjectDetailPage() {
       });
 
     return () => controller.abort();
+  }, [decodedId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getLatestSavedReport(decodedId)
+      .then((report) => {
+        if (!cancelled) setHasSavedFinalReport(Boolean(report?.reportJson));
+      })
+      .catch(() => {
+        if (!cancelled) setHasSavedFinalReport(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [decodedId]);
 
   const completedCount = useMemo(
@@ -201,7 +218,8 @@ function ProjectDetailPage() {
     }
   };
 
-  const reportReady = completedCount === WORKSPACE_MODULES.length;
+  const reportReady =
+    completedCount === WORKSPACE_MODULES.length || hasSavedFinalReport;
   const missingModules = WORKSPACE_MODULES.filter(
     (module) => project.modules[module.key] !== MODULE_STATUS.DONE,
   );
@@ -325,8 +343,10 @@ function ProjectDetailPage() {
             <span className="heritage-project-kicker">FINAL DELIVERABLE</span>
             <h2>최종 복원 결과 보고서</h2>
             <p>
-              {reportReady
-                ? "세 기능이 모두 완료되었습니다. 최종 통합 보고서를 생성할 수 있습니다."
+              {hasSavedFinalReport
+                ? "생성된 최종보고서가 저장되어 있습니다. 기존 결과를 바로 확인할 수 있습니다."
+                : reportReady
+                  ? "세 기능이 모두 완료되었습니다. 최종 통합 보고서를 생성할 수 있습니다."
                 : `세 기능은 독립적으로 진행되며, 최종 보고서만 모두 완료된 뒤 생성할 수 있습니다. 현재 ${completedCount}개 완료.`}
             </p>
             {!reportReady && (
@@ -343,7 +363,7 @@ function ProjectDetailPage() {
               navigate(getFinalReportRoute(project.artifactId));
             }}
           >
-            최종 보고서
+            {hasSavedFinalReport ? "최종보고서 보기 →" : "최종 보고서"}
           </button>
         </section>
       </main>

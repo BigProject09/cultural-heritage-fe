@@ -237,6 +237,18 @@
   .final-report-error {
     @apply text-[#a1453c] text-xs;
   }
+
+  .final-report-success {
+    @apply text-[#566b52] text-xs font-semibold;
+  }
+
+  .final-report-saved-actions button {
+    @apply min-h-10 px-5 rounded-lg border border-[color:var(--heritage-bronze)] cursor-pointer transition disabled:opacity-60 disabled:cursor-default;
+  }
+
+  .final-report-saved-actions button:hover:not(:disabled) {
+    @apply -translate-y-px shadow-sm;
+  }
 }
 
 @layer components {
