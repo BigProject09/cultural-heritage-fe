@@ -13,7 +13,12 @@ const FLOW_KEY_TO_NAME = {
 
 const STAGE_KEYS = {
   해체: ["checklist", "tool", "method", "post"],
-  세척: ["cleaningMethod", "cleaningStep", "cleaningDryingStep", "cleaningPost"],
+  세척: [
+    "cleaningMethod",
+    "cleaningStep",
+    "cleaningDryingStep",
+    "cleaningPost",
+  ],
   강화: [
     "strengtheningMaterial",
     "strengtheningWetting",
@@ -212,7 +217,9 @@ export function taskFlowToApprovedFlow(flow) {
 
 function findInterruptDescriptor(interrupt) {
   const stage = String(interrupt?.stage || "");
-  return INTERRUPT_ROUTES.find((item) => stage.startsWith(item.startsWith)) || null;
+  return (
+    INTERRUPT_ROUTES.find((item) => stage.startsWith(item.startsWith)) || null
+  );
 }
 
 function markWholeStage(completed, stageName) {
@@ -285,7 +292,11 @@ function applyStoredResults(results, ctx) {
       })),
     );
   }
-  if (disassembly.memo || disassembly.photo?.length || disassembly.photo_urls?.length) {
+  if (
+    disassembly.memo ||
+    disassembly.photo?.length ||
+    disassembly.photo_urls?.length
+  ) {
     ctx.setPostRecord("disassembly", {
       memo: disassembly.memo || "",
       photos: disassembly.photo || disassembly.photo_urls || [],
@@ -324,8 +335,13 @@ function applyStoredResults(results, ctx) {
   if (strengthening.ai_color_analysis) {
     ctx.setColorChangeAnalysis(strengthening.ai_color_analysis);
   }
-  if (strengthening.ai_method) ctx.setStrengtheningGuide(strengthening.ai_method);
-  if (strengthening.memo || strengthening.photo?.length || strengthening.photo_urls?.length) {
+  if (strengthening.ai_method)
+    ctx.setStrengtheningGuide(strengthening.ai_method);
+  if (
+    strengthening.memo ||
+    strengthening.photo?.length ||
+    strengthening.photo_urls?.length
+  ) {
     ctx.setPostRecord("strengthening", {
       memo: strengthening.memo || "",
       photos: strengthening.photo || strengthening.photo_urls || [],
@@ -335,9 +351,12 @@ function applyStoredResults(results, ctx) {
   const bonding = results.bonding || {};
   if (bonding.ai_adhesive) ctx.setBondingAdhesive(bonding.ai_adhesive);
   if (bonding.confirmed_adhesive) {
-    ctx.setBondingChoice({ adhesive: bonding.confirmed_adhesive.adhesive || "" });
+    ctx.setBondingChoice({
+      adhesive: bonding.confirmed_adhesive.adhesive || "",
+    });
   }
-  if (bonding.ai_temp_analysis) ctx.setBondingTempAnalysis(bonding.ai_temp_analysis);
+  if (bonding.ai_temp_analysis)
+    ctx.setBondingTempAnalysis(bonding.ai_temp_analysis);
   if (bonding.ai_method) ctx.setBondingGuide(bonding.ai_method);
   if (bonding.memo || bonding.photo?.length || bonding.photo_urls?.length) {
     ctx.setPostRecord("bonding", {
@@ -347,7 +366,8 @@ function applyStoredResults(results, ctx) {
   }
 
   const restoration = results.restoration || {};
-  if (restoration.ai_material) ctx.setRestorationMaterial(restoration.ai_material);
+  if (restoration.ai_material)
+    ctx.setRestorationMaterial(restoration.ai_material);
   if (restoration.confirmed_material) {
     ctx.setRestorationChoice({
       material: restoration.confirmed_material.material || "",
@@ -357,7 +377,11 @@ function applyStoredResults(results, ctx) {
   if (restoration.ai_finishing) {
     ctx.setRestorationFinishingGuide(restoration.ai_finishing);
   }
-  if (restoration.memo || restoration.photo?.length || restoration.photo_urls?.length) {
+  if (
+    restoration.memo ||
+    restoration.photo?.length ||
+    restoration.photo_urls?.length
+  ) {
     ctx.setPostRecord("restoration", {
       memo: restoration.memo || "",
       photos: restoration.photo || restoration.photo_urls || [],
@@ -373,9 +397,19 @@ export function getRecoveredGuideRoute(task, artifactId) {
   }
 
   const descriptor = findInterruptDescriptor(task.currentInterrupt);
-  return descriptor
-    ? getArtifactWorkflowRoute(artifactId, descriptor.route)
-    : "";
+  if (!descriptor) return "";
+
+  const stageRoute = {
+    해체: "disassembly",
+    세척: "cleaning",
+    강화: "strengthening",
+    접합: "bonding",
+    복원: "restoration",
+  }[descriptor.stage];
+
+  return stageRoute
+    ? getArtifactWorkflowRoute(artifactId, stageRoute)
+    : getArtifactWorkflowRoute(artifactId);
 }
 
 export function restoreGuideTaskContext(task, artifactId, ctx) {
