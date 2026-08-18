@@ -203,10 +203,11 @@ function StrengtheningWettingPage() {
           <h1>습윤 효과 테스트</h1>
         </div>
 
-        <div className="photo-row">
+        {!colorChangeAnalysis && (
+          <div className="photo-row">
           <div
             className={`info-card photo-upload-zone ${
-              colorChangeAnalysis || beforeUploading ? "is-disabled" : ""
+              beforeUploading ? "is-disabled" : ""
             } ${beforePhoto ? "has-photo" : ""}`}
           >
             <h2>처리 전</h2>
@@ -216,7 +217,7 @@ function StrengtheningWettingPage() {
               type="file"
               accept="image/*"
               aria-label="처리 전 사진 선택"
-              disabled={isLocked || !!colorChangeAnalysis || beforeUploading}
+              disabled={isLocked || beforeUploading}
               onChange={handleBeforeFileChange}
             />
 
@@ -251,7 +252,7 @@ function StrengtheningWettingPage() {
 
           <div
             className={`info-card photo-upload-zone ${
-              colorChangeAnalysis || afterUploading ? "is-disabled" : ""
+              afterUploading ? "is-disabled" : ""
             } ${afterPhoto ? "has-photo" : ""}`}
           >
             <h2>처리 후</h2>
@@ -261,7 +262,7 @@ function StrengtheningWettingPage() {
               type="file"
               accept="image/*"
               aria-label="처리 후 사진 선택"
-              disabled={isLocked || !!colorChangeAnalysis || afterUploading}
+              disabled={isLocked || afterUploading}
               onChange={handleAfterFileChange}
             />
 
@@ -293,7 +294,8 @@ function StrengtheningWettingPage() {
               )}
             </div>
           </div>
-        </div>
+          </div>
+        )}
 
         {colorChangeAnalysis && (
           <div className="info-card color-result-card">

@@ -389,13 +389,16 @@
   @apply flex min-h-[580px] flex-1 overflow-hidden flex-col border [background:radial-gradient(_circle_at_center,rgba(92,116,140,0.11),transparent_55%_),#090d12] rounded-xl border-solid border-[#2b3540];
 }
 .xray-page .viewer-inner {
-  @apply relative flex min-h-0 items-center justify-center flex-1 overflow-auto leading-[0];
+  @apply flex min-h-0 items-center justify-center flex-1 overflow-auto leading-[0] p-3;
+}
+.xray-page .viewer-canvas {
+  @apply relative inline-block max-w-full max-h-[650px];
 }
 .xray-page .viewer-img {
-  @apply block w-full max-h-[650px] object-contain;
+  @apply block max-w-full max-h-[650px] w-auto h-auto object-contain;
 }
 .xray-page .viewer-svg {
-  @apply absolute w-full h-full inset-0;
+  @apply absolute w-full h-full pointer-events-auto inset-0;
 }
 .xray-page .viewer-meta {
   @apply text-[#8f9ba8] text-[11px] px-[13px] py-2.5 border-t-[#27313c] border-t border-solid;
@@ -588,7 +591,7 @@
   @apply text-[color:var(--xray-text-muted)] text-[11px];
 }
 .result-image-frame {
-  @apply grid h-[clamp(320px,36vw,520px)] place-items-center overflow-hidden;
+  @apply grid min-h-[320px] h-auto max-h-[620px] place-items-center overflow-auto p-[18px];
 }
 .result-image-frame.color {
   @apply [background:linear-gradient(45deg,#f4f5f6_25%,transparent_25%),linear-gradient(-45deg,#f4f5f6_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f4f5f6_75%),linear-gradient(-45deg,transparent_75%,#f4f5f6_75%),#fafafa] bg-[0_0,0_8px,8px_-8px,-8px_0] bg-[16px_16px];
@@ -597,7 +600,7 @@
   @apply [background:radial-gradient(_circle_at_center,rgba(80,104,128,0.14),transparent_48%_),#0d1218];
 }
 .result-image-frame > img {
-  @apply block w-full h-full object-contain p-[18px];
+  @apply block max-w-full max-h-[584px] w-auto h-auto object-contain;
 }
 .result-image-empty {
   @apply flex items-center justify-center flex-col gap-2 text-[color:var(--xray-text-muted)] text-xs;
@@ -906,7 +909,7 @@
     @apply py-4;
   }
   .result-image-frame {
-    @apply h-[340px];
+    @apply min-h-[300px] max-h-[480px];
   }
   .final-report-actions {
     @apply w-full justify-between;

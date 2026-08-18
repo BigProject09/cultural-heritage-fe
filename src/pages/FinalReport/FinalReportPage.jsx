@@ -265,6 +265,18 @@ function FinalReportPage() {
   const [generationNotice, setGenerationNotice] = useState("");
 
   useEffect(() => {
+    if (!generating) return undefined;
+
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [generating]);
+
+  useEffect(() => {
     const controller = new AbortController();
 
     getWorkspaceProject(decodedArtifactId, { signal: controller.signal })
@@ -668,6 +680,23 @@ function FinalReportPage() {
   return (
     <div className="final-report-page">
       <HeritageHeader active="projects" />
+
+      {generating && (
+        <div
+          className="final-report-generating-overlay"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="final-report-generating-modal">
+            <span className="final-report-spinner" aria-hidden="true" />
+            <span>FINAL REPORT</span>
+            <h2>최종보고서를 생성하고 있습니다.</h2>
+            <p>보존가이드 · X-RAY · 육안조사 결과를 종합하고 있습니다.</p>
+            <small>생성이 완료될 때까지 잠시만 기다려주세요.</small>
+          </div>
+        </div>
+      )}
 
       <main className="final-report-main">
         <button

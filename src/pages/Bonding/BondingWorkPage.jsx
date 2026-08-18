@@ -243,10 +243,11 @@ function BondingWorkPage() {
           <h1>임시접합 검증</h1>
         </div>
 
-        <div className="photo-row">
+        {!bondingTempAnalysis && (
+          <div className="photo-row">
           <div
             className={`info-card photo-upload-zone ${
-              bondingTempAnalysis || beforeUploading ? "is-disabled" : ""
+              beforeUploading ? "is-disabled" : ""
             } ${beforePhoto ? "has-photo" : ""}`}
           >
             <h2>임시접합 전</h2>
@@ -256,7 +257,7 @@ function BondingWorkPage() {
               type="file"
               accept="image/*"
               aria-label="임시접합 전 사진 선택"
-              disabled={isLocked || !!bondingTempAnalysis || beforeUploading}
+              disabled={isLocked || beforeUploading}
               onChange={handleBeforeFileChange}
             />
 
@@ -291,7 +292,7 @@ function BondingWorkPage() {
 
           <div
             className={`info-card photo-upload-zone ${
-              bondingTempAnalysis || afterUploading ? "is-disabled" : ""
+              afterUploading ? "is-disabled" : ""
             } ${afterPhoto ? "has-photo" : ""}`}
           >
             <h2>임시접합 후</h2>
@@ -301,7 +302,7 @@ function BondingWorkPage() {
               type="file"
               accept="image/*"
               aria-label="임시접합 후 사진 선택"
-              disabled={isLocked || !!bondingTempAnalysis || afterUploading}
+              disabled={isLocked || afterUploading}
               onChange={handleAfterFileChange}
             />
 
@@ -333,7 +334,8 @@ function BondingWorkPage() {
               )}
             </div>
           </div>
-        </div>
+          </div>
+        )}
 
         {bondingTempAnalysis && (
           <div className="info-card temp-analysis-card">

@@ -17,6 +17,7 @@ import {
   isVcaMockMode,
   uploadVcaImage,
 } from "../../services/vcaApi";
+import { getVcaSource } from "../../services/reportApi";
 
 const IMAGE_TYPES = "image/png,image/jpeg,image/webp";
 const ACTIVE_RUN_STATUSES = new Set(["QUEUED", "RUNNING"]);
@@ -99,6 +100,8 @@ export function useVisualInvestigation(artifactId) {
   const [selectedRunId, setSelectedRunId] = useState("");
   const [report, setReport] = useState(null);
   const [reportRunId, setReportRunId] = useState("");
+  const [reportRecoveredFromServer, setReportRecoveredFromServer] =
+    useState(false);
   const [previewUrls, setPreviewUrls] = useState({});
   const [pdfJob, setPdfJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -211,13 +214,51 @@ export function useVisualInvestigation(artifactId) {
             "이 유물의 VCA 조사를 새로 시작합니다. 이미지를 먼저 업로드하세요.",
           );
         } else if (!silent) {
-          setError(vcaResult.reason);
+          // VCA artifact 상세 조회가 실패하더라도 워크스페이스가 이미 육안조사
+          // 완료 상태라면 저장된 assessment_report를 직접 복원한다.
+          // /api/reports/{artifactId}/vca-source는 RDS의 최신 VCA 보고서를 읽기
+          // 때문에 AI 서비스가 일시적으로 실패해도 완료 결과 재진입이 가능하다.
+          try {
+            const savedSource = await getVcaSource(artifactId);
+
+            if (savedSource && Object.keys(savedSource).length > 0) {
+              const recoveredRunId = `saved-${artifactId}`;
+
+              setArtifact({
+                ...emptyVcaArtifact(artifactId, workspaceValue),
+                status: "COMPLETED",
+                runs: [
+                  {
+                    runId: recoveredRunId,
+                    assessmentRunId: recoveredRunId,
+                    status: "COMPLETED",
+                    imageCount: 0,
+                  },
+                ],
+              });
+
+              setSelectedRunId(recoveredRunId);
+              setReport(withPreviewReport(savedSource));
+              setReportRunId(recoveredRunId);
+              setReportRecoveredFromServer(true);
+              setError(null);
+              setNotice(
+                "저장된 VCA 완료 결과를 복원했습니다. AI 재요청 없이 기존 보고서를 표시합니다.",
+              );
+            } else {
+              setError(vcaResult.reason);
+            }
+          } catch (recoveryError) {
+            console.error("저장된 VCA 결과 복원 실패:", recoveryError);
+            setError(vcaResult.reason);
+          }
         }
 
         // silent 폴링 중 VCA 조회가 일시적으로 실패한 경우는 현재 화면을
         // 덮어쓰지 않고 다음 폴링에서 다시 복구를 시도한다.
       } else {
         const nextArtifact = vcaResult.value;
+        setReportRecoveredFromServer(false);
         const nextLatestRun = latestRun(nextArtifact.runs);
 
         setArtifact(nextArtifact);
@@ -236,7 +277,7 @@ export function useVisualInvestigation(artifactId) {
 
       if (!silent) setLoading(false);
     },
-    [artifactId],
+    [artifactId, withPreviewReport],
   );
 
   // setTimeout(0)으로 감싸는 이유: effect 본문에서 곧바로 setState를 하면
@@ -440,6 +481,7 @@ export function useVisualInvestigation(artifactId) {
 
         setReport(withPreviewReport(nextReport));
         setReportRunId(runId);
+        setReportRecoveredFromServer(false);
 
         const completedRun = result.run || {
           assessmentRunId: runId,
@@ -569,6 +611,7 @@ export function useVisualInvestigation(artifactId) {
     removeImage,
     report,
     reportRunId,
+    reportRecoveredFromServer,
     runRequestPending,
     runIsActive,
     selectFiles,
