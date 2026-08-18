@@ -7,8 +7,8 @@ import {
   getLatestInspectionJob,
   pollInspectionJob,
   MultipleObjectsDetectedError,
+  uploadAnnotatedInspectionPhoto,
 } from "../../services/potteryInspectionApi";
-import { uploadPhoto } from "../../services/photoUploadApi";
 import {
   parseInspectionSections,
   compareEra,
@@ -201,6 +201,7 @@ function PotteryVisualPage() {
       __artifactId: artifactId,
       __photoUrl: job.photoUrl || null,
       __assessmentRunId: job.assessmentRunId,
+      __annotatedPhotoUrl: job.annotatedPhotoUrl || null,
     });
     setStatus("done");
   };
@@ -444,7 +445,12 @@ function PotteryVisualPage() {
             const file = new File([blob], `annotated-${Date.now()}.png`, {
               type: "image/png",
             });
-            annotatedPhotoUrl = await uploadPhoto(file, artifactId);
+            const savedJob = await uploadAnnotatedInspectionPhoto(
+              artifactId,
+              visualResult.__assessmentRunId,
+              file,
+            );
+            annotatedPhotoUrl = savedJob?.annotatedPhotoUrl || null;
           } catch (uploadError) {
             console.warn(
               "마스킹 사진 S3 업로드 실패 - base64로 대체합니다:",

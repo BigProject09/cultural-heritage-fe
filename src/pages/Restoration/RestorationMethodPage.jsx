@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./RestorationMethodPage.css";
@@ -16,6 +17,7 @@ function RestorationMethodPage({
   backPath = "/restoration",
 }) {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const { taskId, setCompleted, setStepSaving } = ctx;
@@ -121,6 +123,8 @@ function RestorationMethodPage({
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving(completedKey, true);
 
     try {
@@ -138,7 +142,7 @@ function RestorationMethodPage({
           [completedKey]: true,
         }));
 
-      navigate(backPath);
+      navigateIfStillHere(pathAtRequest, backPath);
     } catch (error) {
         console.error(error);
 

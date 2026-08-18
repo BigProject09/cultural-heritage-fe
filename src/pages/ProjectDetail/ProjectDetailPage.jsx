@@ -126,7 +126,7 @@ function ProjectDetailPage() {
 
       // 복원 가이드는 React 메모리만 신뢰하지 않는다. 새로고침/재접속으로
       // Context가 비어 있어도 artifactId로 DB의 최신 Task를 다시 찾고, 마지막
-      // LangGraph interrupt를 기준으로 정확한 하위 단계까지 복구해 이어서 연다.
+      // LangGraph interrupt를 기준으로 현재 진행 중인 큰 공정까지 복구해 이어서 연다.
       if (moduleKey === "guide") {
         if (project.modules.guide === MODULE_STATUS.DONE) {
           navigate(getArtifactWorkflowRoute(nextProject.artifactId, "result"), {

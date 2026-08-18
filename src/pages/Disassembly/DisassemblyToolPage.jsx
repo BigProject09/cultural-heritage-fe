@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./DisassemblyToolPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
@@ -9,6 +10,7 @@ import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 function DisassemblyToolPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const {
@@ -57,6 +59,8 @@ function DisassemblyToolPage() {
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("tool", true);
 
     try {
@@ -79,7 +83,7 @@ function DisassemblyToolPage() {
           tool: true,
         }));
 
-      navigate("/disassembly");
+      navigateIfStillHere(pathAtRequest, "/disassembly");
     } catch (error) {
         console.error(error);
         alert("도구 저장 실패");

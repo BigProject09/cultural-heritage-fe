@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./DisassemblyMethodPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
@@ -8,6 +9,7 @@ import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 function DisassemblyMethodPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const {
@@ -108,6 +110,8 @@ function DisassemblyMethodPage() {
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("method", true);
 
     try {
@@ -124,7 +128,7 @@ function DisassemblyMethodPage() {
           method: true,
         }));
 
-      navigate("/disassembly");
+      navigateIfStillHere(pathAtRequest, "/disassembly");
     } catch (error) {
         console.error(error);
         alert("해체 방법 저장 실패");

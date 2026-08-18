@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -61,6 +62,7 @@ const SEVERITY_LABELS = {
 
 function StrengtheningWettingPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
   const { artifactId: routeArtifactId = "" } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
 
@@ -140,6 +142,8 @@ function StrengtheningWettingPage() {
 
   const handleProceed = async () => {
     if (isLocked) return;
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("strengtheningWetting", true);
 
     try {
@@ -156,7 +160,7 @@ function StrengtheningWettingPage() {
           strengtheningWetting: true,
         }));
 
-      navigate("/strengthening");
+      navigateIfStillHere(pathAtRequest, "/strengthening");
     } catch (error) {
         console.error(error);
         alert("습윤 테스트 결과 저장 실패");

@@ -1,6 +1,7 @@
 import { resumeTask } from "../../services/conservationGuideApi";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./CleaningStepPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
@@ -9,6 +10,7 @@ import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 function CleaningStepPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const { taskId, setCompleted, setStepSaving, cleaningGuide } = ctx;
@@ -80,6 +82,8 @@ function CleaningStepPage() {
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("cleaningStep", true);
 
     try {
@@ -96,7 +100,7 @@ function CleaningStepPage() {
           cleaningStep: true,
         }));
 
-      navigate("/cleaning");
+      navigateIfStillHere(pathAtRequest, "/cleaning");
     } catch (error) {
         console.error(error);
         alert("세척 단계 저장 실패");

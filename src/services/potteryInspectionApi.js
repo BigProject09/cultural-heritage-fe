@@ -167,6 +167,38 @@ export async function createInspectionJob(
   return job;
 }
 
+/** 문양 박스가 합성된 최종 이미지를 해당 assessment_run에 영구 연결한다. */
+export async function uploadAnnotatedInspectionPhoto(
+  artifactId,
+  assessmentRunId,
+  file,
+  { signal } = {},
+) {
+  if (USE_MOCK) {
+    return { annotatedPhotoUrl: file ? URL.createObjectURL(file) : null };
+  }
+
+  if (!artifactId || !assessmentRunId) {
+    throw new Error("artifactId 또는 assessmentRunId가 없어 보정 이미지를 저장할 수 없습니다.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file, file?.name || "annotated.png");
+
+  const params = new URLSearchParams({ artifact_id: artifactId });
+  const response = await authFetch(
+    `${API_BASE_URL}/pottery-inspection/jobs/${encodeURIComponent(assessmentRunId)}/annotated-photo?${params.toString()}`,
+    { method: "POST", body: formData, signal },
+  );
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${String(detail).slice(0, 300)}`);
+  }
+
+  return response.json();
+}
+
 /** 특정 assessment_run의 현재 상태를 Spring에서 조회한다. */
 export async function getInspectionJob(artifactId, assessmentRunId, { signal } = {}) {
   if (USE_MOCK && String(assessmentRunId).startsWith("mock-")) {

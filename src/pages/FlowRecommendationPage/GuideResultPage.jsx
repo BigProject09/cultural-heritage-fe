@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDisassembly } from "../../context/useDisassembly";
 import { sanitizeGuideFlow } from "../../data/flowData";
 import ModulePageHeader from "../../components/common/ModulePageHeader/ModulePageHeader";
 import { getArtifactRoute } from "../../utils/artifactRoutes";
+import { getLatestTaskByArtifact } from "../../services/conservationGuideApi";
+import { restoreGuideTaskContext } from "../../utils/guideTaskRecovery";
 
 import "./GuideResultPage.css";
 import "./FlowRecommendationPage.css";
 
 function StepList({ steps }) {
-  if (!steps?.length) return <p className="guide-result-modal-empty">기록된 절차가 없습니다.</p>;
+  if (!steps?.length)
+    return <p className="guide-result-modal-empty">기록된 절차가 없습니다.</p>;
 
   return (
     <ol className="guide-result-modal-steps">
@@ -241,6 +244,33 @@ function GuideResultPage() {
   const { taskId, approvedFlow } = ctx;
 
   const [activeDetail, setActiveDetail] = useState(null);
+  const [recovering, setRecovering] = useState(true);
+  const [recoveryError, setRecoveryError] = useState("");
+
+  useEffect(() => {
+    if (!artifactId || (taskId && approvedFlow?.length)) return undefined;
+
+    let cancelled = false;
+
+    getLatestTaskByArtifact(artifactId)
+      .then((task) => {
+        if (cancelled || !task) return;
+        restoreGuideTaskContext(task, artifactId, ctx);
+      })
+      .catch((error) => {
+        if (!cancelled)
+          setRecoveryError(
+            error.message || "복원 가이드 결과를 불러오지 못했습니다.",
+          );
+      })
+      .finally(() => {
+        if (!cancelled) setRecovering(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [artifactId, taskId, approvedFlow?.length, ctx]);
 
   const guideFlow = sanitizeGuideFlow(approvedFlow);
   const hasSessionData = Boolean(taskId) && guideFlow.length > 0;
@@ -259,7 +289,11 @@ function GuideResultPage() {
       </div>
 
       <div className="guide-result-container">
-        {hasSessionData ? (
+        {recovering ? (
+          <div className="guide-result-notice">
+            <strong>저장된 복원 가이드 결과를 불러오는 중입니다.</strong>
+          </div>
+        ) : hasSessionData ? (
           <div className="guide-result-flow">
             {guideFlow.map((step, index) => {
               const details = buildStageDetails(step.name, ctx).filter(
@@ -320,11 +354,10 @@ function GuideResultPage() {
           </div>
         ) : (
           <div className="guide-result-notice">
-            <strong>이 세션에는 표시할 진행 기록이 없습니다.</strong>
+            <strong>저장된 복원 가이드 결과를 찾지 못했습니다.</strong>
             <p>
-              복원 가이드 진행 상황은 현재 브라우저 세션에만 저장되어 있어,
-              새로고침하거나 다른 세션에서 접속하면 불러올 수 없습니다.
-              이어서 작업하시려면 유물 워크스페이스에서 다시 시작해주세요.
+              {recoveryError ||
+                "이 유물에 완료된 복원 가이드 작업이 있는지 확인한 뒤 워크스페이스에서 다시 진입해주세요."}
             </p>
           </div>
         )}
@@ -333,7 +366,10 @@ function GuideResultPage() {
       <div className="guide-result-actions">
         <div>
           <strong>복원 가이드 작업이 완료되었습니다.</strong>
-          <span>유물 워크스페이스로 돌아가 다른 분석 결과를 확인하거나 최종 보고서를 진행할 수 있습니다.</span>
+          <span>
+            유물 워크스페이스로 돌아가 다른 분석 결과를 확인하거나 최종 보고서를
+            진행할 수 있습니다.
+          </span>
         </div>
         <button
           type="button"

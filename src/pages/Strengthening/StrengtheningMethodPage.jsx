@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./StrengtheningMethodPage.css";
@@ -11,6 +12,7 @@ import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 function StrengtheningMethodPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const { taskId, strengtheningGuide, setCompleted, setStepSaving } = ctx;
@@ -121,6 +123,8 @@ function StrengtheningMethodPage() {
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("strengtheningMethod", true);
 
     try {
@@ -138,7 +142,7 @@ function StrengtheningMethodPage() {
           strengtheningMethod: true,
         }));
 
-      navigate("/strengthening");
+      navigateIfStillHere(pathAtRequest, "/strengthening");
     } catch (error) {
         console.error(error);
 
