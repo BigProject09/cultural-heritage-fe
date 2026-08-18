@@ -261,6 +261,7 @@ function FinalReportPage() {
   const [reportSources, setReportSources] = useState(null);
   const [savedReport, setSavedReport] = useState(null);
   const [savedReportLoading, setSavedReportLoading] = useState(true);
+  const [generationNotice, setGenerationNotice] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -314,7 +315,9 @@ function FinalReportPage() {
     [project],
   );
 
-  const reportReady = Boolean(project) && missingModules.length === 0;
+  const reportReady =
+    Boolean(project) &&
+    (missingModules.length === 0 || Boolean(savedReport?.reportJson));
 
   const visualResultForThisArtifact =
     visualResult && project && visualResult.__artifactId === project.artifactId
@@ -327,12 +330,14 @@ function FinalReportPage() {
     ? resolvePreviewPhotoSrc(visualResultForThisArtifact, project.artifactId)
     : null;
 
-  const handleGenerateReport = async () => {
+  const handleGenerateReport = async ({ stayOnCurrentView = false } = {}) => {
     if (!reportReady || !project || generating) return;
 
     setGenerating(true);
     setGenerateError("");
-    setReportJson(null);
+    setGenerationNotice("");
+    const previousReportJson = reportJson;
+    if (!stayOnCurrentView) setReportJson(null);
     setSaved(false);
 
     try {
@@ -417,11 +422,18 @@ function FinalReportPage() {
       };
 
       const json = await generateReportJson(payload);
-      setReportJson(json);
+      if (stayOnCurrentView) {
+        if (previousReportJson) setReportJson(json);
+      } else {
+        setReportJson(json);
+      }
 
       try {
         const stored = await saveReportJson(project.artifactId, json);
         setSavedReport(stored);
+        if (stayOnCurrentView) {
+          setGenerationNotice("최종보고서가 재생성되었습니다.");
+        }
       } catch (saveError) {
         console.error("생성된 최종보고서 저장 실패:", saveError);
         setGenerateError(
@@ -532,7 +544,7 @@ function FinalReportPage() {
           : await getLatestTaskByArtifact(project.artifactId).catch(() => null);
         const results = task?.results || {};
         for (const [stageKey, stageResult] of Object.entries(results)) {
-          const urls = stageResult?.photo;
+          const urls = stageResult?.photo || stageResult?.photo_urls;
           if (!Array.isArray(urls) || urls.length === 0) continue;
 
           for (const url of urls) {
@@ -613,10 +625,11 @@ function FinalReportPage() {
     setReportJson(savedReport.reportJson);
     setReportSources(null);
     setGenerateError("");
+    setGenerationNotice("");
     setSaved(false);
   };
 
-  if (loading) {
+  if (loading || savedReportLoading) {
     return (
       <div className="final-report-page">
         <HeritageHeader active="projects" />
@@ -760,7 +773,7 @@ function FinalReportPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={handleGenerateReport}
+                      onClick={() => handleGenerateReport({ stayOnCurrentView: true })}
                       disabled={generating}
                     >
                       {generating ? "재생성 중..." : "다시 생성하기"}
@@ -779,6 +792,9 @@ function FinalReportPage() {
             <div className="final-report-actions">
               {generateError && (
                 <span className="final-report-error">{generateError}</span>
+              )}
+              {generationNotice && !generateError && (
+                <span className="final-report-success">{generationNotice}</span>
               )}
               <div className="final-report-actions-right">
                 {!savedReport?.reportJson && (
@@ -836,14 +852,17 @@ function FinalReportPage() {
                 {generateError && (
                   <span className="final-report-error">{generateError}</span>
                 )}
-                {saved && !generateError && (
+                {generationNotice && !generateError && (
+                  <span className="final-report-success">{generationNotice}</span>
+                )}
+                {saved && !generateError && !generationNotice && (
                   <span>다운로드 완료 - 내 보고서에도 저장되었습니다.</span>
                 )}
               </div>
               <div className="final-report-actions-right">
                 <button
                   className="final-report-secondary"
-                  onClick={handleGenerateReport}
+                  onClick={() => handleGenerateReport({ stayOnCurrentView: true })}
                   disabled={generating || downloading}
                 >
                   {generating ? "다시 생성 중..." : "다시 생성하기"}

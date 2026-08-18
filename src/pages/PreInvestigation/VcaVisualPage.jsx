@@ -4,7 +4,7 @@ import {
   MODULE_STATUS,
   markWorkspaceModule,
 } from "../../data/workspaceProjects";
-import { getArtifactRoute } from "../../utils/artifactRoutes";
+import { getArtifactModuleRoute, getArtifactRoute } from "../../utils/artifactRoutes";
 import VisualReport from "./VisualReport";
 import { useVisualInvestigation } from "./useVisualInvestigation";
 import SystemInfoFooter from "../../components/common/SystemInfoFooter";
@@ -195,13 +195,22 @@ export default function VcaVisualPage() {
             ? "이 유물의 VCA 조사 데이터가 아직 준비되지 않았습니다. 잠시 후 다시 시도하세요."
             : error.message}
         </p>
-        <button
-          type="button"
-          className="visual-primary-button"
-          onClick={loadArtifact}
-        >
-          다시 시도
-        </button>
+        <div className="visual-vca-error-actions">
+          <button
+            type="button"
+            className="visual-primary-button"
+            onClick={loadArtifact}
+          >
+            다시 시도
+          </button>
+          <button
+            type="button"
+            className="visual-secondary-button"
+            onClick={() => navigate(getArtifactModuleRoute(artifactId, "visual"))}
+          >
+            육안조사 선택으로 돌아가기
+          </button>
+        </div>
       </main>
     );
   }
