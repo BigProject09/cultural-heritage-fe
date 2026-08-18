@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
@@ -29,6 +30,7 @@ function AdhesiveThumbnail({ src, alt }) {
 
 function BondingMaterialPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const { taskId, bondingAdhesive, setCompleted, setStepSaving } = ctx;
@@ -70,6 +72,8 @@ function BondingMaterialPage() {
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("bondingMaterial", true);
 
     try {
@@ -88,7 +92,7 @@ function BondingMaterialPage() {
         bondingMaterial: true,
       }));
 
-      navigate("/bonding");
+      navigateIfStillHere(pathAtRequest, "/bonding");
     } catch (error) {
       console.error(error);
       alert("접합제 저장 실패");

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
@@ -62,6 +63,7 @@ function MaterialThumbnail({ src, alt }) {
 
 function StrengtheningMaterialPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const { taskId, strengtheningRecommendation, setCompleted, setStepSaving } = ctx;
@@ -170,6 +172,8 @@ function StrengtheningMaterialPage() {
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("strengtheningMaterial", true);
 
     try {
@@ -189,7 +193,7 @@ function StrengtheningMaterialPage() {
         strengtheningMaterial: true,
       }));
 
-      navigate("/strengthening");
+      navigateIfStillHere(pathAtRequest, "/strengthening");
     } catch (error) {
       console.error(error);
       alert("강화제 저장 실패");

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { applyInterrupt } from "../../utils/applyInterrupt";
@@ -11,6 +12,7 @@ import "./CleaningMethodSelectPage.css";
 
 function CleaningMethodSelectPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const {
@@ -57,6 +59,8 @@ function CleaningMethodSelectPage() {
       },
     };
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("cleaningMethod", true);
 
     try {
@@ -71,7 +75,7 @@ function CleaningMethodSelectPage() {
         cleaningMethod: true,
       }));
 
-      navigate("/cleaning");
+      navigateIfStillHere(pathAtRequest, "/cleaning");
     } catch (error) {
       console.error("❌ 에러:", error);
       alert("세척 방법 저장 실패");

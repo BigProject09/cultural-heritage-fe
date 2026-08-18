@@ -74,7 +74,6 @@ const ARTIFACT_STORAGE_MODE =
     : "local";
 const ACTIVE_ARTIFACT_KEY = "activeArtifactId";
 const LOCAL_PROJECTS_KEY = "voraWorkspaceProjectsV2";
-const API_MODULE_STATUS_KEY = "voraArtifactModuleStatusesV1";
 
 function safeParse(value, fallback) {
   try {
@@ -190,44 +189,30 @@ export function normalizeWorkspaceProject(project = {}) {
   };
 }
 
-function readApiModuleStatuses() {
-  return safeParse(localStorage.getItem(API_MODULE_STATUS_KEY), {});
-}
-
-function writeApiModuleStatuses(statuses) {
-  localStorage.setItem(API_MODULE_STATUS_KEY, JSON.stringify(statuses));
-}
-
-function withApiModuleStatuses(project) {
+async function withServerWorkflowStatus(project, { signal } = {}) {
   const normalized = normalizeWorkspaceProject(project);
-  const savedStatuses = readApiModuleStatuses()[normalized.artifactId];
+  if (!normalized.artifactId) return normalized;
 
-  if (!savedStatuses) return normalized;
-
-  return {
-    ...normalized,
-    modules: normalizeModules(savedStatuses),
-  };
-}
-
-function saveApiModuleStatus(artifactId, moduleKey, status) {
-  const statuses = readApiModuleStatuses();
-  const targetId = String(artifactId);
-  const current = normalizeModules(statuses[targetId]);
-
-  statuses[targetId] = {
-    ...current,
-    [moduleKey]: normalizeStatus(status),
-  };
-  writeApiModuleStatuses(statuses);
-
-  return statuses[targetId];
-}
-
-function deleteApiModuleStatuses(artifactId) {
-  const statuses = readApiModuleStatuses();
-  delete statuses[String(artifactId)];
-  writeApiModuleStatuses(statuses);
+  try {
+    const workflow = await request(
+      `${ARTIFACTS_PATH}/${encodeURIComponent(normalized.artifactId)}/workflow-status`,
+      { signal },
+    );
+    return {
+      ...normalized,
+      modules: normalizeModules({
+        guide: workflow?.guide,
+        xray: workflow?.xray,
+        visual: workflow?.visual,
+      }),
+      finalReportExists: Boolean(workflow?.finalReportExists),
+      allCompleted: Boolean(workflow?.allCompleted),
+    };
+  } catch (error) {
+    if (error?.name === "AbortError") throw error;
+    console.warn("워크플로우 상태 조회 실패 - artifact 응답 상태를 사용합니다.", error);
+    return normalized;
+  }
 }
 
 function readLocalProjects() {
@@ -494,9 +479,10 @@ export async function getMyWorkspaceProjects({ signal } = {}) {
   }
 
   const payload = await request(`${ARTIFACTS_PATH}/mine`, { signal });
-  return extractList(payload)
-    .map(withApiModuleStatuses)
+  const projects = extractList(payload)
+    .map(normalizeWorkspaceProject)
     .filter((project) => project.artifactId);
+  return Promise.all(projects.map((project) => withServerWorkflowStatus(project, { signal })));
 }
 
 export async function getPublicWorkspaceProjects({ signal } = {}) {
@@ -527,9 +513,10 @@ export async function getWorkspaceProjects({ signal } = {}) {
   }
 
   const payload = await request(ARTIFACTS_PATH, { signal });
-  return extractList(payload)
-    .map(withApiModuleStatuses)
+  const projects = extractList(payload)
+    .map(normalizeWorkspaceProject)
     .filter((project) => project.artifactId);
+  return Promise.all(projects.map((project) => withServerWorkflowStatus(project, { signal })));
 }
 
 export async function getWorkspaceProject(artifactId, { signal } = {}) {
@@ -548,7 +535,7 @@ export async function getWorkspaceProject(artifactId, { signal } = {}) {
     `${ARTIFACTS_PATH}/${encodeURIComponent(artifactId)}`,
     { signal },
   );
-  return withApiModuleStatuses(payload?.data || payload);
+  return withServerWorkflowStatus(payload?.data || payload, { signal });
 }
 
 // 로컬 저장 모드에서, VCA가 방금 발급한 서버 아티팩트 UUID를 워크스페이스
@@ -651,14 +638,14 @@ export async function upsertWorkspaceProject(
     body: JSON.stringify(artifactPayload(artifactInfo)),
   });
 
-  let project = withApiModuleStatuses(saved?.data || saved);
+  let project = normalizeWorkspaceProject(saved?.data || saved);
   if (!project.artifactId) {
     throw new Error("서버 응답에 artifactId가 없습니다.");
   }
 
   if (imageFile) {
     const uploaded = await uploadArtifactImage(project.artifactId, imageFile);
-    project = withApiModuleStatuses(uploaded?.data || uploaded);
+    project = normalizeWorkspaceProject(uploaded?.data || uploaded);
   }
 
   if (project.modules[entryModule] === MODULE_STATUS.NOT_STARTED) {
@@ -696,11 +683,13 @@ export async function markWorkspaceModule(artifactId, moduleKey, status) {
     );
   }
 
-  const modules = saveApiModuleStatus(artifactId, moduleKey, status);
   const project = await getWorkspaceProject(artifactId);
   return {
     ...project,
-    modules: normalizeModules(modules),
+    modules: {
+      ...project.modules,
+      [moduleKey]: normalizeStatus(status),
+    },
     updatedAt: new Date().toISOString(),
   };
 }
@@ -728,7 +717,6 @@ export async function deleteWorkspaceProject(artifactId) {
     await request(`${ARTIFACTS_PATH}/${encodeURIComponent(targetId)}`, {
       method: "DELETE",
     });
-    deleteApiModuleStatuses(targetId);
   }
 
   deleteMyReportsByArtifactId(targetId);

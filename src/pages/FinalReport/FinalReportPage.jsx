@@ -21,6 +21,7 @@ import {
   getWorkflowDefects,
   getWorkflowReportText,
 } from "../../services/xrayApi";
+import { getLatestInspectionJob } from "../../services/potteryInspectionApi";
 import {
   downloadReportFromUrl,
   generateReportJson,
@@ -481,6 +482,15 @@ function FinalReportPage() {
     let annotatedImageBase64 =
       visualResultForThisArtifact?.__annotatedImageBase64;
     let annotatedPhotoUrl = visualResultForThisArtifact?.__annotatedPhotoUrl;
+
+    if (!annotatedPhotoUrl) {
+      try {
+        const latestPotteryJob = await getLatestInspectionJob(project.artifactId);
+        annotatedPhotoUrl = latestPotteryJob?.annotatedPhotoUrl || null;
+      } catch (serverPhotoError) {
+        console.error("서버 보정 이미지 조회 실패:", serverPhotoError);
+      }
+    }
 
     if (!annotatedImageBase64 && !annotatedPhotoUrl) {
       try {

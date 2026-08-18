@@ -18,10 +18,7 @@ import {
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
 import { getAccessToken } from "../../services/authToken";
-import {
-  getArtifactRoute,
-  getFinalReportRoute,
-} from "../../utils/artifactRoutes";
+import { getArtifactRoute, getFinalReportRoute } from "../../utils/artifactRoutes";
 import { getLatestSavedReport } from "../../services/reportApi";
 import "./HomePage.css";
 
@@ -40,9 +37,7 @@ function HomePage() {
   const [projectsLoading, setProjectsLoading] = useState(isLoggedIn);
   const [projectsError, setProjectsError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const [finalReportReadyByArtifact, setFinalReportReadyByArtifact] = useState(
-    {},
-  );
+  const [finalReportReadyByArtifact, setFinalReportReadyByArtifact] = useState({});
 
   const [selectedModule, setSelectedModule] = useState(null);
   const [gateMode, setGateMode] = useState("choice");
@@ -76,6 +71,7 @@ function HomePage() {
     return () => controller.abort();
   }, [isLoggedIn, reloadKey]);
 
+
   useEffect(() => {
     if (!isLoggedIn || projects.length === 0) {
       return undefined;
@@ -84,14 +80,11 @@ function HomePage() {
     let cancelled = false;
     Promise.all(
       projects.map(async (project) => {
-        const report = await getLatestSavedReport(project.artifactId).catch(
-          () => null,
-        );
+        const report = await getLatestSavedReport(project.artifactId).catch(() => null);
         return [project.artifactId, Boolean(report?.reportJson)];
       }),
     ).then((entries) => {
-      if (!cancelled)
-        setFinalReportReadyByArtifact(Object.fromEntries(entries));
+      if (!cancelled) setFinalReportReadyByArtifact(Object.fromEntries(entries));
     });
 
     return () => {
@@ -258,33 +251,31 @@ function HomePage() {
             const ModuleIcon = MODULE_ICONS[module.key];
 
             return (
-              <button
-                className={`heritage-quick-card ${module.key}`}
-                key={module.key}
-                onClick={() => openModule(module.key)}
-              >
-                <span className="heritage-card-number">{module.number}</span>
+            <button
+              className={`heritage-quick-card ${module.key}`}
+              key={module.key}
+              onClick={() => openModule(module.key)}
+            >
+              <span className="heritage-card-number">{module.number}</span>
 
-                <span className="heritage-card-icon" aria-hidden="true">
-                  <ModuleIcon />
-                </span>
+              <span className="heritage-card-icon" aria-hidden="true">
+                <ModuleIcon />
+              </span>
 
-                <span className="heritage-eyebrow">{module.eyebrow}</span>
+              <span className="heritage-eyebrow">{module.eyebrow}</span>
 
-                <strong>{module.title}</strong>
+              <strong>{module.title}</strong>
 
-                <span className="heritage-card-subtitle">
-                  {module.subtitle}
-                </span>
+              <span className="heritage-card-subtitle">{module.subtitle}</span>
 
-                <span className="heritage-card-description">
-                  {module.description}
-                </span>
+              <span className="heritage-card-description">
+                {module.description}
+              </span>
 
-                <span className="heritage-card-action">
-                  작업 선택 <b>→</b>
-                </span>
-              </button>
+              <span className="heritage-card-action">
+                작업 선택 <b>→</b>
+              </span>
+            </button>
             );
           })}
         </section>

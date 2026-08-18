@@ -13,12 +13,7 @@ const FLOW_KEY_TO_NAME = {
 
 const STAGE_KEYS = {
   해체: ["checklist", "tool", "method", "post"],
-  세척: [
-    "cleaningMethod",
-    "cleaningStep",
-    "cleaningDryingStep",
-    "cleaningPost",
-  ],
+  세척: ["cleaningMethod", "cleaningStep", "cleaningDryingStep", "cleaningPost"],
   강화: [
     "strengtheningMaterial",
     "strengtheningWetting",
@@ -217,9 +212,7 @@ export function taskFlowToApprovedFlow(flow) {
 
 function findInterruptDescriptor(interrupt) {
   const stage = String(interrupt?.stage || "");
-  return (
-    INTERRUPT_ROUTES.find((item) => stage.startsWith(item.startsWith)) || null
-  );
+  return INTERRUPT_ROUTES.find((item) => stage.startsWith(item.startsWith)) || null;
 }
 
 function markWholeStage(completed, stageName) {
@@ -292,11 +285,7 @@ function applyStoredResults(results, ctx) {
       })),
     );
   }
-  if (
-    disassembly.memo ||
-    disassembly.photo?.length ||
-    disassembly.photo_urls?.length
-  ) {
+  if (disassembly.memo || disassembly.photo?.length || disassembly.photo_urls?.length) {
     ctx.setPostRecord("disassembly", {
       memo: disassembly.memo || "",
       photos: disassembly.photo || disassembly.photo_urls || [],
@@ -335,13 +324,8 @@ function applyStoredResults(results, ctx) {
   if (strengthening.ai_color_analysis) {
     ctx.setColorChangeAnalysis(strengthening.ai_color_analysis);
   }
-  if (strengthening.ai_method)
-    ctx.setStrengtheningGuide(strengthening.ai_method);
-  if (
-    strengthening.memo ||
-    strengthening.photo?.length ||
-    strengthening.photo_urls?.length
-  ) {
+  if (strengthening.ai_method) ctx.setStrengtheningGuide(strengthening.ai_method);
+  if (strengthening.memo || strengthening.photo?.length || strengthening.photo_urls?.length) {
     ctx.setPostRecord("strengthening", {
       memo: strengthening.memo || "",
       photos: strengthening.photo || strengthening.photo_urls || [],
@@ -351,12 +335,9 @@ function applyStoredResults(results, ctx) {
   const bonding = results.bonding || {};
   if (bonding.ai_adhesive) ctx.setBondingAdhesive(bonding.ai_adhesive);
   if (bonding.confirmed_adhesive) {
-    ctx.setBondingChoice({
-      adhesive: bonding.confirmed_adhesive.adhesive || "",
-    });
+    ctx.setBondingChoice({ adhesive: bonding.confirmed_adhesive.adhesive || "" });
   }
-  if (bonding.ai_temp_analysis)
-    ctx.setBondingTempAnalysis(bonding.ai_temp_analysis);
+  if (bonding.ai_temp_analysis) ctx.setBondingTempAnalysis(bonding.ai_temp_analysis);
   if (bonding.ai_method) ctx.setBondingGuide(bonding.ai_method);
   if (bonding.memo || bonding.photo?.length || bonding.photo_urls?.length) {
     ctx.setPostRecord("bonding", {
@@ -366,8 +347,7 @@ function applyStoredResults(results, ctx) {
   }
 
   const restoration = results.restoration || {};
-  if (restoration.ai_material)
-    ctx.setRestorationMaterial(restoration.ai_material);
+  if (restoration.ai_material) ctx.setRestorationMaterial(restoration.ai_material);
   if (restoration.confirmed_material) {
     ctx.setRestorationChoice({
       material: restoration.confirmed_material.material || "",
@@ -377,11 +357,7 @@ function applyStoredResults(results, ctx) {
   if (restoration.ai_finishing) {
     ctx.setRestorationFinishingGuide(restoration.ai_finishing);
   }
-  if (
-    restoration.memo ||
-    restoration.photo?.length ||
-    restoration.photo_urls?.length
-  ) {
+  if (restoration.memo || restoration.photo?.length || restoration.photo_urls?.length) {
     ctx.setPostRecord("restoration", {
       memo: restoration.memo || "",
       photos: restoration.photo || restoration.photo_urls || [],
@@ -399,6 +375,10 @@ export function getRecoveredGuideRoute(task, artifactId) {
   const descriptor = findInterruptDescriptor(task.currentInterrupt);
   if (!descriptor) return "";
 
+  // 워크스페이스의 `이어서 작업`은 마지막 하위 화면(checklist/tool/method 등)이
+  // 아니라 현재 진행 중인 큰 공정의 시작 화면으로 진입한다.
+  // 하위 단계의 완료/선택 상태는 Context에 복원해 두므로 공정 내부에서는
+  // 기존 진행 상태를 그대로 확인할 수 있다.
   const stageRoute = {
     해체: "disassembly",
     세척: "cleaning",

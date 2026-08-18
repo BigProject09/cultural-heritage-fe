@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -60,6 +61,7 @@ const SEVERITY_LABELS = {
 
 function BondingWorkPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
   const { artifactId: routeArtifactId = "" } = useParams();
   const artifactId = decodeURIComponent(routeArtifactId);
 
@@ -172,6 +174,8 @@ function BondingWorkPage() {
   // 검증 결과를 그대로 승인하고 다음(접합 방법 안내)으로 진행한다.
   const handleProceed = async () => {
     if (isLocked) return;
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("bondingWork", true);
 
     try {
@@ -186,7 +190,7 @@ function BondingWorkPage() {
           bondingWork: true,
         }));
 
-      navigate("/bonding");
+      navigateIfStillHere(pathAtRequest, "/bonding");
     } catch (error) {
         console.error(error);
         alert("임시접합 검증 결과 저장 실패");

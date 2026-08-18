@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
@@ -10,6 +11,7 @@ import "./DisassemblyChecklistPage.css";
 
 function DisassemblyChecklistPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const {
@@ -40,6 +42,8 @@ function DisassemblyChecklistPage() {
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("checklist", true);
 
     try {
@@ -56,7 +60,7 @@ function DisassemblyChecklistPage() {
           checklist: true,
         }));
 
-      navigate("/disassembly");
+      navigateIfStillHere(pathAtRequest, "/disassembly");
     } catch (error) {
         console.error(error);
         alert("체크리스트 저장 실패");

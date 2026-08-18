@@ -1,6 +1,7 @@
 import { resumeTask } from "../../services/conservationGuideApi";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 import GuideNavigation from "../../components/guide/GuideNavigation";
 import "./CleaningDryingStepPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
@@ -9,6 +10,7 @@ import { useGuideStepLock } from "../../hooks/useGuideStepLock";
 
 function CleaningDryingStepPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const { taskId, setCompleted, setStepSaving, dryingGuide } = ctx;
@@ -79,6 +81,8 @@ function CleaningDryingStepPage() {
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("cleaningDryingStep", true);
 
     try {
@@ -95,7 +99,7 @@ function CleaningDryingStepPage() {
           cleaningDryingStep: true,
         }));
 
-      navigate("/cleaning");
+      navigateIfStillHere(pathAtRequest, "/cleaning");
     } catch (error) {
         console.error(error);
         alert("건조 단계 저장 실패");

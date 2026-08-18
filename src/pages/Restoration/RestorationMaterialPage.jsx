@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeAsyncNavigate } from "../../hooks/useSafeAsyncNavigate";
 import { useDisassembly } from "../../context/useDisassembly";
 import { resumeTask } from "../../services/conservationGuideApi";
 import { applyInterrupt } from "../../utils/applyInterrupt";
@@ -78,6 +79,7 @@ function MaterialThumbnail({ src, alt }) {
 
 function RestorationMaterialPage() {
   const navigate = useNavigate();
+  const { captureAsyncNavigationOrigin, navigateIfStillHere } = useSafeAsyncNavigate();
 
   const ctx = useDisassembly();
   const { taskId, restorationMaterial, setCompleted, setStepSaving } = ctx;
@@ -119,6 +121,8 @@ function RestorationMaterialPage() {
       return;
     }
 
+    const pathAtRequest = captureAsyncNavigationOrigin();
+
     setStepSaving("restorationMaterial", true);
 
     try {
@@ -137,7 +141,7 @@ function RestorationMaterialPage() {
         restorationMaterial: true,
       }));
 
-      navigate("/restoration");
+      navigateIfStillHere(pathAtRequest, "/restoration");
     } catch (error) {
       console.error(error);
       alert("복원 재료 저장 실패");
