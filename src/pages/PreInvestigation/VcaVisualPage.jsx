@@ -31,6 +31,13 @@ const RUN_STATUS_PROGRESS = {
   COMPLETED: 100,
   FAILED: 100,
 };
+// BE의 STAGE_NAMES(receipts.py)/EXECUTED_STAGE_NAMES(stage_execution.py)와
+// 정확히 같은 9개, 같은 순서여야 한다 - 여기 없는 이름이나 순서가 다른
+// 이름은 run.stages에 절대 안 잡혀서 stageChecklist()가 영원히 "대기"로만
+// 남긴다. anomaly_grouping은 물리적으로 같은 특이점인 rough_masking 후보를
+// rag 직후·prompt_generating 이전에 병합하고(pre_refinement_merge.py),
+// mask_refining 이후의 report_trace_assembly가 그 결과로 report_trace_source.json만
+// 조립한다(feature/vca_v2_anomaly_grouping_reorder, 2026-08-18).
 const STAGE_ORDER = [
   "preprocessing",
   "rough_masking",
