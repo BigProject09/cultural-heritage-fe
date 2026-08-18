@@ -13,12 +13,12 @@ import {
   WORKSPACE_MODULES,
   formatWorkspaceDate,
   getModuleRoute,
-  getNextModule,
   getWorkspaceProjects,
   markWorkspaceModule,
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
 import { getAccessToken } from "../../services/authToken";
+import { getArtifactRoute } from "../../utils/artifactRoutes";
 import "./HomePage.css";
 
 const MODULE_ICONS = {
@@ -157,12 +157,12 @@ function HomePage() {
 
   const openProjectHub = (project) => {
     selectWorkspaceProject(project);
-
-    navigate(`/workspace/${encodeURIComponent(project.artifactId)}`);
+    navigate(getArtifactRoute(project.artifactId));
   };
 
-  const continueProject = (project) =>
-    enterProjectModule(project, getNextModule(project));
+  // 기존 동작 복원: "이어서 작업"은 특정 모듈로 바로 진입하지 않고
+  // artifactId 기반 프로젝트 허브(/artifacts/:artifactId)로 이동한다.
+  const continueProject = (project) => openProjectHub(project);
 
   const retryProjects = () => {
     if (!isLoggedIn) return;

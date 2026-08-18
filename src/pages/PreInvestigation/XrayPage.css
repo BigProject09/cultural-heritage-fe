@@ -995,3 +995,87 @@
 
 /* 최종 검토 화면은 화면 흐름에 그대로 둔다 */
 }
+
+/* STEP 3 분석 전에는 검토 데이터가 없으므로 이미지 패널만 전체 폭으로 표시한다.
+   이상 영역 탐지가 완료되면 기존 2열(이미지 + 검토 영역) 레이아웃으로 전환한다. */
+.inspection-workspace.inspection-preview-workspace {
+  @apply grid-cols-1 min-h-[720px];
+}
+.inspection-preview-workspace .image-workspace {
+  @apply border-r-0;
+}
+
+.final-image-loading-card {
+  @apply flex min-h-[120px] items-center justify-center gap-3 border [background:var(--xray-surface)] px-5 py-6 rounded-2xl border-solid border-[color:var(--xray-border)];
+}
+.final-image-loading-card > div {
+  @apply flex flex-col gap-1;
+}
+.final-image-loading-card strong {
+  @apply text-[13px] text-[color:var(--xray-text-primary)];
+}
+.final-image-loading-card span:not(.xray-button-spinner) {
+  @apply text-[11px] text-[color:var(--xray-text-secondary)];
+}
+
+/* STEP 3의 분석 전/후 이미지 검수 화면을 단계 카드 안에서 하나의 작업 영역으로 묶는다. */
+.analysis-launch > .inspection-workspace,
+.analysis-launch > .final-image-loading-card {
+  @apply mt-5;
+}
+.analysis-launch > .inspection-workspace {
+  @apply w-full;
+}
+
+/* STEP 2 → STEP 3 전환을 명확히 보여준다. 이미지 배치는 유지하되
+   단계 카드 자체를 화면 시작점으로 이동시키고 짧게 강조한다. */
+.analysis-launch {
+  scroll-margin-top: 18px;
+}
+.step-transition-chip {
+  @apply inline-flex items-center w-fit [background:rgba(164,105,52,0.10)] text-[color:var(--xray-primary)] text-[12px] font-bold mb-3 px-3 py-2 rounded-full;
+}
+.analysis-launch.step3-entry-highlight {
+  animation: xray-step3-entry 1.35s ease-out;
+}
+@keyframes xray-step3-entry {
+  0% {
+    box-shadow: 0 0 0 3px rgba(164, 105, 52, 0.22), 0 18px 44px rgba(25, 31, 40, 0.12);
+    transform: translateY(6px);
+  }
+  35% {
+    box-shadow: 0 0 0 2px rgba(164, 105, 52, 0.16), 0 14px 34px rgba(25, 31, 40, 0.08);
+    transform: translateY(0);
+  }
+  100% {
+    box-shadow: none;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .analysis-launch.step3-entry-highlight {
+    animation: none;
+  }
+}
+
+
+/* STEP 3 분석 실행 버튼은 어두운 이미지 패널 바깥, 이미지 바로 아래에 둔다.
+   분석 완료 후에는 렌더링하지 않아 검수 흐름에만 집중하게 한다. */
+.inspection-analysis-action {
+  @apply flex justify-end pt-4;
+}
+
+.step3-final-preview {
+  margin-top: 18px;
+}
+
+
+/* STEP 3 검수 완료 후에만 STEP 4로 명시적으로 전환한다. */
+.step3-complete-action {
+  @apply flex justify-end mt-4 pt-4 border-t border-[color:var(--xray-border)] border-solid;
+}
+
+/* 탐지 후 검수 워크스페이스도 STEP 3 카드 안에서 동일한 폭으로 유지한다. */
+.analysis-launch > .inspection-workspace {
+  @apply mt-5 w-full;
+}
