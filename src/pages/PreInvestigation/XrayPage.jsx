@@ -2743,7 +2743,7 @@ export default function XrayPage() {
                   <button
                     className="xray-complete-btn"
                     onClick={openFinalReview}
-                    disabled={!inspectionDone || !report.trim()}
+                    disabled={!inspectionDone || !report.trim() || reportLoading}
                   >
                     최종 검토로 이동
                     <span aria-hidden="true">→</span>

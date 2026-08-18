@@ -900,6 +900,14 @@ function FinalReportPage() {
               </div>
               <div className="final-report-actions-right">
                 <button
+                  type="button"
+                  className="final-report-secondary"
+                  onClick={() => navigate(getArtifactRoute(project.artifactId))}
+                  disabled={generating || downloading}
+                >
+                  ← 뒤로가기
+                </button>
+                <button
                   className="final-report-secondary"
                   onClick={() => handleGenerateReport({ stayOnCurrentView: true })}
                   disabled={generating || downloading}
