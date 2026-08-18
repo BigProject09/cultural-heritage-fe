@@ -31,13 +31,25 @@ export default function SystemInfoFooter() {
     .map((model) => model.repoId || model.key)
     .filter(Boolean)
     .join(", ");
-  const parts = [
+  // models까지 한 줄에 다 이어붙이면 라이브러리 목록이 길 때 줄이 너무
+  // 길어져서, models부터는 별도 줄로 뺀다.
+  const firstLineParts = [
     info.os,
     info.pythonVersion && `Python ${info.pythonVersion}`,
     info.device && `Device: ${info.device.toUpperCase()}`,
     libraries && `Libraries: ${libraries}`,
-    models && `Models: ${models}`,
   ].filter(Boolean);
+  const secondLine = models && `Models: ${models}`;
 
-  return <p className="app-system-info-footer">{parts.join(" · ")}</p>;
+  return (
+    <p className="app-system-info-footer">
+      {firstLineParts.join(" · ")}
+      {secondLine && (
+        <>
+          <br />
+          {secondLine}
+        </>
+      )}
+    </p>
+  );
 }

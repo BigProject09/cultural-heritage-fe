@@ -7,7 +7,6 @@ import {
 import { getArtifactRoute } from "../../utils/artifactRoutes";
 import VisualReport from "./VisualReport";
 import { useVisualInvestigation } from "./useVisualInvestigation";
-import { isPotteryMaterial } from "./visualVcaLabels";
 import SystemInfoFooter from "../../components/common/SystemInfoFooter";
 import ModulePageHeader from "../../components/common/ModulePageHeader/ModulePageHeader";
 import "./VcaVisualPage.css";
@@ -32,6 +31,13 @@ const RUN_STATUS_PROGRESS = {
   COMPLETED: 100,
   FAILED: 100,
 };
+// BE의 STAGE_NAMES(receipts.py)/EXECUTED_STAGE_NAMES(stage_execution.py)와
+// 정확히 같은 9개, 같은 순서여야 한다 - 여기 없는 이름이나 순서가 다른
+// 이름은 run.stages에 절대 안 잡혀서 stageChecklist()가 영원히 "대기"로만
+// 남긴다. anomaly_grouping은 물리적으로 같은 특이점인 rough_masking 후보를
+// rag 직후·prompt_generating 이전에 병합하고(pre_refinement_merge.py),
+// mask_refining 이후의 report_trace_assembly가 그 결과로 report_trace_source.json만
+// 조립한다(feature/vca_v2_anomaly_grouping_reorder, 2026-08-18).
 const STAGE_ORDER = [
   "preprocessing",
   "rough_masking",
@@ -62,32 +68,6 @@ const STAGE_STATUS_LABELS = {
   skipped: "건너뜀",
 };
 
-// pottery-inspection-ai(별도 FastAPI, analyze_pottery())는 VCA 엔진과 달리
-// 단계별 진행 상황을 보고하지 않는 단일 동기 호출이라, run.stages 같은 실제
-// per-stage 신호가 없다 - 그래서 이 목록은 "실제로 어떤 순서로 계산되는지"를
-// pottery_analyzer.py의 analyze_pottery() 흐름 그대로 옮긴 고정 체크리스트이고,
-// 상태는 개별 단계가 아니라 도자기 검사 전체 상태(POTTERY_STAGE_STATUS 참고)를
-// 모든 항목에 동일하게 적용한다 - 실제로는 없는 단계별 진행률을 있는 것처럼
-// 보여주지 않기 위함이다.
-const POTTERY_STAGE_ORDER = [
-  "detection",
-  "completeness",
-  "glaze",
-  "era",
-  "era_evidence",
-  "pattern",
-  "condition_review",
-];
-const POTTERY_STAGE_LABELS = {
-  detection: "유물 영역 탐지",
-  completeness: "완전성·파편 판별",
-  glaze: "유약·광택 분석",
-  era: "시대 판정",
-  era_evidence: "시대 판정 근거 확인",
-  pattern: "문양 인식",
-  condition_review: "문양 상태 검토",
-};
-
 function statusLabel(status) {
   return RUN_STATUS_LABELS[status] || status || "상태 확인 필요";
 }
@@ -105,17 +85,6 @@ function stageChecklist(run) {
     if (name === run?.currentStage) return { name, status: "running" };
     return { name, status: "pending" };
   });
-}
-
-// pottery-inspection-ai에는 개별 단계 신호가 없으므로, 도자기 검사 전체
-// 상태(potteryInspectionStatus.status) + 지금 도자기 검사가 실행 중인지
-// (working === "pottery")만으로 모든 단계에 공통 상태 하나를 매긴다.
-function potteryStageStatus(potteryInspectionStatus, working) {
-  if (working === "pottery") return "running";
-  const status = potteryInspectionStatus?.status;
-  if (status === "COMPLETED") return "completed";
-  if (status === "FAILED") return "failed";
-  return "pending";
 }
 
 function formatDate(value) {
@@ -405,30 +374,6 @@ export default function VcaVisualPage() {
                     </span>
                   </li>
                 ))}
-                {isPotteryMaterial(workspaceArtifact.material) && (
-                  <>
-                    <li className="visual-vca-stage-group">도자기 특화 분석</li>
-                    {POTTERY_STAGE_ORDER.map((name) => {
-                      const status = potteryStageStatus(
-                        report?.potteryInspectionStatus,
-                        working,
-                      );
-                      return (
-                        <li
-                          key={name}
-                          className={`visual-vca-stage-item ${status}`}
-                        >
-                          <span className="visual-vca-stage-name">
-                            {POTTERY_STAGE_LABELS[name]}
-                          </span>
-                          <span className="visual-vca-stage-status">
-                            {STAGE_STATUS_LABELS[status]}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </>
-                )}
               </ol>
               <dl className="visual-vca-status-meta">
                 <div>
