@@ -10,7 +10,9 @@ function BoardWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const loginUser = readLoginUser();
-  const writer = loginUser?.nickName ? maskName(loginUser.nickName) : "익명";
+  const writerName =
+    loginUser?.name || loginUser?.nickName || loginUser?.loginId || "사용자";
+  const writer = maskName(writerName);
 
   const editPostId = location.state?.editPostId;
   const editMode = Boolean(editPostId);
@@ -96,7 +98,10 @@ function BoardWritePage() {
       {loadingPost ? (
         <p className="heritage-empty-cell">게시글을 불러오는 중입니다.</p>
       ) : (
-        <form className="heritage-panel board-write-form" onSubmit={handleSubmit}>
+        <form
+          className="heritage-panel board-write-form"
+          onSubmit={handleSubmit}
+        >
           <div className="board-write-header">
             <div>
               <span className="board-write-header-label">작성자</span>
