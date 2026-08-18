@@ -41,7 +41,10 @@ function BoardWritePage() {
         title="로그인이 필요합니다"
         description="게시글 작성/수정은 로그인 후 이용할 수 있습니다."
       >
-        <button className="heritage-button secondary" onClick={() => navigate("/login")}>
+        <button
+          className="heritage-button secondary"
+          onClick={() => navigate("/login")}
+        >
           로그인하러 가기
         </button>
       </HeritagePage>
@@ -72,6 +75,8 @@ function BoardWritePage() {
     }
   };
 
+  const backPath = editMode ? `/board/${editPostId}` : "/board";
+
   return (
     <HeritagePage
       active="community"
@@ -80,25 +85,34 @@ function BoardWritePage() {
       description="문화유산 보존처리 사례와 현장 경험을 공유해주세요."
     >
       <button
-        className="heritage-back"
-        onClick={() => navigate(editMode ? `/board/${editPostId}` : "/board")}
+        className="heritage-back board-write-back"
+        type="button"
+        onClick={() => navigate(backPath)}
       >
-        <span aria-hidden="true">←</span> {editMode ? "게시글로 돌아가기" : "게시판 목록"}
+        <span aria-hidden="true">←</span>{" "}
+        {editMode ? "게시글로 돌아가기" : "게시판 목록"}
       </button>
 
       {loadingPost ? (
         <p className="heritage-empty-cell">게시글을 불러오는 중입니다.</p>
       ) : (
         <form className="heritage-panel board-write-form" onSubmit={handleSubmit}>
-          <p className="board-write-writer">작성자 {writer}</p>
+          <div className="board-write-header">
+            <div>
+              <span className="board-write-header-label">작성자</span>
+              <strong>{writer}</strong>
+            </div>
+            <p>보존처리 사례와 현장 경험을 자유롭게 공유해주세요.</p>
+          </div>
 
           <div className="board-write-field">
             <label className="board-write-label" htmlFor="board-write-title">
               제목
+              <span className="board-write-required">필수</span>
             </label>
             <input
               id="board-write-title"
-              className="heritage-field"
+              className="heritage-field board-write-input"
               type="text"
               placeholder="제목을 입력하세요"
               value={title}
@@ -109,6 +123,7 @@ function BoardWritePage() {
           <div className="board-write-field">
             <label className="board-write-label" htmlFor="board-write-content">
               내용
+              <span className="board-write-required">필수</span>
             </label>
             <textarea
               id="board-write-content"
@@ -124,12 +139,16 @@ function BoardWritePage() {
           <div className="board-write-actions">
             <button
               type="button"
-              className="heritage-button secondary"
-              onClick={() => navigate(editMode ? `/board/${editPostId}` : "/board")}
+              className="heritage-button secondary board-write-action"
+              onClick={() => navigate(backPath)}
             >
               취소
             </button>
-            <button type="submit" className="heritage-button" disabled={submitting}>
+            <button
+              type="submit"
+              className="heritage-button board-write-action"
+              disabled={submitting}
+            >
               {submitting ? "저장 중..." : editMode ? "수정 완료" : "등록"}
             </button>
           </div>
