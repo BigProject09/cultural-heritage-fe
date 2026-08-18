@@ -4,7 +4,10 @@ import {
   MODULE_STATUS,
   markWorkspaceModule,
 } from "../../data/workspaceProjects";
-import { getArtifactModuleRoute, getArtifactRoute } from "../../utils/artifactRoutes";
+import {
+  getArtifactModuleRoute,
+  getArtifactRoute,
+} from "../../utils/artifactRoutes";
 import VisualReport from "./VisualReport";
 import { useVisualInvestigation } from "./useVisualInvestigation";
 import SystemInfoFooter from "../../components/common/SystemInfoFooter";
@@ -147,8 +150,11 @@ export default function VcaVisualPage() {
     workspaceArtifact,
   } = investigation;
   const canComplete = Boolean(report) && selectedRun?.status === "COMPLETED";
+  const runIsCompleted = selectedRun?.status === "COMPLETED";
   const pageBusy = Boolean(working) || runRequestPending;
-  const canStartRun = uploadedImages.length > 0 && !runIsActive && !pageBusy;
+
+  const canStartRun =
+    uploadedImages.length > 0 && !runIsActive && !runIsCompleted && !pageBusy;
   const progressValue = runProgress(selectedRun);
 
   // "육안 상태 조사 완료" 버튼 핸들러. 워크스페이스에 완료 상태를 기록하고
@@ -188,7 +194,9 @@ export default function VcaVisualPage() {
       <main className="visual-page visual-vca-page visual-state" role="alert">
         <span className="visual-eyebrow">VCA CONNECTION</span>
         <h1>
-          {notReady ? "육안 상태 조사 준비 중" : "조사 정보를 불러오지 못했습니다"}
+          {notReady
+            ? "육안 상태 조사 준비 중"
+            : "조사 정보를 불러오지 못했습니다"}
         </h1>
         <p>
           {notReady
@@ -206,7 +214,9 @@ export default function VcaVisualPage() {
           <button
             type="button"
             className="visual-secondary-button"
-            onClick={() => navigate(getArtifactModuleRoute(artifactId, "visual"))}
+            onClick={() =>
+              navigate(getArtifactModuleRoute(artifactId, "visual"))
+            }
           >
             육안조사 선택으로 돌아가기
           </button>
@@ -417,6 +427,14 @@ export default function VcaVisualPage() {
                 >
                   {working === "cancel" ? "중지 중" : "분석 중지"}
                 </button>
+              ) : runIsCompleted ? (
+                <button
+                  type="button"
+                  className="visual-primary-button"
+                  disabled
+                >
+                  분석 완료
+                </button>
               ) : artifact.resumableRunId ? (
                 <>
                   <button
@@ -515,7 +533,8 @@ export default function VcaVisualPage() {
 
         <footer className="complete-area">
           <p>
-            보고서를 확인한 뒤 완료하면 현재 유물의 육안 상태 조사 결과가 저장됩니다.
+            보고서를 확인한 뒤 완료하면 현재 유물의 육안 상태 조사 결과가
+            저장됩니다.
           </p>
           <button
             type="button"
