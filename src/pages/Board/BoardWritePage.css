@@ -1,25 +1,163 @@
 @reference "../../index.css";
 
 @layer components {
-.board-write-form {
-  @apply flex flex-col gap-5;
-}
-.board-write-field {
-  @apply flex flex-col gap-2;
-}
-.board-write-writer {
-  @apply text-[color:var(--heritage-muted)] text-xs tracking-[0.04em];
-}
-.board-write-label {
-  @apply text-[color:var(--heritage-ink)] [font-family:Georgia,"Noto_Serif_KR",serif] text-[17px];
-}
-.board-write-textarea {
-  @apply h-auto min-h-[240px] py-3 resize-y leading-[1.6];
-}
-.board-write-error {
-  @apply text-[color:#b3452c] text-sm;
-}
-.board-write-actions {
-  @apply flex justify-end gap-3;
-}
+  .board-write-back {
+    margin-bottom: 22px;
+    font-weight: 700;
+  }
+
+  .board-write-form {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    width: 100%;
+    padding: 32px 36px 30px;
+  }
+
+  .board-write-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: rgba(242, 235, 225, 0.62);
+  }
+
+  .board-write-header > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .board-write-header-label {
+    color: #81776d;
+    font-size: 12px;
+  }
+
+  .board-write-header strong {
+    color: var(--heritage-ink);
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .board-write-header p {
+    margin: 0;
+    color: #7b7268;
+    font-size: 13px;
+  }
+
+  .board-write-field {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .board-write-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--heritage-ink);
+    font-family: Georgia, "Noto Serif KR", serif;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .board-write-required {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 27px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #f0e7db;
+    color: #9b662f;
+    font-family: sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .board-write-input,
+  .board-write-textarea {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 101, 55, 0.34);
+    background: rgba(255, 255, 255, 0.52);
+    color: var(--heritage-ink);
+  }
+
+  .board-write-input {
+    min-height: 54px;
+    padding: 0 18px;
+    font-size: 16px;
+  }
+
+  .board-write-textarea {
+    min-height: 300px;
+    padding: 18px;
+    resize: vertical;
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .board-write-input::placeholder,
+  .board-write-textarea::placeholder {
+    color: #9a9289;
+  }
+
+  .board-write-input:focus,
+  .board-write-textarea:focus {
+    outline: none;
+    border-color: rgba(157, 101, 48, 0.78);
+    box-shadow: 0 0 0 3px rgba(157, 101, 48, 0.08);
+  }
+
+  .board-write-error {
+    margin: -8px 0 0;
+    color: #b3452c;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .board-write-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .board-write-action {
+    min-width: 112px;
+    min-height: 54px;
+    border-radius: 12px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 720px) {
+    .board-write-form {
+      gap: 24px;
+      padding: 24px 18px 22px;
+    }
+
+    .board-write-header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .board-write-label {
+      font-size: 19px;
+    }
+
+    .board-write-textarea {
+      min-height: 240px;
+    }
+
+    .board-write-actions {
+      width: 100%;
+    }
+
+    .board-write-action {
+      flex: 1 1 0;
+    }
+  }
 }

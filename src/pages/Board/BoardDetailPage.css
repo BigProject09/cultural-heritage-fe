@@ -1,27 +1,119 @@
 @reference "../../index.css";
 
 @layer components {
-.board-detail-card {
-  @apply min-h-[390px] px-[42px] py-[38px];
-}
-.board-detail-owner-actions {
-  @apply flex gap-2;
-}
-.board-detail-meta {
-  @apply justify-end;
-}
-.board-detail-divider {
-  @apply [background:linear-gradient(_90deg,var(--heritage-bronze),rgba(202,188,168,0.35)_)] h-px mt-[25px] mb-[34px] mx-0;
-}
-.board-detail-content {
-  @apply text-[#3f4741] text-base leading-loose whitespace-pre-wrap;
-}
-@media (max-width: 720px) {
+  .board-detail-back {
+    margin-bottom: 22px;
+    font-weight: 700;
+  }
+
+  .board-detail-owner-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .board-detail-action {
+    min-width: 82px;
+    min-height: 48px;
+    border-radius: 10px;
+    font-weight: 800;
+  }
+
+  .board-detail-delete:hover {
+    border-color: rgba(157, 67, 48, 0.46);
+    color: #9d4330;
+  }
+
   .board-detail-card {
-    @apply px-[22px] py-[26px];
+    min-height: 320px;
+    padding: 30px 36px 44px;
   }
+
+  .board-detail-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+  }
+
+  .board-detail-label {
+    color: var(--heritage-bronze);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+  }
+
   .board-detail-meta {
-    @apply justify-start;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 28px;
   }
-}
+
+  .board-detail-meta > span {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    white-space: nowrap;
+  }
+
+  .board-detail-meta small {
+    color: #8a8177;
+    font-size: 12px;
+  }
+
+  .board-detail-meta strong {
+    color: #5a5148;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .board-detail-divider {
+    height: 1px;
+    margin: 24px 0 36px;
+    background: linear-gradient(
+      90deg,
+      var(--heritage-bronze),
+      rgba(202, 188, 168, 0.35)
+    );
+  }
+
+  .board-detail-content {
+    min-height: 180px;
+    color: #343b37;
+    font-size: 16px;
+    line-height: 1.9;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  @media (max-width: 720px) {
+    .board-detail-card {
+      padding: 24px 20px 32px;
+    }
+
+    .board-detail-card-header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .board-detail-meta {
+      width: 100%;
+      justify-content: flex-start;
+      gap: 14px 20px;
+      flex-wrap: wrap;
+    }
+
+    .board-detail-owner-actions {
+      width: 100%;
+    }
+
+    .board-detail-action {
+      flex: 1 1 0;
+    }
+
+    .board-detail-divider {
+      margin: 20px 0 28px;
+    }
+  }
 }

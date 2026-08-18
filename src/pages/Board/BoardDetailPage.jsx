@@ -5,9 +5,30 @@ import { deletePost, findPost, isMyPost } from "../../services/postApi";
 import HeritagePage from "../../components/workspace/HeritagePage";
 import { isAdminUser, readLoginUser } from "../../utils/auth";
 
-function formatDate(isoString) {
-  if (!isoString) return "-";
-  return isoString.slice(0, 10);
+function normalizeUtcValue(value) {
+  if (
+    typeof value === "string" &&
+    !value.endsWith("Z") &&
+    !/[+-]\d{2}:\d{2}$/.test(value)
+  ) {
+    return `${value}Z`;
+  }
+
+  return value;
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+
+  const date = new Date(normalizeUtcValue(value));
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 }
 
 function BoardDetailPage() {
@@ -99,15 +120,21 @@ function BoardDetailPage() {
           <div className="board-detail-owner-actions">
             {canEdit && (
               <button
-                className="heritage-button secondary"
+                className="heritage-button secondary board-detail-action"
                 type="button"
-                onClick={() => navigate("/board/write", { state: { editPostId: post.id } })}
+                onClick={() =>
+                  navigate("/board/write", { state: { editPostId: post.id } })
+                }
               >
                 수정
               </button>
             )}
             {canDelete && (
-              <button className="heritage-button secondary" type="button" onClick={handleDelete}>
+              <button
+                className="heritage-button secondary board-detail-action board-detail-delete"
+                type="button"
+                onClick={handleDelete}
+              >
                 삭제
               </button>
             )}
@@ -115,16 +142,33 @@ function BoardDetailPage() {
         )
       }
     >
-      <button className="heritage-back" onClick={() => navigate("/board")}>
+      <button
+        className="heritage-back board-detail-back"
+        type="button"
+        onClick={() => navigate("/board")}
+      >
         <span aria-hidden="true">←</span> 게시판 목록
       </button>
 
       <article className="heritage-panel board-detail-card">
-        <div className="heritage-meta board-detail-meta">
-          <span>작성자 {post.author}</span>
-          <span>조회수 {post.viewCount.toLocaleString()}</span>
-          <span>작성일 {formatDate(post.createdAt)}</span>
-        </div>
+        <header className="board-detail-card-header">
+          <div className="board-detail-label">CASE ARCHIVE</div>
+
+          <div className="board-detail-meta">
+            <span>
+              <small>작성자</small>
+              <strong>{post.author}</strong>
+            </span>
+            <span>
+              <small>조회수</small>
+              <strong>{post.viewCount.toLocaleString()}</strong>
+            </span>
+            <span>
+              <small>작성일</small>
+              <strong>{formatDate(post.createdAt)}</strong>
+            </span>
+          </div>
+        </header>
 
         <div className="board-detail-divider" />
 
