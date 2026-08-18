@@ -155,6 +155,7 @@ export default function VisualReport({
   report,
   working,
   onPdfJob,
+  allowPdf = true,
 }) {
   return (
     <>
@@ -171,42 +172,44 @@ export default function VisualReport({
         />
       </div>
       <ReportRecommendations recommendations={report.recommendations || []} />
-      <footer className="visual-vca-pdf">
-        <div>
-          <strong>
-            {pdfJob ? statusLabel(pdfJob.status) : "PDF 보고서 미생성"}
-          </strong>
-          <span>
-            {pdfJob
-              ? "생성 작업은 재사용되며 상태를 다시 확인할 수 있습니다."
-              : "조사 보고서를 PDF로 준비할 수 있습니다."}
-          </span>
-        </div>
-        <div>
-          <button
-            type="button"
-            className="visual-secondary-button"
-            onClick={onPdfJob}
-            disabled={Boolean(working)}
-          >
-            {working === "pdf"
-              ? "PDF 상태 확인 중"
-              : pdfJob
-                ? "PDF 상태 확인"
-                : "PDF 생성"}
-          </button>
-          {pdfJob?.status === "COMPLETED" && (
-            <a
-              className="visual-primary-button"
-              href={getVcaPdfDownloadUrl(pdfJob)}
-              target="_blank"
-              rel="noreferrer"
+      {allowPdf && (
+        <footer className="visual-vca-pdf">
+          <div>
+            <strong>
+              {pdfJob ? statusLabel(pdfJob.status) : "PDF 보고서 미생성"}
+            </strong>
+            <span>
+              {pdfJob
+                ? "생성 작업은 재사용되며 상태를 다시 확인할 수 있습니다."
+                : "조사 보고서를 PDF로 준비할 수 있습니다."}
+            </span>
+          </div>
+          <div>
+            <button
+              type="button"
+              className="visual-secondary-button"
+              onClick={onPdfJob}
+              disabled={Boolean(working)}
             >
-              PDF 열기
-            </a>
-          )}
-        </div>
-      </footer>
+              {working === "pdf"
+                ? "PDF 상태 확인 중"
+                : pdfJob
+                  ? "PDF 상태 확인"
+                  : "PDF 생성"}
+            </button>
+            {pdfJob?.status === "COMPLETED" && (
+              <a
+                className="visual-primary-button"
+                href={getVcaPdfDownloadUrl(pdfJob)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                PDF 열기
+              </a>
+            )}
+          </div>
+        </footer>
+      )}
     </>
   );
 }

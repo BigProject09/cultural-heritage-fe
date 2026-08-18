@@ -35,31 +35,33 @@ export default function ImageViewer({ file, regions, selectedId, onSelect }) {
   return (
     <div className="viewer">
       <div className="viewer-inner">
-        <img
-          ref={imgRef}
-          src={url}
-          alt=""
-          onLoad={handleLoad}
-          className="viewer-img"
-        />
+        <div className="viewer-canvas">
+          <img
+            ref={imgRef}
+            src={url}
+            alt=""
+            onLoad={handleLoad}
+            className="viewer-img"
+          />
 
-        {size && (
-          <svg
-            className="viewer-svg"
-            viewBox={`0 0 ${size.width} ${size.height}`}
-            preserveAspectRatio="xMidYMid meet"
-          >
-            {regions.map((r) => (
-              <BoxShape
-                key={r.regionId}
-                region={r}
-                imageWidth={size.width}
-                selected={r.regionId === selectedId}
-                onSelect={onSelect}
-              />
-            ))}
-          </svg>
-        )}
+          {size && (
+            <svg
+              className="viewer-svg"
+              viewBox={`0 0 ${size.width} ${size.height}`}
+              preserveAspectRatio="xMidYMid meet"
+            >
+              {regions.map((r) => (
+                <BoxShape
+                  key={r.regionId}
+                  region={r}
+                  imageWidth={size.width}
+                  selected={r.regionId === selectedId}
+                  onSelect={onSelect}
+                />
+              ))}
+            </svg>
+          )}
+        </div>
       </div>
 
       {size && (

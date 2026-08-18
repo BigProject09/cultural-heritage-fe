@@ -13,6 +13,42 @@
     @apply [background:transparent] text-[color:var(--heritage-bronze-dark)] text-xs cursor-pointer mb-7 p-0 border-0;
   }
 
+  .final-report-generating-overlay {
+    @apply fixed z-[9999] flex items-center justify-center [background:rgba(30,27,23,0.68)] p-6 inset-0;
+    backdrop-filter: blur(3px);
+  }
+
+  .final-report-generating-modal {
+    @apply flex w-full max-w-[460px] flex-col items-center text-center [background:#fffdf8] shadow-[0_24px_80px_rgba(0,0,0,0.28)] px-10 py-12 rounded-2xl border border-[color:var(--heritage-line)] border-solid;
+  }
+
+  .final-report-generating-modal > span:not(.final-report-spinner) {
+    @apply text-[color:var(--heritage-bronze)] text-[10px] font-bold tracking-[0.18em] mt-5;
+  }
+
+  .final-report-generating-modal h2 {
+    @apply [font-family:"Noto_Serif_KR",Georgia,serif] text-[24px] font-medium mt-3 mb-2;
+  }
+
+  .final-report-generating-modal p {
+    @apply text-[color:var(--heritage-muted)] text-sm leading-6 mt-0 mb-3;
+  }
+
+  .final-report-generating-modal small {
+    @apply text-[color:var(--heritage-muted)] text-xs;
+  }
+
+  .final-report-spinner {
+    @apply block w-11 h-11 rounded-full border-[3px] border-[color:var(--heritage-line)] border-t-[color:var(--heritage-bronze)] border-solid;
+    animation: final-report-spin 0.85s linear infinite;
+  }
+
+  @keyframes final-report-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .final-report-heading {
     @apply flex items-end justify-between border-b border-[color:var(--heritage-line)] pb-7;
   }

@@ -140,6 +140,7 @@ export default function VcaVisualPage() {
     removeImage,
     report,
     reportRunId,
+    reportRecoveredFromServer,
     runRequestPending,
     runIsActive,
     selectFiles,
@@ -504,6 +505,7 @@ export default function VcaVisualPage() {
                 pdfJob={pdfJob}
                 working={working}
                 onPdfJob={handlePdfJob}
+                allowPdf={!reportRecoveredFromServer}
               />
             ) : (
               <p className="status-note">
