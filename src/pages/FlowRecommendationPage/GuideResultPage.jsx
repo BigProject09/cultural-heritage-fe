@@ -244,8 +244,13 @@ function GuideResultPage() {
   const { taskId, approvedFlow } = ctx;
 
   const [activeDetail, setActiveDetail] = useState(null);
-  const [recovering, setRecovering] = useState(true);
+  const [recoveryFinished, setRecoveryFinished] = useState(false);
   const [recoveryError, setRecoveryError] = useState("");
+
+  const hasSessionData =
+    Boolean(taskId) && sanitizeGuideFlow(approvedFlow).length > 0;
+
+  const recovering = !hasSessionData && !recoveryFinished;
 
   useEffect(() => {
     if (!artifactId || (taskId && approvedFlow?.length)) return undefined;
@@ -264,7 +269,9 @@ function GuideResultPage() {
           );
       })
       .finally(() => {
-        if (!cancelled) setRecovering(false);
+        if (!cancelled) {
+          setRecoveryFinished(true);
+        }
       });
 
     return () => {
@@ -273,7 +280,6 @@ function GuideResultPage() {
   }, [artifactId, taskId, approvedFlow?.length, ctx]);
 
   const guideFlow = sanitizeGuideFlow(approvedFlow);
-  const hasSessionData = Boolean(taskId) && guideFlow.length > 0;
 
   return (
     <div className="flow-page guide-result-page">
