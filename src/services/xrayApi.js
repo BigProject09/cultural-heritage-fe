@@ -878,6 +878,14 @@ export async function updateWorkflowDefects(jobId, defects) {
   );
 }
 
+/** 전문가 검수 완료를 확정하고 문안 작성 단계(REPORT_READY)로 전환한다. */
+export async function markWorkflowReportReady(jobId) {
+  return requestJson(
+    `${WORKFLOW_JOBS_BASE}/${encodeURIComponent(jobId)}/report-ready`,
+    { method: "POST" },
+  );
+}
+
 /** 현재 DAMAGE 결함만 사용해 AI 상태조사 초안을 생성한다. */
 export async function generateWorkflowReportText(
   jobId,

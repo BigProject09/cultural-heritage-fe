@@ -295,3 +295,162 @@
   }
 }
 }
+
+@layer components {
+.heritage-entry-modal-backdrop {
+  @apply fixed inset-0 z-[80] flex items-center justify-center p-6 [background:rgba(20,25,22,0.62)];
+}
+.heritage-entry-modal {
+  @apply relative w-full max-w-[1180px] max-h-[calc(100vh_-_48px)] overflow-auto rounded-2xl border border-solid border-[#bda98c] [background:var(--heritage-paper-2)] p-[38px] shadow-[0_30px_70px_rgba(14,17,15,0.28)];
+}
+.heritage-entry-modal > h2 {
+  @apply mt-0 mb-[9px] [font-family:"Noto_Serif_KR",Georgia,serif] text-3xl font-medium;
+}
+.heritage-entry-modal > p {
+  @apply mb-[27px] text-xs leading-[1.7] text-[color:var(--heritage-muted)];
+}
+.heritage-entry-modal-close {
+  @apply absolute right-5 top-4 border-0 bg-transparent text-[26px] text-[#7d7466] cursor-pointer;
+}
+.heritage-entry-kicker,
+.heritage-entry-module-eyebrow {
+  @apply text-[10px] font-bold tracking-[0.15em] text-[color:var(--heritage-bronze)];
+}
+.heritage-entry-kicker {
+  @apply block mb-5;
+}
+.heritage-entry-module-grid {
+  @apply grid grid-cols-3 gap-4;
+}
+.heritage-entry-module-card {
+  @apply relative flex min-h-[330px] flex-col overflow-hidden rounded-xl border border-solid border-[color:var(--heritage-line)] [background:#f8f4eb] p-[28px] text-left cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--heritage-bronze)];
+}
+.heritage-entry-module-card::after {
+  content: "";
+  @apply pointer-events-none absolute -right-[55px] top-[36px] h-[190px] w-[190px] rounded-full border border-solid border-[rgba(150,104,61,0.15)];
+}
+.heritage-entry-module-number {
+  @apply absolute left-3 top-[44px] text-[10px] text-[#a48864];
+}
+.heritage-entry-module-icon {
+  @apply z-[1] mb-[30px] flex h-12 w-12 items-center justify-center rounded-full border border-solid border-[color:var(--heritage-bronze)] text-[color:var(--heritage-bronze)];
+}
+.heritage-entry-module-eyebrow {
+  @apply z-[1] mb-5 ml-0;
+}
+.heritage-entry-module-card > strong {
+  @apply z-[1] block mb-1 [font-family:"Noto_Serif_KR",Georgia,serif] text-[25px] font-medium;
+}
+.heritage-entry-module-subtitle {
+  @apply z-[1] block [font-family:"Noto_Serif_KR",Georgia,serif] text-sm text-[#626b62];
+}
+.heritage-entry-module-description {
+  @apply z-[1] mt-[18px] block max-w-[78%] text-[11px] leading-[1.7] text-[#7b7e75];
+}
+.heritage-entry-module-action {
+  @apply z-[1] mt-auto flex items-center gap-2.5 pt-[18px] text-[11px] text-[color:var(--heritage-bronze-dark)];
+}
+.heritage-entry-module-action b {
+  @apply text-[19px] font-normal transition-transform duration-200;
+}
+.heritage-entry-module-card:hover .heritage-entry-module-action b {
+  @apply translate-x-[5px];
+}
+.heritage-entry-back {
+  @apply mb-5 border-0 bg-transparent p-0 text-xs text-[color:var(--heritage-bronze-dark)] cursor-pointer;
+}
+.heritage-entry-choice-grid {
+  @apply grid grid-cols-2 gap-4;
+}
+.heritage-entry-choice-grid > button {
+  @apply min-h-[220px] rounded-xl border border-solid border-[color:var(--heritage-line)] [background:#f7f2e8] p-[25px] text-left cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--heritage-bronze)];
+}
+.heritage-entry-choice-grid > button > span {
+  @apply mb-7 flex h-[42px] w-[42px] items-center justify-center rounded-full border border-solid border-[color:var(--heritage-bronze)] text-xl text-[color:var(--heritage-bronze)];
+}
+.heritage-entry-choice-grid strong {
+  @apply block [font-family:"Noto_Serif_KR",Georgia,serif] text-xl font-medium;
+}
+.heritage-entry-choice-grid small {
+  @apply mt-[7px] mb-7 block text-[10px] text-[color:var(--heritage-muted)];
+}
+.heritage-entry-choice-grid b {
+  @apply text-[11px] font-medium text-[color:var(--heritage-bronze-dark)];
+}
+.heritage-entry-selector-list {
+  @apply grid gap-2;
+}
+.heritage-entry-selector-list > button {
+  @apply grid grid-cols-[72px_1fr_auto_90px_20px] items-center gap-[15px] rounded-[10px] border border-solid border-[#d6c9b6] [background:#f8f4eb] p-[9px] text-left cursor-pointer;
+}
+.heritage-entry-selector-list .heritage-artifact-thumb {
+  @apply h-[59px] w-[72px];
+}
+.heritage-entry-selector-name strong {
+  @apply block [font-family:"Noto_Serif_KR",Georgia,serif] text-[15px] font-medium;
+}
+.heritage-entry-selector-name small {
+  @apply text-[9px] text-[color:var(--heritage-muted)];
+}
+.heritage-entry-selector-list > button > em {
+  @apply text-[9px] not-italic text-[#8d857a];
+}
+.heritage-entry-selector-list > button > b {
+  @apply text-lg font-normal text-[color:var(--heritage-bronze-dark)];
+}
+.heritage-entry-pill {
+  @apply mt-[5px] rounded-[99px] border border-solid border-[#c3c0b7] px-[9px] py-0.5 text-[9px] not-italic text-[#74766e];
+}
+.heritage-entry-pill.done {
+  @apply border-[#9aaa91] [background:#e5eadf] text-[#566b52];
+}
+.heritage-entry-pill.in_progress {
+  @apply border-[#c89b65] [background:#f4e5d0] text-[#8b5925];
+}
+.heritage-entry-pill.needs_update,
+.heritage-entry-pill.review_required,
+.heritage-entry-pill.failed {
+  @apply border-[#c98c78] [background:#f3dfd8] text-[#914c37];
+}
+.heritage-entry-selector-empty {
+  @apply flex min-h-[120px] flex-col items-center justify-center rounded-[10px] border border-dashed border-[color:var(--heritage-line)] p-5 text-[color:var(--heritage-muted)];
+}
+.heritage-entry-selector-empty strong {
+  @apply [font-family:"Noto_Serif_KR",Georgia,serif] font-medium text-[color:var(--heritage-ink)];
+}
+.heritage-entry-selector-empty button {
+  @apply mt-[7px] min-h-[34px] rounded-[7px] border-0 [background:var(--heritage-bronze)] px-[13px] py-0 text-white cursor-pointer;
+}
+.heritage-entry-error {
+  @apply border-l-[3px] border-solid border-l-[color:var(--heritage-danger)] [background:#f3dfd8] px-3 py-2.5 text-[10px] text-[#824b39];
+}
+@media (max-width: 900px) {
+  .heritage-entry-module-grid {
+    @apply grid-cols-1;
+  }
+  .heritage-entry-module-card {
+    @apply min-h-[260px];
+  }
+}
+@media (max-width: 640px) {
+  .heritage-entry-modal-backdrop {
+    @apply p-3;
+  }
+  .heritage-entry-modal {
+    @apply p-5 pt-12;
+  }
+  .heritage-entry-choice-grid {
+    @apply grid-cols-1;
+  }
+  .heritage-entry-selector-list > button {
+    @apply grid-cols-[64px_1fr_auto];
+  }
+  .heritage-entry-selector-list > button > em,
+  .heritage-entry-selector-list > button > b {
+    @apply hidden;
+  }
+  .heritage-entry-selector-list .heritage-artifact-thumb {
+    @apply h-[52px] w-[64px];
+  }
+}
+}

@@ -32,6 +32,7 @@ import {
   getStitchJobByArtifactId,
   getWorkflowDefects,
   getWorkflowReportText,
+  markWorkflowReportReady,
   rememberXrayJob,
   saveFinalStitchLayout,
   saveWorkflowReportText,
@@ -299,6 +300,32 @@ function finalLayoutFragments(layout) {
   }));
 }
 
+/**
+ * STEP 2에서 이미 확정한 FINAL layout인지 판별하기 위한 메모리 캐시 키.
+ * 좌표 계산 과정의 미세한 부동소수점 차이로 불필요한 재확정이 발생하지
+ * 않도록 좌표/회전값은 소수점 넷째 자리까지 정규화한다.
+ */
+function finalLayoutSignature(fragments) {
+  const normalized = (fragments || [])
+    .map((fragment) => ({
+      index: Number(fragment.index ?? 0),
+      originalSourceIndex: Number(
+        fragment.originalSourceIndex ?? fragment.sourceIndex ?? fragment.index ?? 0,
+      ),
+      subfragmentIndex: Number(fragment.subfragmentIndex ?? 0),
+      centerX: Number(Number(fragment.centerX ?? 0).toFixed(4)),
+      centerY: Number(Number(fragment.centerY ?? 0).toFixed(4)),
+      rotationDeg: Number(Number(fragment.rotationDeg ?? 0).toFixed(4)),
+    }))
+    .sort((a, b) =>
+      a.originalSourceIndex - b.originalSourceIndex ||
+      a.subfragmentIndex - b.subfragmentIndex ||
+      a.index - b.index,
+    );
+
+  return JSON.stringify(normalized);
+}
+
 function bboxFrom(value) {
   const geometry = value?.geometry ?? value?.bbox ?? value ?? {};
 
@@ -483,6 +510,13 @@ export default function XrayPage() {
   const resultMode = location.state?.viewMode === "result";
   const fileInputRef = useRef(null);
   const reportSectionRef = useRef(null);
+  const step3SectionRef = useRef(null);
+  const pendingStep3EntryRef = useRef(false);
+  // 같은 job + 같은 FINAL layout이면 STEP 2 재진입 후에도 finalization API를
+  // 다시 호출하지 않는다. 새로고침 시에는 서버에서 final 결과를 복원해 다시 채운다.
+  const finalizedResultRef = useRef({ jobId: "", signature: "" });
+  const regionListRef = useRef(null);
+  const regionItemRefs = useRef(new Map());
 
   /**
    * 유물 정보.
@@ -590,6 +624,7 @@ export default function XrayPage() {
   const [report, setReport] = useState("");
   const [reportMeta, setReportMeta] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
+  const [reportMessage, setReportMessage] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   // 페이지 재진입 직후에는 아직 서버의 실제 진행 단계를 모른다.
@@ -601,10 +636,44 @@ export default function XrayPage() {
   const [resultLoading, setResultLoading] = useState(
     !USE_MOCK && Boolean(artifactId),
   );
+  const [finalPreviewLoading, setFinalPreviewLoading] = useState(false);
+  const [step3JustEntered, setStep3JustEntered] = useState(false);
   const [resultError, setResultError] = useState("");
   const [resultXrayCount, setResultXrayCount] = useState(0);
   const [restoredCompleted, setRestoredCompleted] = useState(false);
   const readOnlyMode = resultMode || restoredCompleted;
+
+  // STEP 2에서 STEP 3으로 넘어갈 때 화면 구성이 비슷해 단계 전환을
+  // 놓치기 쉽다. 사용자가 직접 이동시킨 경우에만 STEP 3 카드 시작점으로
+  // 스크롤하고 짧게 강조해 현재 단계가 바뀌었음을 명확하게 보여준다.
+  useEffect(() => {
+    if (
+      workflow !== WORKFLOW.INSPECTION ||
+      activeStep !== 3 ||
+      !pendingStep3EntryRef.current
+    ) {
+      return undefined;
+    }
+
+    pendingStep3EntryRef.current = false;
+    setStep3JustEntered(true);
+
+    const scrollTimer = window.setTimeout(() => {
+      step3SectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
+
+    const highlightTimer = window.setTimeout(() => {
+      setStep3JustEntered(false);
+    }, 1400);
+
+    return () => {
+      window.clearTimeout(scrollTimer);
+      window.clearTimeout(highlightTimer);
+    };
+  }, [activeStep, workflow]);
 
   // AI 서비스 상태를 미리 확인한다.
   // 문안 생성처럼 오래 걸리는 요청과 겹쳐 일시적으로 health 조회가 실패해도
@@ -762,10 +831,14 @@ export default function XrayPage() {
           setWorkflow(WORKFLOW.REVIEW);
           setActiveStep(5);
           setMaxReachedStep(5);
+        } else if (status.status === "REPORT_READY") {
+          setWorkflow(WORKFLOW.INSPECTION);
+          setActiveStep(4);
+          setMaxReachedStep(4);
         } else if (status.status === "REVIEW_READY") {
           setWorkflow(WORKFLOW.INSPECTION);
           setActiveStep(3);
-          setMaxReachedStep(4);
+          setMaxReachedStep(3);
         } else {
           setWorkflow(WORKFLOW.STITCH);
           setStitchView("UPLOAD");
@@ -859,6 +932,12 @@ export default function XrayPage() {
         setFragmentFiles(files);
         setStitchSources(sources);
         setStitchLayout(layout);
+        finalizedResultRef.current = hasFinalResult
+          ? {
+              jobId: status.jobId,
+              signature: finalLayoutSignature(finalLayoutFragments(layout)),
+            }
+          : { jobId: "", signature: "" };
         setResultXrayCount(sources.length || files.length);
         rememberXrayJob(
           artifactId,
@@ -883,7 +962,7 @@ export default function XrayPage() {
           return;
         }
 
-        if (["REVIEW_READY", "COMPLETED"].includes(status.status)) {
+        if (["REVIEW_READY", "REPORT_READY", "COMPLETED"].includes(status.status)) {
           const [defectResult, reportResult] = await Promise.all([
             getWorkflowDefects(status.jobId),
             getWorkflowReportText(status.jobId),
@@ -897,7 +976,13 @@ export default function XrayPage() {
           const savedReport = reportResult.reportText || "";
 
           setRegions(loadedRegions);
-          setSelectedId(loadedRegions[0]?.regionId || null);
+          const firstRestoredRegion =
+            loadedRegions.find(
+              (region) => region.analysisTarget === TARGET.ASSEMBLED,
+            ) || loadedRegions[0];
+          setSelectedId(firstRestoredRegion?.regionId || null);
+          // 기존 작업 복원 시에도 이상 영역 화면의 기본 이미지는 결합본이다.
+          setViewFile(assembled);
           setInspectionDone(true);
           setReport(savedReport);
           setReportMeta(null);
@@ -909,8 +994,12 @@ export default function XrayPage() {
             setMaxReachedStep(5);
           } else {
             setWorkflow(WORKFLOW.INSPECTION);
-            setActiveStep(savedReport ? 4 : 3);
-            setMaxReachedStep(savedReport ? 5 : 4);
+            // REPORT_READY는 사용자가 STEP 3 검수를 완료하고 STEP 4에 실제 진입한 상태다.
+            // savedReport fallback은 REPORT_READY 도입 전 생성된 기존 작업과의 호환용이다.
+            const reachedReportStep =
+              status.status === "REPORT_READY" || Boolean(savedReport);
+            setActiveStep(reachedReportStep ? 4 : 3);
+            setMaxReachedStep(reachedReportStep ? 4 : 3);
           }
         }
       } catch (error) {
@@ -928,6 +1017,64 @@ export default function XrayPage() {
       cancelled = true;
     };
   }, [artifactId, resultMode]);
+
+  // STEP 3에서는 이상영역 분석 여부와 관계없이 최종 결합본이 먼저 보여야 한다.
+  // 정상 흐름에서는 confirmStitch/복원 로직이 이미 final 이미지를 받아 두지만,
+  // 화면 재진입이나 상태 복원 타이밍 때문에 파일이 비어 있는 경우에는
+  // Spring의 final-result API에서 이미지 한 장만 다시 받아 복원한다.
+  useEffect(() => {
+    if (
+      USE_MOCK ||
+      workflow !== WORKFLOW.INSPECTION ||
+      activeStep !== 3 ||
+      inspectionDone ||
+      resultLoading ||
+      stitchStatus === "FINALIZING" ||
+      !stitchJobId ||
+      assembledFile
+    ) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    async function restoreFinalPreview() {
+      setFinalPreviewLoading(true);
+      try {
+        const finalFile = await downloadFinalStitchResult(
+          stitchJobId,
+          `assembled-${artifactId || stitchJobId}-final.png`,
+        );
+        if (cancelled) return;
+
+        setAssembledFile(finalFile);
+        setViewFile(finalFile);
+        setInspectionMessage("");
+      } catch (error) {
+        if (!cancelled) {
+          setInspectionMessage(
+            `최종 결합 이미지 조회 실패: ${error.message}`,
+          );
+        }
+      } finally {
+        if (!cancelled) setFinalPreviewLoading(false);
+      }
+    }
+
+    restoreFinalPreview();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeStep,
+    artifactId,
+    assembledFile,
+    inspectionDone,
+    resultLoading,
+    stitchJobId,
+    stitchStatus,
+    workflow,
+  ]);
 
   /**
    * 결합 입력 또는 결합본이 바뀌면 이후 분석 결과는 더 이상
@@ -951,6 +1098,7 @@ export default function XrayPage() {
   }
 
   function resetToImageRegistration() {
+    finalizedResultRef.current = { jobId: "", signature: "" };
     setAssembledFile(null);
     setStitchStatus("IDLE");
     setStitchMessage("");
@@ -1036,6 +1184,7 @@ export default function XrayPage() {
     setEditingPlacement(false);
     setStitchLayout(null);
     setCorrectedFragments(null);
+    finalizedResultRef.current = { jobId: "", signature: "" };
     setStitchJobId("");
     setStitchStatus("UPLOADING");
     setStitchMessage("입력 이미지를 준비하고 있습니다.");
@@ -1159,11 +1308,11 @@ export default function XrayPage() {
 
     // Mock 환경은 실제 finalization API가 없으므로 바로 다음 단계로 이동한다.
     if (USE_MOCK) {
+      pendingStep3EntryRef.current = true;
       setWorkflow(WORKFLOW.INSPECTION);
       setActiveStep(3);
       setMaxReachedStep((current) => Math.max(current, 3));
       setViewFile(assembledFile);
-      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -1183,6 +1332,28 @@ export default function XrayPage() {
       setStitchMessage(
         "최종 배치 정보가 없습니다. 조각 결합 결과를 다시 확인해주세요.",
       );
+      return;
+    }
+
+    const finalSignature = finalLayoutSignature(finalFragments);
+    const cachedFinal = finalizedResultRef.current;
+
+    // STEP 3에서 STEP 2로 돌아왔다가 아무 보정도 하지 않은 경우에는
+    // 이미 메모리에 있는 FINAL 이미지와 확정 layout을 그대로 사용한다.
+    // saveFinalStitchLayout/downloadFinalStitchResult를 다시 호출하지 않으므로
+    // FINALIZING 스피너도 다시 나타나지 않는다.
+    if (
+      cachedFinal.jobId === stitchJobId &&
+      cachedFinal.signature &&
+      cachedFinal.signature === finalSignature
+    ) {
+      setViewFile(assembledFile);
+      setStitchStatus("STITCHED");
+      setStitchMessage("확정된 최종 결합 결과를 그대로 사용합니다.");
+      pendingStep3EntryRef.current = true;
+      setWorkflow(WORKFLOW.INSPECTION);
+      setActiveStep(3);
+      setMaxReachedStep((current) => Math.max(current, 3));
       return;
     }
 
@@ -1223,14 +1394,18 @@ export default function XrayPage() {
 
       setAssembledFile(finalFile);
       setViewFile(finalFile);
+      finalizedResultRef.current = {
+        jobId: stitchJobId,
+        signature: finalSignature,
+      };
       setStitchStatus("STITCHED");
       setStitchMessage("최종 결합 결과가 확정되었습니다.");
 
       // final layout 저장과 최종 이미지 조회가 모두 끝난 뒤에만 STEP 3으로 이동한다.
+      pendingStep3EntryRef.current = true;
       setWorkflow(WORKFLOW.INSPECTION);
       setActiveStep(3);
       setMaxReachedStep((current) => Math.max(current, 3));
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       setStitchStatus("STITCHED");
       setStitchMessage(`최종 결합 확정 실패: ${error.message}`);
@@ -1272,6 +1447,9 @@ export default function XrayPage() {
     setDefectMapping(null);
     setReport("");
     setReportMeta(null);
+    // 이상 영역 단계는 항상 확정된 결합본에서 시작한다.
+    // 이전에 원본 조각을 보고 있었더라도 분석 시작 시 결합본으로 복귀한다.
+    setViewFile(assembledFile);
 
     try {
       let allRegions;
@@ -1345,13 +1523,17 @@ export default function XrayPage() {
 
       setRegions(allRegions);
       setSummaries(allSummaries);
-      const firstRegion = allRegions[0];
-      const firstFile = inspectionFileForRegion(firstRegion);
+      // 3단계 첫 화면은 결합본을 고정해서 보여준다.
+      // 결합본 결함이 있으면 그 영역을 첫 선택으로 잡고, 없으면 첫 결함만 선택 상태로 둔다.
+      const firstRegion =
+        allRegions.find((region) => region.analysisTarget === TARGET.ASSEMBLED) ||
+        allRegions[0];
       setSelectedId(firstRegion?.regionId || null);
-      setViewFile(firstFile || assembledFile);
+      setViewFile(assembledFile);
       setInspectionDone(true);
-      // 분석이 끝나면 문안 작성 단계까지 이동할 수 있다.
-      setMaxReachedStep(4);
+      // 탐지 완료는 STEP 3 완료 상태일 뿐이다. STEP 4는 사용자가
+      // "검수 완료 · 문안 작성으로 이동"을 눌렀을 때만 활성화한다.
+      setMaxReachedStep((current) => Math.max(current, 3));
       setInspectionMessage(
         allRegions.length === 0 ? "탐지된 검토 필요 영역이 없습니다." : "",
       );
@@ -1446,7 +1628,7 @@ export default function XrayPage() {
    */
   async function runReport() {
     if (!inspectionDone) {
-      setInspectionMessage("먼저 결함 분석을 실행하세요.");
+      setReportMessage("먼저 결함 분석을 실행하세요.");
       return;
     }
 
@@ -1454,6 +1636,7 @@ export default function XrayPage() {
     setMaxReachedStep((current) => Math.max(current, 4));
     setReportLoading(true);
     setInspectionMessage("");
+    setReportMessage("");
 
     try {
       if (USE_MOCK) {
@@ -1489,7 +1672,7 @@ export default function XrayPage() {
         });
       }
     } catch (error) {
-      setInspectionMessage(`문안 생성 실패: ${error.message}`);
+      setReportMessage(`문안 생성 실패: ${error.message}`);
     } finally {
       setReportLoading(false);
     }
@@ -1526,6 +1709,28 @@ export default function XrayPage() {
     navigate(getArtifactRoute(artifactId));
   }
 
+  async function openReportStep() {
+    if (!inspectionDone) return;
+
+    setInspectionMessage("");
+    try {
+      if (!USE_MOCK) {
+        if (!stitchJobId) {
+          throw new Error("결합 작업 ID가 없습니다.");
+        }
+        await markWorkflowReportReady(stitchJobId);
+      }
+    } catch (error) {
+      setInspectionMessage(`문안 작성 단계 전환 실패: ${error.message}`);
+      return;
+    }
+
+    setWorkflow(WORKFLOW.INSPECTION);
+    setActiveStep(4);
+    setMaxReachedStep((current) => Math.max(current, 4));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function openFinalReview() {
     if (!inspectionDone || !report.trim()) return;
     setWorkflow(WORKFLOW.REVIEW);
@@ -1537,12 +1742,7 @@ export default function XrayPage() {
   function returnToReport() {
     setWorkflow(WORKFLOW.INSPECTION);
     setActiveStep(4);
-    window.setTimeout(() => {
-      reportSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   /**
@@ -1579,9 +1779,11 @@ export default function XrayPage() {
 
     if (step === 3) {
       if (!assembledFile) return;
+      pendingStep3EntryRef.current = true;
       setWorkflow(WORKFLOW.INSPECTION);
       setActiveStep(3);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // 다른 이미지 탭을 보고 있다가 3단계로 돌아와도 결합본부터 보여준다.
+      setViewFile(assembledFile);
       return;
     }
 
@@ -1589,12 +1791,7 @@ export default function XrayPage() {
       if (!inspectionDone) return;
       setWorkflow(WORKFLOW.INSPECTION);
       setActiveStep(4);
-      window.setTimeout(() => {
-        reportSectionRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 0);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -1609,12 +1806,6 @@ export default function XrayPage() {
   function showRetryNotice() {
     window.alert(
       "현재 재결합 기능은 지원 준비 중입니다. 백엔드 재결합 처리 정책 적용 후 사용할 수 있습니다.",
-    );
-  }
-
-  function showReanalysisNotice() {
-    window.alert(
-      "현재 재분석 기능은 지원 준비 중입니다. 백엔드 재분석 처리 정책 적용 후 사용할 수 있습니다.",
     );
   }
 
@@ -1704,17 +1895,42 @@ export default function XrayPage() {
     [],
   );
 
-  function selectRegion(id) {
+  function scrollReviewRegionToTop(id) {
+    const list = regionListRef.current;
+    const item = regionItemRefs.current.get(id);
+    if (!list || !item) return;
+
+    // 목록 자체에 스크롤 가능한 여유가 없으면 페이지를 억지로 움직이지 않는다.
+    const maxScrollTop = list.scrollHeight - list.clientHeight;
+    if (maxScrollTop <= 0) return;
+
+    const listRect = list.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    const desiredTop = list.scrollTop + (itemRect.top - listRect.top);
+
+    // 가능한 범위에서는 선택 항목을 목록 최상단에 맞춘다.
+    // 마지막 항목처럼 아래쪽 여유가 부족하면 가능한 최대 지점까지만 이동한다.
+    list.scrollTo({
+      top: Math.max(0, Math.min(desiredTop, maxScrollTop)),
+      behavior: "smooth",
+    });
+  }
+
+  function selectRegion(id, { scrollReviewList = false } = {}) {
     setSelectedId(id);
     const region = regions.find((item) => item.regionId === id);
     const file = inspectionFileForRegion(region);
     if (file) setViewFile(file);
+
+    if (scrollReviewList) {
+      window.requestAnimationFrame(() => scrollReviewRegionToTop(id));
+    }
   }
 
   function selectNextRegion() {
     if (selectedIndex < 0 || regions.length === 0) return;
     const next = regions[(selectedIndex + 1) % regions.length];
-    selectRegion(next.regionId);
+    selectRegion(next.regionId, { scrollReviewList: true });
   }
 
   function inspectionFileLabel(file, index) {
@@ -2091,403 +2307,450 @@ export default function XrayPage() {
 
         {!initialJobLookupLoading && workflow === WORKFLOW.INSPECTION && (
           <main className="workflow-content">
-            <section className="xray-section analysis-launch">
-              <div className="section-heading compact">
-                <div>
-                  <span className="section-kicker">STEP 3</span>
-                  <h2>이상 영역 검수</h2>
-                  <p>
-                    결합본과 원본 조각을 함께 분석해 검토할 영역을 찾습니다.
-                  </p>
-                </div>
-                <span className={`health-badge ${health?.ok ? "ok" : "fail"}`}>
-                  <span className="status-dot" />
-                  {health === null
-                    ? "분석 환경 확인 중"
-                    : health.ok
-                      ? "분석 준비 완료"
-                      : "분석 환경 연결 실패"}
-                </span>
-              </div>
-
-              {!inspectionDone && (
-                <>
-                  <TaskProgress
-                    active={stitchStatus === "FINALIZING"}
-                    headline="최종 결합 결과를 확정하고 있습니다"
-                    detail="완료되는 즉시 이상 영역 분석을 시작할 수 있습니다."
-                    steps={[{ key: "FINALIZING", label: "최종 확정" }]}
-                    currentKey="FINALIZING"
-                    note="현재 화면을 벗어나도 서버 작업은 계속됩니다."
-                    showElapsed={false}
-                  />
-                  <div className="analysis-notice">
-                    <span className="ai-symbol" aria-hidden="true">
-                      AI
-                    </span>
-                    <div>
-                      <strong>
-                        AI 결과는 최종 판정이 아닌 검토 후보입니다.
-                      </strong>
-                      <p>
-                        결합 경계와 실제 손상을 구분하려면 원본 조각을 함께
-                        확인해야 합니다.
-                      </p>
-                    </div>
+            {activeStep === 3 && (
+              <section
+                ref={step3SectionRef}
+                className={`xray-section analysis-launch ${
+                  step3JustEntered ? "step3-entry-highlight" : ""
+                }`}
+              >
+                {step3JustEntered && (
+                  <div className="step-transition-chip" role="status">
+                    STEP 3 · 이상 영역 검수로 이동했습니다
                   </div>
-
-                  <div className="section-action-bar">
-                    <button
-                      className="text-button"
-                      onClick={() => goToWorkflowStep(2)}
-                      disabled={
-                        inspectionLoading || stitchStatus === "FINALIZING"
-                      }
-                    >
-                      ← 결합 결과로 돌아가기
-                    </button>
-                    <button
-                      className="xray-primary"
-                      onClick={runInspection}
-                      disabled={
-                        resultLoading ||
-                        inspectionLoading ||
-                        stitchStatus === "FINALIZING" ||
-                        !health?.ok
-                      }
-                    >
-                      {stitchStatus === "FINALIZING"
-                        ? "결합 결과 확정 중..."
-                        : inspectionLoading
-                        ? "이상 영역 찾는 중..."
-                        : "이상 영역 찾기"}
-                      <span aria-hidden="true">→</span>
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {inspectionMessage && !inspectionLoading && (
-                <div className="xray-message">{inspectionMessage}</div>
-              )}
-
-              <TaskProgress
-                active={inspectionLoading}
-                headline="이상 영역을 탐지하고 있습니다"
-                detail={`결합본 1장 · 원본 조각 ${fragmentFiles.length}장`}
-                steps={INSPECTION_STEPS}
-                currentKey={inspectionStep}
-                note="조각 수에 따라 1분에서 4분이 걸립니다."
-                showElapsed={false}
-              />
-
-              {inspectionDone && (
-                <div className="inspection-summary-bar">
+                )}
+                <div className="section-heading compact">
                   <div>
-                    <strong>{includedCount}</strong>
-                    <span>이상 영역 포함</span>
-                  </div>
-                  <div>
-                    <strong>{excludedCount}</strong>
-                    <span>정상으로 제외</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="text-button"
-                    onClick={showReanalysisNotice}
-                  >
-                    다시 분석
-                  </button>
-                </div>
-              )}
-            </section>
-
-            {inspectionDone && regions.length > 0 && (
-              <section className="inspection-workspace">
-                <div className="image-workspace">
-                  <div className="workspace-toolbar">
-                    <div>
-                      <strong>이미지 판독 화면</strong>
-                      <span>
-                        신뢰도는 탐지 확률이며 손상 심각도가 아닙니다.
-                      </span>
-                    </div>
-                    <span className="candidate-count">
-                      현재 이미지 {visibleRegions.length}건
-                    </span>
-                  </div>
-                  <div className="image-tabs">
-                    {allInspectionFiles.map((file, index) => {
-                      const count = regions.filter(
-                        (region) =>
-                          regionBelongsToFile(region, file) &&
-                          region.reviewDecision !== "normal",
-                      ).length;
-
-                      return (
-                        <button
-                          key={`${file.name}-${file.lastModified}`}
-                          className={
-                            viewFile?.name === file.name ? "active" : ""
-                          }
-                          onClick={() => setViewFile(file)}
-                          title={file.name}
-                        >
-                          <span>{inspectionFileLabel(file, index)}</span>
-                          {file === assembledFile && <strong>{count}</strong>}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <ImageViewer
-                    file={viewFile}
-                    regions={visibleRegions}
-                    selectedId={selectedId}
-                    onSelect={selectRegion}
-                  />
-                </div>
-
-                <aside className="review-sidebar">
-                  <div className="review-sidebar-header">
-                    <div>
-                      <span>검토 영역</span>
-                      <strong>
-                        {selectedIndex + 1} / {regions.length}
-                      </strong>
-                    </div>
-                    <span>{includedCount}건 이상 영역으로 포함</span>
-                  </div>
-
-                  <div className="review-default-guide">
-                    <strong>기본 판정: 이상 있음</strong>
-                    <span>
-                      AI 탐지 영역은 모두 결과에 포함됩니다. 정상으로 확인된
-                      영역만 제외하세요.
-                    </span>
-                  </div>
-
-                  <div className="region-list" aria-label="검토 영역 목록">
-                    {regions.map((region) => (
-                      <button
-                        type="button"
-                        key={region.regionId}
-                        className={
-                          region.regionId === selectedRegion?.regionId
-                            ? "active"
-                            : ""
-                        }
-                        onClick={() => selectRegion(region.regionId)}
-                      >
-                        <span
-                          className={`review-state ${
-                            region.reviewDecision === "normal"
-                              ? "normal"
-                              : "damage"
-                          }`}
-                        />
-                        <strong>{region.regionId}</strong>
-                        <span>{region.position}</span>
-                        <small>
-                          {region.confidence != null
-                            ? region.confidence.toFixed(2)
-                            : "—"}
-                        </small>
-                      </button>
-                    ))}
-                  </div>
-
-                  {selectedRegion && (
-                    <div className="review-detail">
-                      <div className="review-detail-title">
-                        <div>
-                          <strong>{selectedRegion.regionId}</strong>
-                          <span
-                            className={`decision-chip ${
-                              selectedRegion.reviewDecision === "normal"
-                                ? "normal"
-                                : "damage"
-                            }`}
-                          >
-                            {selectedRegion.reviewDecision === "normal"
-                              ? "정상 판단 · 결과 제외"
-                              : "이상 있음 · 결과 포함"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <dl className="region-meta">
-                        <div>
-                          <dt>분석 이미지</dt>
-                          <dd title={selectedRegion.fileName}>
-                            {selectedRegion.analysisTarget === TARGET.ASSEMBLED
-                              ? "결합본"
-                              : "원본 조각"}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>탐지 신뢰도</dt>
-                          <dd>
-                            {selectedRegion.confidence != null
-                              ? selectedRegion.confidence.toFixed(3)
-                              : "—"}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>위치</dt>
-                          <dd>{selectedRegion.position}</dd>
-                        </div>
-                        <div>
-                          <dt>영역 비율</dt>
-                          <dd>
-                            {selectedRegion.areaRatioPercent != null
-                              ? `${selectedRegion.areaRatioPercent.toFixed(3)}%`
-                              : "—"}
-                          </dd>
-                        </div>
-                        {selectedRegion.mappingStatus && (
-                          <div>
-                            <dt>결함 대응 결과</dt>
-                            <dd>
-                              {defectMappingLabel(selectedRegion.mappingStatus)}
-                            </dd>
-                          </div>
-                        )}
-                      </dl>
-
-                      <div className="ai-finding">
-                        <span className="ai-symbol" aria-hidden="true">
-                          AI
-                        </span>
-                        <div>
-                          <strong>AI 탐지 결과</strong>
-                          <p>
-                            이상 영역 후보로 탐지되었습니다. 결합 경계 또는 파손
-                            흔적일 수 있습니다.
-                          </p>
-                        </div>
-                      </div>
-
-                      <label className="review-note">
-                        <span>전문가 소견 · 선택 입력</span>
-                        <textarea
-                          value={selectedRegion.userNote || ""}
-                          onChange={(event) =>
-                            updateNote(
-                              selectedRegion.regionId,
-                              event.target.value,
-                            )
-                          }
-                          onBlur={() => void persistReviewNote(selectedRegion)}
-                          placeholder="이미지에서 확인한 특징과 판단 근거를 입력하세요."
-                        />
-                      </label>
-
-                      <div className="review-navigation">
-                        <button
-                          type="button"
-                          className="xray-secondary"
-                          onClick={() => {
-                            const previous =
-                              regions[
-                                (selectedIndex - 1 + regions.length) %
-                                  regions.length
-                              ];
-                            selectRegion(previous.regionId);
-                          }}
-                        >
-                          이전
-                        </button>
-                        <button
-                          type="button"
-                          className="normal-exclude-button"
-                          onClick={() =>
-                            selectedRegion.reviewDecision === "normal"
-                              ? restoreRegion(selectedRegion.regionId)
-                              : excludeRegion(selectedRegion.regionId)
-                          }
-                        >
-                          {selectedRegion.reviewDecision === "normal"
-                            ? "되돌리기"
-                            : "정상으로 제외"}
-                        </button>
-                        <button
-                          type="button"
-                          className="xray-primary"
-                          onClick={selectNextRegion}
-                        >
-                          다음
-                          <span aria-hidden="true">→</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </aside>
-              </section>
-            )}
-
-            {inspectionDone && (
-              <section className="report-section" ref={reportSectionRef}>
-                <div className="section-heading">
-                  <div>
-                    <span className="section-kicker">STEP 4</span>
-                    <h2>조사 문안 작성</h2>
+                    <span className="section-kicker">STEP 3</span>
+                    <h2>이상 영역 검수</h2>
                     <p>
-                      검수 결과를 바탕으로 초안을 만들고, 최종 기록에 맞게 직접
-                      편집하세요.
+                      결합본과 원본 조각을 함께 분석해 검토할 영역을 찾습니다.
                     </p>
                   </div>
-                  <span className="ai-chip">AI 초안 · 전문가 검토 전</span>
+                  <span className={`health-badge ${health?.ok ? "ok" : "fail"}`}>
+                    <span className="status-dot" />
+                    {health === null
+                      ? "분석 환경 확인 중"
+                      : health.ok
+                        ? "분석 준비 완료"
+                        : "분석 환경 연결 실패"}
+                  </span>
                 </div>
-                <ReportPanel
-                  report={report}
-                  meta={reportMeta}
-                  loading={reportLoading}
-                  disabled={
-                    health === null ||
-                    health.unreachable === true ||
-                    health.ok !== true ||
-                    health.llmEnabled !== true
-                  }
-                  disabledReason={
-                    health === null
-                      ? "문안 생성 환경을 확인하고 있습니다."
-                      : health.unreachable === true || health.ok !== true
-                        ? "문안 생성 서비스 연결을 확인하고 있습니다. 잠시 후 자동으로 다시 확인합니다."
-                        : health.llmEnabled !== true
-                          ? "문안 생성 서비스가 비활성화되어 있습니다. 서버의 OPENAI_API_KEY 설정을 확인하세요."
-                          : ""
-                  }
-                  onGenerate={runReport}
-                  onChange={setReport}
-                />
+
+                {!inspectionDone && (
+                  <>
+                    <TaskProgress
+                      active={stitchStatus === "FINALIZING"}
+                      headline="최종 결합 결과를 확정하고 있습니다"
+                      detail="완료되는 즉시 이상 영역 분석을 시작할 수 있습니다."
+                      steps={[{ key: "FINALIZING", label: "최종 확정" }]}
+                      currentKey="FINALIZING"
+                      note="현재 화면을 벗어나도 서버 작업은 계속됩니다."
+                      showElapsed={false}
+                    />
+
+                    <div className="analysis-notice">
+                      <span className="ai-symbol" aria-hidden="true">
+                        AI
+                      </span>
+                      <div>
+                        <strong>
+                          AI 결과는 최종 판정이 아닌 검토 후보입니다.
+                        </strong>
+                        <p>
+                          결합 경계와 실제 손상을 구분하려면 원본 조각을 함께
+                          확인해야 합니다.
+                        </p>
+                      </div>
+                    </div>
+
+                    {finalPreviewLoading && !assembledFile && (
+                      <div className="final-image-loading-card">
+                        <span className="xray-button-spinner" aria-hidden="true" />
+                        <div>
+                          <strong>최종 결합 이미지를 불러오는 중입니다.</strong>
+                          <span>확정된 결합 결과를 조회하고 있습니다.</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {assembledFile && assembledPreview && (
+                      <div className="assembled-preview step3-final-preview">
+                        <img src={assembledPreview} alt="최종 X-RAY 결합 결과" />
+                      </div>
+                    )}
+
+                    <div className="section-action-bar">
+                      <span />
+                      <button
+                        className="xray-primary"
+                        onClick={runInspection}
+                        disabled={
+                          resultLoading ||
+                          inspectionLoading ||
+                          stitchStatus === "FINALIZING" ||
+                          !health?.ok ||
+                          !assembledFile
+                        }
+                      >
+                        {stitchStatus === "FINALIZING"
+                          ? "결합 결과 확정 중..."
+                          : inspectionLoading
+                            ? "이상 영역 찾는 중..."
+                            : "이상 영역 찾기"}
+                        <span aria-hidden="true">→</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {inspectionMessage && !inspectionLoading && (
+                  <div className="xray-message">{inspectionMessage}</div>
+                )}
+
                 <TaskProgress
-                  active={reportLoading}
-                  headline="AI 1차 상태조사 문안을 작성하고 있습니다"
-                  detail={`이상 포함 ${includedCount}건 · 정상 제외 ${excludedCount}건`}
-                  note="30초에서 2분이 걸립니다."
+                  active={inspectionLoading}
+                  headline="이상 영역을 탐지하고 있습니다"
+                  detail={`결합본 1장 · 원본 조각 ${fragmentFiles.length}장`}
+                  steps={INSPECTION_STEPS}
+                  currentKey={inspectionStep}
+                  note="조각 수에 따라 1분에서 4분이 걸립니다."
                   showElapsed={false}
                 />
+
+                {inspectionDone && regions.length > 0 && (
+                  <section className="inspection-workspace">
+                    <div className="image-workspace">
+                      <div className="workspace-toolbar">
+                        <div>
+                          <strong>이미지 판독 화면</strong>
+                          <span>
+                            신뢰도는 탐지 확률이며 손상 심각도가 아닙니다.
+                          </span>
+                        </div>
+                        <span className="candidate-count">
+                          현재 이미지 {visibleRegions.length}건
+                        </span>
+                      </div>
+                      <div className="image-tabs">
+                        {allInspectionFiles.map((file, index) => {
+                          const count = regions.filter(
+                            (region) =>
+                              regionBelongsToFile(region, file) &&
+                              region.reviewDecision !== "normal",
+                          ).length;
+
+                          return (
+                            <button
+                              key={`${file.name}-${file.lastModified}`}
+                              className={
+                                viewFile?.name === file.name ? "active" : ""
+                              }
+                              onClick={() => setViewFile(file)}
+                              title={file.name}
+                            >
+                              <span>{inspectionFileLabel(file, index)}</span>
+                              {file === assembledFile && <strong>{count}</strong>}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <ImageViewer
+                        file={viewFile}
+                        regions={visibleRegions}
+                        selectedId={selectedId}
+                        onSelect={(id) =>
+                          selectRegion(id, { scrollReviewList: true })
+                        }
+                      />
+                    </div>
+
+                    <aside className="review-sidebar">
+                      <div className="review-sidebar-header">
+                        <div>
+                          <span>검토 영역</span>
+                          <strong>
+                            {selectedIndex + 1} / {regions.length}
+                          </strong>
+                        </div>
+                        <span>{includedCount}건 이상 영역으로 포함</span>
+                      </div>
+
+                      <div className="review-default-guide">
+                        <strong>기본 판정: 이상 있음</strong>
+                        <span>
+                          AI 탐지 영역은 모두 결과에 포함됩니다. 정상으로 확인된
+                          영역만 제외하세요.
+                        </span>
+                      </div>
+
+                      <div
+                        ref={regionListRef}
+                        className="region-list"
+                        aria-label="검토 영역 목록"
+                      >
+                        {regions.map((region) => (
+                          <button
+                            type="button"
+                            key={region.regionId}
+                            ref={(node) => {
+                              if (node) {
+                                regionItemRefs.current.set(region.regionId, node);
+                              } else {
+                                regionItemRefs.current.delete(region.regionId);
+                              }
+                            }}
+                            className={
+                              region.regionId === selectedRegion?.regionId
+                                ? "active"
+                                : ""
+                            }
+                            onClick={() => selectRegion(region.regionId)}
+                          >
+                            <span
+                              className={`review-state ${
+                                region.reviewDecision === "normal"
+                                  ? "normal"
+                                  : "damage"
+                              }`}
+                            />
+                            <strong>{region.regionId}</strong>
+                            <span>{region.position}</span>
+                            <small>
+                              {region.confidence != null
+                                ? region.confidence.toFixed(2)
+                                : "—"}
+                            </small>
+                          </button>
+                        ))}
+                      </div>
+
+                      {selectedRegion && (
+                        <div className="review-detail">
+                          <div className="review-detail-title">
+                            <div>
+                              <strong>{selectedRegion.regionId}</strong>
+                              <span
+                                className={`decision-chip ${
+                                  selectedRegion.reviewDecision === "normal"
+                                    ? "normal"
+                                    : "damage"
+                                }`}
+                              >
+                                {selectedRegion.reviewDecision === "normal"
+                                  ? "정상 판단 · 결과 제외"
+                                  : "이상 있음 · 결과 포함"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <dl className="region-meta">
+                            <div>
+                              <dt>분석 이미지</dt>
+                              <dd title={selectedRegion.fileName}>
+                                {selectedRegion.analysisTarget === TARGET.ASSEMBLED
+                                  ? "결합본"
+                                  : "원본 조각"}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>탐지 신뢰도</dt>
+                              <dd>
+                                {selectedRegion.confidence != null
+                                  ? selectedRegion.confidence.toFixed(3)
+                                  : "—"}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>위치</dt>
+                              <dd>{selectedRegion.position}</dd>
+                            </div>
+                            <div>
+                              <dt>영역 비율</dt>
+                              <dd>
+                                {selectedRegion.areaRatioPercent != null
+                                  ? `${selectedRegion.areaRatioPercent.toFixed(3)}%`
+                                  : "—"}
+                              </dd>
+                            </div>
+                            {selectedRegion.mappingStatus && (
+                              <div>
+                                <dt>결함 대응 결과</dt>
+                                <dd>
+                                  {defectMappingLabel(selectedRegion.mappingStatus)}
+                                </dd>
+                              </div>
+                            )}
+                          </dl>
+
+                          <div className="ai-finding">
+                            <span className="ai-symbol" aria-hidden="true">
+                              AI
+                            </span>
+                            <div>
+                              <strong>AI 탐지 결과</strong>
+                              <p>
+                                이상 영역 후보로 탐지되었습니다. 결합 경계 또는 파손
+                                흔적일 수 있습니다.
+                              </p>
+                            </div>
+                          </div>
+
+                          <label className="review-note">
+                            <span>전문가 소견 · 선택 입력</span>
+                            <textarea
+                              value={selectedRegion.userNote || ""}
+                              onChange={(event) =>
+                                updateNote(
+                                  selectedRegion.regionId,
+                                  event.target.value,
+                                )
+                              }
+                              onBlur={() => void persistReviewNote(selectedRegion)}
+                              placeholder="이미지에서 확인한 특징과 판단 근거를 입력하세요."
+                            />
+                          </label>
+
+                          <div className="review-navigation">
+                            <button
+                              type="button"
+                              className="xray-secondary"
+                              onClick={() => {
+                                const previous =
+                                  regions[
+                                    (selectedIndex - 1 + regions.length) %
+                                      regions.length
+                                  ];
+                                selectRegion(previous.regionId, {
+                                  scrollReviewList: true,
+                                });
+                              }}
+                            >
+                              이전
+                            </button>
+                            <button
+                              type="button"
+                              className="normal-exclude-button"
+                              onClick={() =>
+                                selectedRegion.reviewDecision === "normal"
+                                  ? restoreRegion(selectedRegion.regionId)
+                                  : excludeRegion(selectedRegion.regionId)
+                              }
+                            >
+                              {selectedRegion.reviewDecision === "normal"
+                                ? "되돌리기"
+                                : "정상으로 제외"}
+                            </button>
+                            <button
+                              type="button"
+                              className="xray-primary"
+                              onClick={selectNextRegion}
+                            >
+                              다음
+                              <span aria-hidden="true">→</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </aside>
+                  </section>
+                )}
+
+                {inspectionDone && (
+                  <>
+                    <div className="inspection-summary-bar">
+                      <div>
+                        <strong>{includedCount}</strong>
+                        <span>이상 영역 포함</span>
+                      </div>
+                      <div>
+                        <strong>{excludedCount}</strong>
+                        <span>정상으로 제외</span>
+                      </div>
+                    </div>
+                    <div className="step3-complete-action">
+                      <button
+                        type="button"
+                        className="xray-primary"
+                        onClick={openReportStep}
+                      >
+                        검수 완료 · 문안 작성으로 이동
+                        <span aria-hidden="true">→</span>
+                      </button>
+                    </div>
+                  </>
+                )}
               </section>
             )}
 
-            <div className="xray-complete-bar">
-              <div>
-                <strong>최종 검토 전 확인</strong>
-                <span>
-                  이상 포함 {includedCount}건 · 정상 제외 {excludedCount}건 ·
-                  문안 {report.trim() ? "작성 완료" : "작성 필요"}
-                </span>
-              </div>
-              <button
-                className="xray-complete-btn"
-                onClick={openFinalReview}
-                disabled={!inspectionDone || !report.trim()}
-              >
-                최종 검토로 이동
-                <span aria-hidden="true">→</span>
-              </button>
-            </div>
+            {activeStep === 4 && (
+              <>
+                <section className="report-section" ref={reportSectionRef}>
+                  <div className="section-heading">
+                    <div>
+                      <span className="section-kicker">STEP 4</span>
+                      <h2>조사 문안 작성</h2>
+                      <p>
+                        검수 결과를 바탕으로 초안을 만들고, 최종 기록에 맞게 직접
+                        편집하세요.
+                      </p>
+                    </div>
+                    <span className="ai-chip">AI 초안 · 전문가 검토 전</span>
+                  </div>
+                  {reportMessage && !reportLoading && (
+                    <div className="xray-message error">{reportMessage}</div>
+                  )}
+                  <ReportPanel
+                    report={report}
+                    meta={reportMeta}
+                    loading={reportLoading}
+                    disabled={
+                      health === null ||
+                      health.unreachable === true ||
+                      health.ok !== true ||
+                      health.llmEnabled !== true
+                    }
+                    disabledReason={
+                      health === null
+                        ? "문안 생성 환경을 확인하고 있습니다."
+                        : health.unreachable === true || health.ok !== true
+                          ? "문안 생성 서비스 연결을 확인하고 있습니다. 잠시 후 자동으로 다시 확인합니다."
+                          : health.llmEnabled !== true
+                            ? "문안 생성 서비스가 비활성화되어 있습니다. 서버의 OPENAI_API_KEY 설정을 확인하세요."
+                            : ""
+                    }
+                    onGenerate={runReport}
+                    onChange={setReport}
+                  />
+                  <TaskProgress
+                    active={reportLoading}
+                    headline="AI 1차 상태조사 문안을 작성하고 있습니다"
+                    detail={`이상 포함 ${includedCount}건 · 정상 제외 ${excludedCount}건`}
+                    note="30초에서 2분이 걸립니다."
+                    showElapsed={false}
+                  />
+                </section>
+
+                <div className="xray-complete-bar">
+                  <div>
+                    <strong>최종 검토 전 확인</strong>
+                    <span>
+                      이상 포함 {includedCount}건 · 정상 제외 {excludedCount}건 ·
+                      문안 {report.trim() ? "작성 완료" : "작성 필요"}
+                    </span>
+                  </div>
+                  <button
+                    className="xray-complete-btn"
+                    onClick={openFinalReview}
+                    disabled={!inspectionDone || !report.trim()}
+                  >
+                    최종 검토로 이동
+                    <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </>
+            )}
           </main>
         )}
 

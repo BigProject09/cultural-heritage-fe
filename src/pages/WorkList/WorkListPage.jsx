@@ -3,18 +3,32 @@ import { useNavigate } from "react-router-dom";
 import ArtifactThumb from "../../components/workspace/ArtifactThumb";
 import HeritageHeader from "../../components/workspace/HeritageHeader";
 import {
+  ConservationGuideIcon,
+  VisualInspectionIcon,
+  XrayAnalysisIcon,
+} from "../../components/workspace/DashboardModuleIcons";
+import {
   MODULE_STATUS,
+  STATUS_LABEL,
   WORKSPACE_MODULES,
   deleteWorkspaceProject,
   formatWorkspaceDate,
+  getModuleRoute,
   getMyWorkspaceProjects,
   getPublicWorkspaceProjects,
+  markWorkspaceModule,
   selectWorkspaceProject,
 } from "../../data/workspaceProjects";
 import { getArtifactRoute } from "../../utils/artifactRoutes";
 import { getMyReports } from "../../utils/myReports";
 import { getAccessToken } from "../../services/authToken";
 import "./WorkListPage.css";
+
+const MODULE_ICONS = {
+  guide: ConservationGuideIcon,
+  xray: XrayAnalysisIcon,
+  visual: VisualInspectionIcon,
+};
 
 function getReportArtifactId(report) {
   return String(
@@ -43,9 +57,16 @@ function WorkListPage() {
   const [deleteError, setDeleteError] = useState("");
 
   const [publicDetail, setPublicDetail] = useState(null);
+  const [entryFlowStep, setEntryFlowStep] = useState(null);
+  const [selectedModule, setSelectedModule] = useState(null);
+  const [entryActionError, setEntryActionError] = useState("");
 
   const isMine = scope === "mine";
   const isLoggedIn = Boolean(getAccessToken());
+  const selectedModuleMeta = useMemo(
+    () => WORKSPACE_MODULES.find((module) => module.key === selectedModule),
+    [selectedModule],
+  );
 
   const currentProjectReports = useMemo(() => {
     if (!isMine) return [];
@@ -179,6 +200,79 @@ function WorkListPage() {
     navigate(getArtifactRoute(project.artifactId));
   };
 
+  const openNewArtifactFlow = () => {
+    setSelectedModule(null);
+    setEntryActionError("");
+    setEntryFlowStep("module");
+  };
+
+  const closeNewArtifactFlow = () => {
+    setEntryFlowStep(null);
+    setSelectedModule(null);
+    setEntryActionError("");
+  };
+
+  const selectEntryModule = (moduleKey) => {
+    setSelectedModule(moduleKey);
+    setEntryActionError("");
+    setEntryFlowStep("choice");
+  };
+
+  const createArtifactForModule = () => {
+    if (!selectedModule) return;
+
+    closeNewArtifactFlow();
+    navigate("/artifacts/new", {
+      state: {
+        entryModule: selectedModule,
+        workspaceEntry: true,
+      },
+    });
+  };
+
+  const enterExistingProjectModule = async (project) => {
+    if (!selectedModule) return;
+
+    setEntryActionError("");
+
+    try {
+      const nextProject =
+        project.modules[selectedModule] === MODULE_STATUS.NOT_STARTED
+          ? await markWorkspaceModule(
+              project.artifactId,
+              selectedModule,
+              MODULE_STATUS.IN_PROGRESS,
+            )
+          : project;
+
+      if (nextProject !== project) {
+        setProjects((current) =>
+          current.map((item) =>
+            item.artifactId === nextProject.artifactId ? nextProject : item,
+          ),
+        );
+      }
+
+      const artifactInfo = selectWorkspaceProject(nextProject);
+      const destination = getModuleRoute(
+        selectedModule,
+        nextProject.artifactId,
+      );
+
+      closeNewArtifactFlow();
+      navigate(destination, {
+        state: {
+          artifactId: nextProject.artifactId,
+          artifactInfo,
+          workspaceEntry: true,
+          workspaceModule: selectedModule,
+        },
+      });
+    } catch (requestError) {
+      setEntryActionError(requestError.message);
+    }
+  };
+
   const retry = () => {
     setLoading(true);
     setError("");
@@ -230,16 +324,7 @@ function WorkListPage() {
           </div>
 
           {isMine && isLoggedIn && (
-            <button
-              onClick={() =>
-                navigate("/artifacts/new", {
-                  state: {
-                    entryModule: "guide",
-                    workspaceEntry: true,
-                  },
-                })
-              }
-            >
+            <button onClick={openNewArtifactFlow}>
               ＋ 신규 유물 등록
             </button>
           )}
@@ -514,6 +599,218 @@ function WorkListPage() {
           </>
         )}
       </main>
+
+
+      {entryFlowStep && (
+        <div
+          className="heritage-entry-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeNewArtifactFlow();
+            }
+          }}
+        >
+          <section
+            className="heritage-entry-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="heritage-entry-modal-title"
+          >
+            <button
+              className="heritage-entry-modal-close"
+              type="button"
+              aria-label="닫기"
+              onClick={closeNewArtifactFlow}
+            >
+              ×
+            </button>
+
+            {entryFlowStep === "module" && (
+              <>
+                <span className="heritage-entry-kicker">SELECT WORKFLOW</span>
+                <h2 id="heritage-entry-modal-title">
+                  시작할 작업을 선택하세요
+                </h2>
+                <p>
+                  보존가이드, X-RAY 사진 분석, 육안 상태 조사 중 먼저 진행할
+                  기능을 선택하세요.
+                </p>
+
+                <div className="heritage-entry-module-grid">
+                  {WORKSPACE_MODULES.map((module) => {
+                    const ModuleIcon = MODULE_ICONS[module.key];
+
+                    return (
+                      <button
+                        type="button"
+                        key={module.key}
+                        className={`heritage-entry-module-card ${module.key}`}
+                        onClick={() => selectEntryModule(module.key)}
+                      >
+                        <span className="heritage-entry-module-number">
+                          {module.number}
+                        </span>
+                        <span
+                          className="heritage-entry-module-icon"
+                          aria-hidden="true"
+                        >
+                          <ModuleIcon />
+                        </span>
+                        <span className="heritage-entry-module-eyebrow">
+                          {module.eyebrow}
+                        </span>
+                        <strong>{module.title}</strong>
+                        <span className="heritage-entry-module-subtitle">
+                          {module.subtitle}
+                        </span>
+                        <span className="heritage-entry-module-description">
+                          {module.description}
+                        </span>
+                        <span className="heritage-entry-module-action">
+                          작업 선택 <b>→</b>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {entryFlowStep === "choice" && selectedModuleMeta && (
+              <>
+                <button
+                  type="button"
+                  className="heritage-entry-back"
+                  onClick={() => {
+                    setEntryActionError("");
+                    setEntryFlowStep("module");
+                  }}
+                >
+                  ← 작업 다시 선택
+                </button>
+
+                <span className="heritage-entry-kicker">
+                  {selectedModuleMeta.eyebrow}
+                </span>
+                <h2 id="heritage-entry-modal-title">
+                  {selectedModuleMeta.title}을 시작할 유물을 선택하세요
+                </h2>
+                <p>
+                  기존 유물을 선택하면 이전 결과에 이어서 저장되고, 신규 등록 시
+                  새로운 artifactId가 생성됩니다.
+                </p>
+
+                <div className="heritage-entry-choice-grid">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEntryActionError("");
+                      setEntryFlowStep("existing");
+                    }}
+                  >
+                    <span>↻</span>
+                    <strong>기존 프로젝트에서 계속</strong>
+                    <small>등록된 유물과 기능별 진행 상태 확인</small>
+                    <b>프로젝트 선택 →</b>
+                  </button>
+
+                  <button type="button" onClick={createArtifactForModule}>
+                    <span>＋</span>
+                    <strong>신규 유물 등록</strong>
+                    <small>공통 유물 정보를 먼저 등록하고 시작</small>
+                    <b>새로 만들기 →</b>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {entryFlowStep === "existing" && selectedModuleMeta && (
+              <>
+                <button
+                  type="button"
+                  className="heritage-entry-back"
+                  onClick={() => {
+                    setEntryActionError("");
+                    setEntryFlowStep("choice");
+                  }}
+                >
+                  ← 이전
+                </button>
+
+                <span className="heritage-entry-kicker">SELECT ARTIFACT</span>
+                <h2 id="heritage-entry-modal-title">기존 프로젝트 선택</h2>
+                <p>
+                  선택한 기능의 상태와 최근 저장 시점을 확인한 뒤 이어서
+                  작업하세요.
+                </p>
+
+                <div className="heritage-entry-selector-list">
+                  {entryActionError && (
+                    <div className="heritage-entry-error" role="alert">
+                      {entryActionError}
+                    </div>
+                  )}
+
+                  {loading && (
+                    <div className="heritage-entry-selector-empty">
+                      프로젝트를 불러오는 중입니다.
+                    </div>
+                  )}
+
+                  {!loading && error && (
+                    <div className="heritage-entry-selector-empty">
+                      <strong>프로젝트 목록을 불러오지 못했습니다.</strong>
+                      <button type="button" onClick={retry}>
+                        다시 시도
+                      </button>
+                    </div>
+                  )}
+
+                  {!loading && !error && projects.length === 0 && (
+                    <div className="heritage-entry-selector-empty">
+                      <strong>이어갈 프로젝트가 없습니다.</strong>
+                      <button type="button" onClick={createArtifactForModule}>
+                        신규 유물 등록
+                      </button>
+                    </div>
+                  )}
+
+                  {!loading &&
+                    !error &&
+                    projects.map((project) => {
+                      const status = project.modules[selectedModule];
+
+                      return (
+                        <button
+                          type="button"
+                          key={project.artifactId}
+                          onClick={() => enterExistingProjectModule(project)}
+                        >
+                          <ArtifactThumb project={project} />
+                          <span className="heritage-entry-selector-name">
+                            <strong>{project.name}</strong>
+                            <small>
+                              {project.artifactId} · {project.material} · {" "}
+                              {project.period}
+                            </small>
+                          </span>
+                          <span
+                            className={`heritage-entry-pill ${status.toLowerCase()}`}
+                          >
+                            {STATUS_LABEL[status]}
+                          </span>
+                          <em>{formatWorkspaceDate(project.updatedAt)}</em>
+                          <b>→</b>
+                        </button>
+                      );
+                    })}
+                </div>
+              </>
+            )}
+          </section>
+        </div>
+      )}
 
       {publicDetail && (
         <div
