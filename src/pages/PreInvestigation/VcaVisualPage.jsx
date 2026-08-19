@@ -138,6 +138,8 @@ export default function VcaVisualPage() {
     notice,
     pdfJob,
     removeImage,
+    prepareFailedRunImageReplacement,
+    completeFailedRunWithoutResult,
     report,
     reportRunId,
     reportRecoveredFromServer,
@@ -150,25 +152,44 @@ export default function VcaVisualPage() {
     working,
     workspaceArtifact,
   } = investigation;
-  const canComplete = Boolean(report) && selectedRun?.status === "COMPLETED";
   const runIsCompleted = selectedRun?.status === "COMPLETED";
+  const runIsFailed = selectedRun?.status === "FAILED";
   const pageBusy = Boolean(working) || runRequestPending;
+  const canComplete =
+    ((Boolean(report) && runIsCompleted) || runIsFailed) && !pageBusy;
+
+  // 분석을 한 번 시작하면 그 run의 입력 이미지는 고정한다. FAILED run에서
+  // "사진 다시 선택"을 실행해 기존 입력이 ARCHIVED 된 경우에만 새 이미지
+  // 업로드/삭제를 다시 허용한다(resumableRunId가 null이 되는 것이 그 신호).
+  const canEditImages =
+    !selectedRun || (runIsFailed && !artifact?.resumableRunId);
 
   const canStartRun =
     uploadedImages.length > 0 && !runIsActive && !runIsCompleted && !pageBusy;
   const progressValue = runProgress(selectedRun);
 
-  // "육안 상태 조사 완료" 버튼 핸들러. 워크스페이스에 완료 상태를 기록하고
-  // 유물 워크스페이스로 돌아간다. 보고서를 아직 못 열었으면(canComplete
-  // false) 저장을 시도하지 않고 안내만 띄운다.
+  // 정상 완료 run은 기존 보고서를 확인한 뒤 완료한다. FAILED run은 AI 결과가
+  // 없다는 사실을 명확히 경고하고 사용자가 승인한 경우에만 서버에
+  // "결과 없이 완료" 표식을 저장한 뒤 상위 워크플로우를 DONE 처리한다.
   async function handleComplete() {
     if (!canComplete) {
       setCompletionError("완료된 분석 보고서를 먼저 열어 확인하세요.");
       return;
     }
 
+    if (runIsFailed) {
+      const confirmed = window.confirm(
+        "육안 상태 조사 분석에 실패하여 결과가 생성되지 않았습니다.\n\n" +
+          "결과 없이 이 단계를 완료하면 최종보고서에도 육안 상태 조사 AI 결과가 포함되지 않습니다. 계속하시겠습니까?",
+      );
+      if (!confirmed) return;
+    }
+
     try {
       setCompletionError("");
+      if (runIsFailed) {
+        await completeFailedRunWithoutResult();
+      }
       await markWorkspaceModule(artifactId, "visual", MODULE_STATUS.DONE);
       navigate(getArtifactRoute(artifactId));
     } catch (completionFailure) {
@@ -281,12 +302,19 @@ export default function VcaVisualPage() {
                   조사 이미지
                 </h3>
                 <p className="status-note">
-                  원본 이미지는 변경되지 않으며, 업로드 후 분석 실행에
-                  사용됩니다.
+                  유물의 전면·후면·측면 등 여러 방향의 이미지를 여러 장 등록할 수 있습니다.
+                  등록된 이미지는 한 번의 육안 상태 조사에 함께 사용됩니다.
                 </p>
               </div>
-              <label className="photo-upload-btn" aria-disabled={pageBusy}>
-                {working === "upload" ? "업로드 중" : "파일 선택 및 업로드"}
+              <label
+                className="photo-upload-btn"
+                aria-disabled={pageBusy || !canEditImages}
+              >
+                {working === "upload"
+                  ? "업로드 중"
+                  : canEditImages
+                    ? "파일 선택 및 업로드"
+                    : "분석 입력 이미지 고정"}
                 <input
                   ref={fileInputRef}
                   className="visual-vca-hidden"
@@ -295,7 +323,7 @@ export default function VcaVisualPage() {
                   multiple
                   aria-label="조사 이미지 파일 선택"
                   onChange={selectFiles}
-                  disabled={pageBusy}
+                  disabled={pageBusy || !canEditImages}
                 />
               </label>
             </div>
@@ -323,15 +351,17 @@ export default function VcaVisualPage() {
                     )}
                     <div>
                       <strong>{image.fileName || "등록 이미지"}</strong>
-                      <button
-                        type="button"
-                        onClick={() => removeImage(image.imageId)}
-                        disabled={working === `delete-${image.imageId}`}
-                      >
-                        {working === `delete-${image.imageId}`
-                          ? "삭제 중"
-                          : "삭제"}
-                      </button>
+                      {canEditImages && (
+                        <button
+                          type="button"
+                          onClick={() => removeImage(image.imageId)}
+                          disabled={working === `delete-${image.imageId}`}
+                        >
+                          {working === `delete-${image.imageId}`
+                            ? "삭제 중"
+                            : "삭제"}
+                        </button>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -454,6 +484,14 @@ export default function VcaVisualPage() {
                   >
                     {runRequestPending ? "분석 접수 중" : "새로 분석 시작"}
                   </button>
+                  <button
+                    type="button"
+                    className="visual-secondary-button"
+                    onClick={prepareFailedRunImageReplacement}
+                    disabled={pageBusy}
+                  >
+                    {working === "replace-images" ? "준비 중" : "사진 다시 선택"}
+                  </button>
                 </>
               ) : (
                 <button
@@ -511,9 +549,11 @@ export default function VcaVisualPage() {
               <p className="status-note">
                 {selectedRun?.status === "COMPLETED"
                   ? "완료된 분석 보고서를 불러오고 있습니다. 잠시 후 자동으로 표시됩니다."
-                  : selectedRun
-                    ? "분석이 완료되면 보고서가 자동으로 표시됩니다."
-                    : "이미지를 등록하고 분석을 시작하면 보고서를 불러올 수 있습니다."}
+                  : selectedRun?.status === "FAILED"
+                    ? "분석에 실패하여 생성된 VCA 보고서가 없습니다. 다시 분석하거나 결과 없이 조사를 완료할 수 있습니다."
+                    : selectedRun
+                      ? "분석이 완료되면 보고서가 자동으로 표시됩니다."
+                      : "이미지를 등록하고 분석을 시작하면 보고서를 불러올 수 있습니다."}
               </p>
             )}
           </section>
@@ -535,8 +575,9 @@ export default function VcaVisualPage() {
 
         <footer className="complete-area">
           <p>
-            보고서를 확인한 뒤 완료하면 현재 유물의 육안 상태 조사 결과가
-            저장됩니다.
+            {runIsFailed
+              ? "분석에 실패한 경우 결과 없이 단계를 완료할 수 있으며, 최종보고서에는 VCA 결과가 포함되지 않습니다."
+              : "보고서를 확인한 뒤 완료하면 현재 유물의 육안 상태 조사 결과가 저장됩니다."}
           </p>
           <button
             type="button"

@@ -6,7 +6,9 @@ import {
   setWorkspaceVcaArtifactId,
 } from "../../data/workspaceProjects";
 import {
+  archiveFailedVcaRunImages,
   cancelVcaRun,
+  completeFailedVcaRunWithoutResult,
   createVcaArtifact,
   createVcaPdfJob,
   createVcaRun,
@@ -426,6 +428,64 @@ export function useVisualInvestigation(artifactId) {
     }
   }
 
+  // FAILED run의 사진을 교체하기 위한 준비 단계. 기존 사진은 S3/DB에서
+  // 삭제하지 않고 서버에서 ARCHIVED 처리해 다음 run 입력에서만 제외한다.
+  // 새 사진 업로드 후 startRun()을 호출하면 별도의 새 AssessmentRun이 생긴다.
+  async function prepareFailedRunImageReplacement() {
+    if (!selectedRunId || selectedRun?.status !== "FAILED") return;
+
+    setWorking("replace-images");
+    setNotice("");
+
+    try {
+      const updatedArtifact = await archiveFailedVcaRunImages(
+        vcaArtifactId,
+        selectedRunId,
+      );
+
+      setArtifact(updatedArtifact);
+      setPreviewUrls((current) => {
+        Object.values(current).forEach((url) => {
+          if (url?.startsWith?.("blob:")) URL.revokeObjectURL(url);
+        });
+        return {};
+      });
+      setReport(null);
+      setReportRunId("");
+      setPdfJob(null);
+      setNotice(
+        "기존 실패 이미지는 분석 이력으로 보존했습니다. 새 이미지를 등록한 뒤 새 분석을 시작하세요.",
+      );
+    } catch (replaceError) {
+      setNotice(operationMessage(replaceError, "사진 다시 선택을 준비"));
+    } finally {
+      setWorking((current) =>
+        current === "replace-images" ? "" : current,
+      );
+    }
+  }
+
+  // AI 분석 실패 상태를 그대로 보존하면서 결과 없이 해당 조사 단계를
+  // 완료하겠다는 사용자의 명시적 승인을 서버에 기록한다.
+  async function completeFailedRunWithoutResult() {
+    if (!selectedRunId || selectedRun?.status !== "FAILED") return null;
+    setWorking("complete-without-result");
+    setNotice("");
+    try {
+      return await completeFailedVcaRunWithoutResult(
+        vcaArtifactId,
+        selectedRunId,
+      );
+    } catch (completionError) {
+      setNotice(operationMessage(completionError, "결과 없이 완료 처리"));
+      throw completionError;
+    } finally {
+      setWorking((current) =>
+        current === "complete-without-result" ? "" : current,
+      );
+    }
+  }
+
   // 새 VCA 분석 run을 접수한다.
   // resume=false는 신규 분석, resume=true는 이전 실패 지점부터 이어서 실행한다.
   // 새 run을 시작할 때 기존 report/PDF 상태를 비워 이전 결과가 남지 않게 한다.
@@ -609,6 +669,8 @@ export function useVisualInvestigation(artifactId) {
     notice,
     pdfJob,
     removeImage,
+    prepareFailedRunImageReplacement,
+    completeFailedRunWithoutResult,
     report,
     reportRunId,
     reportRecoveredFromServer,

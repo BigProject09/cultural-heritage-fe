@@ -453,6 +453,36 @@ export async function cancelVcaRun(artifactId, assessmentRunId) {
   ));
 }
 
+// FAILED run의 기존 입력 이미지를 과거 이력으로 남긴 채 현재 업로드 목록에서 제외한다.
+// 이후 새 이미지를 올리고 createVcaRun을 호출하면 새 AssessmentRun이 생성된다.
+export async function archiveFailedVcaRunImages(artifactId, assessmentRunId) {
+  if (USE_VCA_MOCK) {
+    const artifact = getMockArtifact(artifactId);
+    artifact.uploadedImages = [];
+    artifact.resumableRunId = null;
+    return normalizeArtifact(artifact);
+  }
+  return normalizeArtifact(await requestJson(
+    `/${encodeURIComponent(artifactId)}/runs/${encodeURIComponent(assessmentRunId)}/archive-images`,
+    { method: "POST" },
+  ));
+}
+
+// VCA AI run은 FAILED로 유지하되 사용자가 결과 없이 조사 단계를 끝내겠다고
+// 승인한 사실을 서버에 저장한다. 상위 workflow는 이 표식을 DONE으로 해석한다.
+export async function completeFailedVcaRunWithoutResult(artifactId, assessmentRunId) {
+  if (USE_VCA_MOCK) {
+    const artifact = getMockArtifact(artifactId);
+    const run = artifact.runs.find((candidate) => candidate.runId === assessmentRunId);
+    if (run) run.workflowCompletedWithoutResult = true;
+    return normalizeRun(run || { assessmentRunId, status: "FAILED" });
+  }
+  return normalizeRun(await requestJson(
+    `/${encodeURIComponent(artifactId)}/runs/${encodeURIComponent(assessmentRunId)}/complete-without-result`,
+    { method: "POST" },
+  ));
+}
+
 // 완료된 run의 보고서 조회. useVisualInvestigation의 loadReport와
 // VisualFindingDetailPage가 각자 직접 호출한다(후자는 report를 라우트
 // 이동으로 전달받지 않고 매번 새로 불러온다). run이 아직 COMPLETED가
