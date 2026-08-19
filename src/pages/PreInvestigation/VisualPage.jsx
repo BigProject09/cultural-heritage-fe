@@ -49,13 +49,13 @@ export default function VisualPage() {
               <span className="visual-select-card-eyebrow">VCA</span>
               <h3>육안 상태 조사</h3>
               <p>
-                다중 이미지 기반 특이점 탐지, 단계별 분석 진행상태, RAG 근거와
-                조사 보고서를 확인합니다.
+                유물 표면의 이상영역을 탐지하고 손상 유형과 위치를 분석하여
+                육안 상태 조사 결과를 제공합니다.
               </p>
               <ul>
-                <li>다중 이미지 분석</li>
-                <li>Finding 상세 확인</li>
-                <li>RAG 근거 및 Report/PDF</li>
+                <li>표면 이상영역 탐지</li>
+                <li>손상 유형·위치 분석</li>
+                <li>조사 결과 및 근거 확인</li>
               </ul>
             </div>
             <button
@@ -73,13 +73,13 @@ export default function VisualPage() {
               <span className="visual-select-card-eyebrow">POTTERY</span>
               <h3>문양 기반 상태 조사</h3>
               <p>
-                도자기 형태와 문양을 분석하고, 서버에 저장된 비동기 Job 상태와
-                결과를 재진입 시에도 이어서 확인합니다.
+                도자기의 형태와 표면 문양을 분석하여 완전도·유약 상태·문양 및
+                시대 정보를 확인합니다.
               </p>
               <ul>
-                <li>문양 및 형태 분석</li>
-                <li>비동기 Job 상태 관리</li>
-                <li>새로고침·재진입 결과 복구</li>
+                <li>형태·완전도 및 유약 상태 분석</li>
+                <li>문양 후보 탐지 및 위치 확인</li>
+                <li>시대 추정 및 등록 정보 비교</li>
               </ul>
             </div>
             <button
@@ -93,7 +93,7 @@ export default function VisualPage() {
         </section>
 
         <p className="visual-select-note">
-          두 기능의 실행 상태와 결과는 각각 독립적으로 저장됩니다.
+          필요한 조사 기능을 선택해 각각의 분석 결과를 확인할 수 있습니다.
         </p>
       </div>
 

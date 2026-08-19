@@ -293,7 +293,7 @@
   .complete-area p { @apply m-0 text-vora-muted text-sm [word-break:keep-all] [overflow-wrap:break-word]; }
   .complete-btn { @apply w-[220px] h-[58px] text-white text-xl font-bold cursor-pointer transition-[0.2s] rounded-[14px] border-[none]; background: var(--color-vora-bronze, #96683d); }
   .complete-btn:hover:enabled { background: var(--color-vora-bronze-dark, #704821); transform: translateY(-2px); }
-  .complete-btn:disabled { background: #c8b9a8; cursor: not-allowed; }
+  .complete-btn:disabled { background: #d8cfc4; color: rgba(255, 255, 255, 0.9); cursor: not-allowed; opacity: 0.72; transform: none; }
 
   .visual-state { @apply grid place-items-center content-center text-center px-6; }
   .visual-state p { @apply max-w-lg text-vora-muted text-sm leading-[1.7] mt-4 mb-6; }

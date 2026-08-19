@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./PotteryVisualPage.css";
 import { useDisassembly } from "../../context/useDisassembly";
 import {
+  completeInspectionJob,
   createInspectionJob,
   getLatestInspectionJob,
   pollInspectionJob,
@@ -134,6 +135,8 @@ function PotteryVisualPage() {
 
   // restoring | idle | loading | done | error | unsupported
   const [status, setStatus] = useState("restoring");
+  const [serverJobStatus, setServerJobStatus] = useState(null);
+  const [completionPending, setCompletionPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [multiObjectPrompt, setMultiObjectPrompt] = useState(null);
   const [imageSize, setImageSize] = useState(null);
@@ -173,7 +176,7 @@ function PotteryVisualPage() {
   }, [artifactId]);
 
   // 페이지를 벗어나면 브라우저 폴링만 중단한다. 실제 분석 상태는 Spring/RDS와
-  // FastAPI에 남아 있고, Spring 서버 폴러가 완료 결과를 계속 저장한다.
+  // FastAPI에 남아 있고, AI 완료 결과는 Spring이 검토 대기 상태로 보관한다.
   useEffect(() => {
     return () => {
       pollAbortRef.current?.abort();
@@ -196,6 +199,7 @@ function PotteryVisualPage() {
       }
       setInspectionPhotoUrl(job.photoUrl);
     }
+    setServerJobStatus(job.status || null);
     setVisualResult({
       ...job.result,
       __artifactId: artifactId,
@@ -206,12 +210,13 @@ function PotteryVisualPage() {
     setStatus("done");
   };
 
-  /** 새 사진으로 서버 영속 육안조사 job을 시작하고 완료될 때까지 폴링한다. */
+  /** 새 사진으로 서버 영속 문양조사 job을 시작하고 검토 대기 상태까지 폴링한다. */
   const runInspection = async (
     file,
     { treatAsSingleArtifact = false } = {},
   ) => {
     setStatus("loading");
+    setServerJobStatus(null);
     setErrorMessage("");
     setMultiObjectPrompt(null);
 
@@ -224,6 +229,7 @@ function PotteryVisualPage() {
         artifactId,
         treatAsSingleArtifact,
       });
+      setServerJobStatus(created.status || null);
 
       // SPA 이동 중에도 짧은 접수 POST 자체는 끝까지 보내고, 화면을 이미
       // 벗어났다면 이후 UI 갱신/브라우저 폴링만 중단한다.
@@ -322,11 +328,12 @@ function PotteryVisualPage() {
           setInspectionPhotoUrl(latest.photoUrl);
         }
 
-        if (latest.status === "done") {
+        if (latest.status === "done" || latest.status === "review_ready") {
           applyCompletedJob(latest);
           return;
         }
 
+        setServerJobStatus(latest.status || null);
         setStatus("loading");
         const completed = await pollInspectionJob(
           artifactId,
@@ -364,7 +371,7 @@ function PotteryVisualPage() {
   }, [artifactId]);
 
   const selectInspectionFile = (file) => {
-    if (!file || status === "loading" || status === "restoring") return;
+    if (!file || status === "loading" || status === "restoring" || completionPending) return;
 
     if (!file.type?.startsWith("image/")) {
       setErrorMessage("이미지 파일을 선택해 주세요.");
@@ -383,6 +390,7 @@ function PotteryVisualPage() {
     setZoom(1);
     setPan({ x: 0, y: 0 });
     setVisualResult(null);
+    setServerJobStatus(null);
 
     void runInspection(file);
   };
@@ -399,7 +407,7 @@ function PotteryVisualPage() {
     e.preventDefault();
     setIsUploadDragging(false);
 
-    if (status === "loading" || status === "restoring") return;
+    if (status === "loading" || status === "restoring" || completionPending) return;
 
     const file = Array.from(e.dataTransfer.files || []).find((item) =>
       item.type?.startsWith("image/"),
@@ -419,86 +427,115 @@ function PotteryVisualPage() {
   };
 
   const handleComplete = async () => {
-    if (artifactId) {
-      // 문양 박스(마스킹)가 화면에 떠 있으면 사진 위에 합성해서 base64로
-      // 들고 있는다. 최종보고서 docx를 만들 때 이 값을 그대로 실어 보낸다.
-      // 서버 업로드를 안 하므로 실패할 일이 거의 없지만, 실패해도 완료
-      // 처리 자체는 막지 않는다.
-      if (resultIsCurrent && imgRef.current && visiblePatterns.length > 0) {
+    if (!artifactId || !visualResult?.__assessmentRunId) return;
+    if (serverJobStatus === "done") {
+      navigate(getArtifactRoute(artifactId));
+      return;
+    }
+    if (serverJobStatus !== "review_ready" || !resultIsCurrent) {
+      window.alert("AI 분석 결과가 완료된 뒤 조사 결과를 확정할 수 있습니다.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "문양 기반 상태 조사 결과를 확인했습니다. 완료하시겠습니까?\n\n완료하면 분석 결과가 최종 저장되고 조사 상태가 확정됩니다.",
+    );
+    if (!confirmed) return;
+
+    setCompletionPending(true);
+    setErrorMessage("");
+
+    let annotatedBlob = null;
+    let annotatedImageBase64 = null;
+
+    // 최종 저장 전에 현재 화면의 문양 박스가 반영된 이미지를 준비한다.
+    // 실제 S3 연결은 결과 저장이 성공한 다음 수행한다.
+    if (imgRef.current && visiblePatterns.length > 0) {
+      try {
+        annotatedBlob = await compositeAnnotatedPhoto(
+          imgRef.current,
+          visiblePatterns,
+        );
+        annotatedImageBase64 = await blobToBase64(annotatedBlob);
+      } catch (compositeError) {
+        console.error("마스킹 사진 합성 실패:", compositeError);
+      }
+    }
+
+    try {
+      // 이 호출이 성공해야 InspectionResultPottery 저장과 AssessmentRun COMPLETED
+      // 전환이 일어난다. AI 분석 완료만으로는 더 이상 최종 저장되지 않는다.
+      const finalizedJob = await completeInspectionJob(
+        artifactId,
+        visualResult.__assessmentRunId,
+      );
+      applyCompletedJob(finalizedJob);
+
+      let annotatedPhotoUrl = finalizedJob?.annotatedPhotoUrl || null;
+      if (annotatedBlob) {
         try {
-          const blob = await compositeAnnotatedPhoto(
-            imgRef.current,
-            visiblePatterns,
+          // eslint-disable-next-line react-hooks/purity
+          const file = new File([annotatedBlob], `annotated-${Date.now()}.png`, {
+            type: "image/png",
+          });
+          const savedJob = await uploadAnnotatedInspectionPhoto(
+            artifactId,
+            visualResult.__assessmentRunId,
+            file,
           );
-          const annotatedImageBase64 = await blobToBase64(blob);
-
-          // AWS(S3)가 설정돼 있으면 원본 사진처럼 S3에 올려서 세션이 끝나도
-          // (다른 사람/다른 브라우저에서도) 재사용 가능한 URL로 남긴다.
-          // 자격증명이 없는 로컬 환경 등에서 업로드가 실패하면 base64로
-          // 대체한다 - 이번 세션/이번 보고서 다운로드는 그래도 되게 하기 위함.
-          let annotatedPhotoUrl = null;
-          try {
-            // handleComplete는 버튼 클릭으로만 실행되는 이벤트 핸들러라
-            // 렌더링 중에는 절대 호출되지 않는다 - Date.now()는 파일명
-            // 유일성만 위한 것이라 여기서는 안전하다.
-            // eslint-disable-next-line react-hooks/purity
-            const file = new File([blob], `annotated-${Date.now()}.png`, {
-              type: "image/png",
-            });
-            const savedJob = await uploadAnnotatedInspectionPhoto(
-              artifactId,
-              visualResult.__assessmentRunId,
-              file,
-            );
-            annotatedPhotoUrl = savedJob?.annotatedPhotoUrl || null;
-          } catch (uploadError) {
-            console.warn(
-              "마스킹 사진 S3 업로드 실패 - base64로 대체합니다:",
-              uploadError,
-            );
-          }
-
-          setVisualResult((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  __annotatedImageBase64: annotatedImageBase64,
-                  __annotatedPhotoUrl: annotatedPhotoUrl,
-                }
-              : prev,
+          annotatedPhotoUrl = savedJob?.annotatedPhotoUrl || annotatedPhotoUrl;
+        } catch (uploadError) {
+          console.warn(
+            "마스킹 사진 S3 업로드 실패 - base64로 대체합니다:",
+            uploadError,
           );
+        }
+      }
 
-          // Context(메모리)에만 두면 새로고침 한 번에 사라져서 보고서에
-          // 사진이 빠진다. 같은 탭 안에서는 살아남도록 sessionStorage에도
-          // 같이 넣어둔다(용량 초과 시 조용히 실패해도 메모리 쪽은 유효).
-          try {
+      if (annotatedImageBase64 || annotatedPhotoUrl) {
+        setVisualResult((prev) =>
+          prev
+            ? {
+                ...prev,
+                __annotatedImageBase64: annotatedImageBase64 || prev.__annotatedImageBase64,
+                __annotatedPhotoUrl: annotatedPhotoUrl || prev.__annotatedPhotoUrl,
+              }
+            : prev,
+        );
+
+        try {
+          if (annotatedImageBase64) {
             sessionStorage.setItem(
               `${ANNOTATED_IMAGE_STORAGE_KEY}:${artifactId}`,
               annotatedImageBase64,
             );
-            if (annotatedPhotoUrl) {
-              sessionStorage.setItem(
-                `${ANNOTATED_IMAGE_URL_STORAGE_KEY}:${artifactId}`,
-                annotatedPhotoUrl,
-              );
-            }
-          } catch (storageError) {
-            console.error("마스킹 사진 임시 저장 실패:", storageError);
           }
-        } catch (compositeError) {
-          console.error("마스킹 사진 합성 실패:", compositeError);
+          if (annotatedPhotoUrl) {
+            sessionStorage.setItem(
+              `${ANNOTATED_IMAGE_URL_STORAGE_KEY}:${artifactId}`,
+              annotatedPhotoUrl,
+            );
+          }
+        } catch (storageError) {
+          console.error("마스킹 사진 임시 저장 실패:", storageError);
         }
       }
 
       try {
         await markWorkspaceModule(artifactId, "visual", MODULE_STATUS.DONE);
-      } catch (error) {
-        window.alert(`문양 기반 상태 조사 저장 실패: ${error.message}`);
-        return;
+      } catch (workspaceError) {
+        console.warn("워크스페이스 상태 갱신 실패:", workspaceError);
       }
-    }
 
-    navigate(getArtifactRoute(artifactId));
+      navigate(getArtifactRoute(artifactId));
+    } catch (completionError) {
+      console.error("문양 기반 상태 조사 완료 처리 실패:", completionError);
+      setErrorMessage(
+        completionError?.message || "문양 기반 상태 조사 완료 처리에 실패했습니다.",
+      );
+    } finally {
+      setCompletionPending(false);
+    }
   };
 
   const handleImageLoad = (e) => {
@@ -559,9 +596,20 @@ function PotteryVisualPage() {
       ? "기존 분석 확인 중"
       : status === "loading"
         ? "분석 중"
-        : status === "done"
-          ? "AI 분석 완료"
-          : "AI 분석 초안";
+        : serverJobStatus === "done"
+          ? "조사 완료"
+          : status === "done"
+            ? "AI 분석 완료 · 검토 대기"
+            : "AI 분석 초안";
+
+  const canComplete =
+    status === "done" &&
+    serverJobStatus === "review_ready" &&
+    resultIsCurrent &&
+    !completionPending;
+  const isFinalized = serverJobStatus === "done";
+  const pageLocked =
+    status === "loading" || status === "restoring" || completionPending;
 
   return (
     <div className="visual-page">
@@ -639,25 +687,20 @@ function PotteryVisualPage() {
               {!inspectionPhotoUrl ? (
                 <div
                   className={`visual-photo-upload ${isUploadDragging ? "dragging" : ""} ${
-                    status === "loading" || status === "restoring"
-                      ? "disabled"
-                      : ""
+                    pageLocked ? "disabled" : ""
                   }`}
                   role="button"
-                  tabIndex={
-                    status === "loading" || status === "restoring" ? -1 : 0
-                  }
-                  aria-disabled={status === "loading" || status === "restoring"}
+                  tabIndex={pageLocked ? -1 : 0}
+                  aria-disabled={pageLocked}
                   aria-label="문양 분석용 사진 업로드"
                   onClick={() => {
-                    if (status !== "loading" && status !== "restoring") {
+                    if (!pageLocked) {
                       fileInputRef.current?.click();
                     }
                   }}
                   onKeyDown={(event) => {
                     if (
-                      status !== "loading" &&
-                      status !== "restoring" &&
+                      !pageLocked &&
                       (event.key === "Enter" || event.key === " ")
                     ) {
                       event.preventDefault();
@@ -666,7 +709,7 @@ function PotteryVisualPage() {
                   }}
                   onDragEnter={(event) => {
                     event.preventDefault();
-                    if (status !== "loading" && status !== "restoring") {
+                    if (!pageLocked) {
                       setIsUploadDragging(true);
                     }
                   }}
@@ -688,7 +731,7 @@ function PotteryVisualPage() {
                     type="button"
                     className="photo-replace-btn"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={status === "loading" || status === "restoring"}
+                    disabled={pageLocked}
                   >
                     사진 변경
                   </button>
@@ -701,7 +744,7 @@ function PotteryVisualPage() {
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                disabled={status === "loading" || status === "restoring"}
+                disabled={pageLocked}
               />
 
               {inspectionPhotoUrl && (
@@ -744,7 +787,7 @@ function PotteryVisualPage() {
                     onMouseLeave={handlePointerUp}
                     onDragEnter={(event) => {
                       event.preventDefault();
-                      if (status !== "loading" && status !== "restoring") {
+                      if (!pageLocked) {
                         setIsUploadDragging(true);
                       }
                     }}
@@ -1094,13 +1137,25 @@ function PotteryVisualPage() {
         </div>
 
         <footer className="complete-area">
-          <p>완료하면 현재 유물의 문양 기반 상태 조사 결과가 저장됩니다.</p>
+          <p>
+            {isFinalized
+              ? "문양 기반 상태 조사가 완료되어 결과가 저장되었습니다."
+              : completionPending
+                ? "조사 결과를 최종 저장하고 있습니다."
+                : canComplete
+                  ? "AI 분석 결과를 확인한 뒤 완료하면 결과가 최종 저장됩니다."
+                  : "AI 분석이 완료되면 결과를 확인하고 조사를 완료할 수 있습니다."}
+          </p>
           <button
             className="complete-btn"
             onClick={handleComplete}
-            disabled={status === "loading" || status === "restoring"}
+            disabled={!canComplete}
           >
-            문양 기반 상태 조사 완료
+            {completionPending
+              ? "완료 처리 중…"
+              : isFinalized
+                ? "문양 기반 상태 조사 완료됨"
+                : "문양 기반 상태 조사 완료"}
           </button>
         </footer>
       </div>
