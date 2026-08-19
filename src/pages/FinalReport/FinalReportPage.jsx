@@ -651,6 +651,18 @@ function FinalReportPage() {
     setSaved(false);
   };
 
+  const handleBackToFinalReport = () => {
+    setReportJson(null);
+    setReportSources(null);
+    setGenerateError("");
+    setGenerationNotice("");
+    setSaved(false);
+    navigate(
+      `/artifacts/${encodeURIComponent(project.artifactId)}/final-report`,
+      { replace: true },
+    );
+  };
+
   if (loading || savedReportLoading) {
     return (
       <div className="final-report-page">
@@ -902,7 +914,7 @@ function FinalReportPage() {
                 <button
                   type="button"
                   className="final-report-secondary"
-                  onClick={() => navigate(getArtifactRoute(project.artifactId))}
+                  onClick={handleBackToFinalReport}
                   disabled={generating || downloading}
                 >
                   ← 뒤로가기
