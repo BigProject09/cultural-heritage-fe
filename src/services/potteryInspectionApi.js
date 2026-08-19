@@ -167,6 +167,44 @@ export async function createInspectionJob(
   return job;
 }
 
+/**
+ * 사용자가 AI 분석 결과를 최종 확인한 뒤 문양 기반 상태 조사를 확정한다.
+ * 이 호출이 성공한 시점에 Spring이 결과를 저장하고 assessment_run을 완료 처리한다.
+ */
+export async function completeInspectionJob(
+  artifactId,
+  assessmentRunId,
+  { signal } = {},
+) {
+  if (USE_MOCK) {
+    return {
+      assessmentRunId,
+      artifactId,
+      status: "done",
+      progressPercent: 100,
+      result: MOCK_RESULT,
+      photoUrl: null,
+    };
+  }
+
+  if (!artifactId || !assessmentRunId) {
+    throw new Error("artifactId 또는 assessmentRunId가 없어 조사를 완료할 수 없습니다.");
+  }
+
+  const params = new URLSearchParams({ artifact_id: artifactId });
+  const response = await authFetch(
+    `${API_BASE_URL}/pottery-inspection/jobs/${encodeURIComponent(assessmentRunId)}/complete?${params.toString()}`,
+    { method: "POST", signal },
+  );
+
+  if (!response.ok) {
+    const detail = await readError(response);
+    throw new Error(`HTTP ${response.status}: ${String(detail).slice(0, 300)}`);
+  }
+
+  return response.json();
+}
+
 /** 문양 박스가 합성된 최종 이미지를 해당 assessment_run에 영구 연결한다. */
 export async function uploadAnnotatedInspectionPhoto(
   artifactId,
@@ -205,7 +243,7 @@ export async function getInspectionJob(artifactId, assessmentRunId, { signal } =
     return {
       assessmentRunId,
       artifactId,
-      status: "done",
+      status: "review_ready",
       progressPercent: 100,
       result: MOCK_RESULT,
       photoUrl: null,
@@ -250,7 +288,7 @@ export async function getLatestInspectionJob(artifactId, { signal } = {}) {
   return job;
 }
 
-/** 진행 중 서버 job을 완료될 때까지 폴링한다. */
+/** 진행 중 서버 job을 AI 분석 완료(검토 대기) 상태까지 폴링한다. */
 export async function pollInspectionJob(
   artifactId,
   assessmentRunId,
@@ -271,7 +309,7 @@ export async function pollInspectionJob(
     return {
       assessmentRunId,
       artifactId,
-      status: "done",
+      status: "review_ready",
       progressPercent: 100,
       result: MOCK_RESULT,
     };
@@ -283,7 +321,7 @@ export async function pollInspectionJob(
     const job = await getInspectionJob(artifactId, assessmentRunId, { signal });
     onStatus?.(job);
 
-    if (job.status === "done") {
+    if (job.status === "done" || job.status === "review_ready") {
       return job;
     }
 

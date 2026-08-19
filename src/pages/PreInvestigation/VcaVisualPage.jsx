@@ -577,7 +577,7 @@ export default function VcaVisualPage() {
           <p>
             {runIsFailed
               ? "분석에 실패한 경우 결과 없이 단계를 완료할 수 있으며, 최종보고서에는 VCA 결과가 포함되지 않습니다."
-              : "보고서를 확인한 뒤 완료하면 현재 유물의 육안 상태 조사 결과가 저장됩니다."}
+              : "보고서를 확인한 뒤 완료하여 육안 상태 조사 단계를 확정하세요."}
           </p>
           <button
             type="button"
