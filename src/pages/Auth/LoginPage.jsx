@@ -8,6 +8,8 @@ import { login } from "../../services/userApi";
 import { decodeJwtPayload } from "../../utils/jwt";
 
 const ID_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9]{4,20}$/;
+const DEMO_LOGIN_ID = "vora1";
+const DEMO_PASSWORD = "vora1234!";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -29,23 +31,18 @@ function LoginPage() {
     password: !password ? "비밀번호를 입력해주세요." : "",
   }), [userId, password]);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setTouched({ userId: true, password: true });
+  const performLogin = async (loginId, loginPassword) => {
+    setSubmitting(true);
     setError("");
 
-    if (fieldErrors.userId || fieldErrors.password) return;
-
-    setSubmitting(true);
-
     try {
-      const response = await login({ loginId: userId.trim(), password });
+      const response = await login({ loginId, password: loginPassword });
       const payload = decodeJwtPayload(response.token);
 
       const loginUser = {
-        loginId: response.loginId || payload?.sub || userId.trim(),
+        loginId: response.loginId || payload?.sub || loginId,
         email: response.email || "",
-        name: response.nickName || response.loginId || payload?.sub || userId.trim(),
+        name: response.nickName || response.loginId || payload?.sub || loginId,
         role: response.role || payload?.role || "USER",
         accessToken: response.token,
       };
@@ -57,6 +54,21 @@ function LoginPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setTouched({ userId: true, password: true });
+    setError("");
+
+    if (fieldErrors.userId || fieldErrors.password) return;
+
+    await performLogin(userId.trim(), password);
+  };
+
+  const handleDemoLogin = async () => {
+    setTouched({ userId: false, password: false });
+    await performLogin(DEMO_LOGIN_ID, DEMO_PASSWORD);
   };
 
   const inputStateClass = (name) => {
@@ -152,6 +164,23 @@ function LoginPage() {
               {submitting ? "로그인 중..." : "로그인"}
             </button>
           </form>
+
+          <div className="heritage-auth-demo">
+            <div className="heritage-auth-divider" aria-hidden="true">
+              <span />
+              <b>DEMO</b>
+              <span />
+            </div>
+            <button
+              type="button"
+              className="heritage-auth-demo-button"
+              onClick={handleDemoLogin}
+              disabled={submitting}
+            >
+              {submitting ? "접속 중..." : "데모 계정으로 시작하기"}
+            </button>
+            <p>별도의 계정 입력 없이 VORA 주요 기능을 체험할 수 있습니다.</p>
+          </div>
 
           <div className="heritage-auth-links">
             <button type="button" onClick={() => navigate("/signup")}>회원가입</button>
